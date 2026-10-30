@@ -41,6 +41,8 @@ function tokenize(source: string): Token[] {
       tokens.push({ kind: 'variable', name: variable[1] ?? '' })
       i += variable[0].length
     } else if (power) {
+      if (power[2] && /^\d/.test(rest.slice(power[0].length)))
+        throw new Error(`Write ^{${power[2]}…} in "${source}"`)
       const raw = power[1] ?? power[2] ?? ''
       tokens.push({ kind: 'power', power: raw === 'T' ? 'T' : Number(raw) })
       i += power[0].length

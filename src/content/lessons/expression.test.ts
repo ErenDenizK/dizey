@@ -64,5 +64,6 @@ describe('evaluate', () => {
     expect('scalar' in evaluate('3I', scope)).toBe(true)
     expect(() => evaluate('C', scope)).toThrow()
     expect(() => evaluate('(A', scope)).toThrow()
+    expect(() => evaluate('A^10', scope)).toThrow()
   })
 })

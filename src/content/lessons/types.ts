@@ -29,6 +29,17 @@ export interface Frame {
   readonly note?: string
 }
 
+/** One elementary row operation, rows 0-based, factors as exact rationals ("-1/4"). Shown as R₂ → R₂ − 3R₁. */
+export type RowOp =
+  | { readonly kind: 'swap'; readonly a: number; readonly b: number }
+  | { readonly kind: 'scale'; readonly row: number; readonly factor: string }
+  | {
+      readonly kind: 'addMultiple'
+      readonly target: number
+      readonly source: number
+      readonly factor: string
+    }
+
 export type Beat =
   /** 2×2 rule: main diagonal product, other diagonal product, difference into `result`. */
   | { readonly kind: 'det2'; readonly matrix: string }
@@ -45,6 +56,16 @@ export type Beat =
       readonly along: 'row' | 'col'
       readonly index: number
     }
+  /**
+   * Row operations applied one at a time to `matrix` (an augmented matrix keeps its bar); the stage
+   * ends on the lesson matrix `result`, which the tests check is exactly what the operations produce.
+   */
+  | {
+      readonly kind: 'rowOps'
+      readonly matrix: string
+      readonly ops: readonly RowOp[]
+      readonly result: string
+    }
   /** Highlight frames played in order. */
   | { readonly kind: 'frames'; readonly frames: readonly Frame[] }
   /** A chain of equalities written one line at a time. */
@@ -59,6 +80,8 @@ export interface Scene {
 }
 
 export type Derived = 'cofactors' | 'adjugate' | 'inverse'
+
+export type SolutionKind = 'unique' | 'infinite' | 'none'
 
 /** Matrix classes; `index` is the exact nilpotency index or period (left out: any index or period). */
 export type Property =
@@ -142,6 +165,7 @@ export type Claim =
       readonly kind: 'expr'
       readonly expr: string
       readonly equals: readonly (readonly string[])[]
+      readonly answer?: true
     } & Where)
   /** One entry (1-based) of a matrix expression. */
   | ({
@@ -170,6 +194,8 @@ export type Claim =
       readonly index?: number
       readonly holds?: false
     } & Where)
+  /** Choice steps: exactly the answer option (an expression such as "$\\frac{1}{3}(5I - 2A^2)$") equals `expr`. */
+  | ({ readonly kind: 'optionExpr'; readonly expr: string } & Where)
   /** The scalar unknown `{variable}` makes the expression the zero matrix exactly at `equals`. */
   | ({
       readonly kind: 'solve'
@@ -178,6 +204,34 @@ export type Claim =
       readonly equals: string
       readonly answer?: true
     } & Where)
+  /** Rank of a lesson matrix (only its first `columns` columns when given, e.g. r_A of [A | b]). */
+  | {
+      readonly kind: 'rank'
+      readonly matrix: string
+      readonly columns?: number
+      readonly equals: string
+      readonly at?: Readonly<Record<string, string>>
+      readonly answer?: true
+    }
+  /**
+   * The system whose augmented matrix [A | b] is the lesson matrix (bar at `augmentedAt`) has a unique
+   * solution, infinitely many, or none. In a choice step marked `answer`, the answer option reads
+   * "Tek çözüm", "Sonsuz çözüm" or "Çözüm yok" accordingly.
+   */
+  | {
+      readonly kind: 'system'
+      readonly matrix: string
+      readonly is: SolutionKind
+      readonly at?: Readonly<Record<string, string>>
+      readonly answer?: true
+    }
+  /** Choice steps: of the option values for `variable`, exactly the answer gives a system of kind `is`. */
+  | {
+      readonly kind: 'optionSystem'
+      readonly matrix: string
+      readonly variable: string
+      readonly is: SolutionKind
+    }
   /** The values of `variable` for which det is 0, exactly (checked on a dense rational grid). */
   | {
       readonly kind: 'detRoots'
