@@ -9,8 +9,9 @@ Primary (used):
 - Lecturer notes 2, "Matrislerde Elemanter İşlemler, Eşelon Form, Rank, Ters Matris ve Determinantlar" (90 slides).
 - Three whiteboard photos, 2026-10-27: adjoint inverse, systems with r_A / r_B, homogeneous systems, start of Cramer.
 
-Format: multiple choice (Eren, 2026-10-30). Exam date 2026-11-20 11:00-13:00 is an unverified hint from the old
-archive; the yildiz.edu.tr hosts are not reachable from the build environment.
+Format: multiple choice (Eren, 2026-10-30). Exam date not fixed yet (Eren, 2026-10-30): midterm week starts around
+2026-11-15 and Linear Algebra is likely around 2026-11-18 to 2026-11-20. Plan for 2026-11-15; show no countdown to an
+exact date until the date is confirmed.
 
 ## Nodes
 
@@ -56,4 +57,4 @@ No scope announcement from the lecturer (Eren, 2026-10-30). Working scope: sylla
 
 ## Open
 
-- Exam date confirmation.
+- Exact exam date (Eren will tell us once it is announced).
