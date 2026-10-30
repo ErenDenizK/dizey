@@ -11,3 +11,24 @@ export function daysUntil(iso: string, today: Date): number {
   const now = Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())
   return Math.round((target - now) / 86_400_000)
 }
+
+const months = [
+  'Ocak',
+  'Şubat',
+  'Mart',
+  'Nisan',
+  'Mayıs',
+  'Haziran',
+  'Temmuz',
+  'Ağustos',
+  'Eylül',
+  'Ekim',
+  'Kasım',
+  'Aralık',
+]
+
+/** "2026-11-19" → "19 Kasım". */
+export function dayLabel(iso: string): string {
+  const [, month, day] = iso.split('-').map(Number)
+  return `${day} ${months[(month ?? 1) - 1]}`
+}

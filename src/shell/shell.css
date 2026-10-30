@@ -608,6 +608,13 @@
   cursor: pointer;
 }
 .ex-clock {
+  min-height: 44px;
+  padding: 0 6px;
+  border: 0;
+  background: none;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
   min-width: 4ch;
   text-align: right;
   font-size: 1rem;
@@ -1159,4 +1166,40 @@ a.sh-node {
 }
 .ls-key:disabled {
   opacity: 0.45;
+}
+
+/* Mistake log and exam date (INTERIM until the shell moves onto src/ui). */
+.sh-mistakes {
+  margin: 0;
+  padding: 4px 16px;
+  list-style: none;
+}
+.sh-mistakes li + li {
+  border-top: 1px solid var(--sh-line);
+}
+.sh-mistake {
+  display: grid;
+  grid-template-columns: 34px 1fr;
+  gap: 10px;
+  padding: 12px 0;
+  color: inherit;
+  text-decoration: none;
+  line-height: 1.45;
+}
+.sh-mistake b {
+  display: block;
+  font-weight: 600;
+}
+.sh-mistake__code {
+  font-size: 0.8rem;
+  color: var(--sh-muted);
+}
+.sh-date {
+  min-height: 36px;
+  padding: 4px 8px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--sh-soft);
+  color: var(--sh-ink);
+  font: inherit;
 }

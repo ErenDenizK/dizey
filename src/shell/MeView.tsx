@@ -1,9 +1,18 @@
+import { Link } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
+import { dayLabel } from '../content/exam'
+import { lessons } from '../content/lessons'
+import { questions } from '../content/questions'
 import { strings } from '../content/strings'
+import { RichText } from '../exam/Blocks'
+import { useExam } from '../exam/store'
 import { versionLine } from '../legacy/build-line'
 import { appStorage } from '../legacy/storage'
+import { useLessonRecords } from '../lesson/store'
 import { type Backup, createBackup, parseBackup, readEntries, restoreEntries } from '../lib/backup/backup'
 import { buildInfo } from '../lib/build-info'
+import { openMistakes } from '../progress/mistakes'
+import { saveSettings, useSettings } from '../progress/settings'
 import { Glyph } from './Glyph'
 import { lessonState } from './progress'
 import { useShell } from './store'
@@ -33,9 +42,11 @@ export function MeView() {
         <Stat state="current" value={counts.current} label={strings.me.statOpen} />
         <Stat state="new" value={counts.new} label={strings.me.statNew} />
       </div>
+      <MistakeLog />
       <section>
         <h2 className="sh-label">{strings.me.settings}</h2>
         <div className="sh-card sh-settings">
+          <ExamDateSetting />
           <SoundSetting />
           <div className="sh-set">
             <span>
@@ -61,6 +72,88 @@ function Stat({ state, value, label }: { state: 'done' | 'current' | 'new'; valu
       <b>{value}</b>
       <span>{label}</span>
     </div>
+  )
+}
+
+function MistakeLog() {
+  const records = useLessonRecords()
+  const { outcomes } = useExam()
+  const list = openMistakes(lessons, records, questions, outcomes)
+  return (
+    <section aria-labelledby="mistakes">
+      <div className="sh-group-head">
+        <h2 id="mistakes" className="sh-label">
+          {strings.me.mistakes}
+        </h2>
+        {list.length ? <span>{list.length}</span> : null}
+      </div>
+      {list.length ? (
+        <>
+          <ul className="sh-card sh-mistakes">
+            {list.map((mistake) => (
+              <li
+                key={
+                  mistake.source === 'lesson' ? `${mistake.lessonId}:${mistake.stepId}` : mistake.questionId
+                }
+              >
+                {mistake.source === 'lesson' ? (
+                  <Link
+                    to="/lesson/$id"
+                    params={{ id: mistake.lessonId }}
+                    search={{ step: mistake.stepId }}
+                    className="sh-mistake sh-press"
+                  >
+                    <span className="sh-mistake__code">{mistake.node}</span>
+                    <span>
+                      <b>
+                        <RichText text={mistake.title} />
+                      </b>
+                      <RichText text={mistake.text} />
+                    </span>
+                  </Link>
+                ) : (
+                  <div className="sh-mistake">
+                    <span className="sh-mistake__code">{mistake.node}</span>
+                    <span>
+                      <b>{strings.me.mistakeExam}</b>
+                      <RichText text={mistake.text} />
+                    </span>
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          <p className="sh-sub">{strings.me.mistakesHint}</p>
+        </>
+      ) : (
+        <p className="sh-sub">{strings.me.mistakesEmpty}</p>
+      )}
+    </section>
+  )
+}
+
+function ExamDateSetting() {
+  const settings = useSettings()
+  return (
+    <label className="sh-set">
+      <span>
+        {strings.me.examDate}
+        <small>{settings.examDate ? dayLabel(settings.examDate) : strings.me.examDateHint}</small>
+      </span>
+      <input
+        type="date"
+        className="sh-date"
+        min="2026-11-01"
+        max="2026-12-31"
+        value={settings.examDate ?? ''}
+        aria-label={strings.me.examDate}
+        onChange={(event) => {
+          const value = event.currentTarget.value
+          const { examDate: _cleared, ...rest } = settings
+          saveSettings(value ? { ...rest, examDate: value } : rest)
+        }}
+      />
+    </label>
   )
 }
 

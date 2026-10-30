@@ -4,7 +4,7 @@ import type { Lesson, Step } from '../content/lessons/types'
 import { strings } from '../content/strings'
 import { Blocks, RichText } from '../exam/Blocks'
 import { Keypad } from './Keypad'
-import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordAnswer, resumeIndex } from './progress'
+import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { Stage } from './Stage'
 import { recordOf, saveRecord } from './store'
 import { compile, emptyStage } from './timeline'
@@ -33,9 +33,12 @@ function beatOf(step: Step, attempt: Attempt) {
   return undefined
 }
 
-export function LessonPlayer({ lesson }: { lesson: Lesson }) {
+export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep: string | undefined }) {
   const navigate = useNavigate()
-  const [index, setIndex] = useState(() => resumeIndex(lesson, recordOf(lesson.id)))
+  const [index, setIndex] = useState(() => {
+    const asked = lesson.steps.findIndex((candidate) => candidate.id === startStep)
+    return asked >= 0 ? asked : resumeIndex(lesson, recordOf(lesson.id))
+  })
   const [attempt, setAttempt] = useState<Attempt>(freshAttempt)
   const [typed, setTyped] = useState('')
   const step = lesson.steps[index] as Step
@@ -77,7 +80,7 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
 
   const answer = (given: string, correct: boolean) => {
     const record = recordOf(lesson.id)
-    saveRecord(lesson.id, recordAnswer(record, step.id, given, correct))
+    saveRecord(lesson.id, recordTry(record, step.id, given, correct, attempt.wrong.length === 0, Date.now()))
     if (correct) setAttempt((a) => ({ ...a, solved: true, revealed: true }))
     else setAttempt((a) => ({ ...a, wrong: [...a.wrong, given] }))
   }

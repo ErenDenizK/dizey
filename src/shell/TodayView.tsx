@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { daysUntil, examWeek } from '../content/exam'
+import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { strings } from '../content/strings'
+import { useSettings } from '../progress/settings'
 import { LessonSheet } from './LessonSheet'
 import { lessonName, unitOf, upNext } from './progress'
 import { startLesson, useShell } from './store'
@@ -8,13 +9,17 @@ import { startLesson, useShell } from './store'
 export function TodayView() {
   const { catalog, done, resume } = useShell()
   const [sheet, setSheet] = useState<string | null>(null)
-  const days = daysUntil(examWeek.iso, new Date())
+  const { examDate } = useSettings()
+  // The date is not announced: say "around" until Eren enters the day, then count down to it.
+  const examLine = examDate
+    ? strings.today.examLine(daysUntil(examDate, new Date()), dayLabel(examDate))
+    : strings.today.examWeekLine(examWeek.label)
 
   return (
     <div className="sh-view">
       <header>
         <h1 className="sh-title">{strings.today.title}</h1>
-        <p className="sh-sub">{strings.today.examLine(days, examWeek.label)}</p>
+        <p className="sh-sub">{examLine}</p>
       </header>
       {!catalog || !resume ? (
         <p className="sh-sub">{strings.loading}</p>

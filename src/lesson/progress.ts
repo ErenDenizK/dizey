@@ -8,6 +8,8 @@ export type LessonRecord = {
   doneAt: number | null
   /** First answer per question step: what was given and whether it was right. */
   answers: Record<string, { given: string; correct: boolean }>
+  /** Steps whose wrong first try was later fixed by a right first try on another visit (mistake log). */
+  cleared?: Record<string, number>
 }
 
 export const emptyRecord: LessonRecord = { at: null, doneAt: null, answers: {} }
@@ -38,6 +40,26 @@ export function recordAnswer(
 ): LessonRecord {
   if (record.answers[stepId]) return record
   return { ...record, answers: { ...record.answers, [stepId]: { given, correct } } }
+}
+
+/**
+ * Records a try. The first try of all is kept for the score; a right answer on the first try of a later
+ * visit clears an earlier mistake from the log.
+ */
+export function recordTry(
+  record: LessonRecord,
+  stepId: string,
+  given: string,
+  correct: boolean,
+  firstThisVisit: boolean,
+  now: number,
+): LessonRecord {
+  const earlier = record.answers[stepId]
+  if (!earlier) return recordAnswer(record, stepId, given, correct)
+  if (!earlier.correct && correct && firstThisVisit && !record.cleared?.[stepId]) {
+    return { ...record, cleared: { ...record.cleared, [stepId]: now } }
+  }
+  return record
 }
 
 export function firstTryScore(lesson: Lesson, record: LessonRecord): { correct: number; total: number } {

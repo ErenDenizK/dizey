@@ -73,6 +73,40 @@ test('a rebuilt lesson plays, checks answers and resumes where it was left', asy
   await expect(page.getByRole('link', { name: /^Derse gir: Determinant:/ })).toContainText('kaldığın yer')
 })
 
+test('a wrong first try lands in the mistake log and leaves it when fixed', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './map')
+  await page.getByRole('link', { name: /^Derse gir: Determinant:/ }).click()
+  const player = page.getByTestId('lesson-player')
+  const next = player.getByRole('button', { name: 'İleri' })
+  while (!(await player.getByRole('group').count())) await next.click()
+  await player.getByRole('group').getByRole('button').filter({ hasText: '26' }).click()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await page.getByRole('link', { name: 'Ben' }).click()
+  const log = page.getByRole('region', { name: 'Hata defteri' })
+  await expect(log).toContainText('İki çarpımı topladın')
+  // Back to that step: a right first try on this visit clears it.
+  await log.getByRole('link').first().click()
+  await page
+    .getByTestId('lesson-player')
+    .getByRole('group')
+    .getByRole('button')
+    .filter({ hasText: /^b/ })
+    .click()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await page.getByRole('link', { name: 'Ben' }).click()
+  await expect(page.getByRole('region', { name: 'Hata defteri' })).toContainText('Açık hata yok')
+})
+
+test('the exam line says "around" until a date is set', async ({ page }) => {
+  await openApp(page)
+  await expect(page.getByText('Vize 1 haftası 15 Kasım civarı')).toBeVisible()
+  await page.getByRole('link', { name: 'Ben' }).click()
+  await page.getByLabel('Vize 1 tarihi').fill('2026-11-19')
+  await page.getByRole('link', { name: 'Bugün' }).click()
+  await expect(page.getByText(/19 Kasım/)).toBeVisible()
+})
+
 test('an exam rehearsal runs, survives a reload and shows its result', async ({ page }) => {
   await openApp(page, './exam')
   await page.getByRole('button', { name: 'Başlat' }).first().click()
