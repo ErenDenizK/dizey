@@ -1,7 +1,12 @@
 /**
- * Motion vocabulary carried over unchanged from the earlier app's in-lesson engine, which Eren chose
- * to keep (2026-10-30). Spring presets: stiffness k (mass 1) and damping ratio zeta; durations come
- * from physics. Times in ms, distances in px.
+ * Motion vocabulary from the earlier app's in-lesson engine, which Eren chose to keep (2026-10-30).
+ * Spring presets: stiffness k (mass 1) and damping ratio zeta; durations come from physics.
+ * Times in ms, distances in px.
+ *
+ * These values are STARTING DEFAULTS, not settled (Eren, 2026-10-30): each one is reviewed on iPhone
+ * screen recordings, and every change is recorded in docs/research/motion-tuning.md with its reason.
+ * The principles stay fixed: one clock, a tap finishes motion, cause first, one bounce at a time.
+ * All tunable motion values live in this file only.
  */
 export const SPRINGS = {
   press: { k: 3800, zeta: 1 },
