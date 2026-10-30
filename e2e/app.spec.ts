@@ -65,7 +65,10 @@ test('a rebuilt lesson plays, checks answers and resumes where it was left', asy
   await next.click()
   const step = await player.getByRole('progressbar').getAttribute('aria-valuenow')
   await page.reload()
-  await expect(page.getByTestId('lesson-player').getByRole('progressbar')).toHaveAttribute('aria-valuenow', step ?? '')
+  await expect(page.getByTestId('lesson-player').getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    step ?? '',
+  )
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await expect(page.getByRole('link', { name: /^Derse gir: Determinant:/ })).toContainText('kaldığın yer')
 })
