@@ -124,6 +124,16 @@ function hasProperty(a: Matrix, is: Property, index?: number): boolean {
       return index
         ? M.equals(power(a, index), zero) && !M.equals(power(a, index - 1), zero)
         : M.equals(power(a, n), zero)
+    case 'diagonal':
+      return a.every((row, i) => row.every((v, j) => i === j || Q.isZero(v)))
+    case 'scalar':
+      return hasProperty(a, 'diagonal') && a.every((_, i) => Q.equals(M.at(a, i, i), M.at(a, 0, 0)))
+    case 'identity':
+      return M.equals(a, M.identity(n))
+    case 'upperTriangular':
+      return a.every((row, i) => row.every((v, j) => j >= i || Q.isZero(v)))
+    case 'lowerTriangular':
+      return a.every((row, i) => row.every((v, j) => j <= i || Q.isZero(v)))
     case 'periodic': {
       const limit = index ?? 24
       for (let k = 1; k < limit; k++) if (M.equals(power(a, k + 1), a)) return index === undefined
