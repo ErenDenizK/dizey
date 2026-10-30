@@ -145,6 +145,8 @@ function hasProperty(a: Matrix, is: Property, index?: number): boolean {
       return index
         ? M.equals(power(a, index), zero) && !M.equals(power(a, index - 1), zero)
         : M.equals(power(a, n), zero)
+    case 'singular':
+      return Q.isZero(M.determinant(a))
     case 'diagonal':
       return a.every((row, i) => row.every((v, j) => i === j || Q.isZero(v)))
     case 'scalar':
