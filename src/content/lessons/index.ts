@@ -4,6 +4,7 @@ import { d3DeterminantProperties } from './d3-determinant-properties'
 import { d4AdjugateInverse } from './d4-adjugate-inverse'
 import { m7SymmetricAntisymmetric } from './m7-symmetric-antisymmetric'
 import { m8PowerClasses } from './m8-power-classes'
+import { m9Orthogonal } from './m9-orthogonal'
 import type { Lesson } from './types'
 
 export type { Beat, Claim, Lesson, Step } from './types'
@@ -16,4 +17,5 @@ export const lessons: readonly Lesson[] = [
   d4AdjugateInverse,
   m7SymmetricAntisymmetric,
   m8PowerClasses,
+  m9Orthogonal,
 ]
