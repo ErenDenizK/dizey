@@ -44,4 +44,4 @@ task-level feedback without a running counter, honest scores in mock exams.
 
 ## Open
 
-- Whether Eren wants a visible count anyway (decision 0003 awaits his choice).
+- None for feedback: Eren accepted decision 0003 on 2026-10-30.

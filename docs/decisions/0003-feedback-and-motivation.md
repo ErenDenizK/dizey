@@ -1,6 +1,6 @@
 # 0003: Feedback and motivation, including wrong-answer counts
 
-- Status: proposed (awaiting Eren's choice)
+- Status: accepted (Eren, 2026-10-30)
 - Date: 2026-10-30
 - Ledger items: plan step 3; Eren's open question "should wrong-answer counts be shown?"
 
@@ -21,7 +21,7 @@ already ruled out by Eren; badges are allowed.
 
 ## Decision
 
-Proposed: the third option. In lessons, right/wrong is shown immediately and a wrong answer shows the step and the
+Eren chose the third option. In lessons, right/wrong is shown immediately and a wrong answer shows the step and the
 error type, with no running counter or lives. The end of a lesson lists skills that settled and skills sent to the
 error log. An error closes when the same skill is answered right on a later review; the log shows open errors and a
 "fixed" count. Mock exams show the real score, per-item mistakes and time. A stats screen with all raw data is
