@@ -21,7 +21,7 @@ Links to the Claude Docs are in project memory (`dizey-system-board`, `dizey-ope
 
 ## Non-negotiables
 
-1. **Nothing from the old project.** An earlier, abandoned attempt exists as an archive in project files. Its rules, skills, analyses, tools, design notes and code are not defaults and are not to be reused. Only raw source material (lecturer notes, board photos) may be consulted.
+1. **Nothing from the old project.** An earlier, abandoned attempt exists as an archive in project files. Its rules, skills, analyses, tools, design notes and code are not defaults and are not to be reused. Only raw source material (lecturer notes, board photos) may be consulted. One exception, chosen by Eren: the old app's in-lesson layer (step-by-step lesson presentation, animation system, sounds) is kept and rebuilt to current standards; everything outside lessons is designed from scratch.
 2. **Technical English, user Turkish.** Code, identifiers, comments, file names, commits, branches, PRs, docs in this repo, skills: English only. App UI text and lesson content: Turkish, kept in content files separate from code (English keys, Turkish values). Talking to Eren: Turkish.
 3. **Ask, don't assume.** If a requirement is ambiguous, ask Eren. Eren dictates; correct obvious speech-to-text errors and confirm the ones you are unsure of.
 4. **Nothing becomes a rule without weighing it.** Follow `.claude/skills/principle-adoption` before adding any principle, including your own "from now on..." ideas.
