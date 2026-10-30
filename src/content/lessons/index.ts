@@ -5,6 +5,7 @@ import { d4AdjugateInverse } from './d4-adjugate-inverse'
 import { m7SymmetricAntisymmetric } from './m7-symmetric-antisymmetric'
 import { m8PowerClasses } from './m8-power-classes'
 import { m9Orthogonal } from './m9-orthogonal'
+import { r4Inverse } from './r4-inverse'
 import type { Lesson } from './types'
 
 export type { Beat, Claim, Lesson, Step } from './types'
@@ -18,4 +19,5 @@ export const lessons: readonly Lesson[] = [
   m7SymmetricAntisymmetric,
   m8PowerClasses,
   m9Orthogonal,
+  r4Inverse,
 ]

@@ -29,6 +29,17 @@ export interface Frame {
   readonly note?: string
 }
 
+/** One elementary row operation, rows 0-based, factors as exact rationals ("-1/4"). Shown as R₂ → R₂ − 3R₁. */
+export type RowOp =
+  | { readonly kind: 'swap'; readonly a: number; readonly b: number }
+  | { readonly kind: 'scale'; readonly row: number; readonly factor: string }
+  | {
+      readonly kind: 'addMultiple'
+      readonly target: number
+      readonly source: number
+      readonly factor: string
+    }
+
 export type Beat =
   /** 2×2 rule: main diagonal product, other diagonal product, difference into `result`. */
   | { readonly kind: 'det2'; readonly matrix: string }
@@ -44,6 +55,16 @@ export type Beat =
       readonly matrix: string
       readonly along: 'row' | 'col'
       readonly index: number
+    }
+  /**
+   * Row operations applied one at a time to `matrix` (an augmented matrix keeps its bar); the stage
+   * ends on the lesson matrix `result`, which the tests check is exactly what the operations produce.
+   */
+  | {
+      readonly kind: 'rowOps'
+      readonly matrix: string
+      readonly ops: readonly RowOp[]
+      readonly result: string
     }
   /** Highlight frames played in order. */
   | { readonly kind: 'frames'; readonly frames: readonly Frame[] }
@@ -170,6 +191,8 @@ export type Claim =
       readonly index?: number
       readonly holds?: false
     } & Where)
+  /** Choice steps: exactly the answer option (an expression such as "$\\frac{1}{3}(5I - 2A^2)$") equals `expr`. */
+  | ({ readonly kind: 'optionExpr'; readonly expr: string } & Where)
   /** The scalar unknown `{variable}` makes the expression the zero matrix exactly at `equals`. */
   | ({
       readonly kind: 'solve'

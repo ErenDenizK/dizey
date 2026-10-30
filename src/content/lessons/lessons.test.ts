@@ -5,7 +5,7 @@ import type { Rational } from '../../lib/math/rational'
 import * as Q from '../../lib/math/rational'
 import { evaluate, evaluateMatrix } from './expression'
 import { lessons } from './index'
-import type { Beat, Claim, Derived, Lesson, MatrixBlock, Property, Step } from './types'
+import type { Beat, Claim, Derived, Lesson, MatrixBlock, Property, RowOp, Step } from './types'
 
 // Every lesson: structure is sound, and every claimed number is recomputed with the math core.
 
@@ -132,6 +132,21 @@ function hasProperty(a: Matrix, is: Property, index?: number): boolean {
   }
 }
 
+function rowOp(op: RowOp): M.RowOperation {
+  if (op.kind === 'swap') return op
+  return { ...op, factor: parse(op.factor) }
+}
+
+function checkBeat(lesson: Lesson, beat: Beat): void {
+  if (beat.kind === 'sequence') for (const b of beat.beats) checkBeat(lesson, b)
+  if (beat.kind !== 'rowOps') return
+  let a = numeric(matrixOf(lesson, beat.matrix))
+  for (const op of beat.ops) a = M.applyRowOperation(a, rowOp(op))
+  expect(formatMatrix(a), `${beat.matrix} → ${beat.result}`).toEqual(
+    formatMatrix(numeric(matrixOf(lesson, beat.result))),
+  )
+}
+
 function checkClaim(lesson: Lesson, claim: Claim): void {
   if (claim.kind === 'expr') {
     const rows = formatRows(claim.equals)
@@ -151,7 +166,7 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
     expect(hasProperty(a, claim.is, claim.index), `${claim.expr} ${claim.is}`).toBe(claim.holds ?? true)
     return
   }
-  if (claim.kind === 'optionProperty') return
+  if (claim.kind === 'optionProperty' || claim.kind === 'optionExpr') return
   if (claim.kind === 'solve') {
     const matrices = scope(lesson, claim.where)
     const isZeroAt = (value: Rational) => {
@@ -238,6 +253,8 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
 
 function beatMatrices(beat: Beat): string[] {
   switch (beat.kind) {
+    case 'rowOps':
+      return [beat.matrix, beat.result]
     case 'sequence':
       return beat.beats.flatMap(beatMatrices)
     case 'frames':
@@ -330,6 +347,13 @@ describe('lessons', () => {
         for (const step of lesson.steps) for (const claim of step.claims ?? []) checkClaim(lesson, claim)
       })
 
+      it('replays every row operation to its stated result', () => {
+        for (const step of lesson.steps) {
+          if (step.kind === 'explain' && step.beat) checkBeat(lesson, step.beat)
+          if ('reveal' in step && step.reveal) checkBeat(lesson, step.reveal)
+        }
+      })
+
       it('keys every exercise to its claim', () => {
         for (const step of lesson.steps) {
           const numericClaims = (step.claims ?? []).filter(
@@ -396,6 +420,20 @@ describe('lessons', () => {
                   ? numeric(shown)
                   : valueMatrix(first?.kind === 'text' ? first.text : '', matrices)
               return hasProperty(a, optionClaim.is, optionClaim.index) === (optionClaim.holds ?? true)
+            })
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          const exprClaim = step.claims?.find((c) => c.kind === 'optionExpr')
+          if (step.kind === 'choice' && exprClaim?.kind === 'optionExpr') {
+            const matrices = scope(lesson, exprClaim.where)
+            const target = JSON.stringify(formatMatrix(valueMatrix(exprClaim.expr, matrices)))
+            const matching = step.options.filter((o) => {
+              const first = o.content[0]
+              const shown = valueMatrix(first?.kind === 'text' ? first.text : '', matrices)
+              return JSON.stringify(formatMatrix(shown)) === target
             })
             expect(
               matching.map((o) => o.key),
