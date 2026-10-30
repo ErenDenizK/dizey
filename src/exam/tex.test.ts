@@ -49,3 +49,15 @@ describe('question bank TeX', () => {
     expect(broken).toEqual([])
   })
 })
+
+describe('splitTones', () => {
+  it('reads highlight markup around text and TeX', async () => {
+    const { splitTones } = await import('./tex')
+    expect(splitTones('{row}Ana köşegen{/row} $ad$, {ok}tekil{/ok}dir')).toEqual([
+      { tone: 'row', value: 'Ana köşegen' },
+      { tone: null, value: ' $ad$, ' },
+      { tone: 'ok', value: 'tekil' },
+      { tone: null, value: 'dir' },
+    ])
+  })
+})

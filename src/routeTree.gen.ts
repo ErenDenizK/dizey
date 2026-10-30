@@ -15,6 +15,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as ExamIndexRouteImport } from './routes/exam.index'
 import { Route as ExamResultRouteImport } from './routes/exam.result'
 import { Route as ExamRunRouteImport } from './routes/exam.run'
+import { Route as LessonIdRouteImport } from './routes/lesson.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -46,6 +47,11 @@ const ExamRunRoute = ExamRunRouteImport.update({
   path: '/exam/run',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LessonIdRoute = LessonIdRouteImport.update({
+  id: '/lesson/$id',
+  path: '/lesson/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
+  '/lesson/$id': typeof LessonIdRoute
   '/exam/': typeof ExamIndexRoute
 }
 export interface FileRoutesByTo {
@@ -61,6 +68,7 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
+  '/lesson/$id': typeof LessonIdRoute
   '/exam': typeof ExamIndexRoute
 }
 export interface FileRoutesById {
@@ -70,15 +78,37 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
+  '/lesson/$id': typeof LessonIdRoute
   '/exam/': typeof ExamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/map' | '/me' | '/exam/result' | '/exam/run' | '/exam/'
+  fullPaths:
+    | '/'
+    | '/map'
+    | '/me'
+    | '/exam/result'
+    | '/exam/run'
+    | '/lesson/$id'
+    | '/exam/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/map' | '/me' | '/exam/result' | '/exam/run' | '/exam'
+  to:
+    | '/'
+    | '/map'
+    | '/me'
+    | '/exam/result'
+    | '/exam/run'
+    | '/lesson/$id'
+    | '/exam'
   id:
-    '__root__' | '/' | '/map' | '/me' | '/exam/result' | '/exam/run' | '/exam/'
+    | '__root__'
+    | '/'
+    | '/map'
+    | '/me'
+    | '/exam/result'
+    | '/exam/run'
+    | '/lesson/$id'
+    | '/exam/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -87,6 +117,7 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   ExamResultRoute: typeof ExamResultRoute
   ExamRunRoute: typeof ExamRunRoute
+  LessonIdRoute: typeof LessonIdRoute
   ExamIndexRoute: typeof ExamIndexRoute
 }
 
@@ -134,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExamRunRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lesson/$id': {
+      id: '/lesson/$id'
+      path: '/lesson/$id'
+      fullPath: '/lesson/$id'
+      preLoaderRoute: typeof LessonIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -143,6 +181,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   ExamResultRoute: ExamResultRoute,
   ExamRunRoute: ExamRunRoute,
+  LessonIdRoute: LessonIdRoute,
   ExamIndexRoute: ExamIndexRoute,
 }
 export const routeTree = rootRouteImport
