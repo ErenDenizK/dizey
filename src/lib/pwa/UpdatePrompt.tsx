@@ -11,7 +11,7 @@ export function UpdatePrompt() {
   return (
     <div
       role="status"
-      className="fixed inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 rounded-card bg-ink px-4 py-3 text-paper"
+      className="fixed z-30 inset-x-4 bottom-[max(1rem,env(safe-area-inset-bottom))] flex items-center justify-between gap-3 rounded-card bg-ink px-4 py-3 text-paper"
     >
       <span>{strings.updateReady}</span>
       <button

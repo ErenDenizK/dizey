@@ -1,6 +1,7 @@
 // Kept v21 lesson layer (engine, lessons, sound), moved here unchanged except for storage access.
 // See src/legacy/README.md before editing.
 import { versionLine } from './build-line'
+import { shellBridge } from './bridge'
 import { appStorage } from './storage'
 
 /* ---------- Content (lesson data; the engine below never hard-codes lesson text) ---------- */
@@ -7523,7 +7524,8 @@ function feelLaunchPlay(kind) {
 }
 
 function feelLaunchBoot(lastSeen) {
-  if (window.SATIR_QA) return;
+  // The launch greeting belongs to the v21 home, which the new shell replaces.
+  if (window.SATIR_QA || shellBridge.embedded) return;
   const kind = feelLaunchKind(lastSeen, Date.now());
   if (kind !== 'none') feelLaunchPlay(kind);
 }
@@ -14000,6 +14002,19 @@ function openMap() {
   stopMotion();
   const completed = justCompleted;
   justCompleted = null;
+  if (shellBridge.embedded) {
+    // New shell: the lesson fades out and the shell takes over. The v21 map stays hidden by CSS but
+    // is marked visible, so the next open plays its shared-element morph from the shell's card.
+    els.mapView.hidden = false;
+    feelEmit('view', 'map');
+    if (!fromLesson) return;
+    els.lessonView.inert = true;
+    motion.to(els.lessonView, {opacity: 0}, reducedMotion.matches ? 'fade' : 'leave', {onArrive: () => {
+      settleLesson(true);
+      shellBridge.exit(completed);
+    }});
+    return;
+  }
   els.mapView.hidden = false;
   if (fromLesson && completed) activeUnit = unitOf(completed);
   renderMap({pendingStamp: completed});
@@ -14471,6 +14486,12 @@ renderMap();
     clock.after(CHOREO.fontWait, start);
   }
 }
+
+shellBridge.publish({
+  units: UNITS,
+  ready: LESSON_ORDER,
+  steps: Object.fromEntries(LESSON_ORDER.map((code) => [code, LESSONS[code].steps.length])),
+});
 
 /* Test hooks for tools/design-qa.js (no effect on normal use). */
 window.satir = {

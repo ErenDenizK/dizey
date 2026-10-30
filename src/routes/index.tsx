@@ -1,4 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { LegacyApp } from '../legacy/LegacyApp'
+import { TodayView } from '../shell/TodayView'
 
-export const Route = createFileRoute('/')({ component: LegacyApp })
+export const Route = createFileRoute('/')({ component: TodayView })

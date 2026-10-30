@@ -1,0 +1,559 @@
+/*
+ * New shell (Today, Map, Me), from the design thread's prototype. INTERIM colours: they come from the kept lesson
+ * layer's tokens (v21.css), so shell and lesson speak one language and share light/dark switching.
+ * All motion runs on src/engine springs (shell/motion.ts); there are no CSS transitions here.
+ */
+:root {
+  --sh-bg: var(--neutral-2);
+  --sh-surface: var(--neutral-1);
+  --sh-ink: var(--neutral-12);
+  --sh-muted: var(--neutral-11);
+  --sh-soft: var(--neutral-3);
+  --sh-soft-strong: var(--neutral-5);
+  --sh-line: var(--neutral-4);
+  --sh-action: var(--brand-9);
+  --sh-on-action: var(--on-brand);
+  --sh-ok: var(--success-11);
+  --sh-ok-fill: var(--success-9);
+  --sh-shadow: rgba(48, 46, 41, 0.08);
+  --sh-scrim: rgba(48, 46, 41, 0.28);
+  --sh-tabbar-h: 58px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --sh-shadow: rgba(0, 0, 0, 0.35);
+    --sh-scrim: rgba(0, 0, 0, 0.5);
+  }
+}
+
+#root {
+  height: 100%;
+}
+.sh-shell {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--sh-bg);
+  color: var(--sh-ink);
+  font-family: "Onest", system-ui, -apple-system, sans-serif;
+}
+.sh-main {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  display: flex;
+}
+.sh-view {
+  flex: 1;
+  width: 100%;
+  max-width: 440px;
+  margin-inline: auto;
+  padding: max(20px, env(safe-area-inset-top)) max(20px, env(safe-area-inset-right)) 24px
+    max(20px, env(safe-area-inset-left));
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.sh-view header {
+  padding-top: 12px;
+}
+
+/* tab bar */
+.sh-tabbar {
+  flex: none;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  padding: 6px 12px max(8px, env(safe-area-inset-bottom));
+  background: var(--sh-surface);
+  border-top: 1px solid var(--sh-line);
+}
+.sh-tab {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+  min-height: 48px;
+  padding-top: 4px;
+  font-size: 0.75rem;
+  color: var(--sh-muted);
+  text-decoration: none;
+}
+.sh-tab svg {
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+}
+.sh-tab[aria-current="page"] {
+  color: var(--sh-ink);
+  font-weight: 600;
+}
+
+/* type */
+.sh-title {
+  margin: 0;
+  font-size: 1.9rem;
+  line-height: 1.15;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.sh-sub {
+  margin: 4px 0 0;
+  color: var(--sh-muted);
+  font-size: 0.92rem;
+}
+.sh-label {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--sh-muted);
+}
+.sh-muted {
+  color: var(--sh-muted);
+}
+
+/* surfaces and buttons */
+.sh-card {
+  background: var(--sh-surface);
+  border-radius: 24px;
+  box-shadow: 0 1px 2px var(--sh-shadow);
+}
+.sh-btn {
+  width: 100%;
+  min-height: 56px;
+  border: 0;
+  border-radius: 16px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.sh-btn--primary {
+  background: var(--sh-action);
+  color: var(--sh-on-action);
+}
+.sh-btn--soft {
+  background: var(--sh-soft);
+  color: var(--sh-ink);
+}
+.sh-link {
+  min-height: 44px;
+  border: 0;
+  background: none;
+  color: var(--sh-muted);
+  font-size: 0.95rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.sh-spacer {
+  flex: 1;
+}
+.sh-dock {
+  position: sticky;
+  bottom: 0;
+  padding-top: 8px;
+  background: linear-gradient(transparent, var(--sh-bg) 30%);
+}
+.sh-chev {
+  color: var(--sh-muted);
+}
+
+/* mastery glyph */
+.sh-glyph {
+  display: grid;
+  grid-template-columns: repeat(2, 7px);
+  gap: 2px;
+  flex: none;
+}
+.sh-glyph i {
+  width: 7px;
+  height: 7px;
+  border-radius: 2px;
+  border: 1.25px solid var(--sh-soft-strong);
+}
+.sh-glyph i.on {
+  background: var(--sh-ink);
+  border-color: var(--sh-ink);
+}
+.sh-glyph[data-state="soon"] i {
+  border-style: dashed;
+}
+
+/* Today */
+.sh-cont {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  padding: 20px 18px 18px;
+  border: 0;
+  text-align: left;
+  color: inherit;
+  cursor: pointer;
+}
+.sh-cont .sh-label {
+  margin: 0;
+}
+.sh-cont__code {
+  font-size: 0.85rem;
+  color: var(--sh-muted);
+}
+.sh-cont__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.sh-cont__meta b {
+  font-size: 1.3rem;
+  line-height: 1.25;
+}
+.sh-cont__meta span {
+  flex: none;
+  font-size: 0.85rem;
+  color: var(--sh-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sh-pbar {
+  display: block;
+  height: 4px;
+  margin-top: 6px;
+  border-radius: 2px;
+  background: var(--sh-soft);
+  overflow: hidden;
+}
+.sh-pbar__fill {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+  background: var(--sh-action);
+}
+.sh-rows {
+  display: grid;
+  padding: 4px 14px;
+}
+.sh-row {
+  display: grid;
+  grid-template-columns: 40px 1fr auto;
+  gap: 12px;
+  align-items: center;
+  min-height: 60px;
+  padding: 12px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--sh-line);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sh-row:last-child {
+  border-bottom: 0;
+}
+.sh-row__ic {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 36px;
+  border-radius: 12px;
+  background: var(--sh-soft);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.sh-row__t {
+  display: block;
+  font-weight: 500;
+}
+.sh-row__d {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--sh-muted);
+}
+
+/* Map */
+.sh-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.78rem;
+  color: var(--sh-muted);
+}
+.sh-legend li {
+  display: inline-flex;
+  gap: 6px;
+  align-items: center;
+}
+.sh-group-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  margin: 4px 0 6px;
+}
+.sh-group-head h2 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.sh-group-head span {
+  font-size: 0.8rem;
+  color: var(--sh-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sh-nodes {
+  padding: 0 12px;
+}
+.sh-node {
+  display: grid;
+  grid-template-columns: 18px 34px 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+  min-height: 52px;
+  padding: 11px 2px;
+  border: 0;
+  border-bottom: 1px solid var(--sh-line);
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.sh-node:last-child {
+  border-bottom: 0;
+}
+.sh-node__id {
+  font-size: 0.8rem;
+  color: var(--sh-muted);
+  font-variant-numeric: tabular-nums;
+}
+.sh-node__nm {
+  font-size: 0.97rem;
+}
+.sh-node__st {
+  font-size: 0.78rem;
+  color: var(--sh-muted);
+}
+.sh-node[data-state="current"] .sh-node__nm {
+  font-weight: 600;
+}
+.sh-node[data-state="current"] .sh-node__st {
+  color: var(--sh-ink);
+}
+.sh-node:disabled {
+  cursor: default;
+}
+.sh-node:disabled .sh-node__nm {
+  color: var(--sh-muted);
+}
+
+/* sheet */
+.sh-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 5;
+  border: 0;
+  padding: 0;
+  background: var(--sh-scrim);
+  opacity: 0;
+  visibility: hidden;
+}
+.sh-sheet {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 6;
+  display: grid;
+  gap: 14px;
+  max-width: 440px;
+  margin-inline: auto;
+  padding: 10px 20px max(28px, env(safe-area-inset-bottom));
+  border-radius: 24px 24px 0 0;
+  background: var(--sh-surface);
+  visibility: hidden;
+}
+.sh-sheet h3 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+.sh-sheet .sh-sub {
+  margin: 0;
+}
+.sh-grab {
+  justify-self: center;
+  width: 36px;
+  height: 5px;
+  border-radius: 3px;
+  background: var(--sh-soft-strong);
+}
+.sh-kv {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  gap: 6px 12px;
+  margin: 0;
+  font-size: 0.92rem;
+}
+.sh-kv dt {
+  color: var(--sh-muted);
+}
+.sh-kv dd {
+  margin: 0;
+}
+
+/* Me */
+.sh-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px;
+}
+.sh-stat {
+  display: grid;
+  gap: 4px;
+  justify-items: start;
+}
+.sh-stat b {
+  font-size: 1.4rem;
+  font-variant-numeric: tabular-nums;
+}
+.sh-stat span {
+  font-size: 0.75rem;
+  line-height: 1.2;
+  color: var(--sh-muted);
+}
+.sh-empty {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+.sh-empty p {
+  margin: 0;
+  font-size: 0.92rem;
+  color: var(--sh-muted);
+}
+.sh-settings {
+  padding: 0 14px;
+}
+.sh-set {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 56px;
+  padding: 14px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--sh-line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+}
+.sh-set--last {
+  border-bottom: 0;
+}
+.sh-set--button {
+  cursor: pointer;
+}
+.sh-set small {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--sh-muted);
+}
+.sh-toggle {
+  flex: none;
+  margin: 0;
+  accent-color: var(--sh-ok-fill);
+}
+.sh-note {
+  display: grid;
+  gap: 10px;
+  margin: 0 0 14px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--sh-soft);
+  font-size: 0.9rem;
+}
+.sh-note p {
+  margin: 0;
+}
+.sh-note__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.sh-note__actions .sh-btn {
+  min-height: 48px;
+}
+.sh-version {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--sh-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* first launch */
+.sh-onb {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: max(56px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom));
+  background: var(--sh-bg);
+  color: var(--sh-ink);
+  font-family: "Onest", system-ui, -apple-system, sans-serif;
+}
+.sh-onb__intro {
+  display: grid;
+  gap: 8px;
+}
+.sh-onb h1 {
+  margin: 0;
+  font-size: 1.7rem;
+  line-height: 1.2;
+}
+.sh-onb p {
+  margin: 0;
+  color: var(--sh-muted);
+}
+.sh-onb__steps {
+  margin: 0;
+  padding: 4px 16px;
+  list-style: none;
+}
+.sh-onb__steps li {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--sh-line);
+}
+.sh-onb__steps li:last-child {
+  border-bottom: 0;
+}
+.sh-onb__n {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--sh-soft);
+  font-weight: 600;
+}
+.sh-onb svg {
+  width: 18px;
+  height: 18px;
+  vertical-align: -3px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}

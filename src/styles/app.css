@@ -3,29 +3,23 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 
 /*
- * Tailwind's default theme is removed: only Dizey's tokens exist as utilities.
- * PLACEHOLDER values until the design direction defines the real tokens.
+ * INTERIM until the motion and visual system lands its token set. Tailwind's default theme is
+ * removed: only Dizey's tokens exist as utilities. They point at the
+ * kept lesson layer's colour roles (src/legacy/v21.css), which also switch light and dark, so the
+ * shell, these utilities and the lessons share one palette. Contrast: src/shell/contrast.test.ts.
  */
 @theme {
   --*: initial;
-  --color-paper: #ffffff;
-  --color-ink: #16181d;
-  --color-muted: #5b616e;
-  --font-sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --color-paper: var(--neutral-1);
+  --color-ink: var(--neutral-12);
+  --color-muted: var(--neutral-11);
+  --font-sans: "Onest", system-ui, -apple-system, sans-serif;
   --text-sm: 0.875rem;
   --text-lead: 1.125rem;
   --text-title: 2rem;
   --spacing: 0.25rem;
   --radius-card: 1rem;
   --font-weight-semibold: 600;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-paper: #101216;
-    --color-ink: #eceef2;
-    --color-muted: #a3a9b6;
-  }
 }
 
 html {

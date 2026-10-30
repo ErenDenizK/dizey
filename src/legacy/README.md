@@ -11,10 +11,15 @@ Eren chose to keep the earlier app's in-lesson presentation, animation engine an
 | `fonts/`          | Onest, self-hosted instead of Google Fonts so the app works offline                   |
 
 Changes from v21, and only these: storage goes through `storage.ts` (namespaced per deployment
-channel), and Onest is loaded locally. Everything else is byte-for-byte.
+channel), Onest is loaded locally, and the new shell embeds the layer through `bridge.ts` (v21
+publishes its lesson catalog there, closing a lesson hands control back to the shell, and the v21
+launch greeting is off). `LessonLayer.tsx` mounts it once, above the shell; the v21 course map stays
+in the DOM but hidden.
 
-Plan: the new shell (home, map, profile) replaces the v21 map; the lesson layer then moves piece by
-piece into TypeScript (`src/engine/` already holds the clock and springs), each step under tests that
-compare against this version. Until a piece has moved, fix bugs here and keep the diff small.
+Status (Eren, 2026-10-30): this wrapped layer is a temporary reference only. The lesson layer is to be
+rebuilt from scratch in TypeScript, taking only the logic from here, on the new motion and visual
+system, and verified frame by frame.
+
+Until the rebuild replaces it, fix bugs here and keep the diff small.
 
 `window.satir` is the v21 test hook (open a lesson, advance, answer, finish); E2E uses it.

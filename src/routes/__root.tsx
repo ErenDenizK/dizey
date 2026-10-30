@@ -1,25 +1,25 @@
-import { createRootRoute, Link, Outlet } from '@tanstack/react-router'
+import { createRootRoute, Link } from '@tanstack/react-router'
 import { strings } from '../content/strings'
 import { buildInfo } from '../lib/build-info'
 import { UpdatePrompt } from '../lib/pwa/UpdatePrompt'
+import { Shell } from '../shell/Shell'
 
 export const Route = createRootRoute({
   component: RootLayout,
   notFoundComponent: () => (
-    <main className="p-6">
+    <div className="sh-view">
       <p>{strings.notFound}</p>
-      <Link to="/" className="underline">
+      <Link to="/" className="sh-link">
         {strings.goHome}
       </Link>
-    </main>
+    </div>
   ),
 })
 
-/** The version line lives on the Profil page of the kept v21 layer until the new shell lands. */
 function RootLayout() {
   return (
     <>
-      <Outlet />
+      <Shell />
       {buildInfo.channel === 'production' ? <UpdatePrompt /> : null}
     </>
   )
