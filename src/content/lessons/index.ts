@@ -15,6 +15,7 @@ import { r4Inverse } from './r4-inverse'
 import { s1LinearSystems } from './s1-linear-systems'
 import { s2ParametricSystems } from './s2-parametric-systems'
 import { s3HomogeneousSystems } from './s3-homogeneous-systems'
+import { s4Cramer } from './s4-cramer'
 import type { Lesson } from './types'
 
 export type { Beat, Claim, Lesson, Step } from './types'
@@ -38,4 +39,5 @@ export const lessons: readonly Lesson[] = [
   m1ReadingAMatrix,
   m2MatrixTypes,
   m6Transpose,
+  s4Cramer,
 ]
