@@ -1,0 +1,1248 @@
+/* Satır page styles. One fixed screen, never scrolls. Rows: top bar (fixed) / stage (flexible, holds
+   persistent math objects) / narration (content-sized) / dock (fixed actions in the thumb zone).
+
+   Design system: design/SATIR_DESIGN.md. Every raw value lives in the token layer below, in three
+   tiers: palette (generated from design-research/data/tokens.json by tools/build-preview.py),
+   semantic roles (the only tokens components may use for colour), component tokens (sizes owned by
+   one component). Components below the layer use var() only; tools/token-lint.js enforces this. */
+
+/* @tokens begin */
+/* Tokens: Defter (provisional, 2026-10-26) */
+:root { --neutral-1: #fdfcf8; --neutral-2: #f9f6f2; --neutral-3: #f1eee9; --neutral-4: #e9e6e0; --neutral-5: #e0ddd7; --neutral-6: #d6d3cd; --neutral-7: #c9c6bf; --neutral-8: #b4b1a9; --neutral-9: #78746d; --neutral-10: #6d6a63; --neutral-11: #6a6761; --neutral-12: #302e29; --on-neutral: #ffffff; --brand-1: #fbfcfd; --brand-2: #f6f7f9; --brand-3: #eceff3; --brand-4: #e2e6ee; --brand-5: #d8dee7; --brand-6: #cdd4e0; --brand-7: #bec6d6; --brand-8: #a7b2c5; --brand-9: #29354d; --brand-10: #212d42; --brand-11: #5c687d; --brand-12: #282e38; --on-brand: #ffffff; --accent-1: #fcfcf9; --accent-2: #f8f7f1; --accent-3: #f1efe2; --accent-4: #eae7d2; --accent-5: #e3dec2; --accent-6: #dbd5b0; --accent-7: #cfc899; --accent-8: #bdb375; --accent-9: #f0e07f; --accent-10: #e4d578; --accent-11: #756816; --accent-12: #342e09; --on-accent: #111318; --success-1: #f9fdfb; --success-2: #f0f9f5; --success-3: #e1f4ec; --success-4: #d0eee2; --success-5: #c0e8d7; --success-6: #ade1cc; --success-7: #93d7bc; --success-8: #6ac6a5; --success-9: #1acf9f; --success-10: #14c295; --success-11: #007a5c; --success-12: #003728; --on-success: #111318; --warning-1: #fefbf8; --warning-2: #fbf6ef; --warning-3: #f8eddd; --warning-4: #f6e3cb; --warning-5: #f2d9b8; --warning-6: #edcea4; --warning-7: #e6bf89; --warning-8: #daa75e; --warning-9: #f5a91f; --warning-10: #e79f1b; --warning-11: #8b5d00; --warning-12: #402800; --on-warning: #111318; --danger-1: #fffbfa; --danger-2: #fff4f3; --danger-3: #ffe9e6; --danger-4: #ffddda; --danger-5: #ffd1cc; --danger-6: #ffc2bc; --danger-7: #ffaea6; --danger-8: #fc8d85; --danger-9: #c21725; --danger-10: #b20a1e; --danger-11: #b23333; --danger-12: #521615; --on-danger: #ffffff; --row-1: #fafcff; --row-2: #f2f7fe; --row-3: #e4f0ff; --row-4: #d6e8ff; --row-5: #c8e0ff; --row-6: #b7d6ff; --row-7: #a2c9fc; --row-8: #81b4f5; --row-9: #0961bb; --row-10: #0057ac; --row-11: #2b68b1; --row-12: #122e51; --on-row: #ffffff; --column-1: #fcfbfe; --column-2: #f8f5fd; --column-3: #f0ecfb; --column-4: #e9e2fa; --column-5: #e1d7f7; --column-6: #d9ccf5; --column-7: #cdbcef; --column-8: #baa4e5; --column-9: #c4a3ff; --column-10: #ba98f4; --column-11: #72569f; --column-12: #332649; --on-column: #111318; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --neutral-1: #141310; --neutral-2: #1a1815; --neutral-3: #22201c; --neutral-4: #2a2824; --neutral-5: #33312c; --neutral-6: #3d3b35; --neutral-7: #4c4943; --neutral-8: #605d57; --neutral-9: #78746d; --neutral-10: #827e77; --neutral-11: #c1bdb6; --neutral-12: #efece7; --on-neutral: #ffffff; --brand-1: #121313; --brand-2: #17181a; --brand-3: #1f2024; --brand-4: #25282e; --brand-5: #2d3138; --brand-6: #363b45; --brand-7: #424956; --brand-8: #545e6f; --brand-9: #cedffd; --brand-10: #deeaff; --brand-11: #b1bed6; --brand-12: #e6edfb; --on-brand: #111318; --accent-1: #131311; --accent-2: #191814; --accent-3: #222117; --accent-4: #2c2918; --accent-5: #35311a; --accent-6: #413c1c; --accent-7: #514a1f; --accent-8: #685e21; --accent-9: #f0e07f; --accent-10: #fbec8f; --accent-11: #ccc073; --accent-12: #f5eec5; --on-accent: #111318; --success-1: #111312; --success-2: #141a17; --success-3: #16241e; --success-4: #152e25; --success-5: #14392c; --success-6: #114535; --success-7: #0a5641; --success-8: #006f53; --success-9: #1acf9f; --success-10: #3fd9aa; --success-11: #60d7af; --success-12: #c1fce4; --on-success: #111318; --warning-1: #141210; --warning-2: #1b1813; --warning-3: #271f13; --warning-4: #332612; --warning-5: #402d10; --warning-6: #4f350c; --warning-7: #634104; --warning-8: #7e5400; --warning-9: #f5a91f; --warning-10: #ffb63f; --warning-11: #efb153; --warning-12: #ffe9cc; --on-warning: #111318; --danger-1: #151211; --danger-2: #1e1615; --danger-3: #2d1b19; --danger-4: #3d1e1c; --danger-5: #4c2220; --danger-6: #5f2724; --danger-7: #772e2b; --danger-8: #9c3634; --danger-9: #c21725; --danger-10: #cb2f33; --danger-11: #ffa098; --danger-12: #ffe6e4; --on-danger: #ffffff; --row-1: #111315; --row-2: #15191d; --row-3: #19212c; --row-4: #1b293b; --row-5: #1e324a; --row-6: #223c5d; --row-7: #284a75; --row-8: #2f5e99; --row-9: #0961bb; --row-10: #216dc3; --row-11: #91c1ff; --row-12: #e1eeff; --on-row: #ffffff; --column-1: #131214; --column-2: #19171c; --column-3: #221e29; --column-4: #2b2537; --column-5: #342c44; --column-6: #403455; --column-7: #4f3f6a; --column-8: #66508b; --column-9: #c4a3ff; --column-10: #cdb2ff; --column-11: #c9adfd; --column-12: #f0e9ff; --on-column: #111318; color-scheme: dark; }
+}
+:root[data-theme="dark"] { --neutral-1: #141310; --neutral-2: #1a1815; --neutral-3: #22201c; --neutral-4: #2a2824; --neutral-5: #33312c; --neutral-6: #3d3b35; --neutral-7: #4c4943; --neutral-8: #605d57; --neutral-9: #78746d; --neutral-10: #827e77; --neutral-11: #c1bdb6; --neutral-12: #efece7; --on-neutral: #ffffff; --brand-1: #121313; --brand-2: #17181a; --brand-3: #1f2024; --brand-4: #25282e; --brand-5: #2d3138; --brand-6: #363b45; --brand-7: #424956; --brand-8: #545e6f; --brand-9: #cedffd; --brand-10: #deeaff; --brand-11: #b1bed6; --brand-12: #e6edfb; --on-brand: #111318; --accent-1: #131311; --accent-2: #191814; --accent-3: #222117; --accent-4: #2c2918; --accent-5: #35311a; --accent-6: #413c1c; --accent-7: #514a1f; --accent-8: #685e21; --accent-9: #f0e07f; --accent-10: #fbec8f; --accent-11: #ccc073; --accent-12: #f5eec5; --on-accent: #111318; --success-1: #111312; --success-2: #141a17; --success-3: #16241e; --success-4: #152e25; --success-5: #14392c; --success-6: #114535; --success-7: #0a5641; --success-8: #006f53; --success-9: #1acf9f; --success-10: #3fd9aa; --success-11: #60d7af; --success-12: #c1fce4; --on-success: #111318; --warning-1: #141210; --warning-2: #1b1813; --warning-3: #271f13; --warning-4: #332612; --warning-5: #402d10; --warning-6: #4f350c; --warning-7: #634104; --warning-8: #7e5400; --warning-9: #f5a91f; --warning-10: #ffb63f; --warning-11: #efb153; --warning-12: #ffe9cc; --on-warning: #111318; --danger-1: #151211; --danger-2: #1e1615; --danger-3: #2d1b19; --danger-4: #3d1e1c; --danger-5: #4c2220; --danger-6: #5f2724; --danger-7: #772e2b; --danger-8: #9c3634; --danger-9: #c21725; --danger-10: #cb2f33; --danger-11: #ffa098; --danger-12: #ffe6e4; --on-danger: #ffffff; --row-1: #111315; --row-2: #15191d; --row-3: #19212c; --row-4: #1b293b; --row-5: #1e324a; --row-6: #223c5d; --row-7: #284a75; --row-8: #2f5e99; --row-9: #0961bb; --row-10: #216dc3; --row-11: #91c1ff; --row-12: #e1eeff; --on-row: #ffffff; --column-1: #131214; --column-2: #19171c; --column-3: #221e29; --column-4: #2b2537; --column-5: #342c44; --column-6: #403455; --column-7: #4f3f6a; --column-8: #66508b; --column-9: #c4a3ff; --column-10: #cdb2ff; --column-11: #c9adfd; --column-12: #f0e9ff; --on-column: #111318; color-scheme: dark; }
+/* Satir Math: a real math minus (and + ±) at Onest's weight and math axis. Generated by
+   tools/math-font.py; listed first in --font-ui with a unicode-range, so only these glyphs come from it. */
+/* @math-font begin */
+@font-face { font-family: "Satir Math"; font-style: normal; font-weight: 100 449; font-display: block; unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212; src: url(data:font/woff2;base64,d09GMgABAAAAAAG0AAoAAAAAA1wAAAFpAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAVAqBSIEnATYCJAMYCw4ABCAFXQcuG3cCCJ4DbvP0KEl3lNKJpKasR8bOnp4kiod/90PvS1KE4wFRmK/ajsGh0Wx0yc/VTdg5YmFo4mbNDRjIoG1xG9vngQ8s8i4b63ER/vM3wH/39XYaeH6/7vRfxsEXUOChlH0LKGsBhYGGmEZtnTMK4XoyNvM3exAETel+lFOO51AFrYwduK0Qxvs68+ffyG9CAwCpLZ2iByRkdMsC3YodNKuXFOM2nQCLLP2PVrvWszi/AABQC5pRhxlsAAoghCSJ0txcSqm/GKyrTUCTRo3RGE1ZzgVrFm/p8dv2HO7uMdpWNVW+6+Zj7/jEP4Hrl3r61Hv6lBw11WFl/TUf5Gje9YrIdyAQ/HHba1fbnD9R/gKf0epX3W24Ft+UIUsgOJbT0Ag2puKCnIZ8UEEkHgjUapcAPlosCTCNMkiyRlmUBqFbS7dIavXu1k/uP/oC3y+oM3Zd98R9j/SorN6zYEbCE30tfgOtXi2kUwAAAA==) format("woff2"); }
+@font-face { font-family: "Satir Math"; font-style: normal; font-weight: 450 549; font-display: block; unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212; src: url(data:font/woff2;base64,d09GMgABAAAAAAGgAAoAAAAAA1wAAAFWAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAVAqBSIEnATYCJAMYCw4ABCAFXQcuG3cCAJ4FOZlruoJGUUTIdta0xQP5EQ9fY6z3dxeVRJJqlrSLeGykpIlIg5Oo09XTMXhzPX5AAd5LdOnS19IWceG55mH5311YUsfrTv9lXFuAgYdS9i+gLMAw0BDTtAcaUQi3W1LChugMflj+Rzm1xC+Ewq2MGTitEHq6W/P9/+fk++ABUlO6QydIyGiXBdoVM4B61ZKix6QLazfziIl2jy/Ewl8FAIBKUI8qDGICUAAhJEmU+vpSSvVuNDisU6dWbdRGndataIBJZ/XmTX+Nz/BCUzy4fJ/nL4s44It9CHmeQGTeBN9i7cM/rVM7rVUBCASzvz53BOTE7+qc38FbIvziZxNm4186BWQJBI9KaRQBE1PI+SWN8lAFcaiAoFKzBBbyi3EBplYGSVYri1IjtGvoF0mlrtWoTst/wPcyN2hVpJYqseapJWSDOT7RV+IraHS+ne8AAAA=) format("woff2"); }
+@font-face { font-family: "Satir Math"; font-style: normal; font-weight: 550 649; font-display: block; unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212; src: url(data:font/woff2;base64,d09GMgABAAAAAAGkAAoAAAAAA1wAAAFZAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAVAqBSIEnATYCJAMYCw4ABCAFXQcuG3cCQB4H5ZYzweVbG5qIoBpD9/4/CBotFtkBU8LjW4WyRgFqZlchAVVtU7fp1f2/7vTfjYMvoMBDKasFlAUYBhpiGrV14IhCuJ6M4irbh0AofpRTR9qhQuFGxjK4VCH09rTmt/8/kd/GdIDUlJ6hCyRktMsC7YplqFctKXotdpee1qlw7aa+fHXTdf4KAACVoB5VmIZFgAIIIUmi1NeXUqp3R4P9derUqo3aqLO6Ixp0hCP5+OvZ+5cennt0eWH/0Nsh31cO3741dOvW8C3Ynhq+dHHo4iV28+rQ2yELb+c3mTxM55d9WP5h2fvlQCBYde/F5/1Ni/5V5/wNvlYc+ON3i8xNlek0sgSCk6a0og6LpmL5klbokAVx2gmBSs0SwMWLOQKoVgZJViuLUiO0a2CLpFL35oOTJ8e/gO/nTJtms4MmnTSuy1ppJ8wxLfwTfSX+anRlNj4DAAAA) format("woff2"); }
+@font-face { font-family: "Satir Math"; font-style: normal; font-weight: 650 900; font-display: block; unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212; src: url(data:font/woff2;base64,d09GMgABAAAAAAGwAAoAAAAAA1wAAAFlAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAAVAqBSIEnATYCJAMYCw4ABCAFXQcuG3cCAD4M8GR28mq2h8DwYdhqk20vwrcqFp6srzNCJSeoH3vdu/eCMB4sKwJhsMAkM3WZ2tYYYMUuLkJVuHzVqNq2Afyu/8MGHCQbvtg08CVh0gAiVnn6H7n7ee9AS0/LQMXFkjq23Gkt49oCDDyUsmsBZS2gMNAQ07RPMwrh9YbUwoeIg7LSH5Ucy1+aVKYVrJIrDGF0pL/s/RtlLwKQPbmLIZAoGFQEBlWr6NQqVaOWfOGr/qPD3Sf2AwEAoBl0ogVTWARUQAgpRe3srLW2no4u5zt0aNce7dEh5UR0MeFKvtl/bnlu/97W2OrDBxgaD9vZSe9DWHjtWEHT96LaOxAIXt698z2Lf0VpwH7T//jZopEczEcoEgRPRW5OiMWpOD/nJg+ZEM9cEWjWK0FddjUtQLXTIBXtiqhtwqCuepGaDR+++OTmowd8P+Mph130xE2PDFmjesOMqeif9M040O3VdtwFAAAA) format("woff2"); }
+@font-face { font-family: "Satir Ident"; font-style: normal; font-weight: 100 449; font-display: block; unicode-range: U+0049; src: url(data:font/woff2;base64,d09GMgABAAAAAAE0AAoAAAAAAoAAAADrAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAANAosRwE2AiQDBgsGAAQgBWAHJhvgAUieB8aN87ZScqLjXfQQETV0e/9PrbrK3nRVwQecr1ITx8R4UDgs6OQivGZBIgm2FSRBO1fFz4X77wanTbTKRuM2oA+4TAu8jrvBZSVBFKWT/lFNP+8GNOKArtbgWtTPv9TP7ACUqdLDEiiomFcF85olNE1w/d8zEgAFNATjmAQ0QMa7E0bbmPGMDYyefTzcv/49+gSC8Hw+oTt1/jtc6zd8DTz+MHdO3ksPVQHhlKc/4PyAAACSPs4FxbiAAgCA5lBAjCGgqMZUaSNi0WSHxaC1zhPnEE8Aa27bOhKNA9dKW+S2Iy/oYusAAAA=) format("woff2"); }
+@font-face { font-family: "Satir Ident"; font-style: normal; font-weight: 450 549; font-display: block; unicode-range: U+0049; src: url(data:font/woff2;base64,d09GMgABAAAAAAEsAAoAAAAAAoAAAADlAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAANAosRwE2AiQDBgsGAAQgBWAHJhvgAUiOlKurUzz8t1+7b2ZQzRrd8q9AFrHSiZltnC0dEgkq5P8zrhucNtEqG43bgD7gMi3wOu4Gl5UEUZRO+kc56vGjQSEO0NYaVKr88Tf5I2YAUleqYQgkZPTLAv2KIRRFoPrnGRIAEigItKMTUADRvt+htbRpj7aG1rX33b3Xptc99IFAcLk9U9vvWv9tzvkLPhsOvplbJ95SDVkCwSmP+oD1AwIAEFHHukDSLkACAECxKEBoQ4Aka5NFaREGdXaYNBrbOXy5fBqqngDWFqan7Tj04tKTIZUTp+68WDAdeUIXGwcA) format("woff2"); }
+@font-face { font-family: "Satir Ident"; font-style: normal; font-weight: 550 649; font-display: block; unicode-range: U+0049; src: url(data:font/woff2;base64,d09GMgABAAAAAAEwAAoAAAAAAoAAAADoAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAANAosRwE2AiQDBgsGAAQgBWAHJhvgAUgeqVcfLc0oHv7br903M6hmjZrE86cuZPcUiBW2cbZ08EaFjMECy/9nXDc4baJVNhq3AX3AZVrgddwNLisJoiid9I9yNFKaFOIAra9Bpcovf5NfAkDqSXWMgISMQVlgUDGCoghU/zxDAkACBYFOdAMKIDq3u7SnDp3RkduXnzcvL94vLtEHAsHGzdbTds/Kb2vOb/Da9A9zK8RjqiNLIDjl0RiwckAAACIaWBFIOgVIAAAo5gQIHQiQZB2yKG3CsO4Ok2YTtd2H07uR6glgbW52Vs2uB6fujKgcOHTlwZzZyBO62CQAAA==) format("woff2"); }
+@font-face { font-family: "Satir Ident"; font-style: normal; font-weight: 650 900; font-display: block; unicode-range: U+0049; src: url(data:font/woff2;base64,d09GMgABAAAAAAE0AAoAAAAAAoAAAADuAAEAAAAAAAAAAAAAAAAAAAAAAAAAAAAABmAANAosRwE2AiQDBgsGAAQgBWAHJhvgAUieB7atZLv1ykiTV+LoIYL6vW7v7lGr7q43/XXwQaloJFKACoqJ8aBwWNDJRXixAydYK0iCdhCo+p4L998NTptolY3GbUAfcJkWeB13g8tKgihKJ/2jilG+GdOIA/S4Bh2vz7/UZxwD5EIOsQEShVUlsKrZQNMEuv+ekQCQoCEwi3lAA8Rsf850zpiNmZq+HT4N8nOAPoNAsPvivb9w9ztZ9Q1fY88/zN0Rr/mBkiA45TEacHdAAAAiRrgTSLMCJAAAmgsBwgwCpDKjRJsS1s13mMbt9EJz6J4A1nh0pCfIONApbQkdRZ7oYns=) format("woff2"); }
+/* @math-font end */
+:root {
+  /* Colour roles. Swap the palette here only; components never name a palette step. */
+  --color-bg: var(--neutral-2);
+  --color-surface: var(--neutral-1);
+  --color-stage: var(--neutral-1);
+  --color-ink: var(--neutral-12);
+  --color-muted: var(--neutral-11);
+  --color-soft: var(--neutral-3);
+  --color-soft-strong: var(--neutral-5);
+  --color-pill: var(--neutral-1);
+  --color-action: var(--brand-9);
+  --color-on-action: var(--on-brand);
+  --color-focus: var(--row-9);
+  --color-row-wash: var(--row-4);
+  --color-row-edge: var(--row-8);
+  --color-row-ink: var(--row-11);
+  --color-row-fill: var(--row-9);
+  --color-on-row: var(--on-row);
+  --color-col-wash: var(--column-4);
+  --color-col-edge: var(--column-8);
+  --color-col-ink: var(--column-11);
+  --color-col-fill: var(--column-9);
+  --color-on-col: var(--on-column);
+  --color-ok-tint: var(--success-3);
+  --color-ok-wash: var(--success-4);
+  --color-ok-edge: var(--success-8);
+  --color-ok-ink: var(--success-11);
+  --color-ok-fill: var(--success-9);
+  --color-on-ok: var(--on-success);
+  --color-bad-tint: var(--danger-3);
+  --color-bad-wash: var(--danger-4);
+  --color-bad-edge: var(--danger-8);
+  --color-bad-ink: var(--danger-11);
+  --color-spark: var(--accent-9);
+  --color-shadow: rgba(48, 46, 41, 0.14);
+
+  /* Type. Scale from design-research/type.md: 13 · 15 · 17 · 20 · 24 · 30 (+ 14 and 16 for dense UI). */
+  --font-ui: "Satir Math", "Onest", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  /* Math (st-math, the work line, labels, cells): adds a serifed I for the identity matrix, so |I| and
+     3·I never read as bars. Words outside math keep Onest's I. */
+  --font-math: "Satir Ident", var(--font-ui);
+  --text-caption: 13px;
+  --text-label: 14px;
+  --text-ui: 15px;
+  --text-body-sm: 16px;
+  --text-body: 17px;
+  --text-lead: 20px;
+  --text-title: 24px;
+  --text-display: 30px;
+  --text-script: 0.7em;
+  --leading-none: 1;
+  --leading-display: 1.15;
+  --leading-title: 1.2;
+  --leading-caption: 1.35;
+  --leading-base: 1.5;
+  --leading-math: 1.45;
+  --leading-label: 17px;
+  --leading-body-sm: 22px;
+  --leading-body: 25px;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+  --tracking-tight: -0.01em;
+  --tracking-tighter: -0.02em;
+
+  /* Space (4 px rhythm, 2 px for hairline gaps). */
+  --space-2xs: 2px;
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --gutter: var(--space-lg);
+
+  /* Radius (nested radii are concentric: outer = inner + padding). */
+  --radius-xs: 4px;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  /* Sheet's bottom corners: concentric with the Devam button inside its padding. */
+  --radius-sheet-end: calc(var(--radius-lg) + var(--space-md));
+  --radius-full: 999px;
+
+  /* Elevation. */
+  --shadow-raised: 0 1px 2px var(--color-shadow);
+  --shadow-float: 0 3px 10px var(--color-shadow);
+  --shadow-sheet: 0 -6px 24px var(--color-shadow);
+
+  /* Strokes and states. */
+  --stroke-hair: 1px;
+  --stroke-mark: 1.5px;
+  --stroke-ring: 2px;
+  --stroke-bracket: 2px;
+  --stroke-aug: -0.5px;
+  --stroke-icon: 2.2;
+  --stroke-glyph: 3;
+  --stroke-mascot: 3.2;
+  --stroke-mascot-face: 2.4;
+  --opacity-track: 0.55;
+  --opacity-current: 0.45;
+  --strike-angle: -35deg;
+  --z-under: -1; /* a layer drawn behind its own element's content (an isolated chip's pill) */
+  --z-raised: 1;
+  --z-sheet: 2;
+  --z-overlay: 10;
+
+  /* CSS state transitions (colour only; all movement runs on the engine's springs). */
+  --fade-t: 160ms;
+  --fade-curve: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Component tokens. */
+  --view-max: 440px;
+  --view-max-wide: 920px;
+  --top-h: 48px;
+  --hit: 48px;
+  --primary-h: 56px;
+  --icon: 22px;
+  --glyph: 18px;
+  --glyph-sm: 12px;
+  --stage-min-h: 150px;
+  --tile-min-h: 52px;
+  --tile-max-h: 88px;
+  --badge: 16px;
+  --dot: 8px;
+  --progress-h: 6px;
+  --count-w: 66px; /* "B2 · 18/18" at the Label number role (14 px) */
+  --option-key: 28px;
+  --caret-w: 2px;
+  --caret-h: 24px;
+  /* Work area: one line is 48 px tall; a calculation reserves room for all its lines (--work-lines). */
+  --work-pad-y: 7px;
+  --work-line-h: 34px;
+  --work-line-gap: var(--space-xs);
+  --work-fold-h: 22px;
+  --work-inset: var(--space-lg);
+  /* Space kept between a work line and the transport button in the stage corner (engine fitWork). */
+  --work-gap-transport: var(--space-xs);
+  --work-gap: 0.34em;
+  --work-text: clamp(17px, 6cqw, 24px);
+  --stage-gap: var(--space-md);
+  /* Two objects with no operator between them (P Q R) never read as one block matrix. */
+  --scene-gap-objects: var(--space-xl);
+  --cell-min-tight: 20px;
+  --mascot: 40px;
+  --mascot-big: min(34cqw, 40cqh);
+  --mascot-shared: min(26cqw, 34cqh);
+  --spark: 8px;
+}
+/* Cell sizes are registered lengths: they compute to px where they are declared, so an object that
+   leaves the scene (a ghost fading out in the fx layer) keeps its exact size. */
+@property --cell { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --cell-w { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --cell-font { syntax: "<length>"; inherits: true; initial-value: 0px; }
+@property --cell-font-long { syntax: "<length>"; inherits: true; initial-value: 0px; }
+/* Work area height: --work-lines open lines plus, with --work-fold, a compact chip row (both set by the
+   engine per step, planWork). Scoped to the stage so the scene's cell fit reads the same value. */
+.st-stage {
+  --work-min-h: calc(var(--work-pad-y) * 2 + var(--work-line-h) * var(--work-lines, 1) + var(--work-line-gap) * (var(--work-lines, 1) - 1) +
+    var(--work-fold, 0) * (var(--work-fold-h) + var(--work-line-gap)));
+}
+/* Matrix cell size per scene mode. Scoped to the scene because it reads the scene's own size facts
+   (--scene-rows, --scene-cols, set by the engine), so a 3×3 or 4×4 in solo scales down to fit. */
+.st-scene {
+  --cell-fit-h: calc((100cqh - var(--work-min-h) - var(--stage-gap) - var(--space-xl)) / (var(--scene-rows, 2) + 0.8));
+  /* Row operations also keep room for the scaled row written under the matrix (1.3 cells). */
+  --cell-fit-h-aug: calc((100cqh - var(--work-min-h) - var(--stage-gap) - var(--space-xl) - var(--space-sm)) / (var(--scene-rows, 2) + 2.1));
+  --cell-fit-w: calc((100cqw - var(--space-xl) * 2) / (var(--scene-cols, 2) + 1.2));
+  /* --cell-fit-x: the cell size at which the scene's content fills the stage width (engine fitScene);
+     the cqw values are the fallback before it is measured. */
+  --scene-inset: var(--space-xl);
+  --cell-base: clamp(var(--cell-min), min(var(--cell-fit-x, 9.4cqw), 15cqh, var(--cell-fit-h)), 60px);
+  --cell-solo: clamp(var(--cell-min), min(var(--cell-fit-x, 15cqw), 22cqh, var(--cell-fit-h), var(--cell-fit-w)), 88px);
+  --cell-aug: clamp(var(--cell-min), min(var(--cell-fit-x, 12cqw), 18cqh, var(--cell-fit-h-aug)), 64px);
+  --cell-font: max(var(--text-ui), calc(var(--cell) * 0.48));
+  --cell-font-long: max(var(--text-ui), calc(var(--cell) * 0.4));
+  --cell-char: 0.62;
+  --scene-gap: calc(var(--cell) * 0.24);
+}
+/* Smallest cell. A feedback sheet that needs the room on a small phone may take cells down to
+   --cell-min-tight (engine: reserveDock), so the sheet never covers the question. */
+.st-scene { --cell-min: 28px; }
+.st-lesson.is-tight .st-scene { --cell-min: var(--cell-min-tight); }
+/* Symbolic entries ("1+a", "4−k²"): the matrix widens its columns to its longest entry (--long, set by
+   the engine) instead of shrinking the text; up to two characters this is the plain cell. A variable,
+   not a class, so a widening is a layout glide and no restyle. */
+.st-mat { --cell-w: max(var(--cell), calc(var(--long, 0) * var(--cell-font-long) * var(--cell-char) + var(--space-sm))); }
+/* Dark: shadows deepen, and the selected-tab pill sits lighter than its track (raised, not sunken). */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) { --color-shadow: rgba(0, 0, 0, 0.55); --color-pill: var(--neutral-5); }
+}
+:root[data-theme="dark"] { --color-shadow: rgba(0, 0, 0, 0.55); --color-pill: var(--neutral-5); }
+:root {
+  /* Feel layer tokens (work/feel-v1). Semantic tier maps palette steps; the component tier owns its sizes. */
+  /* Seal: ink is the brand-neutral fill that cells "take" (navy in light, pale navy in dark); text on it passes 4.5:1
+     in both themes (brand-9 against on-brand). The wash is a filled cell that has not taken ink yet. */
+  --color-seal-ink: var(--brand-9);
+  --color-on-seal: var(--on-brand);
+  --color-seal-wash: var(--neutral-3);
+  /* Duo heads: the role fills, the same in both themes (mascot.html: "the role colours never change"), so Satır
+     and Sütun keep their look. The nearest palette steps to mascot.html's #3b8be0 and #dac6ff are row-9 and column-9. */
+  --color-head-row: var(--color-row-fill);
+  --color-on-head-row: var(--color-on-row);
+  --color-head-col: var(--color-col-fill);
+  --color-on-head-col: var(--color-on-col);
+  /* Seal geometry. The bracket language lives here so branding can tune it in one place. */
+  --seal-gap: 14px;
+  --seal-bracket-arm: 0.16;
+  --seal-bracket-stroke: var(--stroke-bracket);
+  /* Duo: pair widths (one head is --duo-one). On the lesson-end stage the pair is --end-duo-share of the stage height wide,
+     between --duo-sm (a short stage, 375 x 548) and --duo-xl (a tall one): about a fifth of the stage height at most. */
+  --duo-one: 40px;
+  --duo-sm: 56px;
+  --duo-md: 72px;
+  --duo-lg: 96px;
+  --duo-xl: 128px;
+  --end-duo-share: 0.3;
+  /* The pair is 74 : 48 (two 44-wide heads overlapping by 14). In the summary step it is as tall as the old mascot was. */
+  --duo-pair-ratio: 1.54;
+  /* In the sheet the pair overhangs the mascot column into its gap, so the words keep their place and wrap as they did. */
+  --duo-sheet-pair: calc(var(--mascot) + var(--space-md) - var(--space-xs));
+  /* The empty strip above a head (4 units of 44 for one head, of 74 for a pair), as a share of the mascot column: pulled up in the sheet so the face meets the verdict's line. */
+  --duo-top-one: 0.09;
+  --duo-top-pair: 0.07;
+  /* The duo, matrix and score line together fill at most this share of the stage height (calm: the rest is air). */
+  --end-fill: 0.7;
+  /* Extra space above the group, as a share of the free stage height: keeps the leaving duo inside the stage when the engine re-flows the stage. */
+  --end-top-share: 0.4;
+  /* Largest answers / course cell the end-stage layout estimate counts on (the engine's solo cell cap is 88px). */
+  --end-cell-max: 88px;
+  /* Head rim: a 1.4-unit edge so each head keeps 3:1 against the stage in both themes (Satır on dark is 3.04:1 without it,
+     Sütun on light 2.04:1). Palette step 11 of each role: darker than the fill on light, lighter on dark. */
+  --color-head-rim-row: var(--color-row-ink);
+  --color-head-rim-col: var(--color-col-ink);
+  --stroke-duo-rim: 1.4;
+  --stroke-duo: 0.6;
+  --stroke-duo-mouth: 2.4;
+  --stroke-duo-brow: 1.8;
+  /* Touch (M5). Neighbouring targets keep this much air between them (SPEC 2.1), on every screen. */
+  --tap-gap: var(--space-sm);
+  /* The ink a pressed control takes: the text colour at low strength, so it darkens a light surface and lightens a dark one. */
+  /* How far the UI font's capital centre sits above the line box's centre, in em (measured; feel-qa checks the result within 1 px). */
+  --cap-lift: 0.06em;
+  --press-ink: color-mix(in srgb, var(--color-ink) 14%, transparent);
+  /* The ink arrives in the tap's own frame (no transition in), and fades on release. */
+  --press-in-t: 0s;
+  /* Navigation, Profil and the answer card (DESIGN_AUDIT_AND_REDESIGN 3.0-3.2). The title switch, the Dersler list rows, Profil's course matrix,
+     the secret's dot, the sound switch, and how many lines the answer card's text box holds (the card is always as tall as that many lines). */
+  --nav-title: var(--text-title);
+  --nav-pad: var(--space-md);
+  --nav-arm: var(--space-sm);
+  --row-h: 56px;
+  --row-h-min: 48px;
+  --row-h-short: 48px;
+  --row-h-min-short: 44px;
+  --row-chev: 8px;
+  --row-chev-turn: 45deg;
+  --opacity-soon: 0.7;
+  --list-fade: 24px;
+  --unit-seg-h: 6px;
+  --row-next-h: 72px;
+  --row-next-h-short: 56px;
+  --row-code-w: 36px;
+  --row-end-w: 24px;
+  --row-check: 20px;
+  --course-cell: 36px;
+  --course-cell-short: 28px;
+  --course-cols: 10;
+  --course-key: 10px;
+  --course-bracket: 40px;
+  --sezgi-dot-sm: 6px;
+  --soon-gap: var(--space-md);
+  --notice-h: 32px;
+  --notice-gap: var(--space-sm);
+  --sezgi-dot: 8px;
+  --switch-h: 28px;
+  --sheet-lines: 3;
+  --launch-mark: 96px;
+}
+/* The tint a control takes is a registered colour, so it can fade back on release. */
+@property --press-tint { syntax: '<color>'; inherits: false; initial-value: transparent; }
+/* The lesson-end stage's cell: the size the layout rule chose (--end-cell, set by feelEndLayout), kept inside the width the engine's fit
+   measured (--cell-fit-x). It does not read --scene-rows, so the engine resizing the scene for the next step cannot move the
+   leaving duo before it is ghosted. */
+.st-scene { --cell-stack: clamp(var(--cell-min), min(var(--cell-fit-x, var(--end-cell)), var(--end-cell)), var(--end-cell-max)); }
+
+/* @tokens end */
+
+[hidden] { display: none !important; }
+html { height: 100%; box-sizing: border-box; scrollbar-width: none; overscroll-behavior: none; }
+*, *::before, *::after { box-sizing: inherit; }
+::-webkit-scrollbar { display: none; }
+body {
+  position: relative;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font: var(--weight-regular) var(--text-body)/var(--leading-base) var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+button { font: inherit; color: inherit; }
+button:focus-visible { outline: var(--stroke-ring) solid var(--color-focus); outline-offset: var(--space-2xs); }
+sub, sup { font-size: var(--text-script); line-height: 0; }
+
+/* Views stack in one place so a transition can show both; the engine hides the outgoing one. */
+.st-view {
+  position: absolute;
+  inset: 0;
+  max-width: var(--view-max);
+  margin-inline: auto;
+  padding-left: max(var(--gutter), env(safe-area-inset-left, 0px));
+  padding-right: max(var(--gutter), env(safe-area-inset-right, 0px));
+  padding-block: 0 var(--space-md);
+  overflow: clip;
+  transform-origin: 50% 40%;
+}
+/* Shared-element morphs and answer sparks fly above both views. */
+.st-view.is-prepping { visibility: hidden; }
+.st-overlay { position: fixed; inset: 0; z-index: var(--z-overlay); pointer-events: none; overflow: hidden; }
+.st-morph {
+  position: absolute;
+  overflow: hidden;
+  transform-origin: 0 0;
+  background: var(--color-stage);
+  box-shadow: var(--shadow-raised);
+  will-change: transform;
+}
+.st-morph__tint { position: absolute; inset: 0; background: var(--color-action); }
+
+.st-icon { width: var(--icon); height: var(--icon); fill: none; stroke: currentColor; stroke-width: var(--stroke-icon); stroke-linecap: round; stroke-linejoin: round; }
+.st-glyph { width: var(--glyph); height: var(--glyph); fill: none; stroke: currentColor; stroke-width: var(--stroke-glyph); stroke-linecap: round; stroke-linejoin: round; overflow: visible; }
+
+/* Buttons: filled surfaces, no outlines (Eren finds boxed line drawing cheap). */
+.st-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  min-height: var(--primary-h);
+  padding: 0 var(--space-lg);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-soft);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-body);
+  cursor: pointer;
+  user-select: none;
+}
+.st-btn--primary { background: var(--color-action); color: var(--color-on-action); }
+/* UC-2: İleri while the entry beat plays: Geri's soft look, full-ink label, never disabled. */
+.st-btn--primary { transition: background-color var(--fade-t) var(--fade-curve), color var(--fade-t) var(--fade-curve); }
+.st-btn--primary.is-soft { background: var(--color-soft); color: var(--color-ink); }
+.st-btn--ok { background: var(--color-ok-fill); color: var(--color-on-ok); }
+.st-btn[disabled] { color: var(--color-muted); cursor: default; }
+.st-icon-btn {
+  display: inline-grid;
+  place-items: center;
+  width: var(--hit);
+  height: var(--hit);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  cursor: pointer;
+}
+
+/* ---------- Course map ---------- */
+.st-map {
+  display: grid;
+  grid-template-rows: var(--top-h) auto auto minmax(0, 1fr) auto;
+  row-gap: var(--space-md);
+}
+.st-map__top { display: flex; align-items: center; justify-content: space-between; }
+.st-map__brand { display: inline-flex; align-items: center; gap: var(--space-sm); font-weight: var(--weight-bold); font-size: var(--text-ui); }
+.st-map__exam { font-weight: var(--weight-medium); font-size: var(--text-label); font-variant-numeric: tabular-nums; }
+.st-map__title { margin: 0; font-size: var(--text-display); line-height: var(--leading-display); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); text-wrap: balance; }
+.st-map__meta { margin: var(--space-2xs) 0 0; font-size: var(--text-ui); }
+.st-map__ghost { position: absolute; inset: 0; pointer-events: none; }
+.st-tabs {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-xs);
+  padding: var(--space-xs);
+  border-radius: var(--radius-lg);
+  background: var(--color-soft);
+}
+.st-tabs__pill {
+  position: absolute;
+  top: var(--space-xs);
+  bottom: var(--space-xs);
+  left: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-pill);
+  box-shadow: var(--shadow-raised);
+}
+.st-tab {
+  position: relative;
+  z-index: var(--z-raised);
+  min-height: var(--hit);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-weight: var(--weight-medium);
+  font-size: var(--text-ui);
+  cursor: pointer;
+}
+.st-tab[aria-selected="true"] { font-weight: var(--weight-bold); }
+.st-tiles {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: minmax(var(--tile-min-h), var(--tile-max-h));
+  gap: var(--space-sm);
+  align-content: start;
+  min-height: 0;
+  touch-action: pan-y;
+}
+.st-tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-2xs);
+  min-width: 0;
+  padding: var(--space-sm);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  text-align: left;
+  cursor: pointer;
+  user-select: none;
+}
+.st-tile__code { display: flex; gap: var(--space-xs); font-weight: var(--weight-semibold); font-size: var(--text-caption); line-height: var(--leading-none); }
+/* The lesson in progress: where it stopped, beside the code. */
+.st-tile__step { font-weight: var(--weight-medium); color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.st-tile__step::before { content: "·"; margin-right: var(--space-xs); }
+.st-tile__name { font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-medium); }
+.st-tile.is-ready { box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-action); }
+/* Lessons not written yet are shown for orientation but are not actions. */
+.st-tile.is-locked { background: transparent; box-shadow: inset 0 0 0 var(--stroke-hair) var(--color-soft-strong); color: var(--color-muted); cursor: default; }
+.st-tile__lock { position: absolute; top: var(--space-xs); right: var(--space-xs); display: grid; color: var(--color-muted); }
+.st-tile__lock .st-glyph { width: var(--glyph-sm); height: var(--glyph-sm); stroke-width: var(--stroke-icon); }
+/* Ready: a small green dot. Done: the dot grows into a check badge. */
+.st-tile__badge {
+  position: absolute;
+  top: var(--space-sm);
+  right: var(--space-sm);
+  display: grid;
+  place-items: center;
+  width: var(--dot);
+  height: var(--dot);
+  border-radius: var(--radius-full);
+  background: var(--color-ok-fill);
+  color: var(--color-on-ok);
+}
+.st-tile__badge .st-glyph { display: none; width: var(--glyph-sm); height: var(--glyph-sm); }
+.st-tile.is-done .st-tile__badge { width: var(--badge); height: var(--badge); }
+.st-tile.is-done .st-tile__badge .st-glyph { display: block; }
+.st-map__dock { display: grid; gap: var(--space-sm); }
+
+/* ---------- Lesson ---------- */
+.st-lesson {
+  display: grid;
+  grid-template-rows: var(--top-h) minmax(var(--stage-min-h), 1fr) auto auto;
+  grid-template-areas: "top" "stage" "narr" "dock";
+}
+.st-top { grid-area: top; display: flex; align-items: center; gap: var(--space-md); }
+/* Close and back keep the bar's own gap (12 px between targets, SPEC 2.1 ≥ 8); back keeps its place when hidden. */
+.st-back.is-off { visibility: hidden; }
+.st-progress { flex: 1; display: flex; gap: var(--space-xs); height: var(--progress-h); }
+.st-progress.is-dense { gap: var(--space-2xs); }
+.st-progress__seg { position: relative; flex: 1; border-radius: var(--radius-full); }
+.st-progress__seg::before { content: ""; position: absolute; inset: 0; border-radius: var(--radius-full); background: var(--color-soft-strong); opacity: var(--opacity-track); }
+.st-progress__fill {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--radius-full);
+  background: var(--color-action);
+  opacity: var(--opacity-current);
+  transform-origin: 0 50%;
+  transition: opacity var(--fade-t) var(--fade-curve);
+}
+.st-progress__seg.is-done .st-progress__fill { opacity: 1; }
+.st-count { min-width: var(--count-w); text-align: right; font-weight: var(--weight-medium); font-size: var(--text-label); color: var(--color-muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+/* UC-3: the lesson names itself ("B2 · 7/18"); #count keeps only the number, which rolls on its own. */
+#count { display: inline-block; }
+
+.st-stage {
+  grid-area: stage;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--stage-gap);
+  min-height: 0;
+  border-radius: var(--radius-2xl);
+  background: var(--color-stage);
+  box-shadow: var(--shadow-raised);
+  container-type: size;
+  overflow: hidden;
+}
+.st-scene {
+  --cell: var(--cell-base);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--scene-gap);
+  min-height: 0;
+  font-variant-numeric: tabular-nums;
+}
+.st-scene--solo { --cell: var(--cell-solo); }
+.st-scene > .st-mat + .st-mat, .st-scene > .st-mat + .st-label, .st-scene > .st-label + .st-mat {
+  margin-left: calc(var(--scene-gap-objects) - var(--scene-gap));
+}
+/* Row operations write the scaled row under the matrix, as on paper; the label moves above. */
+.st-scene--aug { --cell: var(--cell-aug); padding-bottom: calc(var(--cell) * 1.3 + var(--space-sm)); }
+.st-scene--aug + .st-work { order: -1; }
+.st-obj { transform-origin: 0 0; will-change: transform; }
+.st-op { font-weight: var(--weight-medium); font-size: max(var(--text-caption), calc(var(--cell) * 0.55)); line-height: var(--leading-none); color: var(--color-muted); }
+.st-mat { display: flex; flex-direction: column; align-items: center; gap: calc(var(--cell) * 0.12); }
+.st-mat__name { font-family: var(--font-math); font-weight: var(--weight-semibold); font-size: max(var(--text-caption), calc(var(--cell) * 0.4)); line-height: var(--leading-none); color: var(--color-muted); }
+.st-mat__grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--cell-w));
+  grid-auto-rows: var(--cell);
+  gap: var(--space-2xs);
+  padding: var(--space-2xs) calc(var(--cell) * 0.2);
+}
+.st-mat__grid::before, .st-mat__grid::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--cell) * 0.16);
+  border: var(--stroke-bracket) solid var(--color-ink);
+}
+.st-mat__grid::before { left: 0; border-right: 0; border-radius: var(--radius-xs) 0 0 var(--radius-xs); }
+.st-mat__grid::after { right: 0; border-left: 0; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; }
+.st-cell {
+  font-family: var(--font-math);
+  display: grid;
+  place-items: center;
+  border-radius: calc(var(--cell) * 0.24);
+  font-weight: var(--weight-medium);
+  font-size: var(--cell-font);
+  line-height: var(--leading-none);
+  transition: background-color var(--fade-t) var(--fade-curve), color var(--fade-t) var(--fade-curve), box-shadow var(--fade-t) var(--fade-curve), opacity var(--fade-t) var(--fade-curve);
+}
+.st-cell .st-glyph { width: calc(var(--cell) * 0.46); height: calc(var(--cell) * 0.46); }
+.st-cell--aug { box-shadow: inset var(--stroke-ring) 0 0 var(--stroke-aug) var(--color-muted); border-radius: 0 calc(var(--cell) * 0.24) calc(var(--cell) * 0.24) 0; }
+.st-cell.is-unknown { color: var(--color-muted); }
+.st-cell.is-row { background: var(--color-row-wash); color: var(--color-row-ink); box-shadow: inset 0 0 0 var(--stroke-mark) var(--color-row-edge); }
+.st-cell.is-col { background: var(--color-col-wash); color: var(--color-col-ink); box-shadow: inset 0 0 0 var(--stroke-mark) var(--color-col-edge); }
+.st-cell.is-target { box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-ok-edge); }
+.st-cell.is-result { background: var(--color-ok-fill); color: var(--color-on-ok); font-weight: var(--weight-semibold); }
+.st-cell.is-wrong { background: var(--color-bad-wash); color: var(--color-bad-ink); }
+/* Cofactor work: the chosen entry is ringed, its row and column fade back, the minor stays. */
+.st-cell.is-pivot { background: var(--color-ink); color: var(--color-surface); font-weight: var(--weight-semibold); }
+/* Crossed out (not part of the minor): muted ink that still passes contrast, plus a pen line the
+   engine draws through the row or column on a spring. */
+.st-cell.is-struck { position: relative; background: transparent; color: var(--color-muted); box-shadow: none; }
+.st-cell__strike { position: absolute; border-radius: var(--radius-full); background: var(--color-muted); pointer-events: none; }
+.st-cell__strike--h { left: calc(var(--space-2xs) * -1); right: calc(var(--space-2xs) * -1); top: 50%; height: var(--stroke-ring); margin-top: calc(var(--stroke-ring) / -2); transform-origin: 0 50%; }
+.st-cell__strike--v { top: calc(var(--space-2xs) * -1); bottom: calc(var(--space-2xs) * -1); left: 50%; width: var(--stroke-ring); margin-left: calc(var(--stroke-ring) / -2); transform-origin: 50% 0; }
+.st-cell__strike--d { left: 18%; right: 18%; top: 50%; height: var(--stroke-ring); margin-top: calc(var(--stroke-ring) / -2); transform-origin: 0 50%; rotate: var(--strike-angle); }
+.st-cell.is-long { font-size: var(--cell-font-long); letter-spacing: var(--tracking-tight); white-space: nowrap; }
+/* Lesson end: a question that was never answered. */
+.st-cell.is-skipped { box-shadow: inset 0 0 0 var(--stroke-mark) var(--color-soft-strong); color: var(--color-muted); }
+/* "Bilmiyorum" (UC-1): answered without a verdict: a soft cell with no glyph, neither right nor a miss. */
+.st-cell.is-unknown-answer { background: var(--color-soft); }
+/* Determinant bars |A| instead of brackets. */
+.st-mat--det .st-mat__grid::before, .st-mat--det .st-mat__grid::after { width: 0; border-radius: 0; border-width: 0 0 0 var(--stroke-bracket); }
+.st-mat--det .st-mat__grid::after { border-width: 0 var(--stroke-bracket) 0 0; }
+/* Free-standing math labels in the scene, e.g. "det A = 5" or "k = ?". */
+/* Multi-line labels (equation chains split with <br>) get an open, centred rhythm. */
+.st-label { font-weight: var(--weight-semibold); font-size: max(var(--text-body), calc(var(--cell) * 0.5)); line-height: var(--leading-math); text-align: center; white-space: nowrap; font-family: var(--font-math); font-variant-numeric: proportional-nums; }
+.st-label .st-hl-result, .st-label .st-hl-row, .st-label .st-hl-col { font-weight: var(--weight-bold); }
+
+/* Lines of work share a left edge, as on paper; the block is centred under the scene. Lines stack from
+   the top of the reserved height, so a written line never moves when the next one is added. */
+.st-work {
+  display: grid;
+  justify-content: center;
+  align-content: start;
+  justify-items: start;
+  row-gap: var(--work-line-gap);
+  min-height: var(--work-min-h);
+  padding: var(--work-pad-y) var(--work-inset);
+  font-weight: var(--weight-medium);
+  /* Never larger than the numbers it explains (--work-cap: the cells' font, set by the engine), and
+     smaller (--work-fit) when the widest line would not fit the stage. */
+  font-size: var(--work-fit, max(var(--text-ui), min(var(--work-text), var(--work-cap, var(--work-text)))));
+  line-height: var(--leading-none);
+  font-family: var(--font-math);
+  font-variant-numeric: proportional-nums;
+  white-space: nowrap;
+}
+.st-work__line {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--work-gap);
+  min-height: var(--work-line-h);
+  max-width: 100%;
+}
+.st-work__tok { display: inline-block; }
+/* The planner measures a line at the floor font (planLayouts). */
+.st-work__probe--floor { font-size: var(--text-ui); }
+.st-work__slot--open { display: inline-flex; align-items: center; gap: var(--work-gap); }
+/* Older lines folded into their results: labelled chips in the top row ("artılar: 24"), never below
+   --text-ui, so a folded result stays readable. */
+.st-work__line--folded { min-height: var(--work-fold-h); font-size: var(--text-ui); gap: var(--space-xs); }
+/* Lines that fold without a chip (equation chains, silent fold on small stages) leave no empty row. */
+.st-work__line--folded:empty { display: none; }
+/* No room for a chip row (a 3×3 on a small phone): the chips park in a column in the stage's top-left
+   corner, beside the scene (sceneRoom keeps --fold-side-w clear), so a folded result keeps its source. */
+.is-fold-side .st-work__line--folded { position: absolute; left: var(--space-xs); top: var(--space-xs); flex-direction: column; align-items: flex-start; min-height: 0; max-width: none; }
+.st-work__chip-label { margin-inline-end: var(--space-xs); font-family: var(--font-ui); font-weight: var(--weight-medium); }
+/* The pill is its own layer (.st-work__chip-fill) so it can fade in around a result gliding into it. */
+.st-work__chip { position: relative; isolation: isolate; padding: var(--space-2xs) var(--space-xs); border-radius: var(--radius-sm); }
+.st-work__chip-fill { position: absolute; inset: 0; z-index: var(--z-under); border-radius: inherit; background: var(--color-soft); }
+/* A product reads tight, as in the text ("3·2"): the dot's own side bearings are the space. */
+.st-work__dot { margin-inline: calc(var(--work-gap) * -1); }
+.st-work__tok.is-hidden { opacity: 0; }
+.st-work__tok--a { color: var(--color-row-ink); }
+.st-work__tok--b { color: var(--color-col-ink); }
+.st-work__tok--sum { color: var(--color-ok-ink); font-weight: var(--weight-bold); }
+.st-work__label { font-weight: var(--weight-semibold); }
+
+.st-fx { position: absolute; inset: 0; pointer-events: none; }
+.st-chip {
+  font-family: var(--font-math);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  transform-origin: 50% 50%;
+  box-shadow: var(--shadow-float);
+}
+.st-chip--row { background: var(--color-row-fill); color: var(--color-on-row); }
+.st-chip--col { background: var(--color-col-fill); color: var(--color-on-col); }
+.st-chip--result { background: var(--color-ok-fill); color: var(--color-on-ok); }
+/* A runner carry: the chip is as big as its text, so it lands on its token without covering the
+   operators beside it. Two faces share one place when the sign changes mid-flight. */
+.st-chip--text { padding: var(--space-2xs) 0; line-height: var(--leading-none); white-space: nowrap; }
+.st-chip__face { grid-area: 1 / 1; }
+.st-ghost { position: absolute; left: 0; top: 0; transform-origin: 0 0; }
+.st-replay { position: absolute; right: var(--space-xs); bottom: var(--space-xs); color: var(--color-muted); }
+/* A step whose work line cannot clear the bottom corner even at the floor font (planWork). */
+.is-transport-top .st-replay { top: var(--space-xs); bottom: auto; }
+
+/* Celebration sparks: small cells in the math role colours, thrown by the engine's particle ticker. */
+.st-spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: var(--spark);
+  height: var(--spark);
+  border-radius: var(--radius-xs);
+  font-weight: var(--weight-bold);
+  font-size: var(--text-lead);
+  line-height: var(--leading-none);
+  will-change: transform;
+}
+.st-spark--row { background: var(--color-row-fill); }
+.st-spark--col { background: var(--color-col-fill); }
+.st-spark--ok { background: var(--color-ok-fill); }
+.st-spark--accent { background: var(--color-spark); }
+.st-spark--glyph { width: auto; height: auto; background: transparent; }
+.st-spark--glyph.st-spark--row { color: var(--color-row-ink); }
+.st-spark--glyph.st-spark--col { color: var(--color-col-ink); }
+.st-spark--glyph.st-spark--ok, .st-spark--glyph.st-spark--accent { color: var(--color-ok-ink); }
+
+.st-narr { grid-area: narr; padding-block: var(--space-md); min-width: 0; }
+.st-narr__row { display: flex; align-items: center; justify-content: space-between; gap: var(--space-sm); min-height: var(--space-xl); }
+.st-eyebrow { margin: 0; font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); color: var(--color-muted); }
+.st-unclear {
+  min-height: var(--hit);
+  margin: calc(var(--space-md) * -1) 0;
+  padding: 0 var(--space-sm);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  font-size: var(--text-ui);
+  font-weight: var(--weight-medium);
+  color: var(--color-muted);
+  cursor: pointer;
+}
+.st-unclear[aria-pressed="true"] { background: var(--color-soft); color: var(--color-ink); }
+.st-title { margin: var(--space-xs) 0 0; font-size: var(--text-title); line-height: var(--leading-title); font-weight: var(--weight-bold); text-wrap: balance; }
+.st-body { margin: var(--space-sm) 0 0; font-size: var(--text-body); line-height: var(--leading-body); text-wrap: pretty; }
+.st-body b { font-weight: var(--weight-bold); }
+.st-math { white-space: nowrap; font-family: var(--font-math); font-variant-numeric: proportional-nums; }
+.st-hl-row { color: var(--color-row-ink); font-weight: var(--weight-semibold); }
+.st-hl-col { color: var(--color-col-ink); font-weight: var(--weight-semibold); }
+.st-hl-result { color: var(--color-ok-ink); font-weight: var(--weight-bold); }
+
+.st-dock { grid-area: dock; position: relative; display: grid; gap: var(--space-sm); }
+.st-dock.has-sheet > :not(.st-sheet) { visibility: hidden; }
+.st-dock--nav { grid-template-columns: 1fr 2fr; }
+.st-dock--choice { grid-template-columns: 1fr; }
+.st-dock--grid { grid-template-columns: 1fr 1fr; }
+.st-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: var(--primary-h);
+  padding: 0 var(--space-lg) 0 var(--space-md);
+  border: 0;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-lead);
+  line-height: var(--leading-none);
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+  transition: background-color var(--fade-t) var(--fade-curve), color var(--fade-t) var(--fade-curve), box-shadow var(--fade-t) var(--fade-curve);
+}
+.st-option__key {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: var(--option-key);
+  height: var(--option-key);
+  border-radius: var(--radius-sm);
+  background: var(--color-soft);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-label);
+  color: var(--color-muted);
+  transition: background-color var(--fade-t) var(--fade-curve), color var(--fade-t) var(--fade-curve);
+}
+.st-option__key .st-glyph { width: var(--glyph); height: var(--glyph); }
+.st-option.is-correct { background: var(--color-ok-wash); color: var(--color-ok-ink); box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-ok-edge); }
+.st-option.is-correct .st-option__key { background: var(--color-ok-fill); color: var(--color-on-ok); }
+.st-option.is-wrong { background: var(--color-bad-wash); color: var(--color-bad-ink); box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-bad-edge); }
+.st-option.is-wrong .st-option__key { background: var(--color-bad-edge); color: var(--color-ink); }
+.st-option.is-dim { color: var(--color-muted); box-shadow: none; }
+.st-dock--keypad { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: var(--space-sm); }
+.st-keypad__display {
+  grid-column: span 4;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: var(--primary-h);
+  padding: 0 var(--space-lg);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-lead);
+  line-height: var(--leading-none);
+  font-variant-numeric: tabular-nums;
+  transition: background-color var(--fade-t) var(--fade-curve), color var(--fade-t) var(--fade-curve), box-shadow var(--fade-t) var(--fade-curve);
+}
+.st-keypad__value { display: inline-block; transform-origin: 0 50%; }
+.st-keypad__display.is-empty .st-keypad__value { color: var(--color-muted); font-size: var(--text-body); }
+.st-keypad__display.is-correct { background: var(--color-ok-wash); color: var(--color-ok-ink); box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-ok-edge); }
+.st-keypad__display.is-wrong { background: var(--color-bad-wash); color: var(--color-bad-ink); box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-bad-edge); }
+/* Shown, no verdict ("Bilmiyorum", UC-1): one ink ring for an option and the keypad display. */
+.st-option.is-shown, .st-keypad__display.is-shown { box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-ink); }
+.st-keypad__caret { width: var(--caret-w); height: var(--caret-h); background: var(--color-ink); }
+.st-keypad__check { grid-column: span 2; padding: 0 var(--space-sm); }
+.st-key {
+  min-height: var(--hit);
+  border: 0;
+  border-radius: var(--radius-md);
+  background: var(--color-soft);
+  font-weight: var(--weight-medium);
+  font-size: var(--text-lead);
+  line-height: var(--leading-none);
+  cursor: pointer;
+}
+
+/* Feedback sheet (layer E). It sits on the dock's grid area, anchored to its bottom, and hugs its
+   content; a longer explanation grows it upward over the narration instead of clipping. The bottom
+   corners are concentric with the button's (button radius + the sheet's padding). */
+.st-sheet {
+  position: absolute;
+  grid-area: dock;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: var(--z-sheet);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-rows: auto auto auto;
+  column-gap: var(--space-md);
+  row-gap: var(--space-xs);
+  padding: var(--space-md);
+  border-radius: var(--radius-xl) var(--radius-xl) var(--radius-sheet-end) var(--radius-sheet-end);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sheet);
+}
+/* TYPE_SYSTEM.md §3: row 1 is the verdict (and streak) with the duo head at its right end; the text spans
+   the width below on the verdict's left edge (16 px inside: padding 12 + 4); Devam is always the action. */
+.st-sheet.is-correct { background: var(--color-ok-tint); }
+/* Eren 2026-10-27 12:56: the wrong sheet stays pink (a verdict); the neutral "Bilmiyorum" sheet has none. */
+.st-sheet.is-wrong { background: var(--color-bad-tint); }
+.st-sheet__head { grid-column: 1; grid-row: 1; display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs) var(--space-sm); min-height: var(--mascot); padding-inline: var(--space-xs); }
+.st-sheet__mascot { grid-column: 2; grid-row: 1; }
+.st-sheet__verdict { margin: 0; font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-bold); }
+.st-sheet__streak { margin: 0; padding: var(--space-2xs) var(--space-sm); border-radius: var(--radius-full); background: var(--color-ok-fill); color: var(--color-on-ok); font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); }
+.st-sheet.is-correct .st-sheet__verdict { color: var(--color-ok-ink); }
+.st-sheet.is-wrong .st-sheet__verdict { color: var(--color-bad-ink); }
+.st-sheet__text { grid-column: 1 / -1; margin: 0; padding-inline: var(--space-xs); font-size: var(--text-body); line-height: var(--leading-body); }
+.st-sheet__value { font-weight: var(--weight-bold); color: var(--color-ink); }
+/* "Bilmiyorum" (UC-1): no verdict row, the text starts the sheet. */
+.st-sheet.is-neutral .st-sheet__text { grid-row: 1; }
+.st-sheet > .st-btn { grid-column: 1 / -1; margin-top: var(--space-sm); }
+
+/* Mascot: a 1×2 matrix face. Parts move on the engine's springs (hop, squash, wobble, blink). */
+.st-mascot { width: var(--mascot); height: var(--mascot); flex: none; overflow: visible; }
+.st-mascot__body, .st-mascot__arm, .st-mascot__eyes { transform-box: fill-box; transform-origin: 50% 50%; }
+.st-mascot__body { transform-origin: 50% 100%; }
+.st-mascot__bracket { fill: none; stroke: var(--color-ink); stroke-width: var(--stroke-mascot); stroke-linecap: round; stroke-linejoin: round; }
+.st-mascot__eye { fill: var(--color-ink); }
+.st-mascot__smile { fill: none; stroke: var(--color-ink); stroke-width: var(--stroke-mascot-face); stroke-linecap: round; }
+.st-mascot--big { width: var(--mascot-big); height: var(--mascot-big); }
+/* Sharing the scene with a label or matrix: the mascot steps back so both fit. */
+.st-scene:has(> .st-obj + .st-obj) .st-mascot--big { width: var(--mascot-shared); height: var(--mascot-shared); }
+.st-mascot--done { width: calc(var(--cell) * 2.6); height: calc(var(--cell) * 2.6); }
+.st-mascot--brand { width: var(--icon); height: var(--icon); }
+
+/* Short phones (Safari with toolbars, small Android): narration gives the stage a little more room. */
+@media (orientation: portrait) and (max-height: 600px) {
+  .st-narr { padding-block: var(--space-sm); }
+  .st-unclear { margin-block: calc(var(--space-sm) * -1); }
+  .st-body { margin-top: var(--space-xs); }
+}
+
+/* Phone held sideways: stage left, words and actions right. */
+@media (orientation: landscape) and (max-height: 520px) {
+  .st-view { max-width: var(--view-max-wide); }
+  .st-lesson {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+    grid-template-rows: var(--top-h) minmax(0, 1fr) auto;
+    grid-template-areas: "top top" "stage narr" "stage dock";
+    column-gap: var(--space-lg);
+  }
+  .st-narr { align-self: end; }
+  .st-map { grid-template-rows: var(--top-h) auto auto minmax(0, 1fr) auto; row-gap: var(--space-sm); }
+  .st-map__title { font-size: var(--text-title); }
+  .st-tiles { grid-template-columns: repeat(6, minmax(0, 1fr)); grid-auto-rows: minmax(var(--tile-min-h), 1fr); }
+  .st-map__dock { grid-template-columns: 1fr auto; align-items: center; }
+}
+
+/* ---------- Feel layer (work/feel-v1): seals, duo, lesson end ---------- */
+/* A label with variants stays on one line and may not widen its grid track (fitLabel measures the overflow). */
+.st-fit { min-width: 0; white-space: nowrap; }
+
+/* Lesson-end stage: the duo stacks above the matrix and both scale with the stage (feelEndLayout); cells use the solo size. */
+.st-scene--stack { --cell: var(--cell-stack); flex-direction: column; justify-content: flex-start; padding-top: var(--end-top); }
+
+/* Seal: a bracketed matrix whose brackets are real elements, so the engine's springs can close them. */
+.st-mat--seal .st-mat__grid::before, .st-mat--seal .st-mat__grid::after { content: none; }
+.st-seal__br {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: calc(var(--cell) * var(--seal-bracket-arm));
+  border: var(--seal-bracket-stroke) solid var(--color-ink);
+  will-change: transform;
+}
+.st-seal__br--l { left: 0; border-right: 0; border-radius: var(--radius-xs) 0 0 var(--radius-xs); }
+.st-seal__br--r { right: 0; border-left: 0; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; }
+.st-seal__pad { visibility: hidden; }
+/* A course or unit cell: a lesson code on a wash that takes ink (the ink layer fades in over it). */
+.st-seal__tile {
+  position: relative;
+  background: var(--color-seal-wash);
+  font-size: var(--cell-font-long);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
+  transition: none;
+}
+.st-seal__ink {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  border-radius: inherit;
+  background: var(--color-seal-ink);
+  color: var(--color-on-seal);
+}
+/* Under the matrix: the quiet score line. A zero-width box centres it and lets it run past the matrix, so it stays on one
+   line and never widens the matrix (the engine's width fit measures the matrix, not this line). */
+.st-seal__caption {
+  align-self: center;
+  display: flex;
+  justify-content: center;
+  width: 0;
+  white-space: nowrap;
+  font-size: var(--text-ui);
+  line-height: var(--leading-caption);
+  color: var(--color-muted);
+}
+.st-narr__extra { font-size: var(--text-body-sm); color: var(--color-muted); }
+
+/* Duo heads: round, role-coloured, with the face drawn in code (src/duo.js). */
+.st-duo { width: var(--duo-md); line-height: 0; }
+.st-duo--one { width: var(--duo-one); }
+.st-duo--sm { width: var(--duo-sm); }
+.st-duo--fit { width: var(--duo-fit, var(--duo-md)); }
+.st-duo--lg { width: var(--duo-lg); }
+.st-duo svg { display: block; width: 100%; height: auto; overflow: visible; }
+/* The sheet's mascot column (M2): one head, or the pair from the streak on, which overhangs into the column gap. */
+.st-sheet__mascot.st-duo { margin-top: calc(var(--duo-top-one) * -100%); }
+.st-sheet--pair .st-sheet__mascot.st-duo { width: var(--duo-sheet-pair); margin-top: calc(var(--duo-top-pair) * -100%); }
+/* The summary step's pair is as tall as the old mascot was, and steps back the same way when it shares the stage. */
+.st-duo--scene { width: calc(var(--mascot-big) * var(--duo-pair-ratio)); }
+.st-scene:has(> .st-obj + .st-obj) .st-duo--scene { width: calc(var(--mascot-shared) * var(--duo-pair-ratio)); }
+.st-duo__head { transform-box: fill-box; transform-origin: 50% 100%; }
+.st-duo__head--row { color: var(--color-on-head-row); }
+.st-duo__head--col { color: var(--color-on-head-col); }
+.st-duo__skull { stroke-width: var(--stroke-duo-rim); }
+.st-duo__head--row .st-duo__skull { fill: var(--color-head-row); stroke: var(--color-head-rim-row); }
+.st-duo__head--col .st-duo__skull { fill: var(--color-head-col); stroke: var(--color-head-rim-col); }
+.st-duo__eye, .st-duo__mouth { fill: currentColor; stroke: currentColor; stroke-linejoin: round; stroke-linecap: round; }
+.st-duo__eye { stroke-width: var(--stroke-duo); }
+.st-duo__mouth { stroke-width: var(--stroke-duo-mouth); }
+.st-duo__brow { fill: none; stroke: currentColor; stroke-width: var(--stroke-duo-brow); stroke-linecap: round; stroke-linejoin: round; }
+
+/* Secret moment (M3): "Geç" takes the ✕'s place at the same 48 px, so the bar and the counter do not move; İleri is the dock's one primary. */
+.st-icon-btn.st-skip { color: var(--color-ink); font-size: var(--text-ui); font-weight: var(--weight-semibold); line-height: var(--leading-none); }
+.st-dock--moment > [data-action="moment-next"] { grid-column: 1 / -1; }
+
+/* A seal's label is never larger than the narration title under it (the cell-scaled label reached 35 px). */
+.st-mat--seal > .st-mat__name { font-size: min(max(var(--text-caption), calc(var(--cell) * 0.4)), var(--text-title)); }
+
+/* ---------- Touch (M5, flag `touch`: the page root carries .st-touch, so nothing below applies without it) ---------- */
+/* The ink of a press is a gradient of one colour (--press-tint, registered in the tokens), so the engine's press (scale) and the ink arrive in
+   the tap's own frame and the ink fades on release. */
+:root.st-touch :is(.st-btn, .st-option, .st-key, .st-tab, .st-icon-btn, .st-unclear, .st-tile, .st-me-cell, .st-me-sound) {
+  background-image: linear-gradient(var(--press-tint), var(--press-tint));
+  transition: background-color var(--fade-t) var(--fade-curve), color var(--fade-t) var(--fade-curve), box-shadow var(--fade-t) var(--fade-curve), --press-tint var(--fade-t) var(--fade-curve);
+}
+:root.st-touch .is-pressed { --press-tint: var(--press-ink); transition-duration: var(--press-in-t); }
+/* The chip's pill is its ::before (the 48 px target stays clear), so the ink is drawn there. */
+
+/* Neighbouring targets sit --tap-gap apart. The pilot's close/back pair overlapped, the unit tabs and the stage's replay and the narration's
+   "anlaşılmadı" sat 4 px apart. */
+:root.st-touch .st-tabs { gap: var(--tap-gap); }
+:root.st-touch .st-top .st-icon-btn + .st-icon-btn { margin-left: calc((var(--space-md) - var(--tap-gap)) * -1); }
+/* Moved by `translate` (an individual transform the engine's springs do not use), so the narration row keeps its height.
+   The label would travel with its box, off the eyebrow's line: the bottom padding (twice the shift) lifts the content back by the shift. */
+:root.st-touch .st-unclear {
+  translate: 0 calc(var(--tap-gap) - var(--space-xs));
+  padding-block-end: calc((var(--tap-gap) - var(--space-xs)) * 2);
+}
+
+/* Control text is centred on its cap height, not on the line box (the line box leaves more air under the baseline than over the capitals).
+   A button is a block, so the trim reaches its text (a flex container would hide the text in an anonymous box); an option and its key
+   hold a flex row, so they take the UI font's measured lift instead. */
+:root.st-touch .st-btn { display: inline-block; text-align: center; }
+:root.st-touch .st-option { padding-top: calc(var(--cap-lift) * 2); }
+@supports (text-box: trim-both cap alphabetic) {
+  :root.st-touch :is(.st-btn, .st-tab, .st-key, .st-unclear, .st-count) { text-box: trim-both cap alphabetic; }
+}
+
+/* "Bilmiyorum" (engine step result `unknown`): a soft cell with no glyph, between the green check and the neutral cross. */
+.st-cell.is-unknown { background: var(--color-soft); }
+
+/* Neutral ink for a miss (council 27 Oct): the end screen's cross cells and a struck option in the secret moment are never red. */
+.st-cell.is-miss { background: var(--color-soft); color: var(--color-ink); font-weight: var(--weight-semibold); }
+.st-option.is-miss { color: var(--color-muted); box-shadow: none; text-decoration: line-through; text-decoration-thickness: var(--stroke-hair); }
+/* Launch greeting layer: one centred stack above everything, Köşeli's mark at launch size. */
+.st-launch { position: fixed; inset: 0; z-index: calc(var(--z-overlay) + 1); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-md); background: var(--color-bg); }
+.st-launch__mark { width: var(--launch-mark); height: var(--launch-mark); }
+.st-launch__word { margin: var(--space-sm) 0 0; font-size: var(--text-display); line-height: var(--leading-display); font-weight: var(--weight-bold); letter-spacing: var(--tracking-tight); }
+.st-launch__line { margin: 0; font-size: var(--text-body); color: var(--color-muted); }
+/* ---------- Answer card (NAV_PROFILE_CARD_SPEC section 4): one size, one height ---------- */
+/* Everything in the card is Body 17 (the verdict too); head chips are Label 14. The card is always head + 3 text lines + Devam tall:
+   12 + 40 + 4 + 75 + 4 + 8 + 56 + 12 = 211, whatever the verdict, the text or the viewport. */
+.st-sheet { grid-template-rows: var(--mascot) calc(var(--sheet-lines) * var(--leading-body)) auto; }
+.st-sheet__head { flex-wrap: nowrap; height: var(--mascot); min-height: 0; min-width: 0; }
+.st-sheet__verdict { flex: none; font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-bold); }
+.st-sheet.is-neutral .st-sheet__verdict { color: var(--color-ink); }
+.st-sheet__streak, .st-sheet__mine { flex: none; margin: 0; padding: var(--space-2xs) var(--space-sm); border-radius: var(--radius-full); font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); white-space: nowrap; }
+.st-sheet__mine { flex: 0 1 auto; min-width: 0; overflow: hidden; text-overflow: ellipsis; background: var(--color-soft); color: var(--color-ink); }
+.st-sheet__mine-value { font-weight: var(--weight-semibold); }
+.st-sheet__text { grid-row: 2; height: calc(var(--sheet-lines) * var(--leading-body)); overflow: hidden; }
+.st-sheet > .st-btn { grid-row: 3; }
+.st-sheet__text sub, .st-sheet__text sup, .st-narr sub, .st-narr sup { font-size: max(var(--text-caption), var(--text-script)); }
+/* Runtime safety only: a text longer than its box is clamped and opened by "Tamamı" (the sheet then grows upward, once, on his tap). */
+.st-sheet__text.is-clamped { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--sheet-lines); }
+.st-sheet__text.is-clamped.is-open { display: block; height: auto; overflow: visible; }
+.st-sheet.is-open { grid-template-rows: var(--mascot) auto auto; }
+.st-sheet__more { flex: none; min-height: var(--hit); margin-left: auto; padding: 0 var(--space-sm); border: 0; background: transparent; color: var(--color-muted); font-size: var(--text-label); font-weight: var(--weight-semibold); cursor: pointer; }
+.st-sheet.is-neutral .st-sheet__text { grid-row: 2; }
+
+/* ---------- Lesson screen (design audit 3.3) ---------- */
+/* UC-D10, one back location: the top bar's chevron. The dock holds İleri / Bitir alone, full width. */
+.st-dock--nav { grid-template-columns: 1fr; }
+/* UC-D11, progress: the segments touch and read as one continuous bar. Only the bar's ends and the midpoint gap
+   (the engine's mid margin, "Yarısı bitti") keep rounded corners; the fill still moves segment by segment. */
+.st-progress, .st-progress.is-dense { gap: 0; }
+.st-progress__seg, .st-progress__seg::before, .st-progress__seg > .st-progress__fill { border-radius: 0; }
+.st-progress__seg:is(:first-child, .st-progress__seg--mid), .st-progress__seg:is(:first-child, .st-progress__seg--mid) > * { border-top-left-radius: var(--radius-full); border-bottom-left-radius: var(--radius-full); }
+.st-progress__seg:is(:last-child, :has(+ .st-progress__seg--mid)), .st-progress__seg:is(:last-child, :has(+ .st-progress__seg--mid)) > * { border-top-right-radius: var(--radius-full); border-bottom-right-radius: var(--radius-full); }
+.st-progress__seg::before { border-radius: inherit; }
+/* UC-D13, the neutral card ("Bilmiyorum") is a soft surface with a hairline, so it no longer looks like one more option card. */
+.st-sheet.is-neutral { background: var(--color-soft); box-shadow: var(--shadow-sheet), inset 0 0 0 var(--stroke-hair) var(--color-soft-strong); }
+
+/* Duo heads: the proposal's D1 colours (mascot.html --m-row-hi and --m-col-hi): a light tint of the role colour, no rim, the same in both themes. */
+:root {
+  --duo-skin-row: #3b8be0;
+  --duo-skin-col: #dac6ff;
+}
+.st-duo .st-duo__head--row .st-duo__skull { fill: var(--duo-skin-row); stroke: none; }
+.st-duo .st-duo__head--col .st-duo__skull { fill: var(--duo-skin-col); stroke: none; }
+
+/* The answer card's pair: 64 px wide (54 high), its top lifted into the card's padding so it sits inside the fixed 40 px head row
+   (the 211 px card and the 3-line text box are untouched); wide enough that the eyes and mouths read. */
+.st-sheet--pair .st-sheet__mascot.st-duo { width: 64px; margin-top: -8px; margin-right: -4px; }
+
+/* Profil's two switches (Ses, Müzik) share one card: the card owns the surface and the shadow, the rows are flat; a hairline divides them. */
+.st-me .st-me__switches { grid-row: 5; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.st-me .st-me__switches .st-me-sound { grid-row: auto; flex: none; border-radius: 0; background: transparent; box-shadow: none; }
+.st-me .st-me__switches .st-me-sound--music { border-top: var(--stroke-hair) solid var(--color-soft-strong); }
+.st-me .st-me__switches .st-me-sound.is-disabled { cursor: default; opacity: 0.45; }
+
+/* ---------- Shell (DESIGN_AUDIT_AND_REDESIGN): the title switch, Dersler's lesson list, Profil ---------- */
+
+/* Dersler: the map's rows are placed by name: the unit head, then the list in the row that takes the free height. */
+#map-top { grid-row: 1; }
+#unit-tabs { grid-row: 2; }
+#tiles-soon { grid-row: 3; }
+#tiles { grid-row: 4; }
+#map-dock { grid-row: 5; }
+
+/* The title switch: the place is the title. The current word is ink inside matrix brackets, the other is muted. */
+.st-nav { position: relative; display: flex; align-items: center; height: var(--top-h); }
+.st-nav__tab {
+  height: var(--hit);
+  padding: 0 var(--nav-pad);
+  border: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font-size: var(--nav-title);
+  line-height: var(--leading-none);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-tight);
+  cursor: pointer;
+  transition: color var(--fade-t) var(--fade-curve);
+}
+.st-nav__tab[aria-selected="true"] { color: var(--color-ink); }
+/* Layer A rings sit inside the target, so the viewport can never clip them. */
+.st-nav__tab:focus-visible { outline-offset: calc(var(--stroke-ring) * -1); border-radius: var(--radius-md); }
+.st-nav__br { position: absolute; left: 0; top: var(--space-sm); bottom: var(--space-sm); width: var(--nav-arm); border: var(--seal-bracket-stroke) solid var(--color-ink); pointer-events: none; will-change: transform; }
+.st-nav__br--l { border-right: 0; border-radius: var(--radius-xs) 0 0 var(--radius-xs); }
+.st-nav__br--r { border-left: 0; border-radius: 0 var(--radius-xs) var(--radius-xs) 0; }
+
+/* The lesson list: one inset group holding every lesson of the unit (the engine's tiles, shaped into rows by home.js). It fills the
+   room it has; a unit taller than that room scrolls inside (no bar shows, a soft fade marks the side with more). */
+.st-tiles.st-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  align-content: normal;
+  position: relative;
+  align-self: start;
+  max-height: 100%;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: none;
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-raised);
+}
+.st-tiles.st-list::-webkit-scrollbar { display: none; }
+.st-tiles.st-list::before, .st-tiles.st-list::after { content: ""; position: sticky; z-index: var(--z-raised); flex: none; height: var(--list-fade); pointer-events: none; opacity: 0; transition: opacity var(--fade-t) var(--fade-curve); }
+.st-tiles.st-list::before { top: 0; margin-bottom: calc(var(--list-fade) * -1); background: linear-gradient(to top, transparent, var(--color-surface)); }
+.st-tiles.st-list::after { bottom: 0; margin-top: calc(var(--list-fade) * -1); background: linear-gradient(to bottom, transparent, var(--color-surface)); }
+.st-tiles.st-list.is-more-up::before, .st-tiles.st-list.is-more-down::after { opacity: 1; }
+.st-list .st-tile {
+  position: relative;
+  flex: 0 1 var(--row-h);
+  min-height: var(--row-h-min);
+  display: grid;
+  grid-template-columns: var(--row-code-w) minmax(0, 1fr) auto;
+  column-gap: var(--space-sm);
+  row-gap: var(--space-2xs);
+  align-content: center;
+  align-items: center;
+  padding: 0 var(--space-lg);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+.st-list .st-tile:not(.is-last)::after { content: ""; position: absolute; left: var(--space-lg); right: 0; bottom: 0; height: var(--stroke-hair); background: var(--color-soft); }
+.st-list .st-tile.is-next::after, .st-list .st-tile:has(+ .is-next)::after { content: none; }
+.st-list .st-tile__code { grid-column: 1; grid-row: 1; font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.st-list .st-tile__name { grid-column: 2; grid-row: 1; font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-semibold); color: var(--color-ink); overflow: hidden; white-space: nowrap; }
+/* Done: the name settles to regular weight and a check closes the row. */
+.st-list .st-tile.is-done .st-tile__name { font-weight: var(--weight-medium); }
+.st-list .st-tile__badge { position: static; grid-column: 3; grid-row: 1; display: none; width: var(--row-check); height: var(--row-check); }
+.st-list .st-tile.is-done .st-tile__badge { display: grid; width: var(--row-check); height: var(--row-check); }
+/* Ready, not done: a quiet chevron says the row opens. */
+.st-list .st-tile__go { grid-column: 3; grid-row: 1; width: var(--row-chev); height: var(--row-chev); margin-right: var(--space-xs); border-top: var(--stroke-ring) solid var(--color-muted); border-right: var(--stroke-ring) solid var(--color-muted); rotate: var(--row-chev-turn); }
+.st-list .st-tile.is-done .st-tile__go, .st-list .st-tile.is-current .st-tile__go { display: none; }
+.st-list .st-tile.is-next .st-tile__go { border-color: var(--color-action); }
+/* Not written yet: in its place in the course, quiet, with "Yakında" where the check would be. */
+.st-list .st-tile.is-locked { color: var(--color-muted); cursor: default; }
+.st-list .st-tile.is-locked .st-tile__lock { display: none; }
+.st-list .st-tile.is-locked .st-tile__code { }
+.st-list .st-tile.is-locked .st-tile__name { font-weight: var(--weight-medium); color: var(--color-muted); }
+.st-list .st-tile__soon { grid-column: 3; grid-row: 1; font-size: var(--text-caption); line-height: var(--leading-label); font-weight: var(--weight-medium); color: var(--color-muted); }
+.st-list .st-tile__step { grid-column: 3; grid-row: 1; font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); color: var(--color-ink); }
+.st-list .st-tile__step::before { content: none; }
+.st-list .st-tile__meta, .st-list .st-tile__bar { grid-column: 2 / -1; }
+.st-list .st-tile__meta { grid-row: 2; font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-medium); color: var(--color-muted); }
+.st-list .st-tile__bar { grid-row: 3; height: var(--space-xs); margin-top: var(--space-xs); overflow: hidden; border-radius: var(--radius-full); background: var(--color-soft); }
+.st-list .st-tile__bar > i { display: block; height: 100%; border-radius: inherit; background: var(--color-seal-ink); transform-origin: 0 50%; }
+.st-list .st-tile__tag { display: none; grid-column: 3; grid-row: 1; font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); color: var(--color-action); }
+/* The next lesson is the one isolated row: a ring, a taller row, a second line. */
+.st-list .st-tile.is-next { flex-basis: var(--row-next-h); min-height: var(--row-next-h); }
+.st-list .st-tile.is-next::before { content: ""; position: absolute; inset: var(--space-xs); border-radius: var(--radius-md); box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-action); pointer-events: none; }
+.st-list .st-tile.is-next .st-tile__step { display: none; }
+
+/* The unit head: what the unit holds, in one line, and one strip segment per lesson (done ink, next ringed, ready soft, soon faint). */
+.st-unit { display: flex; flex-direction: column; gap: var(--space-sm); padding-inline: var(--space-xs); }
+.st-unit[hidden] { display: none; }
+.st-unit__line { margin: 0; overflow: hidden; white-space: nowrap; font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); color: var(--color-muted); }
+.st-unit__strip { display: flex; gap: var(--space-xs); height: var(--unit-seg-h); }
+.st-unit__seg { flex: 1; border-radius: var(--radius-full); background: var(--color-soft-strong); }
+.st-unit__seg.is-done { background: var(--color-seal-ink); }
+.st-unit__seg.is-next { background: var(--color-surface); box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-action); }
+.st-unit__seg.is-soon { background: var(--color-soft); }
+
+/* The engine's one-line notice: a pill above the primary, out of the flow (nothing reflows when it comes or goes). */
+.st-notice { position: absolute; left: 0; right: 0; bottom: calc(var(--space-md) + var(--primary-h) + var(--notice-gap)); display: flex; align-items: center; width: fit-content; height: var(--notice-h); margin: 0 auto; padding: 0 var(--space-md); border-radius: var(--radius-full); background: var(--color-soft); color: var(--color-ink); font-size: var(--text-label); font-weight: var(--weight-semibold); pointer-events: none; }
+.st-notice[hidden], .st-me[hidden] { display: none; }
+
+/* ---------- Profil: a page of the map view ---------- */
+/* Four calm blocks, top to bottom: the pair and its line, the summary (exam date and three counts), the course matrix, the switches. */
+.st-me { position: absolute; inset: var(--top-h) 0 0; display: flex; flex-direction: column; row-gap: var(--space-md); overflow-y: auto; scrollbar-width: none; padding: var(--space-md) max(var(--gutter), env(safe-area-inset-right, 0px)) var(--space-md) max(var(--gutter), env(safe-area-inset-left, 0px)); }
+.st-me::-webkit-scrollbar { display: none; }
+.st-me__intro { display: flex; flex: none; align-items: center; gap: var(--space-md); padding-inline: var(--space-xs); }
+.st-me__pair { display: flex; flex: none; }
+.st-me__line { margin: 0; font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-medium); text-wrap: balance; }
+.st-me__line--page { flex: 1; min-width: 0; }
+
+.st-me__hero, .st-me__card { flex: none; padding: var(--space-lg); border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-raised); }
+.st-me__exam { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-md); padding-bottom: var(--space-md); border-bottom: var(--stroke-hair) solid var(--color-soft); }
+.st-me__exam-k { font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); color: var(--color-muted); }
+.st-me__eyebrow { font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-semibold); color: var(--color-ink); }
+.st-me__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-sm); margin: var(--space-md) 0 0; }
+.st-me__stat { display: flex; flex-direction: column; min-width: 0; }
+.st-me__stat dd { margin: 0; font-size: var(--text-title); line-height: var(--leading-title); font-weight: var(--weight-bold); font-variant-numeric: tabular-nums; }
+.st-me__stat dt { margin-top: var(--space-2xs); font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-medium); color: var(--color-muted); white-space: nowrap; }
+
+/* The course matrix by unit: display only. Its brackets are the seal's (they close once on arrival); every unit shares one cell grid. */
+.st-me__card-head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-sm); }
+.st-me__card-title { margin: 0; white-space: nowrap; font-size: var(--text-ui); line-height: var(--leading-label); font-weight: var(--weight-bold); }
+.st-me__legend { display: flex; align-items: center; gap: var(--space-xs); margin: 0; font-size: var(--text-caption); line-height: var(--leading-label); color: var(--color-muted); white-space: nowrap; }
+.st-me__legend .st-course__key:not(:first-child) { margin-left: var(--space-xs); }
+.st-course__key { flex: none; width: var(--course-key); height: var(--course-key); border-radius: var(--radius-xs); background: var(--color-soft); }
+.st-course__key.is-done { background: var(--color-seal-ink); }
+.st-course__key.is-next { background: transparent; box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-action); }
+.st-course__key.is-ready { background: transparent; box-shadow: inset 0 0 0 var(--stroke-hair) var(--color-muted); }
+.st-me__course { margin-top: var(--space-sm); }
+.st-me__matrix { --cell: var(--course-bracket); position: relative; display: flex; flex-direction: column; gap: var(--space-lg); padding: var(--space-sm) var(--space-md); }
+.st-course__label { display: flex; justify-content: space-between; gap: var(--space-sm); margin: 0 0 var(--space-xs); font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-semibold); }
+.st-course__count { font-weight: var(--weight-medium); color: var(--color-muted); font-variant-numeric: tabular-nums; }
+.st-course__count.is-sealed { color: var(--color-ok-ink); font-weight: var(--weight-semibold); }
+.st-course__cells { display: grid; grid-template-columns: repeat(var(--course-cols), minmax(0, 1fr)); gap: var(--space-xs); }
+.st-course__cell { position: relative; display: grid; place-items: center; height: var(--course-cell); border-radius: var(--radius-xs); font-style: normal; font-size: var(--text-caption); line-height: var(--leading-none); font-weight: var(--weight-semibold); font-variant-numeric: tabular-nums; color: var(--color-ink); }
+.st-course__cell.is-wide { grid-column: span 2; }
+.st-course__cell.is-done { background: var(--color-seal-ink); color: var(--color-on-seal); }
+.st-course__cell.is-ready { box-shadow: inset 0 0 0 var(--stroke-hair) var(--color-muted); }
+.st-course__cell.is-next { box-shadow: inset 0 0 0 var(--stroke-ring) var(--color-action); }
+.st-course__cell.is-locked { background: var(--color-soft); color: var(--color-muted); font-weight: var(--weight-medium); }
+.st-me__dot { position: absolute; top: var(--space-2xs); right: var(--space-2xs); width: var(--sezgi-dot-sm); height: var(--sezgi-dot-sm); border-radius: var(--radius-full); background: var(--color-head-col); }
+
+.st-me__switches { flex: none; margin-top: auto; }
+.st-me-sound { display: flex; align-items: center; justify-content: space-between; gap: var(--space-md); min-height: var(--primary-h); padding: 0 var(--space-lg); border: 0; border-radius: var(--radius-lg); background: var(--color-surface); box-shadow: var(--shadow-raised); text-align: left; cursor: pointer; }
+.st-me-sound__text { display: flex; flex-direction: column; }
+.st-me-sound__name { font-size: var(--text-body); line-height: var(--leading-body); font-weight: var(--weight-semibold); }
+.st-me-sound__sub { font-size: var(--text-label); line-height: var(--leading-label); font-weight: var(--weight-medium); color: var(--color-muted); }
+.st-me-sound__track { position: relative; flex: none; width: calc(var(--hit) + var(--space-xs)); height: var(--switch-h); border-radius: var(--radius-full); background: var(--color-soft-strong); transition: background-color var(--fade-t) var(--fade-curve); }
+.st-me-sound.is-on .st-me-sound__track { background: var(--color-action); }
+.st-me-sound__knob { position: absolute; top: var(--space-xs); bottom: var(--space-xs); left: var(--space-xs); aspect-ratio: 1; border-radius: var(--radius-full); background: var(--color-surface); }
+.st-me-sound.is-on .st-me-sound__knob { background: var(--color-on-action); }
+
+/* Short phones (375 x 548): rows are 48, the next row 56 with its tag in place of the second line; Profil drops the pair and the switch sub-lines and tightens. */
+@media (max-height: 699px) {
+  :root { --row-h: var(--row-h-short); --row-h-min: var(--row-h-min-short); --row-next-h: var(--row-next-h-short); }
+  .st-list .st-tile__meta, .st-list .st-tile__bar, .st-list .st-tile.is-next .st-tile__go { display: none; }
+  .st-list .st-tile.is-next .st-tile__tag { display: block; }
+  .st-me { row-gap: var(--space-sm); padding-top: var(--space-sm); padding-bottom: var(--space-sm); }
+  .st-me__pair { display: none; }
+  .st-me__line--page { font-size: var(--text-ui); line-height: var(--leading-label); }
+  .st-me__hero, .st-me__card { padding: var(--space-md); }
+  .st-me__exam { padding-bottom: var(--space-sm); }
+  .st-me__stats { margin-top: var(--space-sm); }
+  .st-me__matrix { gap: var(--space-sm); padding-block: var(--space-xs); }
+  :root { --course-cell: var(--course-cell-short); }
+  .st-me__card-title { display: none; }
+  .st-me__card-head { justify-content: flex-start; }
+  .st-me__stat dd { font-size: var(--text-lead); line-height: var(--leading-label); }
+  .st-me-sound { min-height: var(--hit); }
+  .st-me-sound__sub { display: none; }
+}
+

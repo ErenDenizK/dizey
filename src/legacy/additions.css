@@ -1,0 +1,11 @@
+/* Additions to the kept v21 styles (new app only). */
+.st-me__version {
+  margin: 24px 0 0;
+  text-align: center;
+  font-size: 12px;
+  color: #6b6b6b;
+  font-variant-numeric: tabular-nums;
+}
+.st-me .st-me__version {
+  grid-row: 6;
+}
