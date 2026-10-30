@@ -90,6 +90,8 @@ export function Shell() {
   useLayoutEffect(() => {
     const el = layer.current
     if (!overlay || !el) return
+    // A route opened again before the last exit finished replaces its ghost at once.
+    finishExit?.()
     const card = visibleCard()
     if (card) growFrom(el, card)
     else {
@@ -153,6 +155,9 @@ export function Shell() {
     </div>
   )
 }
+
+/** Ends the exit still playing, if any (a route can open again before it lands). */
+let finishExit: (() => void) | null = null
 
 /** The card the route came from, while it is on screen. */
 function visibleCard() {
@@ -235,13 +240,21 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
 
 /** Plays the exit on the route's detached DOM: back into its card, or down and out. */
 function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
+  // Out of the accessibility tree and out of reach: only the motion is left.
   el.inert = true
+  el.setAttribute('aria-hidden', 'true')
   el.style.pointerEvents = 'none'
   host.append(el)
+  finishExit?.()
+  let finished = false
   const done = () => {
+    if (finished) return
+    finished = true
     el.remove()
     if (card) card.style.visibility = ''
+    if (finishExit === done) finishExit = null
   }
+  finishExit = done
   engine.withChannel('chrome', () => {
     if (card) {
       const content = el.firstElementChild as HTMLElement | null
