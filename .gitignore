@@ -1,0 +1,22 @@
+# Dependencies and builds
+node_modules/
+dist/
+build/
+.cache/
+coverage/
+
+# Tooling scratch
+.superpowers/
+playwright-report/
+test-results/
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Secrets
+.env
+.env.*
+!.env.example
