@@ -1,0 +1,116 @@
+name: Pages
+
+# One deployment holds production (site root) and every open PR (pr-preview/pr-<n>/).
+# It always runs in the default branch's context, so the github-pages environment's
+# default-branch protection stays on. Only same-repository PRs are built.
+on:
+  push:
+    branches: [main]
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      previews: ${{ steps.previews.outputs.list }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          ref: main
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Build production
+        run: |
+          pnpm install --frozen-lockfile
+          DIZEY_CHANNEL=production DIZEY_BASE=/${{ github.event.repository.name }}/ GITHUB_SHA=$(git rev-parse HEAD) pnpm build
+          mkdir -p _site && cp -r dist/. _site/
+      - name: Build open PR previews
+        id: previews
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          NAME: ${{ github.event.repository.name }}
+        run: |
+          list=""
+          for row in $(gh pr list --repo "$REPO" --state open --json number,headRefOid,isCrossRepository \
+              --jq '.[] | select(.isCrossRepository | not) | "\(.number):\(.headRefOid)"'); do
+            number=${row%%:*}; sha=${row#*:}
+            git fetch --no-tags origin "pull/$number/head"
+            rm -rf "../pr-$number" && git worktree add --detach "../pr-$number" "$sha"
+            if (cd "../pr-$number" && test -f package.json && pnpm install --frozen-lockfile \
+                && DIZEY_CHANNEL="pr-$number" DIZEY_BASE="/$NAME/pr-preview/pr-$number/" GITHUB_SHA="$sha" pnpm build); then
+              mkdir -p "_site/pr-preview/pr-$number" && cp -r "../pr-$number/dist/." "_site/pr-preview/pr-$number/"
+              list="$list $number"
+            else
+              echo "::warning::Preview build failed for PR #$number"
+            fi
+          done
+          echo "list=${list# }" >> "$GITHUB_OUTPUT"
+      - run: node scripts/write-404.mjs _site /${{ github.event.repository.name }}/
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    outputs:
+      page_url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v5
+
+  comment:
+    needs: [build, deploy]
+    if: needs.build.outputs.previews != ''
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Post or update the preview link on each previewed PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SITE: ${{ needs.deploy.outputs.page_url || format('https://{0}.github.io/{1}/', github.repository_owner, github.event.repository.name) }}
+          PREVIEWS: ${{ needs.build.outputs.previews }}
+        run: |
+          marker="<!-- dizey-preview -->"
+          for number in $PREVIEWS; do
+            url="${SITE,,}pr-preview/pr-$number/"
+            body="$marker
+          Preview: $url
+
+          Opens on the phone too. Rebuilt on every push; removed when the PR closes."
+            id=$(gh api "repos/$REPO/issues/$number/comments" --paginate \
+              --jq ".[] | select(.body | startswith(\"$marker\")) | .id" | head -1)
+            if [ -n "$id" ]; then
+              gh api -X PATCH "repos/$REPO/issues/comments/$id" -f body="$body" > /dev/null
+            else
+              gh api "repos/$REPO/issues/$number/comments" -f body="$body" > /dev/null
+            fi
+          done
