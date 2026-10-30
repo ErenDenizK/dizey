@@ -34,13 +34,6 @@ export function MeView() {
         <Stat state="new" value={counts.new} label={strings.me.statNew} />
       </div>
       <section>
-        <h2 className="sh-label">{strings.me.examTitle}</h2>
-        <div className="sh-card sh-empty">
-          <b>{strings.me.examSoonTitle}</b>
-          <p>{strings.me.examSoonBody}</p>
-        </div>
-      </section>
-      <section>
         <h2 className="sh-label">{strings.me.settings}</h2>
         <div className="sh-card sh-settings">
           <SoundSetting />

@@ -48,6 +48,28 @@ test('a lesson opens from the map sheet', async ({ page }) => {
   await expect(page.locator('#count-lesson')).toContainText('B2')
 })
 
+test('an exam rehearsal runs, survives a reload and shows its result', async ({ page }) => {
+  await openApp(page, './exam')
+  await page.getByRole('button', { name: 'Başlat' }).first().click()
+  await expect(page.getByText(/^Soru 1 \/ \d+$/)).toBeVisible()
+  const first = page.locator('.ex-opt').first()
+  await first.click()
+  await expect(first).toHaveAttribute('aria-pressed', 'true')
+  await first.click()
+  await expect(first).toHaveAttribute('aria-pressed', 'false')
+  await first.click()
+  await page.getByRole('button', { name: 'Sonraki soru' }).click()
+  await expect(page.getByText(/^Soru 2 \/ \d+$/)).toBeVisible()
+  await page.reload()
+  await expect(page.getByText(/^Soru 2 \/ \d+$/)).toBeVisible()
+  await page.getByRole('button', { name: 'Bitir', exact: true }).click()
+  await page.getByRole('alertdialog').getByRole('button', { name: 'Bitir' }).click()
+  await expect(page.getByTestId('exam-score')).toContainText(/\d+ \/ \d+ doğru/)
+  await expect(page.getByTestId('exam-score')).toContainText(/1 yanlış|0 yanlış/)
+  await page.getByRole('link', { name: 'Yeni prova' }).click()
+  await expect(page.getByRole('heading', { name: 'Geçmiş provalar' })).toBeVisible()
+})
+
 test('first launch in iPhone Safari asks to install first', async ({ page, isMobile }, testInfo) => {
   test.skip(channel !== 'production' || testInfo.project.name !== 'iphone-webkit', 'production iPhone only')
   expect(isMobile).toBe(true)
@@ -92,7 +114,7 @@ test('a file that is not a backup is refused', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText('Bu dosya bir Dizey yedeği değil.')
 })
 
-for (const path of ['./', './map', './me']) {
+for (const path of ['./', './map', './exam', './me']) {
   test(`no critical accessibility violations on ${path}`, async ({ page }) => {
     await openApp(page, path)
     const results = await new AxeBuilder({ page }).analyze()
@@ -107,6 +129,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     for (const [name, path] of [
       ['today', './'],
       ['map', './map'],
+      ['exam', './exam'],
       ['me', './me'],
     ] as const) {
       await openApp(page, path)
