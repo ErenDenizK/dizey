@@ -9,9 +9,8 @@ Primary (used):
 - Lecturer notes 2, "Matrislerde Elemanter İşlemler, Eşelon Form, Rank, Ters Matris ve Determinantlar" (90 slides).
 - Three whiteboard photos, 2026-10-27: adjoint inverse, systems with r_A / r_B, homogeneous systems, start of Cramer.
 
-Unverified hints (old package, salvage only): exam date 2026-11-20 11:00-13:00; recent exams are 18-20
-multiple-choice items; parametric (k) systems appear every year. The yildiz.edu.tr hosts are not reachable from
-the build environment, so none of this was re-checked.
+Format: multiple choice (Eren, 2026-10-30). Exam date 2026-11-20 11:00-13:00 is an unverified hint from the old
+archive; the yildiz.edu.tr hosts are not reachable from the build environment.
 
 ## Nodes
 
@@ -50,9 +49,11 @@ Every node answers part of one question: is Ax = b solvable, and is the solution
 - R_i rows, C_i columns in elementary operations; C_ij also means cofactor. Disambiguate by context, do not rename.
 - Turkish terms: "rang", "eşelon", "aşikar (trivial) çözüm". English term shown as a note at first use.
 
+## Scope
+
+No scope announcement from the lecturer (Eren, 2026-10-30). Working scope: syllabus weeks 1-6, the nodes above.
+"Vektörler" (syllabus week 8) stays out; revisit if the lecturer announces otherwise.
+
 ## Open
 
-- Full photos of 2024 summer items 5, 6, 14 (cropped).
-- Whether "Vektörler" (syllabus week 8) is in Vize 1 scope: the lecturer's section was about one week ahead of the
-  2020 syllabus on 2026-10-27.
-- Exam date and format confirmation.
+- Exam date confirmation.
