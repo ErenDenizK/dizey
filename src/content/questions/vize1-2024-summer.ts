@@ -1,20 +1,10 @@
-import type { Block, Question } from './types'
+import { det, matrix, system, text } from './blocks'
+import type { Question } from './types'
 
 /**
  * 2024 summer school Midterm 1, transcribed from Eren's photos and recomputed in
  * vize1-2024-summer.test.ts. Items 5, 6 and 14 are cut off in the photos and are left out.
  */
-
-const text = (value: string): Block => ({ kind: 'text', text: value })
-const matrix = (rows: readonly (readonly string[])[], label?: string): Block =>
-  label === undefined
-    ? { kind: 'matrix', delimiter: 'brackets', rows }
-    : { kind: 'matrix', delimiter: 'brackets', rows, label }
-const det = (rows: readonly (readonly string[])[], label?: string): Block =>
-  label === undefined
-    ? { kind: 'matrix', delimiter: 'bars', rows }
-    : { kind: 'matrix', delimiter: 'bars', rows, label }
-const system = (...equations: string[]): Block => ({ kind: 'system', equations })
 
 const exam = '2024-summer-midterm'
 

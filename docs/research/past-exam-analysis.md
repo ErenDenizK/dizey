@@ -54,6 +54,8 @@ Defects found:
 | 2024 summer, item 10 | With A antisymmetric, B symmetric, AB = BA, options a, b, c and e are all antisymmetric; only d is not. Likely intended "which is not antisymmetric" | Use only in corrected form |
 | 2024 summer, item 13 | The printed A² fits no A with 2A³ − 5A + 3I = 0 (A would be −3(2A² − 5I)⁻¹, whose square differs) | Bank uses a consistent A² from A = [[0, 3/2], [1, −1]] |
 | 2024 summer, item 16 | Statement I, \|Aᵀ(A + B)Bᵀ\| = \|A + B\|, is always true for orthogonal A, B (if \|A\|\|B\| = −1, AᵀB has eigenvalue −1, so \|A + B\| = 0); with II and III true, no option fits | Bank replaces I with \|ABᵀ\| = 1; answer stays c |
+| Bank A, item 1 (version 1) | No orthogonal matrix fits the data: row 1 forces b = −1, which breaks row 2's unit length | Left out; version 2 is consistent and used |
+| Bank A, item 7 (version 1) | Option B is option A multiplied by −1: the same system, so two options are correct | Bank replaces B with a sign slip on one right-hand side |
 | 2024 summer, items 5, 6, 14 | Cropped; item 6's answer depends on the cut statement (c or d) | Do not use until a full photo exists |
 | Bank B, item 6 and its twin | Two options are numerically equal (B and E = −1; C and D = 2); key picks the Cramer form | Rewrite before use |
 | Solved prep, "inverse is unique" proof | Boxed result reads B = I; correct is B = D | Fix if reused |
@@ -66,7 +68,8 @@ of all three classic midterms, the booklet's transcriptions and its key.
 ## Taken
 
 - Question bank: the 15 usable 2024 items are in `src/content/questions/vize1-2024-summer.ts`, each recomputed by
-  `vize1-2024-summer.test.ts` (the keyed option is the only one that passes).
+  `vize1-2024-summer.test.ts` (the keyed option is the only one that passes). Bank A: 17 items in
+  `vize1-practice-a.ts`, same method.
 
 - Topic priorities: D3 first; then special matrices, inverse, parametric systems.
 - Real exam items, corrected where listed above, as the seed of the question bank and of error-type distractors.

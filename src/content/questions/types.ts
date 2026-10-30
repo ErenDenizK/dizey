@@ -42,6 +42,8 @@ export type Block =
       /** "brackets" for a matrix, "bars" for a determinant. */
       readonly delimiter: 'brackets' | 'bars'
       readonly rows: readonly (readonly string[])[]
+      /** For an augmented matrix [A | b]: the column index where the bar goes. */
+      readonly augmentedAt?: number
       /** Text placed before the matrix, such as "A =". */
       readonly label?: string
     }
@@ -60,6 +62,8 @@ export interface QuestionSource {
   /** Where the item comes from, e.g. "2024-summer-midterm". */
   readonly exam: string
   readonly item: number
+  /** Second printed version of the same item ("muadil"). */
+  readonly variant?: 2
   /** What we changed from the original and why, in English. Absent when used as printed. */
   readonly correction?: string
 }
