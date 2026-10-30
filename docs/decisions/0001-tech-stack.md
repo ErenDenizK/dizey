@@ -21,7 +21,7 @@ Hard platform facts that shape the choice (sources in the research report):
 
 | Option | For | Against |
 | --- | --- | --- |
-| **React 19 + TypeScript** | Largest ecosystem for exactly our needs (Motion's layout/gesture API, React Aria, three.js via React Three Fiber if 3D is ever needed); the framework Claude writes most reliably, which matters when all code is AI-written; React Compiler removes manual memoisation; Capacitor wrap stays open if native is ever wanted. | Larger runtime (~60 kB gz), irrelevant for an installed, precached PWA; more ceremony than Svelte. |
+| **React 19 + TypeScript** | Largest ecosystem for exactly our needs (React Aria, three.js via React Three Fiber if 3D is ever needed); the framework Claude writes most reliably, which matters when all code is AI-written; React Compiler removes manual memoisation; Capacitor wrap stays open if native is ever wanted. | Larger runtime (~60 kB gz), irrelevant for an installed, precached PWA; more ceremony than Svelte. |
 | Svelte 5 | Built-in transitions, less code, small output. | Runes are recent, so less reliable AI output; Motion has no first-class Svelte binding; smaller accessible-primitives ecosystem. |
 | SolidJS | Fastest fine-grained updates. | Small ecosystem; animation and a11y libraries thin. |
 | Vue 3 | Mature, good transitions. | No advantage over React for our needs; smaller math/animation ecosystem. |
@@ -47,9 +47,14 @@ Hard platform facts that shape the choice (sources in the research report):
 
 | Option | For | Against |
 | --- | --- | --- |
-| **Motion (motion.dev) for React + native CSS/View Transitions** | Interruptible springs, gestures (drag), layout and shared-element animation, hardware-accelerated where possible, reduced-motion support. | One more dependency. |
-| GSAP (now free) | Powerful timelines. | Imperative, duplicates Motion, fights React's rendering model. |
-| CSS only | Zero cost. | No interruptible springs or drag physics, which the matrix manipulation needs. |
+Amended 2026-10-30 (before merge): Eren chose to keep the earlier app's in-lesson presentation, animation system and sound system. That system's rules: every animation (springs, cue timers, particles) runs on one virtual clock, so a tap can finish any running animation per channel, tests step time deterministically, teaching channels run at their own tempo, and reduced motion is one switch; no CSS transitions for movement, no Web Animations API, no `setTimeout`, no View Transitions (they block input and run outside the clock).
+
+| Option | For | Against |
+| --- | --- | --- |
+| **Port the earlier engine's clock and spring integrator to TypeScript (`src/engine/`)** | Meets every rule above by construction; about 400 lines, no dependency; framework-agnostic, animates DOM nodes through refs, so React never re-renders per frame; its tuned constants (springs, choreography, tempo) carry over unchanged. | We own and test it. |
+| Motion (motion.dev) | Springs, gestures, layout animation. | Clock control is only global (`MotionGlobalConfig.useManualTiming`, `instantAnimations`, `skipAnimations`); no per-channel finish or tempo; transform and opacity can run on WAAPI, outside any virtual clock. |
+| GSAP (now free) | Timelines with a global ticker. | Same gaps per channel; imperative; second system next to the kept engine. |
+| View Transitions / CSS transitions | Zero cost. | Explicitly rejected by the kept system: block input, wall-clock time. |
 
 ## Decision
 
@@ -63,11 +68,11 @@ Hard platform facts that shape the choice (sources in the research report):
 | Styling | Tailwind CSS v4 with the default theme removed, so only Dizey's tokens exist; tokens are CSS custom properties from one source | Prevents stock palettes and raw values; lint rule against arbitrary values. |
 | Math core | In-house exact arithmetic in TypeScript: `bigint` rationals, matrices, row operations, determinant, inverse, RREF, solution classification | Every number shown in a lesson or checked as an answer comes from here. No floating point in answers. |
 | Math display | Own SVG/DOM components for matrices and vectors (the signature element); KaTeX only for inline formulas | Matrix cells are real elements, so they can move, highlight and be dragged. |
-| Motion | Motion for React for springs, drag and layout; View Transitions and `@starting-style` for screen changes; `prefers-reduced-motion` honoured everywhere | 3D (three.js) only if a lesson truly needs it, lazy-loaded. |
-| Feedback | Web Audio for sound; no haptics promised (iOS has no Vibration API) | |
+| Motion | Own engine (`src/engine/`): one virtual clock, interruptible springs, channels (`chrome`, `beat`, `reveal`) with per-channel tempo and finish, free-physics tickers, reduced motion as one switch; driven by `requestAnimationFrame` with frames capped at 64 ms. The whole app (lesson layer and new shell) uses it. | The full lesson player is ported in the lesson-layer step. 3D (three.js) only if a lesson truly needs it, lazy-loaded. |
+| Feedback | Web Audio sound, ported from the earlier app's sound system as Eren asked; no haptics promised (iOS has no Vibration API) | |
 | Content | Lessons as typed TypeScript modules (English keys, Turkish text), validated by Zod 4 schemas at test time | Lets tests recompute every answer with the math core. |
 | Persistence | IndexedDB through Dexie (versioned schema with migrations), `navigator.storage.persist()`, JSON export/import of progress | Database name is namespaced by deployment (production vs each preview) so previews never touch real progress. |
-| PWA | `vite-plugin-pwa` (Workbox, `injectManifest`), precache app shell and fonts, "new version" prompt instead of silent reload, `@vite-pwa/assets-generator` for icons and iOS splash images, in-app "Add to Home Screen" guide | Production SW excludes `/pr-preview/` from navigation fallback and caching; preview builds register no SW. |
+| PWA | `vite-plugin-pwa` (Workbox `generateSW` for now; `injectManifest` once we need custom worker code), precache app shell and fonts, "new version" prompt instead of silent reload, `@vite-pwa/assets-generator` for icons and iOS splash images, in-app "Add to Home Screen" guide | Production SW excludes `/pr-preview/` from navigation fallback and caching; preview builds register no SW. |
 | Quality tooling | Biome 2 (lint + format), `tsc --noEmit` | |
 | Tests | Vitest 5 (unit), fast-check (property tests for the math core), Playwright with WebKit on an iPhone profile (E2E and 390 px screenshots, light and dark), `@axe-core/playwright` (accessibility) | Content tests: every exercise's answer recomputed by the math core. |
 | CI/CD | GitHub Actions. `ci.yml` on every PR: typecheck, lint, unit, build, E2E. `pages.yml` on push to `main`, on `workflow_run` after CI of a PR, and on PR close: checks out `main` and every open same-repo PR by SHA, builds each with its own base path, assembles one artifact, deploys with `actions/deploy-pages`, then upserts one PR comment with the preview link (job permissions: `contents: read`, `pages: write`, `id-token: write`, `pull-requests: write`). | Runs in `main` context, so the environment's default-branch rule holds. Only same-repo PRs are built (private repo, no forks). Version and short commit hash shown in the app. |

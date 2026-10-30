@@ -38,13 +38,17 @@ react 19.3.1, vite 8.3.5, typescript 7.0.2, @vitejs/plugin-react 6.1.2 (peer vit
 
 **Platform (iOS Safari)**
 - Installed web apps: separate storage, no install prompt, no Vibration API (the iOS 18 `<input type="checkbox" switch>` gives a system haptic, only usable as optional garnish).
-- View Transitions and `@starting-style` are available in Safari 18+, enough for most screen changes.
+- View Transitions and `@starting-style` are available in Safari 18+. Not used: the kept lesson engine forbids motion outside its clock (see decision 0001, Motion).
+
+**Animation engine (2026-10-30, after Eren chose to keep the earlier in-lesson engine)**
+- Read the earlier engine's design notes (motion section) and its `Clock` and `Motion` classes in the live v21 build: a timer queue on a virtual clock, a semi-implicit spring integrator at 240 substeps/s, channels with tempo, snap/flush to finish a channel.
+- Checked `motion-dom` 14.9.0 (`npm pack`): clock control exists only as global flags `MotionGlobalConfig.useManualTiming`, `instantAnimations`, `skipAnimations`.
 
 ## 4. Taken, rejected, why
 
-Taken: everything in the decision table. Main reasons: React for ecosystem fit and AI-authoring reliability; own math core and matrix components because they are the product; KaTeX for consistent formulas on WebKit; Motion for interruptible springs and drag; WebKit-first E2E because the target device is WebKit.
+Taken: everything in the decision table. Main reasons: React for ecosystem fit and AI-authoring reliability; own math core and matrix components because they are the product; KaTeX for consistent formulas on WebKit; the earlier engine's virtual clock, ported, because Eren kept that system and no library meets its per-channel rules; WebKit-first E2E because the target device is WebKit.
 
-Rejected: Svelte 5, SolidJS, Vue (no advantage that outweighs ecosystem and AI reliability), Flutter web and React Native web (weak iOS PWA and text/math accessibility), Temml (Safari MathML issues), MathJax (weight), GSAP (duplicates Motion, imperative), Mafs (stale, foreign look), floating-point math libraries for answers (exactness), Python/SymPy checks (second language in CI for no gain once the TS core is property-tested).
+Rejected: Svelte 5, SolidJS, Vue (no advantage that outweighs ecosystem and AI reliability), Flutter web and React Native web (weak iOS PWA and text/math accessibility), Temml (Safari MathML issues), MathJax (weight), Motion and GSAP (no per-channel clock control), View Transitions (blocks input, outside the clock), Mafs (stale, foreign look), floating-point math libraries for answers (exactness), Python/SymPy checks (second language in CI for no gain once the TS core is property-tested).
 
 ## 5. Open questions
 
