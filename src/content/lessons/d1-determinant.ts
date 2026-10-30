@@ -1,0 +1,320 @@
+import { text } from '../questions/blocks'
+import type { Lesson, MatrixBlock } from './types'
+
+const m = (label: string, rows: readonly (readonly string[])[], bars = false): MatrixBlock => ({
+  kind: 'matrix',
+  delimiter: bars ? 'bars' : 'brackets',
+  rows,
+  label,
+})
+
+/** D1: what the determinant is, the 2×2 rule, Sarrus for 3×3, and det = 0 as "no inverse". */
+export const d1Determinant: Lesson = {
+  id: 'd1-determinant',
+  node: 'D1',
+  title: 'Determinant: tek sayıda büyük bilgi',
+  matrices: {
+    A: m('A =', [
+      ['3', '1'],
+      ['4', '2'],
+    ]),
+    G: m('A =', [
+      ['a', 'b'],
+      ['c', 'd'],
+    ]),
+    B: m(
+      'B =',
+      [
+        ['5', '2'],
+        ['3', '4'],
+      ],
+      true,
+    ),
+    C: m(
+      'C =',
+      [
+        ['2', '-3'],
+        ['1', '4'],
+      ],
+      true,
+    ),
+    T: m('T =', [
+      ['1', '2'],
+      ['3', '6'],
+    ]),
+    K: m(
+      'A =',
+      [
+        ['k', '4'],
+        ['4', 'k'],
+      ],
+      true,
+    ),
+    S: m(
+      'S =',
+      [
+        ['2', '1', '3'],
+        ['0', '4', '1'],
+        ['1', '2', '5'],
+      ],
+      true,
+    ),
+    N: m(
+      'N =',
+      [
+        ['1', '-1', '2'],
+        ['3', '0', '1'],
+        ['-2', '1', '4'],
+      ],
+      true,
+    ),
+    E: m(
+      'A =',
+      [
+        ['k', '1', '1'],
+        ['1', 'k', '1'],
+        ['1', '1', 'k'],
+      ],
+      true,
+    ),
+  },
+  steps: [
+    {
+      id: 'hook',
+      kind: 'explain',
+      eyebrow: 'Soru',
+      title: 'Bu matrisin tersi var mı?',
+      body: 'Cevabı tek bir sayı verir: {ok}determinant{/ok}. Kare matrise bağlı bu sayı $\\det(A)$ ya da $|A|$ diye yazılır.',
+      scene: { items: ['A', '=', 'result'], result: '?' },
+    },
+    {
+      id: 'area',
+      kind: 'explain',
+      eyebrow: 'Sezgi',
+      title: 'Determinant alanın kaç katına çıktığını söyler',
+      body: '$A$ birim kareyi, sütunları $(3, 4)$ ve $(1, 2)$ olan bir paralelkenara taşır. Bu paralelkenarın alanı $2$: alan $2$ katına çıktı. $|\\det(A)|$ tam olarak bu katsayıdır.',
+      scene: { items: ['A'] },
+      beat: { kind: 'area', matrix: 'A' },
+      claims: [{ kind: 'det', matrix: 'A', equals: '2' }],
+    },
+    {
+      id: 'rule-2x2',
+      kind: 'explain',
+      eyebrow: 'Kural',
+      title: '2×2 kuralı: $|A| = ad - bc$',
+      body: '{row}Ana köşegen{/row} sol üstten sağ alta iner, çarpımı $ad$. {col}Diğer köşegen{/col} sağ üstten sol alta iner, çarpımı $bc$. Determinant: ana köşegen eksi diğer köşegen.',
+      scene: { items: ['G', '=', 'result'], result: 'ad − bc' },
+      beat: { kind: 'det2', matrix: 'G' },
+    },
+    {
+      id: 'worked-2x2',
+      kind: 'explain',
+      eyebrow: 'Örnek',
+      title: '$|A| = 3 \\cdot 2 - 1 \\cdot 4 = 2$',
+      body: '{row}Ana köşegen{/row} $3 \\cdot 2 = 6$, {col}diğer köşegen{/col} $1 \\cdot 4 = 4$, fark $2$. Sıfır değil: $A$’nın {ok}tersi var{/ok}.',
+      scene: { items: ['A', '=', 'result'], result: '?' },
+      beat: { kind: 'det2', matrix: 'A' },
+      claims: [{ kind: 'det', matrix: 'A', equals: '2' }],
+    },
+    {
+      id: 'try-b',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$|B|$ kaç?',
+      skill: 'det-2x2',
+      scene: { items: ['B', '=', 'result'], result: '?' },
+      options: [
+        {
+          key: 'a',
+          content: [text('$26$')],
+          errorType: 'added-diagonals',
+          feedback: 'İki çarpımı topladın. Diğer köşegen çıkarılır: $20 - 6$.',
+        },
+        { key: 'b', content: [text('$14$')] },
+        {
+          key: 'c',
+          content: [text('$-14$')],
+          errorType: 'diagonals-reversed',
+          feedback: 'Sırayı ters çevirdin: $6 - 20$. Önce ana köşegen gelir.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'det2', matrix: 'B' },
+      solution: '$5 \\cdot 4 - 2 \\cdot 3 = 20 - 6 = 14$.',
+      claims: [{ kind: 'det', matrix: 'B', equals: '14' }],
+    },
+    {
+      id: 'try-c',
+      kind: 'keypad',
+      eyebrow: 'Senin sıran',
+      title: 'Eksiye dikkat: $|C|$ kaç?',
+      skill: 'det-2x2',
+      scene: { items: ['C', '=', 'result'], result: '?' },
+      answer: '11',
+      feedbackWrong: '$(-3) \\cdot 1 = -3$. Eksiyi çıkarmak artı yapar: $8 - (-3) = 11$.',
+      reveal: { kind: 'det2', matrix: 'C' },
+      solution: '$2 \\cdot 4 - (-3) \\cdot 1 = 8 + 3 = 11$.',
+      claims: [{ kind: 'det', matrix: 'C', equals: '11' }],
+    },
+    {
+      id: 'singular',
+      kind: 'explain',
+      eyebrow: 'Kural',
+      title: '$|A| = 0$ ise $A$ tekildir',
+      body: 'Determinantı $0$ olan matris {ok}tekil{/ok}dir, tersi yoktur. Burada {col}2. sütun{/col}, {col}1. sütunun{/col} $2$ katı: kare düz bir çizgiye ezilir, alan $0$. Ezilen bilgi geri getirilemez.',
+      scene: { items: ['T', '=', 'result'], result: '?' },
+      beat: {
+        kind: 'sequence',
+        beats: [
+          { kind: 'det2', matrix: 'T' },
+          {
+            kind: 'frames',
+            frames: [
+              { clear: true, marks: [{ cell: ['T', '*', 0], tone: 'col' }] },
+              { marks: [{ cell: ['T', '*', 1], tone: 'col' }], note: '2. sütun = 2 · (1. sütun)' },
+            ],
+          },
+          { kind: 'area', matrix: 'T' },
+        ],
+      },
+      claims: [{ kind: 'det', matrix: 'T', equals: '0' }],
+    },
+    {
+      id: 'try-k',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: 'Hangi $k$ için $A$ tekil olur?',
+      body: 'Determinantı sıfıra eşitle.',
+      skill: 'det-singular-parameter',
+      scene: { items: ['K', '=', 'result'], result: '0' },
+      options: [
+        {
+          key: 'a',
+          content: [text('$k = 4$')],
+          errorType: 'missed-negative-root',
+          feedback: '$k^2 = 16$’nın iki kökü var: $k = -4$ de tekil yapar.',
+        },
+        { key: 'b', content: [text('$k = -4$ ya da $k = 4$')] },
+        {
+          key: 'c',
+          content: [text('$k = 16$')],
+          errorType: 'forgot-square-root',
+          feedback: 'Bu $k^2$’nin değeri. $k^2 = 16$ ise $k = \\pm 4$.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'equation', lines: ['|A| = k^2 - 16 = 0', 'k^2 = 16', 'k = -4 \\text{ ya da } k = 4'] },
+      solution: '$|A| = k \\cdot k - 4 \\cdot 4 = k^2 - 16$. Sıfır olması için $k = \\pm 4$.',
+      claims: [
+        { kind: 'detRoots', matrix: 'K', variable: 'k', roots: ['-4', '4'] },
+        { kind: 'det', matrix: 'K', at: { k: '4' }, equals: '0' },
+      ],
+    },
+    {
+      id: 'sarrus-why',
+      kind: 'explain',
+      eyebrow: 'Sezgi',
+      title: '3×3: ilk iki sütunu sağa yaz',
+      body: '3×3’te bazı köşegenler sağ kenarda kesilir ve soldan devam eder. {ok}Sarrus kuralı{/ok}: ilk iki sütunu sağa bir kez daha yaz; her köşegen üç sayılık düz bir çizgi olur.',
+      scene: { items: ['S'] },
+      beat: { kind: 'sarrus', matrix: 'S' },
+    },
+    {
+      id: 'sarrus-rule',
+      kind: 'explain',
+      eyebrow: 'Kural',
+      title: 'Sağa inen köşegenler artı, sola inenler eksi',
+      body: '{row}Sağa inen{/row} üç köşegen: $2 \\cdot 4 \\cdot 5 + 1 \\cdot 1 \\cdot 1 + 3 \\cdot 0 \\cdot 2 = 41$. {col}Sola inen{/col} üç köşegen: $3 \\cdot 4 \\cdot 1 + 2 \\cdot 1 \\cdot 2 + 1 \\cdot 0 \\cdot 5 = 16$. {ok}Sonuç{/ok}: $|S| = 41 - 16 = 25$.',
+      scene: { items: ['S', '=', 'result'], result: '?' },
+      beat: { kind: 'sarrus', matrix: 'S' },
+      claims: [
+        { kind: 'sarrus', matrix: 'S', plus: '41', minus: '16' },
+        { kind: 'det', matrix: 'S', equals: '25' },
+      ],
+    },
+    {
+      id: 'try-n',
+      kind: 'keypad',
+      eyebrow: 'Senin sıran',
+      title: '$|N|$ kaç?',
+      body: 'Sarrus: artılar eksi eksiler.',
+      skill: 'det-sarrus',
+      scene: { items: ['N', '=', 'result'], result: '?' },
+      answer: '19',
+      feedbackWrong:
+        'Artılar: $1 \\cdot 0 \\cdot 4 + (-1) \\cdot 1 \\cdot (-2) + 2 \\cdot 3 \\cdot 1 = 8$. Eksiler: $2 \\cdot 0 \\cdot (-2) + 1 \\cdot 1 \\cdot 1 + (-1) \\cdot 3 \\cdot 4 = -11$. Fark: $8 - (-11)$.',
+      reveal: { kind: 'sarrus', matrix: 'N' },
+      solution: '$8 - (-11) = 19$.',
+      claims: [
+        { kind: 'sarrus', matrix: 'N', plus: '8', minus: '-11' },
+        { kind: 'det', matrix: 'N', equals: '19' },
+      ],
+    },
+    {
+      id: 'sarrus-trap',
+      kind: 'explain',
+      eyebrow: 'Tuzak',
+      title: 'Sarrus yalnız 3×3’te çalışır',
+      body: '4×4 için köşegen hilesi yanlış sonuç verir. 4×4 ve üstü için satır ya da sütun açılımı (Laplace) ya da satır işlemleri gerekir; sıradaki derslerin konusu.',
+    },
+    {
+      id: 'exam-k',
+      kind: 'choice',
+      eyebrow: 'Sınav tipi',
+      title: 'Hangi $k$ değerleri için $A$ tekil olur?',
+      skill: 'det-singular-parameter',
+      scene: { items: ['E', '=', 'result'], result: '0' },
+      options: [
+        {
+          key: 'a',
+          content: [text('$k = 1$')],
+          errorType: 'missed-root',
+          feedback: '$k^3 - 3k + 2 = (k - 1)^2(k + 2)$: $k = -2$ de kök.',
+        },
+        {
+          key: 'b',
+          content: [text('$k = -2$')],
+          errorType: 'missed-root',
+          feedback: '$k^3 - 3k + 2 = (k - 1)^2(k + 2)$: $k = 1$ de kök.',
+        },
+        { key: 'c', content: [text('$k = 1$ ya da $k = -2$')] },
+        {
+          key: 'd',
+          content: [text('$k = -1$ ya da $k = 2$')],
+          errorType: 'lost-sign',
+          feedback: 'İşaretler ters: $(k - 1)^2(k + 2) = 0$ ise $k = 1$ ya da $k = -2$.',
+        },
+        {
+          key: 'e',
+          content: [text('$k = 0$')],
+          errorType: 'other',
+          feedback: '$k = 0$ için $|A| = 2 \\neq 0$.',
+        },
+      ],
+      answer: 'c',
+      reveal: {
+        kind: 'equation',
+        lines: ['|A| = k^3 + 1 + 1 - k - k - k', '= k^3 - 3k + 2', '= (k - 1)^2(k + 2) = 0'],
+      },
+      solution:
+        'Sarrus: artılar $k^3 + 1 + 1$, eksiler $k + k + k$. $|A| = k^3 - 3k + 2 = (k - 1)^2(k + 2)$. Sınavda hızlı yol: şıklardaki değerleri yerine koy; $k = 1$ ve $k = -2$ sıfır verir.',
+      claims: [
+        { kind: 'detRoots', matrix: 'E', variable: 'k', roots: ['-2', '1'] },
+        { kind: 'det', matrix: 'E', at: { k: '0' }, equals: '2' },
+      ],
+    },
+    {
+      id: 'summary',
+      kind: 'summary',
+      eyebrow: 'Özet',
+      title: 'Determinant: alan katsayısı ve ters testi',
+      points: [
+        '$|A|$, birim karenin (3×3’te birim küpün) alanının ya da hacminin kaç katına çıktığıdır.',
+        '2×2: $|A| = ad - bc$.',
+        '3×3: Sarrus, sağa inen köşegenler eksi sola inenler. Yalnız 3×3’te.',
+        '$|A| = 0 \\iff A$ tekil, tersi yok. Sütunlardan biri diğerlerinden elde ediliyorsa $|A| = 0$.',
+        'Bilgisayar grafiğinde bir dönüşümün determinantı sıfırsa şekil düzleşir ve geri döndürülemez.',
+      ],
+    },
+  ],
+}
