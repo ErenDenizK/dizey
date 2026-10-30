@@ -10,7 +10,7 @@ Source IDs refer to items in the prompt ledger (Claude Doc "Dizey Prompt Defteri
 
 | ID | Principle | Level | Why | Scope | Source | Review |
 | --- | --- | --- | --- | --- | --- | --- |
-| PR-01 | Nothing from the old project is a default; only raw course material may be consulted. | firm | The old system produced reactive, unfounded rules; reusing them reimports its failures. | Everything | P2.2, P4.13, P4.17 | Never |
+| PR-01 | Nothing from the old project is a default; only raw course material may be consulted. Exception chosen by Eren: the in-lesson layer (presentation, animation, sounds) is kept. | firm | The old system produced reactive, unfounded rules; reusing them reimports its failures. Eren judged the in-lesson layer better than every new direction. | Everything | P2.2, P4.13, P4.17, P9.1, P9.2 | Never |
 | PR-02 | All technical artifacts are in English; UI text and lessons in Turkish; conversation with Eren in Turkish. | firm | Eren wants a professional, standard codebase; the product's users read Turkish. | Code, docs in repo, skills, git | P3.4, P4.1 | Never |
 | PR-03 | No statement becomes a rule before its root cause, counterexamples and scope are weighed. | firm | One complaint ("this tab bar is ugly") must not become a wrong ban ("no tab bars"). | All principles, including Claude's own | P5.4 | Never |
 | PR-04 | Plans are ordered steps with dependencies, not calendars; independent steps run in parallel. | firm | Date-based plans made earlier work run far below potential. | Planning | P7.4, P7.5 | Never |
@@ -25,8 +25,9 @@ Source IDs refer to items in the prompt ledger (Claude Doc "Dizey Prompt Defteri
 
 | ID | Candidate | Source | Status |
 | --- | --- | --- | --- |
-| C-01 | Every visual and writing choice needs a reason from Dizey's own world; "everyone does it" is not a reason. | R1 (AI patterns research) | Waiting for Eren |
+| C-01 | Every visual and writing choice needs a reason from Dizey's own world; "everyone does it" triggers a rethink, not a ban. | R1 (AI patterns research) | Eren approved as a design candidate (P7); adopt with the design documentation |
 | C-02 | Research GitHub first for methods, tools and others' mistakes; record what we took and rejected. | P5.11 | Waiting for Eren |
+| C-03 | Research the field (patterns, existing products, existing skills) before proposing any design; proposals cite what they build on. | P10.1, P10.6 | Weighing; may merge with C-02 into one "research before proposing" principle |
 
 ## Retired
 
