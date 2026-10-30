@@ -97,6 +97,7 @@ export type Property =
   | 'identity'
   | 'upperTriangular'
   | 'lowerTriangular'
+  | 'singular'
   | 'rowEchelon'
   | 'reducedRowEchelon'
 

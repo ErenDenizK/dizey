@@ -11,6 +11,7 @@ import { m6Transpose } from './m6-transpose'
 import { m7SymmetricAntisymmetric } from './m7-symmetric-antisymmetric'
 import { m8PowerClasses } from './m8-power-classes'
 import { m9Orthogonal } from './m9-orthogonal'
+import { m11RegularSingular } from './m11-regular-singular'
 import { r1RowOperations } from './r1-row-operations'
 import { r2EchelonForms } from './r2-echelon-forms'
 import { r3Rank } from './r3-rank'
@@ -44,6 +45,7 @@ export const lessons: readonly Lesson[] = [
   d2CofactorExpansion,
   d3DeterminantProperties,
   d4AdjugateInverse,
+  m11RegularSingular,
   r4Inverse,
   s1LinearSystems,
   s2ParametricSystems,
