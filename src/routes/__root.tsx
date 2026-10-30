@@ -1,4 +1,4 @@
-import { createRootRoute, Link } from '@tanstack/react-router'
+import { createRootRoute, Link, Outlet, useRouterState } from '@tanstack/react-router'
 import { strings } from '../content/strings'
 import { buildInfo } from '../lib/build-info'
 import { UpdatePrompt } from '../lib/pwa/UpdatePrompt'
@@ -17,9 +17,12 @@ export const Route = createRootRoute({
 })
 
 function RootLayout() {
+  const pathname = useRouterState({ select: (state) => state.location.pathname })
+  // The motion lab is a standalone reference page with its own tab bar: no shell, lesson layer or install guide.
+  const lab = pathname === '/lab' || pathname.startsWith('/lab/')
   return (
     <>
-      <Shell />
+      {lab ? <Outlet /> : <Shell />}
       {buildInfo.channel === 'production' ? <UpdatePrompt /> : null}
     </>
   )
