@@ -147,6 +147,19 @@ function checkBeat(lesson: Lesson, beat: Beat): void {
   )
 }
 
+const solutionLabels = { unique: 'Tek çözüm', infinite: 'Sonsuz çözüm', none: 'Çözüm yok' } as const
+
+function paramsOf(at: Readonly<Record<string, string>> = {}): Record<string, Rational> {
+  return Object.fromEntries(Object.entries(at).map(([k, v]) => [k, parse(v)]))
+}
+
+/** Splits an augmented lesson matrix into A and b at its bar (default: before the last column). */
+function system(block: MatrixBlock, params: Readonly<Record<string, Rational>>): [Matrix, Matrix] {
+  const full = numeric(block, params)
+  const bar = block.augmentedAt ?? M.columnCount(full) - 1
+  return [full.map((row) => row.slice(0, bar)), full.map((row) => row.slice(bar))]
+}
+
 function checkClaim(lesson: Lesson, claim: Claim): void {
   if (claim.kind === 'expr') {
     const rows = formatRows(claim.equals)
@@ -166,7 +179,7 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
     expect(hasProperty(a, claim.is, claim.index), `${claim.expr} ${claim.is}`).toBe(claim.holds ?? true)
     return
   }
-  if (claim.kind === 'optionProperty' || claim.kind === 'optionExpr') return
+  if (claim.kind === 'optionProperty' || claim.kind === 'optionExpr' || claim.kind === 'optionSystem') return
   if (claim.kind === 'solve') {
     const matrices = scope(lesson, claim.where)
     const isZeroAt = (value: Rational) => {
@@ -201,8 +214,19 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
   }
   const block = matrixOf(lesson, claim.matrix)
   switch (claim.kind) {
+    case 'rank': {
+      const a = numeric(block, paramsOf(claim.at))
+      const cut = claim.columns === undefined ? a : a.map((row) => row.slice(0, claim.columns))
+      expect(String(M.rank(cut)), `rank ${claim.matrix}`).toBe(claim.equals)
+      return
+    }
+    case 'system': {
+      const [a, b] = system(block, paramsOf(claim.at))
+      expect(M.classifySystem(a, b), `${claim.matrix} ${JSON.stringify(claim.at ?? {})}`).toBe(claim.is)
+      return
+    }
     case 'det': {
-      const params = Object.fromEntries(Object.entries(claim.at ?? {}).map(([k, v]) => [k, parse(v)]))
+      const params = paramsOf(claim.at)
       expect(Q.format(M.determinant(numeric(block, params)))).toBe(Q.format(parse(claim.equals)))
       return
     }
@@ -316,6 +340,18 @@ describe('lessons', () => {
         }
       })
 
+      it('wraps TeX in matrix labels in $...$', () => {
+        for (const [name, block] of Object.entries(lesson.matrices)) {
+          const label = block.label ?? ''
+          const outside = label
+            .split('$')
+            .filter((_, i) => i % 2 === 0)
+            .join('')
+          expect(outside, `${name}: ${label}`).not.toMatch(/[\\_^{}]/)
+          expect((label.match(/\$/g) ?? []).length % 2, `${name}: ${label}`).toBe(0)
+        }
+      })
+
       it('has balanced math and highlight markup', () => {
         for (const step of lesson.steps) {
           for (const t of texts(step)) {
@@ -365,6 +401,7 @@ describe('lessons', () => {
               c.kind === 'derivedEntry' ||
               c.kind === 'derivedDet' ||
               c.kind === 'exprEntry' ||
+              c.kind === 'rank' ||
               c.kind === 'solve',
           )
           const matrixAnswer = step.claims?.find(
@@ -436,6 +473,32 @@ describe('lessons', () => {
               const first = o.content[0]
               const shown = valueMatrix(first?.kind === 'text' ? first.text : '', matrices)
               return JSON.stringify(formatMatrix(shown)) === target
+            })
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          const systemAnswer = step.claims?.find((c) => c.kind === 'system' && c.answer)
+          if (step.kind === 'choice' && systemAnswer?.kind === 'system') {
+            const label = solutionLabels[systemAnswer.is]
+            const matching = step.options.filter((o) =>
+              o.content.some((b) => b.kind === 'text' && b.text === label),
+            )
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          const optionSystem = step.claims?.find((c) => c.kind === 'optionSystem')
+          if (step.kind === 'choice' && optionSystem?.kind === 'optionSystem') {
+            const block = matrixOf(lesson, optionSystem.matrix)
+            const matching = step.options.filter((o) => {
+              const first = o.content[0]
+              const v = first?.kind === 'text' ? Q.parse(first.text.replaceAll('$', '')) : null
+              if (!v) throw new Error(`${step.id}: option ${o.key} is not a number`)
+              const [a, b] = system(block, { [optionSystem.variable]: v })
+              return M.classifySystem(a, b) === optionSystem.is
             })
             expect(
               matching.map((o) => o.key),

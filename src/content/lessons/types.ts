@@ -81,6 +81,8 @@ export interface Scene {
 
 export type Derived = 'cofactors' | 'adjugate' | 'inverse'
 
+export type SolutionKind = 'unique' | 'infinite' | 'none'
+
 /** Matrix classes; `index` is the exact nilpotency index or period (left out: any index or period). */
 export type Property =
   | 'symmetric'
@@ -202,6 +204,34 @@ export type Claim =
       readonly equals: string
       readonly answer?: true
     } & Where)
+  /** Rank of a lesson matrix (only its first `columns` columns when given, e.g. r_A of [A | b]). */
+  | {
+      readonly kind: 'rank'
+      readonly matrix: string
+      readonly columns?: number
+      readonly equals: string
+      readonly at?: Readonly<Record<string, string>>
+      readonly answer?: true
+    }
+  /**
+   * The system whose augmented matrix [A | b] is the lesson matrix (bar at `augmentedAt`) has a unique
+   * solution, infinitely many, or none. In a choice step marked `answer`, the answer option reads
+   * "Tek çözüm", "Sonsuz çözüm" or "Çözüm yok" accordingly.
+   */
+  | {
+      readonly kind: 'system'
+      readonly matrix: string
+      readonly is: SolutionKind
+      readonly at?: Readonly<Record<string, string>>
+      readonly answer?: true
+    }
+  /** Choice steps: of the option values for `variable`, exactly the answer gives a system of kind `is`. */
+  | {
+      readonly kind: 'optionSystem'
+      readonly matrix: string
+      readonly variable: string
+      readonly is: SolutionKind
+    }
   /** The values of `variable` for which det is 0, exactly (checked on a dense rational grid). */
   | {
       readonly kind: 'detRoots'

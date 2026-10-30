@@ -28,7 +28,7 @@ export const r4Inverse: Lesson = {
       ['1', '0', '2'],
     ]),
     Start: augmented(
-      '[A \\mid I] =',
+      '$[A \\mid I]$ =',
       [
         ['1', '2', '0', '1', '0', '0'],
         ['0', '1', '1', '0', '1', '0'],
@@ -46,7 +46,7 @@ export const r4Inverse: Lesson = {
       3,
     ),
     End: augmented(
-      '[I \\mid A^{-1}] =',
+      '$[I \\mid A^{-1}]$ =',
       [
         ['1', '0', '0', '1/2', '-1', '1/2'],
         ['0', '1', '0', '1/4', '1/2', '-1/4'],
@@ -55,7 +55,7 @@ export const r4Inverse: Lesson = {
       3,
     ),
     T: augmented(
-      '[B \\mid I] =',
+      '$[B \\mid I]$ =',
       [
         ['1', '2', '1', '0'],
         ['2', '4', '0', '1'],
