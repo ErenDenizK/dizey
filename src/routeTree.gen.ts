@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as ExamIndexRouteImport } from './routes/exam.index'
+import { Route as ExamResultRouteImport } from './routes/exam.result'
+import { Route as ExamRunRouteImport } from './routes/exam.run'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -28,35 +31,63 @@ const MeRoute = MeRouteImport.update({
   path: '/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ExamIndexRoute = ExamIndexRouteImport.update({
+  id: '/exam/',
+  path: '/exam/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamResultRoute = ExamResultRouteImport.update({
+  id: '/exam/result',
+  path: '/exam/result',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExamRunRoute = ExamRunRouteImport.update({
+  id: '/exam/run',
+  path: '/exam/run',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/me': typeof MeRoute
+  '/exam/result': typeof ExamResultRoute
+  '/exam/run': typeof ExamRunRoute
+  '/exam/': typeof ExamIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/me': typeof MeRoute
+  '/exam/result': typeof ExamResultRoute
+  '/exam/run': typeof ExamRunRoute
+  '/exam': typeof ExamIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/map': typeof MapRoute
   '/me': typeof MeRoute
+  '/exam/result': typeof ExamResultRoute
+  '/exam/run': typeof ExamRunRoute
+  '/exam/': typeof ExamIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/map' | '/me'
+  fullPaths: '/' | '/map' | '/me' | '/exam/result' | '/exam/run' | '/exam/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/map' | '/me'
-  id: '__root__' | '/' | '/map' | '/me'
+  to: '/' | '/map' | '/me' | '/exam/result' | '/exam/run' | '/exam'
+  id:
+    '__root__' | '/' | '/map' | '/me' | '/exam/result' | '/exam/run' | '/exam/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   MapRoute: typeof MapRoute
   MeRoute: typeof MeRoute
+  ExamResultRoute: typeof ExamResultRoute
+  ExamRunRoute: typeof ExamRunRoute
+  ExamIndexRoute: typeof ExamIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -82,6 +113,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/exam/': {
+      id: '/exam/'
+      path: '/exam'
+      fullPath: '/exam/'
+      preLoaderRoute: typeof ExamIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exam/result': {
+      id: '/exam/result'
+      path: '/exam/result'
+      fullPath: '/exam/result'
+      preLoaderRoute: typeof ExamResultRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/exam/run': {
+      id: '/exam/run'
+      path: '/exam/run'
+      fullPath: '/exam/run'
+      preLoaderRoute: typeof ExamRunRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -89,6 +141,9 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   MapRoute: MapRoute,
   MeRoute: MeRoute,
+  ExamResultRoute: ExamResultRoute,
+  ExamRunRoute: ExamRunRoute,
+  ExamIndexRoute: ExamIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

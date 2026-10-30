@@ -9,7 +9,7 @@ export const strings = {
   goHome: 'Ana sayfaya dön',
   loading: 'Dersler yükleniyor…',
 
-  tabs: { today: 'Bugün', map: 'Harita', me: 'Ben', label: 'Bölümler' },
+  tabs: { today: 'Bugün', map: 'Harita', exam: 'Sınav', me: 'Ben', label: 'Bölümler' },
 
   today: {
     title: 'Bugün',
@@ -48,10 +48,6 @@ export const strings = {
     statDone: 'tamamlandı',
     statOpen: 'devam ediyor',
     statNew: 'başlanmadı',
-    examTitle: 'Sınav provası',
-    examSoonTitle: 'Yakında',
-    examSoonBody:
-      'Gerçek Vize 1 biçiminde süreli deneme: çoktan seçmeli, 5 seçenek. Soru bankası hazırlanıyor.',
     settings: 'Ayarlar',
     sound: 'Ses',
     soundHint: 'Ders, cevap ve mühür sesleri. Telefon sessizdeyken çalmaz.',
@@ -68,6 +64,49 @@ export const strings = {
     cancel: 'Vazgeç',
     restoreInvalid: 'Bu dosya bir Dizey yedeği değil.',
     backupFileName: (date: string) => `dizey-yedek-${date}.json`,
+  },
+
+  exam: {
+    title: 'Sınav',
+    subtitle: 'Gerçek Vize 1 biçiminde süreli prova. Puan ve doğru cevaplar prova bitince görünür.',
+    setTitle: { 'summer-2024': '2024 Yaz Okulu Vizesi', mixed: 'Karışık deneme' },
+    setBody: {
+      'summer-2024': 'Gerçek sınavın soruları, kâğıttaki sırayla.',
+      mixed: 'Soru bankasından karışık 18 soru.',
+    },
+    setMeta: (count: number, minutes: number) => `${count} soru · ${minutes} dakika`,
+    start: 'Başlat',
+    inProgress: 'Yarım kalan prova',
+    inProgressMeta: (index: number, total: number, left: string) =>
+      `Soru ${index} / ${total} · ${left} kaldı`,
+    resume: 'Devam et',
+    history: 'Geçmiş provalar',
+    historyRow: (correct: number, total: number) => `${correct} / ${total} doğru`,
+    finishTop: 'Bitir',
+    counter: (index: number, total: number) => `Soru ${index} / ${total}`,
+    flag: 'İşaretle',
+    flagged: 'İşaretli',
+    next: 'Sonraki soru',
+    last: 'Provayı bitir',
+    questions: 'Sorular',
+    confirmTitle: 'Provayı bitir?',
+    confirmBody: (blank: number) =>
+      blank > 0
+        ? `${blank} soru boş. Bitirince cevaplar ve puan görünür.`
+        : 'Bitirince cevaplar ve puan görünür.',
+    confirmKeep: 'Devam et',
+    confirmEnd: 'Bitir',
+    timeUp: 'Süre doldu.',
+    resultTitle: 'Prova sonucu',
+    resultScore: (correct: number, total: number) => `${correct} / ${total} doğru`,
+    resultSplit: (wrong: number, blank: number) => `${wrong} yanlış · ${blank} boş`,
+    resultTime: (minutes: number) => `${minutes} dakikada bitti`,
+    status: { correct: 'doğru', wrong: 'yanlış', blank: 'boş' },
+    yourAnswer: 'Senin cevabın',
+    rightAnswer: 'Doğru cevap',
+    solution: 'Çözüm',
+    newAttempt: 'Yeni prova',
+    noResult: 'Gösterilecek prova yok.',
   },
 
   onboarding: {

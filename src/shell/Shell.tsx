@@ -31,6 +31,16 @@ const tabs = [
     ),
   },
   {
+    to: '/exam',
+    label: strings.tabs.exam,
+    icon: (
+      <>
+        <circle cx="12" cy="13.5" r="7" />
+        <path d="M12 10v3.5l2.5 1.5M10 3.5h4M12 3.5v3" />
+      </>
+    ),
+  },
+  {
     to: '/me',
     label: strings.tabs.me,
     icon: (
@@ -70,7 +80,7 @@ export function Shell() {
         </main>
         <nav className="sh-tabbar" aria-label={strings.tabs.label}>
           {tabs.map((tab) => (
-            <Link key={tab.to} to={tab.to} className="sh-tab" activeOptions={{ exact: true }}>
+            <Link key={tab.to} to={tab.to} className="sh-tab" activeOptions={{ exact: tab.to === '/' }}>
               <svg viewBox="0 0 24 24" aria-hidden="true">
                 {tab.icon}
               </svg>
