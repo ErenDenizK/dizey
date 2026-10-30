@@ -21,13 +21,14 @@ Which stack gives Dizey (installed iPhone PWA, offline, manipulable math, exam-g
 - Pages in a private repo needs GitHub Pro, Team or Enterprise; Free supports public repos only. Pro is included in the GitHub Student Developer Pack.
 - Quote: "GitHub Pages sites are publicly available on the internet, even if the repository for the site is private." Only Enterprise Cloud offers access control.
 - One Pages site per repository.
-- `pr-preview-action` (v1): deploys each PR to `gh-pages/pr-preview/pr-<n>/`, posts a sticky comment (optionally with a QR code, useful for opening on the phone), removes the preview on close. Requires "Deploy from branch" (not the "GitHub Actions" source), read/write workflow permissions, and no fork PRs (irrelevant for us).
+- `actions/deploy-pages` v4: needs `pages: write` and `id-token: write`; its `preview` input is "only in alpha currently and is not available to the public"; with the Actions source the `github-pages` environment is protected (default branch) by default. Source: https://github.com/actions/deploy-pages . Consequence: previews are folders inside the single production deployment, built and deployed from `main` context.
+- `pr-preview-action` (v1, considered, not used after Eren chose the Actions source): deploys each PR to `gh-pages/pr-preview/pr-<n>/`, posts a sticky comment (optionally with a QR code, useful for opening on the phone), removes the preview on close. Requires "Deploy from branch" (not the "GitHub Actions" source), read/write workflow permissions, and no fork PRs (irrelevant for us).
 
 **Edge cases found by reasoning, to be covered by tests**
 - Preview URLs sit inside the production service worker's scope (`/dizey/`). Without care, the production SW would answer preview navigations with the production shell. Fix: `navigateFallbackDenylist: [/\/pr-preview\//]`, no runtime caching under that path, previews register no SW.
 - Previews share the origin `erendenizk.github.io` with production, so on a desktop browser they share IndexedDB. A preview with a new schema could migrate real progress. Fix: database name includes the deployment channel. (On iPhone, the installed app's storage is already separate from Safari.)
 - Deep links on Pages need a `404.html` copy of `index.html`; inside the installed app the SW serves navigations, so this only matters for first visits.
-- Production deploy to `gh-pages` must not delete `pr-preview/` (deploy step keeps that folder).
+- Every deploy replaces the whole site, so it must rebuild production and all open PRs together; a closed PR's preview disappears on the next deploy (the close event triggers one).
 
 **Tooling versions (npm, 2026-10-30)**
 react 19.3.1, vite 8.3.5, typescript 7.0.2, @vitejs/plugin-react 6.1.2 (peer vite ^8, optional React Compiler), @tanstack/react-router 1.170.x, motion 14.9.0, katex 0.19.1, temml 0.14.0, tailwindcss 4.3.3, vite-plugin-pwa 2.0.0 (peer vite up to ^8), vitest 5.0.5 (peer vite ^8 ok), @playwright/test 1.64.1, fast-check 4.10.2, @biomejs/biome 2.6.4, zod 4.6.7, dexie 4.4.7, react-aria-components 1.22.1, pnpm 12.16.1, Node 26 LTS. All peer ranges are compatible with Vite 8.
@@ -48,6 +49,7 @@ Rejected: Svelte 5, SolidJS, Vue (no advantage that outweighs ecosystem and AI r
 ## 5. Open questions
 
 - Is GitHub Pro (Student Pack) active on Eren's account? Without it, Pages cannot publish from the private repo.
+- Eren could not enable the repo-wide "Read and write" workflow permission (2026-10-30); not needed with per-job permissions.
 - Is a public URL acceptable? (Assumed yes: nothing private is in a build.)
 - 3D lessons (planes in R³): decide when the curriculum needs them.
 - Re-check Safari MathML before ever switching KaTeX output modes.

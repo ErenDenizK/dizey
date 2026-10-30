@@ -1,6 +1,6 @@
 # 0001: Technical foundation (stack, hosting, PWA, math, motion, testing)
 
-- Status: proposed
+- Status: accepted (Eren, 2026-10-30 14:22Z; Pages source changed to GitHub Actions at his request)
 - Date: 2026-10-30
 - Ledger items: plan step 2 (tech foundation); Eren's decisions of 2026-10-30 (PWA on iPhone, stack chosen from scratch, overkill allowed, GitHub Pages, every build is a product)
 - Research: [`docs/research/tech-stack.md`](../research/tech-stack.md)
@@ -13,7 +13,7 @@ Hard platform facts that shape the choice (sources in the research report):
 
 - iPhone means WebKit, always. Installed home-screen web apps get their own storage, separate from Safari. No Vibration API; no install prompt (we must show an "Add to Home Screen" guide). View Transitions and `@starting-style` are available in Safari 18+.
 - GitHub Pages from a private repository needs GitHub Pro (free with the GitHub Student Developer Pack). The published site is public on the internet even when the repo is private.
-- Per-PR previews on Pages (`rossjrw/pr-preview-action`) need the "Deploy from branch" source and live under `/<repo>/pr-preview/pr-<n>/`, inside the production service worker's scope and on the same origin as production.
+- Pages source is "GitHub Actions" (Eren's choice): no `gh-pages` branch, one deployment per site. `actions/deploy-pages` has a `preview` input, but it is alpha and not public, and the `github-pages` environment only accepts deployments from the default branch by default. So per-PR previews must be folders inside the one production deployment, under `/<repo>/pr-preview/pr-<n>/`: inside the production service worker's scope and on the same origin as production.
 
 ## Options
 
@@ -31,7 +31,8 @@ Hard platform facts that shape the choice (sources in the research report):
 
 | Option | For | Against |
 | --- | --- | --- |
-| **GitHub Pages (Pro), branch deploy, PR previews in subfolders** | Eren's choice; everything stays in GitHub; free with Student Pack. | Site is public; previews share origin and SW scope with production (both handled below). |
+| **GitHub Pages (Pro), "GitHub Actions" source, one combined deployment: production at the root + each open PR in `pr-preview/pr-<n>/`** | Eren's choice; no `gh-pages` branch; deploys only from `main` context, so the default environment protection stays on; every job declares its own minimal permissions, so the repo-wide "Read and write" setting is not needed. | Each deploy rebuilds every open PR (few at a time, so cheap); site is public; previews share origin and SW scope with production (both handled below). |
+| GitHub Pages, "Deploy from branch" + `rossjrw/pr-preview-action` | Ready-made previews with a sticky comment. | Needs a `gh-pages` branch and the repo-wide read/write workflow setting, which Eren could not enable; Eren prefers the Actions source. |
 | Cloudflare Pages / Netlify | Native per-PR previews on separate origins, access control possible. | Another service and account; Eren chose Pages. Kept as fallback. |
 
 ### Math typography
@@ -69,13 +70,13 @@ Hard platform facts that shape the choice (sources in the research report):
 | PWA | `vite-plugin-pwa` (Workbox, `injectManifest`), precache app shell and fonts, "new version" prompt instead of silent reload, `@vite-pwa/assets-generator` for icons and iOS splash images, in-app "Add to Home Screen" guide | Production SW excludes `/pr-preview/` from navigation fallback and caching; preview builds register no SW. |
 | Quality tooling | Biome 2 (lint + format), `tsc --noEmit` | |
 | Tests | Vitest 5 (unit), fast-check (property tests for the math core), Playwright with WebKit on an iPhone profile (E2E and 390 px screenshots, light and dark), `@axe-core/playwright` (accessibility) | Content tests: every exercise's answer recomputed by the math core. |
-| CI/CD | GitHub Actions: on PR run typecheck, lint, unit, build, E2E, then deploy the preview; on `main` deploy production to `gh-pages` root without touching `pr-preview/` | Version and short commit hash injected at build and shown in the app. |
+| CI/CD | GitHub Actions. `ci.yml` on every PR: typecheck, lint, unit, build, E2E. `pages.yml` on push to `main`, on `workflow_run` after CI of a PR, and on PR close: checks out `main` and every open same-repo PR by SHA, builds each with its own base path, assembles one artifact, deploys with `actions/deploy-pages`, then upserts one PR comment with the preview link (job permissions: `contents: read`, `pages: write`, `id-token: write`, `pull-requests: write`). | Runs in `main` context, so the environment's default-branch rule holds. Only same-repo PRs are built (private repo, no forks). Version and short commit hash shown in the app. |
 
 ## Consequences
 
 - Easier: one language end to end (app, content, math checks, tests); math correctness is testable by construction; every PR gets a link Eren can open on his phone.
 - Harder: we own the math core and the matrix components; that is deliberate, because they are the product.
-- Eren must: have GitHub Pro (Student Pack) active, set Pages source to "Deploy from branch: gh-pages / root", and set Actions workflow permissions to read and write.
+- Eren: GitHub Pro (Student Pack) active; Pages source "GitHub Actions" (done). The repo-wide workflow permission can stay read-only.
 - Privacy: the production site and previews are public URLs. No raw course material, lecturer notes or personal data may ever be in a build. If that becomes a problem, move hosting to Cloudflare Pages with access control (new decision).
 - Watch: TS 7 ecosystem gaps (fallback TS 6); Safari storage behaviour (export/import as a safety net); preview/production isolation (tested in E2E: a preview build must not register a service worker).
 - Exact versions are pinned in `package.json` when the app is scaffolded, not here.
