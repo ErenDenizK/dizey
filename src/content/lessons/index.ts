@@ -11,6 +11,9 @@ import { m6Transpose } from './m6-transpose'
 import { m7SymmetricAntisymmetric } from './m7-symmetric-antisymmetric'
 import { m8PowerClasses } from './m8-power-classes'
 import { m9Orthogonal } from './m9-orthogonal'
+import { r1RowOperations } from './r1-row-operations'
+import { r2EchelonForms } from './r2-echelon-forms'
+import { r3Rank } from './r3-rank'
 import { r4Inverse } from './r4-inverse'
 import { s1LinearSystems } from './s1-linear-systems'
 import { s2ParametricSystems } from './s2-parametric-systems'
@@ -40,4 +43,7 @@ export const lessons: readonly Lesson[] = [
   m2MatrixTypes,
   m6Transpose,
   s4Cramer,
+  r1RowOperations,
+  r2EchelonForms,
+  r3Rank,
 ]

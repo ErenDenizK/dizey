@@ -97,6 +97,8 @@ export type Property =
   | 'identity'
   | 'upperTriangular'
   | 'lowerTriangular'
+  | 'rowEchelon'
+  | 'reducedRowEchelon'
 
 /**
  * Matrix expressions are written as the lesson prints them: "A^T", "AB - BA", "1/2(M + M^T)", "A^{-1}",

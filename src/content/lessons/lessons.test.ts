@@ -104,8 +104,29 @@ function power(a: Matrix, k: number): Matrix {
   return out
 }
 
+/** Zero rows last, each leading entry right of the one above; reduced: leading 1s alone in their columns. */
+function echelon(a: Matrix, reduced: boolean): boolean {
+  let lastLead = -1
+  let seenZero = false
+  for (const [i, row] of a.entries()) {
+    const lead = row.findIndex((v) => !Q.isZero(v))
+    if (lead === -1) {
+      seenZero = true
+      continue
+    }
+    if (seenZero || lead <= lastLead) return false
+    lastLead = lead
+    if (reduced) {
+      if (!Q.equals(M.at(a, i, lead), Q.ONE)) return false
+      if (a.some((_, r) => r !== i && !Q.isZero(M.at(a, r, lead)))) return false
+    }
+  }
+  return true
+}
+
 function hasProperty(a: Matrix, is: Property, index?: number): boolean {
   const n = M.rowCount(a)
+  if (is === 'rowEchelon' || is === 'reducedRowEchelon') return echelon(a, is === 'reducedRowEchelon')
   if (M.columnCount(a) !== n) return false
   const zero = M.scale(Q.ZERO, a)
   switch (is) {
