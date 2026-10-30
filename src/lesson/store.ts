@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { appStorage } from '../legacy/storage'
+import { appStorage } from '../lib/storage/app-storage'
 import { emptyRecord, type LessonRecord } from './progress'
 
 const KEY = 'dizey.lessons'

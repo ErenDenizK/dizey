@@ -9,49 +9,42 @@ async function openApp(page: Page, path = './') {
   await page.addInitScript((key) => localStorage.setItem(key, '1'), `${prefix}dizey.onboarding.safari`)
   await page.goto(path)
   await expect(page.getByRole('navigation', { name: 'Bölümler' })).toBeVisible()
-  // The lesson layer has published its catalog.
-  await expect(page.getByText('Dersler yükleniyor…')).toHaveCount(0)
 }
 
-test('Today offers the next lesson', async ({ page }) => {
+/** The tab screen on show (the other tab panes stay mounted but inert). */
+const screen = (page: Page) => page.locator('.sh-pane:not([inert])')
+const tab = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name })
+
+test('Today offers the first lesson, and the next after it', async ({ page }) => {
   await openApp(page)
-  await expect(page.getByRole('heading', { name: 'Bugün' })).toBeVisible()
-  await expect(page.getByTestId('continue-card')).toContainText('B1')
+  await expect(screen(page).getByRole('heading', { name: 'Bugün', level: 1 })).toBeVisible()
+  await expect(screen(page).getByTestId('continue-card')).toContainText('Sıradaki ders')
+  await expect(screen(page).getByText('Vize 1 haftası 15 Kasım civarı')).toBeVisible()
 })
 
-test('Map lists the lessons and Me shows version and commit', async ({ page }) => {
+test('Map groups the lessons by unit and Me shows version and commit', async ({ page }) => {
   await openApp(page)
-  await page.getByRole('link', { name: 'Harita' }).click()
-  await expect(page.getByRole('heading', { name: 'Determinant' })).toBeVisible()
-  await page.getByRole('link', { name: 'Ben' }).click()
+  await tab(page, 'Harita').click()
+  await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
+  await expect(screen(page).getByText('geçmiş sınavlarda 13 / 34 soru')).toBeVisible()
+  await tab(page, 'Ben').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
   if (channel !== 'production') await expect(page.getByTestId('app-version')).toContainText(channel)
 })
 
-test('a lesson opens from the shell, steps forward and hands back', async ({ page }) => {
-  await openApp(page)
-  await page.getByTestId('continue-card').click()
-  const count = page.locator('#count')
-  await expect(count).toHaveText(/^1\//)
-  await page.locator('#dock').getByRole('button', { name: 'İleri' }).click()
-  await page.locator('#dock').getByRole('button', { name: 'İleri' }).click()
-  await expect(count).toHaveText(/^2\//)
-  await page.locator('#lesson-close').click()
-  await expect(page.getByTestId('continue-card')).toBeVisible()
-  await expect(page.getByTestId('continue-card')).toContainText('2 / ')
-})
-
-test('a lesson opens from the map sheet', async ({ page }) => {
+test('a lesson opens from the map sheet and hides the tab bar', async ({ page }) => {
   await openApp(page, './map')
-  await page.getByRole('button', { name: /B2/ }).click()
-  await page.getByRole('button', { name: /^Derse gir/ }).click()
-  await expect(page.locator('#count-lesson')).toContainText('B2')
+  await screen(page).getByRole('button', { name: /^D1 / }).click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet).toContainText('14 adım')
+  await sheet.getByRole('link', { name: /^Derse gir/ }).click()
+  await expect(page.getByTestId('lesson-player')).toBeVisible()
+  await expect(page.getByRole('navigation', { name: 'Bölümler' })).not.toBeInViewport()
 })
 
-test('a rebuilt lesson plays, checks answers and resumes where it was left', async ({ page }) => {
+test('a lesson plays, checks answers and resumes where it was left', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
-  await openApp(page, './map')
-  await page.getByRole('link', { name: /^Derse gir: Determinant:/ }).click()
+  await openApp(page, './lesson/d1-determinant')
   const player = page.getByTestId('lesson-player')
   await expect(player).toBeVisible()
   const next = player.getByRole('button', { name: 'İleri' })
@@ -70,12 +63,50 @@ test('a rebuilt lesson plays, checks answers and resumes where it was left', asy
     step ?? '',
   )
   await page.getByRole('link', { name: 'Dersten çık' }).click()
-  await expect(page.getByRole('link', { name: /^Derse gir: Determinant:/ })).toContainText('kaldığın yer')
+  await expect(screen(page).getByTestId('continue-card')).toContainText('Kaldığın yer')
+})
+
+test('a wrong first try lands in the mistake log and leaves it when fixed', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './lesson/d1-determinant')
+  const player = page.getByTestId('lesson-player')
+  const next = player.getByRole('button', { name: 'İleri' })
+  while (!(await player.getByRole('group').count())) await next.click()
+  await player.getByRole('group').getByRole('button').filter({ hasText: '26' }).click()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await tab(page, 'Ben').click()
+  const log = screen(page).getByRole('region', { name: /Hata defteri/ })
+  await expect(log).toContainText('İki çarpımı topladın')
+  // Back to that step: a right first try on this visit clears it.
+  await log.getByRole('link').first().click()
+  await page
+    .getByTestId('lesson-player')
+    .getByRole('group')
+    .getByRole('button')
+    .filter({ hasText: /^b/ })
+    .click()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toContainText('Açık hata yok')
+})
+
+test('the exam line counts down once a date is set', async ({ page }) => {
+  await openApp(page, './me')
+  await screen(page).getByLabel('Vize 1 tarihi').fill('2026-11-19')
+  await tab(page, 'Bugün').click()
+  await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
+})
+
+test('the appearance switch sets the theme', async ({ page }) => {
+  await openApp(page, './me')
+  await screen(page).getByRole('button', { name: 'Koyu' }).click()
+  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+  await screen(page).getByRole('button', { name: 'Sistem' }).click()
+  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /./)
 })
 
 test('an exam rehearsal runs, survives a reload and shows its result', async ({ page }) => {
   await openApp(page, './exam')
-  await page.getByRole('button', { name: 'Başlat' }).first().click()
+  await screen(page).getByRole('button', { name: 'Başlat' }).first().click()
   await expect(page.getByText(/^Soru 1 \/ \d+$/)).toBeVisible()
   const first = page.locator('.ex-opt').first()
   await first.click()
@@ -92,7 +123,7 @@ test('an exam rehearsal runs, survives a reload and shows its result', async ({ 
   await expect(page.getByTestId('exam-score')).toContainText(/\d+ \/ \d+ doğru/)
   await expect(page.getByTestId('exam-score')).toContainText(/1 yanlış|0 yanlış/)
   await page.getByRole('link', { name: 'Yeni prova' }).click()
-  await expect(page.getByRole('heading', { name: 'Geçmiş provalar' })).toBeVisible()
+  await expect(screen(page).getByRole('heading', { name: 'Geçmiş provalar' })).toBeVisible()
 })
 
 test('first launch in iPhone Safari asks to install first', async ({ page, isMobile }, testInfo) => {
@@ -104,20 +135,20 @@ test('first launch in iPhone Safari asks to install first', async ({ page, isMob
   await guide.getByRole('button', { name: /Safari'de dene/ }).click()
   await expect(guide).toBeHidden()
   await page.reload()
-  await expect(page.getByTestId('continue-card')).toBeVisible()
+  await expect(screen(page).getByTestId('continue-card')).toBeVisible()
   await expect(guide).toBeHidden()
 })
 
 test('backup round-trips progress', async ({ page }) => {
   await openApp(page, './me')
-  const key = `${prefix}satir.v3.done`
-  await page.evaluate((k) => localStorage.setItem(k, '{"B1":1}'), key)
+  const key = `${prefix}dizey.lessons`
+  await page.evaluate((k) => localStorage.setItem(k, '{}'), key)
   const backup = {
     app: 'dizey',
     format: 1,
     exportedAt: '2026-10-30T12:00:00.000Z',
     channel,
-    entries: { 'satir.v3.done': '{"B1":1,"B2":2}' },
+    entries: { 'dizey.lessons': '{"d1-determinant":{"at":null,"doneAt":1,"answers":{}}}' },
   }
   await page.getByTestId('restore-file').setInputFiles({
     name: 'dizey-yedek.json',
@@ -126,7 +157,9 @@ test('backup round-trips progress', async ({ page }) => {
   })
   await page.getByRole('button', { name: 'Geri yükle', exact: true }).click()
   await expect(page.getByTestId('app-version')).toBeVisible()
-  expect(await page.evaluate((k) => localStorage.getItem(k), key)).toBe('{"B1":1,"B2":2}')
+  expect(await page.evaluate((k) => localStorage.getItem(k), key)).toBe(
+    '{"d1-determinant":{"at":null,"doneAt":1,"answers":{}}}',
+  )
 })
 
 test('a file that is not a backup is refused', async ({ page }) => {
@@ -185,7 +218,7 @@ test('only production registers a service worker', async ({ page }) => {
 test('preview progress is kept apart from production', async ({ page }) => {
   await openApp(page)
   const keys = await page.evaluate(() => Object.keys(localStorage))
-  const appKeys = keys.filter((k) => k.includes('satir') || k.includes('dizey'))
+  const appKeys = keys.filter((k) => k.includes('dizey'))
   expect(appKeys.length).toBeGreaterThan(0)
   if (channel === 'production') expect(appKeys.every((k) => !/^pr-\d+:/.test(k))).toBe(true)
   else expect(appKeys.every((k) => k.startsWith(`${channel}:`))).toBe(true)

@@ -6,16 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "src/**",
-      "e2e/**",
-      "scripts/**",
-      "*.ts",
-      "*.json",
-      "!src/routeTree.gen.ts",
-      "!src/legacy/v21.*",
-      "!src/legacy/v21-markup.html"
-    ]
+    "includes": ["src/**", "e2e/**", "scripts/**", "*.ts", "*.json", "!src/routeTree.gen.ts"]
   },
   "formatter": {
     "indentStyle": "space",

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { strings } from '../content/strings'
-import { appStorage } from '../legacy/storage'
 import { buildInfo } from '../lib/build-info'
+import { appStorage } from '../lib/storage/app-storage'
 
 const SKIPPED = 'dizey.onboarding.safari'
 

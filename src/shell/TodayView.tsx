@@ -1,98 +1,106 @@
-import { useState } from 'react'
-import { daysUntil, examWeek } from '../content/exam'
+import { dayLabel, daysUntil, examWeek } from '../content/exam'
+import { lessons } from '../content/lessons'
+import { questions } from '../content/questions'
 import { strings } from '../content/strings'
-import { LessonSheet } from './LessonSheet'
-import { lessonName, unitOf, upNext } from './progress'
-import { startLesson, useShell } from './store'
+import { useExam } from '../exam/store'
+import { resumeIndex } from '../lesson/progress'
+import { stateOf, upNext } from '../lesson/state'
+import { useLessonRecords } from '../lesson/store'
+import { openMistakes } from '../progress/mistakes'
+import { useSettings } from '../progress/settings'
+import { ChevronRight } from '../ui/icons'
+import { Screen } from '../ui/Screen'
+import { Glyph } from './Glyph'
+import { PressLink } from './PressLink'
 
 export function TodayView() {
-  const { catalog, done, resume } = useShell()
-  const [sheet, setSheet] = useState<string | null>(null)
-  const days = daysUntil(examWeek.iso, new Date())
+  const records = useLessonRecords()
+  const { outcomes } = useExam()
+  const { examDate } = useSettings()
+  // The date is not announced: say "around" until Eren enters the day, then count down to it.
+  const examLine = examDate
+    ? strings.today.examLine(daysUntil(examDate, new Date()), dayLabel(examDate))
+    : strings.today.examWeekLine(examWeek.label)
+  const { main, after } = upNext(lessons, records, 3)
+  const mistakes = openMistakes(lessons, records, questions, outcomes).length
 
   return (
-    <div className="sh-view">
-      <header>
-        <h1 className="sh-title">{strings.today.title}</h1>
-        <p className="sh-sub">{strings.today.examLine(days, examWeek.label)}</p>
-      </header>
-      {!catalog || !resume ? (
-        <p className="sh-sub">{strings.loading}</p>
-      ) : (
-        <>
-          <ContinueCard code={resume.code} step={resume.step} />
-          {(() => {
-            const next = upNext(catalog, done, resume, 3)
-            return (
-              <section>
-                <h2 className="sh-label">{strings.today.next}</h2>
-                {next.length ? (
-                  <div className="sh-card sh-rows">
-                    {next.map((code) => (
-                      <button key={code} type="button" className="sh-row" onClick={() => setSheet(code)}>
-                        <span className="sh-row__ic">{code}</span>
-                        <span>
-                          <span className="sh-row__t">{lessonName(catalog, code)}</span>
-                          <span className="sh-row__d">
-                            {unitOf(catalog, code)?.label} ·{' '}
-                            {strings.today.lessonSteps(catalog.steps[code] ?? 0)}
-                          </span>
-                        </span>
-                        <span className="sh-chev" aria-hidden="true">
-                          ›
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="sh-sub">{strings.today.allDone}</p>
-                )}
-              </section>
-            )
-          })()}
-          <div className="sh-spacer" />
-          <div className="sh-dock">
-            <button
-              type="button"
-              className="sh-btn sh-btn--primary sh-press"
-              onClick={(event) => startLesson(resume.code, event.currentTarget)}
+    <Screen title={strings.today.title}>
+      <p className="dz-subhead sh-lead">{examLine}</p>
+      {main ? (
+        (() => {
+          const record = records[main.id]
+          const resuming = stateOf(record) === 'current'
+          const step = record ? resumeIndex(main, record) + 1 : 1
+          return (
+            <PressLink
+              to="/lesson/$id"
+              params={{ id: main.id }}
+              className="dz-card sh-continue"
+              data-testid="continue-card"
+              aria-label={
+                resuming ? strings.today.continueAction(main.title) : strings.today.startAction(main.title)
+              }
             >
-              {resume.step > 0
-                ? strings.today.continueAction(lessonName(catalog, resume.code))
-                : strings.today.startAction(lessonName(catalog, resume.code))}
-            </button>
+              <span className="dz-footnote">
+                {resuming ? strings.today.continueLabel : strings.today.startLabel}
+              </span>
+              <span className="dz-footnote sh-code">{main.node}</span>
+              <span className="dz-title3">{main.title}</span>
+              <span className="sh-progress" aria-hidden="true">
+                <span
+                  className="sh-progress__fill"
+                  style={{ width: `${resuming ? (step / main.steps.length) * 100 : 0}%` }}
+                />
+              </span>
+              <span className="dz-footnote">
+                {resuming
+                  ? strings.today.stepCount(step, main.steps.length)
+                  : strings.today.lessonSteps(main.steps.length)}
+              </span>
+            </PressLink>
+          )
+        })()
+      ) : (
+        <div className="dz-card sh-continue">
+          <span className="dz-read">{strings.today.allDone}</span>
+          <PressLink to="/exam" className="dz-button" data-kind="primary" data-wide="">
+            {strings.today.allDoneAction}
+          </PressLink>
+        </div>
+      )}
+      {after.length || mistakes ? (
+        <>
+          <h2 className="dz-section-label">{strings.today.next}</h2>
+          <div className="dz-list">
+            {after.map((lesson) => (
+              <PressLink
+                key={lesson.id}
+                to="/lesson/$id"
+                params={{ id: lesson.id }}
+                className="dz-row"
+                pressClass="dz-pressable"
+              >
+                <Glyph state={stateOf(records[lesson.id])} />
+                <span className="dz-row-main">
+                  <span className="dz-footnote sh-code">{lesson.node}</span> {lesson.title}
+                </span>
+                <span className="dz-chevron">
+                  <ChevronRight />
+                </span>
+              </PressLink>
+            ))}
+            {mistakes ? (
+              <PressLink to="/me" className="dz-row" pressClass="dz-pressable">
+                <span className="dz-row-main">{strings.today.mistakes(mistakes)}</span>
+                <span className="dz-chevron">
+                  <ChevronRight />
+                </span>
+              </PressLink>
+            ) : null}
           </div>
         </>
-      )}
-      <LessonSheet code={sheet} onClose={() => setSheet(null)} />
-    </div>
-  )
-}
-
-function ContinueCard({ code, step }: { code: string; step: number }) {
-  const { catalog } = useShell()
-  if (!catalog) return null
-  const total = catalog.steps[code] ?? 0
-  const name = lessonName(catalog, code)
-  const progress = total ? Math.round((step / total) * 100) : 0
-  return (
-    <button
-      type="button"
-      className="sh-card sh-cont sh-press"
-      data-testid="continue-card"
-      onClick={(event) => startLesson(code, event.currentTarget)}
-    >
-      <span className="sh-label">{step > 0 ? strings.today.continueLabel : strings.today.startLabel}</span>
-      <span className="sh-cont__code">
-        {code} · {unitOf(catalog, code)?.label}
-      </span>
-      <span className="sh-cont__meta">
-        <b>{name}</b>
-        <span>{step > 0 ? strings.today.stepCount(step + 1, total) : strings.today.lessonSteps(total)}</span>
-      </span>
-      <span className="sh-pbar" aria-hidden="true">
-        <i className="sh-pbar__fill" style={{ width: `${progress}%` }} />
-      </span>
-    </button>
+      ) : null}
+    </Screen>
   )
 }

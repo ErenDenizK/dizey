@@ -1,4 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { TodayView } from '../shell/TodayView'
 
-export const Route = createFileRoute('/')({ component: TodayView })
+// Tab screens live in the shell, mounted once so each keeps its scroll position.
+export const Route = createFileRoute('/')({ component: () => null })

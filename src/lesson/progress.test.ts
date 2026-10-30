@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { lessons } from '../content/lessons'
-import { checkKeypad, emptyRecord, firstTryScore, recordAnswer, resumeIndex } from './progress'
+import { checkKeypad, emptyRecord, firstTryScore, recordAnswer, recordTry, resumeIndex } from './progress'
 
 const lesson = lessons[0]
 if (!lesson) throw new Error('no lessons')
@@ -22,5 +22,15 @@ describe('lesson progress', () => {
     const once = recordAnswer(emptyRecord, 'try-b', 'a', false)
     expect(recordAnswer(once, 'try-b', 'b', true).answers['try-b']).toEqual({ given: 'a', correct: false })
     expect(firstTryScore(lesson, once).correct).toBe(0)
+  })
+})
+
+describe('recordTry', () => {
+  it('keeps the first try and clears a mistake only on a later first-try right answer', () => {
+    const wrong = recordTry(emptyRecord, 's', 'a', false, true, 1)
+    expect(recordTry(wrong, 's', 'b', true, false, 2).cleared).toBeUndefined()
+    const fixed = recordTry(wrong, 's', 'b', true, true, 3)
+    expect(fixed.answers.s).toEqual({ given: 'a', correct: false })
+    expect(fixed.cleared).toEqual({ s: 3 })
   })
 })

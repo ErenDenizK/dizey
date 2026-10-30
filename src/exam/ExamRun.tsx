@@ -2,6 +2,7 @@ import { Navigate, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
+import { saveSettings, useSettings } from '../progress/settings'
 import { Blocks } from './Blocks'
 import { clock } from './format'
 import { choose, goTo, remainingMs, toggleFlag } from './session'
@@ -14,6 +15,8 @@ export function ExamRun() {
   const navigate = useNavigate()
   const [now, setNow] = useState(() => Date.now())
   const [confirming, setConfirming] = useState(false)
+  const settings = useSettings()
+  const hidden = settings.hideExamClock === true
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
@@ -57,9 +60,21 @@ export function ExamRun() {
           {strings.exam.finishTop}
         </button>
         <span>{strings.exam.counter(session.current + 1, total)}</span>
-        <b className="ex-clock" aria-live="off" data-low={left < 5 * 60_000}>
-          {clock(left)}
-        </b>
+        <button
+          type="button"
+          className="ex-clock"
+          aria-live="off"
+          aria-pressed={hidden}
+          aria-label={hidden ? strings.exam.showClock : strings.exam.hideClock}
+          data-low={!hidden && left < 5 * 60_000}
+          onClick={() =>
+            saveSettings(
+              hidden ? { ...settings, hideExamClock: false } : { ...settings, hideExamClock: true },
+            )
+          }
+        >
+          {hidden ? strings.exam.clockHidden : clock(left)}
+        </button>
       </div>
       <div ref={scroller} className="ex-scroll">
         <div className="sh-card ex-stem">
