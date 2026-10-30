@@ -109,6 +109,28 @@ export const strings = {
     noResult: 'Gösterilecek prova yok.',
   },
 
+  lesson: {
+    close: 'Dersten çık',
+    back: 'Önceki adım',
+    next: 'İleri',
+    finishBeat: 'Hareketi bitir',
+    replay: 'Hareketi tekrar oynat',
+    finish: 'Dersi bitir',
+    count: (index: number, total: number) => `${index}/${total}`,
+    correct: 'Doğru.',
+    wrong: 'Tekrar dene.',
+    answerField: 'Cevabın',
+    answerPlaceholder: 'Cevabını yaz',
+    delete: 'Sil',
+    minus: 'Eksi',
+    check: 'Kontrol et',
+    showAnswer: 'Cevabı göster',
+    score: (correct: number, total: number) => `İlk denemede ${correct} / ${total} doğru`,
+    newGroup: 'Yeni anlatım',
+    newGroupNote: 'Sıfırdan yazılan dersler',
+    open: 'Derse gir',
+  },
+
   onboarding: {
     title: "Dizey'i ana ekrana ekle",
     body: "İlerlemen ana ekrandaki Dizey'de tutulur. iPhone, Safari'deki ve ana ekrandaki uygulamanın verisini ayrı saklar; Safari'de başlarsan ilerlemen oraya taşınmaz. Bu yüzden en başta ekle.",

@@ -1,9 +1,8 @@
 import 'katex/dist/katex.min.css'
 import type { Block } from '../content/questions'
-import { entryText, splitTex, texToHtml } from './tex'
+import { entryText, splitTex, splitTones, texToHtml } from './tex'
 
-/** Turkish text with inline `$...$` TeX. */
-export function RichText({ text }: { text: string }) {
+function TexRun({ text }: { text: string }) {
   return (
     <>
       {splitTex(text).map((part, index) =>
@@ -20,12 +19,40 @@ export function RichText({ text }: { text: string }) {
   )
 }
 
-function Matrix({ block }: { block: Extract<Block, { kind: 'matrix' }> }) {
+/** Turkish text with inline `$...$` TeX and lesson highlight markup ({row}, {col}, {ok}). */
+export function RichText({ text }: { text: string }) {
+  return (
+    <>
+      {splitTones(text).map((segment, index) =>
+        segment.tone ? (
+          // biome-ignore lint/suspicious/noArrayIndexKey: segments never reorder
+          <span key={index} className="tone" data-tone={segment.tone}>
+            <TexRun text={segment.value} />
+          </span>
+        ) : (
+          // biome-ignore lint/suspicious/noArrayIndexKey: segments never reorder
+          <TexRun key={index} text={segment.value} />
+        ),
+      )}
+    </>
+  )
+}
+
+export function Matrix({
+  block,
+  toneAt,
+  hideLabel,
+}: {
+  block: Extract<Block, { kind: 'matrix' }>
+  /** Highlight per cell (lesson beats). */
+  toneAt?: (row: number, column: number) => string | undefined
+  hideLabel?: boolean
+}) {
   const columns = block.rows[0]?.length ?? 1
   const label = block.delimiter === 'bars' ? 'determinant' : 'matris'
   return (
     <span className="ex-mat-wrap">
-      {block.label ? (
+      {block.label && !hideLabel ? (
         <span className="ex-mat-label">
           <RichText text={block.label} />
         </span>
@@ -44,6 +71,7 @@ function Matrix({ block }: { block: Extract<Block, { kind: 'matrix' }> }) {
               key={`${r}-${c}`}
               className="ex-cell"
               data-bar={block.augmentedAt !== undefined && c === block.augmentedAt ? 'before' : undefined}
+              data-tone={toneAt?.(r, c)}
             >
               {entryText(entry)}
             </span>

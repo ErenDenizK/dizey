@@ -33,3 +33,21 @@ export function texToHtml(tex: string): string {
 export function entryText(entry: string): string {
   return entry.replace(/-/g, '−')
 }
+
+export type Tone = 'row' | 'col' | 'ok'
+export type ToneSegment = { tone: Tone | null; value: string }
+
+/** Splits lesson highlight markup: `{row}…{/row}`, `{col}…{/col}`, `{ok}…{/ok}`. Unknown braces stay text. */
+export function splitTones(text: string): ToneSegment[] {
+  const segments: ToneSegment[] = []
+  const pattern = /\{(row|col|ok)\}([\s\S]*?)\{\/\1\}/g
+  let last = 0
+  for (const match of text.matchAll(pattern)) {
+    const index = match.index ?? 0
+    if (index > last) segments.push({ tone: null, value: text.slice(last, index) })
+    segments.push({ tone: match[1] as Tone, value: match[2] ?? '' })
+    last = index + match[0].length
+  }
+  if (last < text.length) segments.push({ tone: null, value: text.slice(last) })
+  return segments
+}

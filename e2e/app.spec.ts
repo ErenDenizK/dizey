@@ -48,6 +48,28 @@ test('a lesson opens from the map sheet', async ({ page }) => {
   await expect(page.locator('#count-lesson')).toContainText('B2')
 })
 
+test('a rebuilt lesson plays, checks answers and resumes where it was left', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './map')
+  await page.getByRole('link', { name: /^Derse gir: Determinant:/ }).click()
+  const player = page.getByTestId('lesson-player')
+  await expect(player).toBeVisible()
+  const next = player.getByRole('button', { name: 'İleri' })
+  while (!(await player.getByRole('group').count())) await next.click()
+  // A wrong option names the mistake and stays disabled; the right one unlocks İleri.
+  const options = player.getByRole('group').getByRole('button')
+  await options.filter({ hasText: '26' }).click()
+  await expect(player.getByRole('status')).toContainText('Tekrar dene.')
+  await options.filter({ hasText: /^b/ }).click()
+  await expect(player.getByRole('status')).toContainText('Doğru.')
+  await next.click()
+  const step = await player.getByRole('progressbar').getAttribute('aria-valuenow')
+  await page.reload()
+  await expect(page.getByTestId('lesson-player').getByRole('progressbar')).toHaveAttribute('aria-valuenow', step ?? '')
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await expect(page.getByRole('link', { name: /^Derse gir: Determinant:/ })).toContainText('kaldığın yer')
+})
+
 test('an exam rehearsal runs, survives a reload and shows its result', async ({ page }) => {
   await openApp(page, './exam')
   await page.getByRole('button', { name: 'Başlat' }).first().click()
