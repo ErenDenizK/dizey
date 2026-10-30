@@ -688,6 +688,15 @@
   text-align: center;
   line-height: 1.8;
 }
+.ex-frac {
+  display: inline-grid;
+  vertical-align: middle;
+  font-size: 0.82em;
+  line-height: 1.15;
+}
+.ex-frac > span + span {
+  border-top: 1.25px solid currentColor;
+}
 .ex-cell[data-bar="before"] {
   padding-left: 10px;
   border-left: 1.5px solid var(--sh-muted);
@@ -923,7 +932,7 @@ a.sh-node {
   background: var(--sh-soft);
   overflow: hidden;
 }
-.ls-progress > span {
+.ls-progress__fill {
   display: block;
   height: 100%;
   border-radius: 3px;
