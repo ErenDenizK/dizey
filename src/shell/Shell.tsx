@@ -1,96 +1,141 @@
-import { Link, Outlet, useRouterState } from '@tanstack/react-router'
-import { useEffect, useRef } from 'react'
+import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { strings } from '../content/strings'
-import { LessonLayer } from '../legacy/LessonLayer'
-import { fade, installPressFeedback } from './motion'
+import { engine } from '../engine/driver'
+import { CHOREO } from '../engine/tokens'
+import { ExamHome } from '../exam/ExamHome'
+import { useSettings } from '../progress/settings'
+import { ExamIcon, MapIcon, MeIcon, TodayIcon } from '../ui/icons'
+import { TabBar } from '../ui/TabBar'
+import { MapView } from './MapView'
+import { MeView } from './MeView'
 import { Onboarding } from './Onboarding'
-import { useShell } from './store'
+import { installPressFeedback } from './press'
+import { overlayHostRef, returnTab, stageRef } from './stage'
+import { TodayView } from './TodayView'
+import '../ui/ui.css'
 import './shell.css'
 
+type TabPath = '/' | '/map' | '/exam' | '/me'
+
 const tabs = [
-  {
-    to: '/',
-    label: strings.tabs.today,
-    icon: (
-      <>
-        <rect x="4" y="5" width="16" height="15" rx="3" />
-        <path d="M8 3v4M16 3v4M4 10h16" />
-      </>
-    ),
-  },
-  {
-    to: '/map',
-    label: strings.tabs.map,
-    icon: (
-      <>
-        <rect x="4" y="4" width="6.5" height="6.5" rx="1.6" />
-        <rect x="13.5" y="4" width="6.5" height="6.5" rx="1.6" />
-        <rect x="4" y="13.5" width="6.5" height="6.5" rx="1.6" />
-        <rect x="13.5" y="13.5" width="6.5" height="6.5" rx="1.6" />
-      </>
-    ),
-  },
-  {
-    to: '/exam',
-    label: strings.tabs.exam,
-    icon: (
-      <>
-        <circle cx="12" cy="13.5" r="7" />
-        <path d="M12 10v3.5l2.5 1.5M10 3.5h4M12 3.5v3" />
-      </>
-    ),
-  },
-  {
-    to: '/me',
-    label: strings.tabs.me,
-    icon: (
-      <>
-        <circle cx="12" cy="8.5" r="3.5" />
-        <path d="M5 20c1.2-3.6 4-5.2 7-5.2s5.8 1.6 7 5.2" />
-      </>
-    ),
-  },
+  { id: '/', label: strings.tabs.today, Icon: TodayIcon },
+  { id: '/map', label: strings.tabs.map, Icon: MapIcon },
+  { id: '/exam', label: strings.tabs.exam, Icon: ExamIcon },
+  { id: '/me', label: strings.tabs.me, Icon: MeIcon },
 ] as const
 
-/** Today, Map and Me around the kept lesson layer, which covers the shell while a lesson is open. */
+const views: Record<TabPath, () => React.ReactNode> = {
+  '/': TodayView,
+  '/map': MapView,
+  '/exam': ExamHome,
+  '/me': MeView,
+}
+
+function tabOf(pathname: string): TabPath | null {
+  const path = pathname.replace(/\/$/, '') || '/'
+  return (tabs.find((tab) => tab.id === path)?.id as TabPath | undefined) ?? null
+}
+
+/**
+ * The app frame: four tab panes kept mounted (so each keeps its scroll position), the floating tab
+ * bar, and full-screen routes (a lesson, a rehearsal) on top. Tabs are peers: the incoming pane fades
+ * in over the outgoing one, which hides only when the fade lands, so no frame is ever empty
+ * (docs/design/motion-system.md).
+ */
 export function Shell() {
-  const { openLesson } = useShell()
-  const lessonOpen = openLesson !== null
+  const navigate = useNavigate()
   const pathname = useRouterState({ select: (state) => state.location.pathname })
-  const main = useRef<HTMLElement>(null)
-  // Each tab opens at its top; the scroll container is shared.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: runs on path change by design
-  useEffect(() => {
-    main.current?.scrollTo(0, 0)
-  }, [pathname])
+  const routeTab = tabOf(pathname)
+  const overlay = routeTab === null
+  // Under a full-screen route the tab it came from stays where it was.
+  const [tab, setTab] = useState<TabPath>(routeTab ?? '/')
+  if (routeTab && routeTab !== tab) setTab(routeTab)
+  returnTab.current = tab
+
+  const panes = useRef<Partial<Record<TabPath, HTMLDivElement | null>>>({})
+  const shown = useRef<TabPath | null>(null)
+  useLayoutEffect(() => {
+    const previous = shown.current
+    shown.current = tab
+    for (const id of Object.keys(views) as TabPath[]) {
+      const pane = panes.current[id]
+      if (!pane) continue
+      const active = id === tab
+      pane.style.pointerEvents = active ? '' : 'none'
+      pane.style.zIndex = active ? '1' : ''
+      pane.toggleAttribute('inert', !active)
+      if (active) {
+        pane.style.visibility = ''
+        if (previous === null || previous === id) continue
+        engine.set(pane, { opacity: 0 })
+        engine.withChannel('chrome', () =>
+          engine.to(pane, { opacity: 1 }, 'fade', {
+            onArrive: () => {
+              const old = panes.current[previous]
+              if (old && shown.current !== previous) old.style.visibility = 'hidden'
+            },
+          }),
+        )
+      } else if (id !== previous) {
+        pane.style.visibility = 'hidden'
+      }
+    }
+  }, [tab])
+
+  // Full-screen routes rise over the shell: a short travel with a fade, never from zero size.
+  const layer = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = layer.current
+    if (!overlay || !el) return
+    engine.set(el, { opacity: 0, y: CHOREO.rise * 3 })
+    engine.withChannel('chrome', () => {
+      engine.to(el, { opacity: 1 }, 'fade')
+      engine.to(el, { y: 0 }, 'page', { launch: CHOREO.launch })
+    })
+  }, [overlay])
+
   useEffect(installPressFeedback, [])
-  // The shell fades behind an opening lesson and back when it closes; the lesson layer runs its own
-  // morph on top.
-  const shell = useRef<HTMLDivElement>(null)
-  const openRef = useRef(lessonOpen)
+
+  const { theme } = useSettings()
   useEffect(() => {
-    openRef.current = lessonOpen
-    if (shell.current) fade(shell.current, !lessonOpen, () => openRef.current)
-  }, [lessonOpen])
+    if (theme) document.documentElement.dataset.theme = theme
+    else delete document.documentElement.dataset.theme
+  }, [theme])
+
   return (
-    <>
-      <div ref={shell} className="sh-shell" inert={lessonOpen}>
-        <main ref={main} className="sh-main">
-          <Outlet />
-        </main>
-        <nav className="sh-tabbar" aria-label={strings.tabs.label}>
-          {tabs.map((tab) => (
-            <Link key={tab.to} to={tab.to} className="sh-tab" activeOptions={{ exact: tab.to === '/' }}>
-              <svg viewBox="0 0 24 24" aria-hidden="true">
-                {tab.icon}
-              </svg>
-              {tab.label}
-            </Link>
-          ))}
-        </nav>
+    <div className="dz dz-app">
+      <div ref={stageRef} className="dz-stage" inert={overlay}>
+        {(Object.keys(views) as TabPath[]).map((id) => {
+          const View = views[id]
+          return (
+            <div
+              key={id}
+              ref={(el) => {
+                panes.current[id] = el
+              }}
+              className="sh-pane"
+            >
+              <View />
+            </div>
+          )
+        })}
+        <div className="dz-edge-bottom" />
       </div>
-      <LessonLayer active={lessonOpen} />
+      <TabBar
+        tabs={tabs}
+        current={tab}
+        hidden={overlay}
+        label={strings.tabs.label}
+        onSelect={(id) => void navigate({ to: id })}
+      />
+      {overlay ? (
+        <div ref={layer} className="sh-overlay">
+          <Outlet />
+        </div>
+      ) : null}
+      <div ref={overlayHostRef} className="sh-sheet-host" />
       <Onboarding />
-    </>
+    </div>
   )
 }

@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { appStorage } from '../legacy/storage'
+import { appStorage } from '../lib/storage/app-storage'
 
 /** Learner settings the shell owns. Every field is optional so older saves keep parsing. */
 export type Settings = {
@@ -7,6 +7,8 @@ export type Settings = {
   examDate?: string
   /** Exam rehearsal clock hidden (for students who get anxious watching it). */
   hideExamClock?: boolean
+  /** Manual appearance; absent follows the system. */
+  theme?: 'light' | 'dark'
 }
 
 const KEY = 'dizey.settings'
@@ -15,10 +17,11 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const value: unknown = JSON.parse(raw ?? '{}')
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-    const { examDate, hideExamClock } = value as Record<string, unknown>
+    const { examDate, hideExamClock, theme } = value as Record<string, unknown>
     const settings: Settings = {}
     if (typeof examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(examDate)) settings.examDate = examDate
     if (hideExamClock === true) settings.hideExamClock = true
+    if (theme === 'light' || theme === 'dark') settings.theme = theme
     return settings
   } catch {
     return {}

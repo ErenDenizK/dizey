@@ -1,7 +1,26 @@
+import { type ReactNode, useLayoutEffect, useRef } from 'react'
 import type { Lesson, Scene } from '../content/lessons/types'
+import { engine } from '../engine/driver'
+import { CHOREO } from '../engine/tokens'
 import { Matrix, RichText } from '../exam/Blocks'
 import { parse } from '../lib/math/rational'
 import { minorBlock, type StageState } from './timeline'
+
+/** A new line of working rises into place on the lesson channel (finished at once by a tap). */
+function Rise({ children, className }: { children: ReactNode; className?: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    engine.set(el, { opacity: 0, y: CHOREO.rise })
+    engine.withChannel('lesson', () => engine.to(el, { opacity: 1, y: 0 }, 'teach'))
+  }, [])
+  return (
+    <span ref={ref} className={className}>
+      {children}
+    </span>
+  )
+}
 
 function toneFor(state: StageState, name: string) {
   return (row: number, column: number) => {
@@ -82,7 +101,7 @@ export function Stage({
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
                 <span key={index} className="ls-result" data-done={state.result !== null}>
-                  {state.result ?? scene.result ?? '?'}
+                  <Rise key={state.result ?? ''}>{state.result ?? scene.result ?? '?'}</Rise>
                 </span>
               )
             }
@@ -110,9 +129,9 @@ export function Stage({
         <div className="ls-notes" aria-live="polite">
           {state.notes.map((note, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: notes only append
-            <p key={index}>
+            <Rise key={`${index}:${note}`} className="ls-note">
               <RichText text={note} />
-            </p>
+            </Rise>
           ))}
         </div>
       ) : null}

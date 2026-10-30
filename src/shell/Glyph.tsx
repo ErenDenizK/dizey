@@ -1,4 +1,4 @@
-import type { LessonState } from './progress'
+import type { LessonState } from '../lesson/state'
 
 /**
  * Mastery mark: a 2×2 that fills along the diagonal (design prototype). Only "learned" exists until

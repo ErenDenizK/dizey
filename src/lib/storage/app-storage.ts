@@ -1,7 +1,7 @@
-import { buildInfo } from '../lib/build-info'
+import { buildInfo } from '../build-info'
 
 /**
- * localStorage for the kept v21 lesson layer, namespaced by deployment channel: a PR preview shares
+ * localStorage for app progress, namespaced by deployment channel: a PR preview shares
  * the production origin, so its keys get a prefix and can never read or overwrite real progress.
  */
 const prefix = buildInfo.channel === 'production' ? '' : `${buildInfo.channel}:`

@@ -1,4 +1,3 @@
-import { Link } from '@tanstack/react-router'
 import { useRef, useState } from 'react'
 import { dayLabel } from '../content/exam'
 import { lessons } from '../content/lessons'
@@ -6,71 +5,56 @@ import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { RichText } from '../exam/Blocks'
 import { useExam } from '../exam/store'
-import { versionLine } from '../legacy/build-line'
-import { appStorage } from '../legacy/storage'
+import { type LessonState, stateOf } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { type Backup, createBackup, parseBackup, readEntries, restoreEntries } from '../lib/backup/backup'
 import { buildInfo } from '../lib/build-info'
+import { versionLine } from '../lib/build-line'
+import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
 import { saveSettings, useSettings } from '../progress/settings'
+import { ChevronRight } from '../ui/icons'
+import { Pressable } from '../ui/Pressable'
+import { Screen } from '../ui/Screen'
 import { Glyph } from './Glyph'
-import { lessonState } from './progress'
-import { useShell } from './store'
-
-type SatirSound = { readonly muted: boolean; setMuted(muted: boolean): Promise<unknown> }
-
-function sound(): SatirSound | undefined {
-  return (globalThis as { SatirSound?: SatirSound }).SatirSound
-}
+import { PressLink } from './PressLink'
 
 export function MeView() {
-  const { catalog, done, resume } = useShell()
+  const records = useLessonRecords()
   const counts = { done: 0, current: 0, new: 0 }
-  for (const code of catalog?.ready ?? []) {
-    const state = catalog ? lessonState(code, catalog, done, resume) : 'new'
-    if (state !== 'soon') counts[state]++
-  }
+  for (const lesson of lessons) counts[stateOf(records[lesson.id])]++
 
   return (
-    <div className="sh-view">
-      <header>
-        <h1 className="sh-title">{strings.me.title}</h1>
-        <p className="sh-sub">{strings.me.subtitle}</p>
-      </header>
-      <div className="sh-card sh-stats">
+    <Screen title={strings.me.title}>
+      <p className="dz-subhead sh-lead">{strings.me.subtitle}</p>
+      <div className="dz-card sh-stats">
         <Stat state="done" value={counts.done} label={strings.me.statDone} />
         <Stat state="current" value={counts.current} label={strings.me.statOpen} />
         <Stat state="new" value={counts.new} label={strings.me.statNew} />
       </div>
       <MistakeLog />
-      <section>
-        <h2 className="sh-label">{strings.me.settings}</h2>
-        <div className="sh-card sh-settings">
-          <ExamDateSetting />
-          <SoundSetting />
-          <div className="sh-set">
-            <span>
-              {strings.me.appearance}
-              <small>{strings.me.appearanceHint}</small>
-            </span>
-            <span className="sh-muted">{strings.me.appearanceValue}</span>
-          </div>
-          <BackupSettings />
-        </div>
-      </section>
-      <p className="sh-version" data-testid="app-version">
+      <h2 className="dz-section-label">{strings.me.settings}</h2>
+      <div className="dz-list">
+        <ExamDateSetting />
+        <ThemeSetting />
+      </div>
+      <h2 className="dz-section-label">{strings.me.data}</h2>
+      <div className="dz-list">
+        <BackupSettings />
+      </div>
+      <p className="dz-footnote sh-version" data-testid="app-version">
         {versionLine()}
       </p>
-    </div>
+    </Screen>
   )
 }
 
-function Stat({ state, value, label }: { state: 'done' | 'current' | 'new'; value: number; label: string }) {
+function Stat({ state, value, label }: { state: LessonState; value: number; label: string }) {
   return (
     <div className="sh-stat">
       <Glyph state={state} />
-      <b>{value}</b>
-      <span>{label}</span>
+      <b className="dz-title2 num">{value}</b>
+      <span className="dz-footnote">{label}</span>
     </div>
   )
 }
@@ -81,15 +65,13 @@ function MistakeLog() {
   const list = openMistakes(lessons, records, questions, outcomes)
   return (
     <section aria-labelledby="mistakes">
-      <div className="sh-group-head">
-        <h2 id="mistakes" className="sh-label">
-          {strings.me.mistakes}
-        </h2>
-        {list.length ? <span>{list.length}</span> : null}
-      </div>
+      <h2 id="mistakes" className="dz-section-label">
+        {strings.me.mistakes}
+        {list.length ? ` · ${list.length}` : ''}
+      </h2>
       {list.length ? (
         <>
-          <ul className="sh-card sh-mistakes">
+          <ul className="dz-list sh-mistakes">
             {list.map((mistake) => (
               <li
                 key={
@@ -97,11 +79,11 @@ function MistakeLog() {
                 }
               >
                 {mistake.source === 'lesson' ? (
-                  <Link
+                  <PressLink
                     to="/lesson/$id"
                     params={{ id: mistake.lessonId }}
                     search={{ step: mistake.stepId }}
-                    className="sh-mistake sh-press"
+                    className="sh-mistake"
                   >
                     <span className="sh-mistake__code">{mistake.node}</span>
                     <span>
@@ -110,7 +92,7 @@ function MistakeLog() {
                       </b>
                       <RichText text={mistake.text} />
                     </span>
-                  </Link>
+                  </PressLink>
                 ) : (
                   <div className="sh-mistake">
                     <span className="sh-mistake__code">{mistake.node}</span>
@@ -123,10 +105,10 @@ function MistakeLog() {
               </li>
             ))}
           </ul>
-          <p className="sh-sub">{strings.me.mistakesHint}</p>
+          <p className="dz-footnote sh-hint">{strings.me.mistakesHint}</p>
         </>
       ) : (
-        <p className="sh-sub">{strings.me.mistakesEmpty}</p>
+        <p className="dz-card dz-subhead">{strings.me.mistakesEmpty}</p>
       )}
     </section>
   )
@@ -135,10 +117,12 @@ function MistakeLog() {
 function ExamDateSetting() {
   const settings = useSettings()
   return (
-    <label className="sh-set">
-      <span>
+    <label className="dz-row">
+      <span className="dz-row-main">
         {strings.me.examDate}
-        <small>{settings.examDate ? dayLabel(settings.examDate) : strings.me.examDateHint}</small>
+        <small className="dz-footnote sh-row-sub">
+          {settings.examDate ? dayLabel(settings.examDate) : strings.me.examDateHint}
+        </small>
       </span>
       <input
         type="date"
@@ -157,28 +141,30 @@ function ExamDateSetting() {
   )
 }
 
-function SoundSetting() {
-  const [on, setOn] = useState(() => sound()?.muted === false)
+function ThemeSetting() {
+  const settings = useSettings()
+  const value = settings.theme ?? 'system'
   return (
-    <label className="sh-set">
-      <span>
-        {strings.me.sound}
-        <small>{strings.me.soundHint}</small>
+    <div className="dz-row">
+      <span className="dz-row-main" id="theme-label">
+        {strings.me.appearance}
       </span>
-      {/* The switch attribute renders the iOS switch and gives its haptic tick. */}
-      <input
-        type="checkbox"
-        className="sh-toggle"
-        {...{ switch: '' }}
-        checked={on}
-        onChange={(event) => {
-          const next = event.currentTarget.checked
-          setOn(next)
-          // A tap counts as the gesture iOS needs to start audio.
-          void sound()?.setMuted(!next)
-        }}
-      />
-    </label>
+      <fieldset className="sh-segments" aria-labelledby="theme-label">
+        {(['system', 'light', 'dark'] as const).map((option) => (
+          <Pressable
+            key={option}
+            className="sh-segment"
+            aria-pressed={value === option}
+            onClick={() => {
+              const { theme: _old, ...rest } = settings
+              saveSettings(option === 'system' ? rest : { ...rest, theme: option })
+            }}
+          >
+            {strings.me.appearanceOptions[option]}
+          </Pressable>
+        ))}
+      </fieldset>
+    </div>
   )
 }
 
@@ -227,28 +213,24 @@ function BackupSettings() {
         data-testid="restore-file"
         onChange={(event) => void chooseFile(event.currentTarget.files?.[0])}
       />
-      <button type="button" className="sh-set sh-set--button" onClick={() => void exportBackup()}>
-        <span>
+      <Pressable className="dz-row" onClick={() => void exportBackup()}>
+        <span className="dz-row-main">
           {strings.me.backup}
-          <small>{strings.me.backupHint}</small>
+          <small className="dz-footnote sh-row-sub">{strings.me.backupHint}</small>
         </span>
-        <span className="sh-chev" aria-hidden="true">
-          ›
+        <span className="dz-chevron">
+          <ChevronRight />
         </span>
-      </button>
-      <button
-        type="button"
-        className="sh-set sh-set--button sh-set--last"
-        onClick={() => file.current?.click()}
-      >
-        <span>
+      </Pressable>
+      <Pressable className="dz-row" onClick={() => file.current?.click()}>
+        <span className="dz-row-main">
           {strings.me.restore}
-          <small>{strings.me.restoreHint}</small>
+          <small className="dz-footnote sh-row-sub">{strings.me.restoreHint}</small>
         </span>
-        <span className="sh-chev" aria-hidden="true">
-          ›
+        <span className="dz-chevron">
+          <ChevronRight />
         </span>
-      </button>
+      </Pressable>
       {error ? (
         <p className="sh-note" role="alert">
           {strings.me.restoreInvalid}
@@ -263,19 +245,19 @@ function BackupSettings() {
             )}
           </p>
           <div className="sh-note__actions">
-            <button type="button" className="sh-btn sh-btn--soft" onClick={() => setPending(null)}>
+            <Pressable className="dz-button" data-kind="secondary" onClick={() => setPending(null)}>
               {strings.me.cancel}
-            </button>
-            <button
-              type="button"
-              className="sh-btn sh-btn--primary"
+            </Pressable>
+            <Pressable
+              className="dz-button"
+              data-kind="primary"
               onClick={() => {
                 restoreEntries(appStorage, pending)
                 window.location.reload()
               }}
             >
               {strings.me.restoreAction}
-            </button>
+            </Pressable>
           </div>
         </div>
       ) : null}

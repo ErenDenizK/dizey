@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { questions } from '../content/questions'
-import { appStorage } from '../legacy/storage'
+import { appStorage } from '../lib/storage/app-storage'
 import type { ExamOutcomes } from '../progress/mistakes'
 import { type ExamResult, type ExamSession, finish, parseSession, score } from './session'
 

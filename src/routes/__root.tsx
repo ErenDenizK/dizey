@@ -7,9 +7,9 @@ import { Shell } from '../shell/Shell'
 export const Route = createRootRoute({
   component: RootLayout,
   notFoundComponent: () => (
-    <div className="sh-view">
-      <p>{strings.notFound}</p>
-      <Link to="/" className="sh-link">
+    <div className="sh-notfound">
+      <p className="dz-title3">{strings.notFound}</p>
+      <Link to="/" className="dz-button" data-kind="secondary">
         {strings.goHome}
       </Link>
     </div>
@@ -18,7 +18,7 @@ export const Route = createRootRoute({
 
 function RootLayout() {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
-  // The motion lab is a standalone reference page with its own tab bar: no shell, lesson layer or install guide.
+  // The motion lab is a standalone reference page with its own tab bar: no shell or install guide.
   const lab = pathname === '/lab' || pathname.startsWith('/lab/')
   return (
     <>

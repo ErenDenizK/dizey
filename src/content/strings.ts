@@ -7,7 +7,6 @@ export const strings = {
   updateAction: 'Yenile',
   notFound: 'Bu sayfa yok.',
   goHome: 'Ana sayfaya dön',
-  loading: 'Dersler yükleniyor…',
 
   tabs: { today: 'Bugün', map: 'Harita', exam: 'Sınav', me: 'Ben', label: 'Bölümler' },
 
@@ -21,7 +20,9 @@ export const strings = {
     stepCount: (step: number, total: number) => `${step} / ${total} adım`,
     lessonSteps: (total: number) => `${total} adım`,
     next: 'Sonra',
-    allDone: 'Hazır derslerin hepsini bitirdin. Yeni dersler geldikçe burada görünür.',
+    allDone: 'Bütün dersleri bitirdin. Şimdi gerçek sınav koşullarında bir prova yap.',
+    allDoneAction: 'Sınav provasına geç',
+    mistakes: (count: number) => `Hata defterinde ${count} açık hata`,
     continueAction: (name: string) => `Devam et: ${name}`,
     startAction: (name: string) => `Başla: ${name}`,
   },
@@ -30,6 +31,7 @@ export const strings = {
     title: 'Harita',
     subtitle: 'Vize 1 dersleri. Her birine istediğin zaman girebilirsin.',
     unitProgress: (done: number, total: number) => `${done} / ${total} tamam`,
+    unitWeight: (items: number, total: number) => `geçmiş sınavlarda ${items} / ${total} soru`,
     state: { new: 'başlanmadı', current: 'kaldığın yer', done: 'tamamlandı', soon: 'yakında' },
   },
 
@@ -45,16 +47,14 @@ export const strings = {
 
   me: {
     title: 'Ben',
-    subtitle: 'İlerlemen, yedeğin ve ayarlar.',
+    subtitle: 'İlerlemen, hataların ve ayarların.',
     statDone: 'tamamlandı',
     statOpen: 'devam ediyor',
     statNew: 'başlanmadı',
     settings: 'Ayarlar',
-    sound: 'Ses',
-    soundHint: 'Ders, cevap ve mühür sesleri. Telefon sessizdeyken çalmaz.',
+    data: 'Veri',
     appearance: 'Görünüm',
-    appearanceHint: 'Açık ve koyu, iPhone ayarına göre',
-    appearanceValue: 'Sistem',
+    appearanceOptions: { system: 'Sistem', light: 'Açık', dark: 'Koyu' },
     examDate: 'Vize 1 tarihi',
     examDateHint: 'Belli olunca gir; Bugün geri sayımı gösterir.',
     examDateUnset: 'Belli değil',

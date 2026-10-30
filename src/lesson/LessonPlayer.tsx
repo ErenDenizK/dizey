@@ -2,7 +2,10 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import type { Lesson, Step } from '../content/lessons/types'
 import { strings } from '../content/strings'
+import { engine } from '../engine/driver'
+import { SPRINGS } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
+import { returnTab } from '../shell/stage'
 import { Keypad } from './Keypad'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { Stage } from './Stage'
@@ -10,10 +13,11 @@ import { recordOf, saveRecord } from './store'
 import { compile, emptyStage } from './timeline'
 
 /**
- * INTERIM pace between beat frames, until the motion system's tempo tokens land. One frame per beat
- * moment; İleri finishes a running beat before it moves on.
+ * One beat frame per `teach` spring plus a short hold to read it; the channel's tempo
+ * (engine.setTempo) scales it. İleri finishes a running beat before it moves on.
  */
-const FRAME_MS = 900
+const LESSON_CHANNEL = 'lesson'
+const FRAME_MS = Math.round(SPRINGS.teach.duration * 1000 * 1.25)
 
 const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
@@ -63,12 +67,18 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     scroller.current?.scrollTo(0, 0)
   }, [index])
 
-  // Beat playback: one frame per tick; reduced motion starts at the end state.
+  // Beat playback on the engine's lesson channel: one cue per frame at the lesson tempo, so a tap
+  // can finish the whole beat at once (finishChannel) and review tools can step it frame by frame.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: schedules once per beat
   useEffect(() => {
-    if (!playing) return
-    const timer = window.setTimeout(() => setPlay({ key: beatKey, shown: shown + 1 }), FRAME_MS)
-    return () => window.clearTimeout(timer)
-  }, [playing, shown, beatKey])
+    if (shown >= frames.length) return
+    engine.withChannel(LESSON_CHANNEL, () => {
+      for (let next = shown + 1; next <= frames.length; next++) {
+        engine.after((next - shown) * FRAME_MS, () => setPlay({ key: beatKey, shown: next }))
+      }
+    })
+    return () => engine.cancelCues(LESSON_CHANNEL)
+  }, [beatKey])
 
   const state = shown > 0 ? (frames[shown - 1] ?? emptyStage) : emptyStage
 
@@ -87,14 +97,16 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
 
   const finish = () => {
     saveRecord(lesson.id, { ...recordOf(lesson.id), at: null, doneAt: Date.now() })
-    void navigate({ to: '/map' })
+    void navigate({ to: returnTab.current })
   }
 
   const isLast = index === lesson.steps.length - 1
   const locked = isQuestion(step) && !attempt.revealed
   const primary = () => {
-    if (playing && frames.length) setShown(frames.length)
-    else if (isLast) finish()
+    if (playing && frames.length) {
+      engine.finishChannel(LESSON_CHANNEL)
+      setShown(frames.length)
+    } else if (isLast) finish()
     else go(index + 1)
   }
   const primaryLabel =
@@ -115,7 +127,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   return (
     <div className="ls-run" data-testid="lesson-player">
       <div className="ls-top">
-        <Link to="/map" className="ls-top__btn sh-press" aria-label={strings.lesson.close}>
+        <Link to={returnTab.current} className="ls-top__btn" aria-label={strings.lesson.close}>
           ✕
         </Link>
         <div
