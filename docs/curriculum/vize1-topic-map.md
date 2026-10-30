@@ -1,6 +1,6 @@
 # MAT1320 Vize 1 topic map
 
-Status: draft, 2026-10-30. Past-exam analysis pending (exam PDFs not yet uploaded).
+Status: draft, 2026-10-30. Exam priorities: see `docs/research/past-exam-analysis.md`.
 
 ## Sources
 
@@ -52,7 +52,7 @@ Every node answers part of one question: is Ax = b solvable, and is the solution
 
 ## Open
 
-- Past-exam tagging, frequency and distractor mining: blocked on exam PDFs.
+- Full photos of 2024 summer items 5, 6, 14 (cropped).
 - Whether "Vektörler" (syllabus week 8) is in Vize 1 scope: the lecturer's section was about one week ahead of the
   2020 syllabus on 2026-10-27.
 - Exam date and format confirmation.
