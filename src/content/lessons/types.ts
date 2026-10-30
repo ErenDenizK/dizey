@@ -36,6 +36,8 @@ export type Beat =
   | { readonly kind: 'sarrus'; readonly matrix: string }
   /** Unit square (or cube) carried by the matrix; the area of the image is |det|. */
   | { readonly kind: 'area'; readonly matrix: string }
+  /** Strike out row `row` and column `col` (0-based) and lift the remaining submatrix: the minor M_ij. */
+  | { readonly kind: 'minor'; readonly matrix: string; readonly row: number; readonly col: number }
   /** Cofactor expansion along one row or column. */
   | {
       readonly kind: 'expand'
@@ -56,6 +58,10 @@ export interface Scene {
   readonly result?: string
 }
 
+/**
+ * Mark a claim with `answer: true` when its value is what the step's exercise asks for; a step with a
+ * single numeric claim needs no mark.
+ */
 export type Claim =
   /** det of a lesson matrix, after substituting `at` (e.g. { k: '4' }). Values are exact rationals. */
   | {
@@ -63,6 +69,28 @@ export type Claim =
       readonly matrix: string
       readonly equals: string
       readonly at?: Readonly<Record<string, string>>
+      readonly answer?: true
+    }
+  /** Minor M_ij or cofactor C_ij; `row` and `col` are 1-based as in the lecturer's notation. */
+  | {
+      readonly kind: 'minor' | 'cofactor'
+      readonly matrix: string
+      readonly row: number
+      readonly col: number
+      readonly equals: string
+      readonly answer?: true
+    }
+  /** det(scalar · F1 F2 … Fn) where each factor is a lesson matrix, optionally transposed or raised to a power (−1 = inverse). */
+  | {
+      readonly kind: 'detProduct'
+      readonly scalar?: string
+      readonly factors: readonly {
+        readonly matrix: string
+        readonly transpose?: true
+        readonly power?: number
+      }[]
+      readonly equals: string
+      readonly answer?: true
     }
   /** The values of `variable` for which det is 0, exactly (checked on a dense rational grid). */
   | {

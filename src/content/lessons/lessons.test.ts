@@ -57,11 +57,43 @@ function sarrusSums(a: Matrix): [Rational, Rational] {
 }
 
 function checkClaim(lesson: Lesson, claim: Claim): void {
+  if (claim.kind === 'detProduct') {
+    let product: Matrix | null = null
+    for (const factor of claim.factors) {
+      let f = numeric(matrixOf(lesson, factor.matrix))
+      if (factor.transpose) f = M.transpose(f)
+      const power = factor.power ?? 1
+      let base = f
+      if (power < 0) {
+        const inverse = M.inverse(f)
+        if (!inverse) throw new Error(`${lesson.id}: ${factor.matrix} is singular`)
+        base = inverse
+      }
+      let raised = M.identity(M.rowCount(f))
+      for (let i = 0; i < Math.abs(power); i++) raised = M.multiply(raised, base)
+      product = product ? M.multiply(product, raised) : raised
+    }
+    if (!product) throw new Error('Empty product')
+    const scaled = M.scale(parse(claim.scalar ?? '1'), product)
+    expect(Q.format(M.determinant(scaled))).toBe(Q.format(parse(claim.equals)))
+    return
+  }
   const block = matrixOf(lesson, claim.matrix)
   switch (claim.kind) {
     case 'det': {
       const params = Object.fromEntries(Object.entries(claim.at ?? {}).map(([k, v]) => [k, parse(v)]))
       expect(Q.format(M.determinant(numeric(block, params)))).toBe(Q.format(parse(claim.equals)))
+      return
+    }
+    case 'minor':
+    case 'cofactor': {
+      const a = numeric(block)
+      const sub = M.fromNumbers(
+        a.filter((_, i) => i !== claim.row - 1).map((row) => row.filter((_, j) => j !== claim.col - 1)),
+      )
+      const minor = M.determinant(sub)
+      const value = claim.kind === 'minor' || (claim.row + claim.col) % 2 === 0 ? minor : Q.neg(minor)
+      expect(Q.format(value)).toBe(Q.format(parse(claim.equals)))
       return
     }
     case 'sarrus': {
@@ -183,16 +215,27 @@ describe('lessons', () => {
 
       it('keys every exercise to its claim', () => {
         for (const step of lesson.steps) {
-          const det = step.claims?.find((c) => c.kind === 'det' && !c.at)
+          const numericClaims = (step.claims ?? []).filter(
+            (c) =>
+              (c.kind === 'det' && !c.at) ||
+              c.kind === 'minor' ||
+              c.kind === 'cofactor' ||
+              c.kind === 'detProduct',
+          )
+          const det =
+            numericClaims.find((c) => 'answer' in c && c.answer) ??
+            (numericClaims.length === 1 ? numericClaims[0] : undefined)
           if (step.kind === 'keypad') {
             expect(det, step.id).toBeDefined()
-            if (det?.kind === 'det') expect(Q.format(parse(step.answer))).toBe(Q.format(parse(det.equals)))
+            if (det && 'equals' in det) expect(Q.format(parse(step.answer))).toBe(Q.format(parse(det.equals)))
           }
-          if (step.kind === 'choice' && det?.kind === 'det') {
+          if (step.kind === 'choice' && det && 'equals' in det) {
             const value = (key: string) => {
               const option = step.options.find((o) => o.key === key)
               const first = option?.content[0]
-              return first?.kind === 'text' ? Q.parse(first.text.replaceAll('$', '')) : null
+              return first?.kind === 'text'
+                ? Q.parse(first.text.replaceAll('$', '').replace(/(-?)\\frac\{(\d+)\}\{(\d+)\}/, '$1$2/$3'))
+                : null
             }
             const matching = step.options.filter((o) => {
               const v = value(o.key)
