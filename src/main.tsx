@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { startAppDriver } from './engine/driver'
 import { requestPersistentStorage } from './lib/storage/db'
 import { routeTree } from './routeTree.gen'
+import { installSound } from './sound/player'
 import './styles/app.css'
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
@@ -15,6 +16,7 @@ declare module '@tanstack/react-router' {
 }
 
 startAppDriver()
+installSound()
 void requestPersistentStorage()
 
 const root = document.getElementById('root')

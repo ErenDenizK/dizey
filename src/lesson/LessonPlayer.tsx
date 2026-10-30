@@ -1,14 +1,19 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
+import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { SPRINGS } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
+import { playSound } from '../sound/player'
+import type { SoundEvent } from '../sound/score'
 import { Keypad } from './Keypad'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
+import { rewardFor } from './reward'
 import { Stage } from './Stage'
+import { stateOf } from './state'
 import { recordOf, saveRecord } from './store'
 import { compile, emptyStage } from './timeline'
 
@@ -18,6 +23,9 @@ import { compile, emptyStage } from './timeline'
  */
 const LESSON_CHANNEL = 'lesson'
 const FRAME_MS = Math.round(SPRINGS.teach.duration * 1000 * 1.25)
+
+/** First-try answers in a row that turn the correct chord into a streak. */
+const STREAK = 3
 
 const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
 
@@ -54,6 +62,15 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const shown = play.key === beatKey ? play.shown : startAt
   const setShown = (value: number) => setPlay({ key: beatKey, shown: value })
   const playing = shown < frames.length
+  // Sounds follow the lesson's chord walk, so they are built from the step on screen.
+  const cue = (event: SoundEvent, cell?: number) =>
+    playSound(event, {
+      step: index,
+      steps: lesson.steps.length,
+      ...(cell === undefined ? {} : { index: cell }),
+    })
+  // First-try answers in a row during this visit.
+  const run = useRef(0)
 
   // Resume point: the step on screen.
   useEffect(() => {
@@ -74,7 +91,13 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     if (shown >= frames.length) return
     engine.withChannel(LESSON_CHANNEL, () => {
       for (let next = shown + 1; next <= frames.length; next++) {
-        engine.after((next - shown) * FRAME_MS, () => setPlay({ key: beatKey, shown: next }))
+        engine.after((next - shown) * FRAME_MS, () => {
+          setPlay({ key: beatKey, shown: next })
+          // A frame that brings a result merges; any other frame lands a value.
+          const result = frames[next - 1]?.result
+          if (result != null && result !== frames[next - 2]?.result) cue('merge')
+          else cue('land', next)
+        })
       }
     })
     return () => engine.cancelCues(LESSON_CHANNEL)
@@ -91,12 +114,21 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const answer = (given: string, correct: boolean) => {
     const record = recordOf(lesson.id)
     saveRecord(lesson.id, recordTry(record, step.id, given, correct, attempt.wrong.length === 0, Date.now()))
-    if (correct) setAttempt((a) => ({ ...a, solved: true, revealed: true }))
-    else setAttempt((a) => ({ ...a, wrong: [...a.wrong, given] }))
+    if (correct) {
+      run.current = attempt.wrong.length === 0 ? run.current + 1 : 0
+      cue(run.current >= STREAK ? 'streak' : 'correct')
+      setAttempt((a) => ({ ...a, solved: true, revealed: true }))
+    } else {
+      run.current = 0
+      cue('wrong')
+      setAttempt((a) => ({ ...a, wrong: [...a.wrong, given] }))
+    }
   }
 
   const finish = () => {
+    const doneBefore = lessons.filter((other) => stateOf(recordOf(other.id)) === 'done')
     saveRecord(lesson.id, { ...recordOf(lesson.id), at: null, doneAt: Date.now() })
+    cue(rewardFor(lesson, doneBefore))
     void navigate({ to: returnTab.current })
   }
 
@@ -230,7 +262,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         {step.kind === 'keypad' && !attempt.revealed ? (
           <Keypad
             value={typed}
-            onChange={setTyped}
+            onChange={(value) => {
+              setTyped(value)
+              cue('select')
+            }}
             onSubmit={() => {
               answer(typed, checkKeypad(step.answer, typed))
               setTyped('')

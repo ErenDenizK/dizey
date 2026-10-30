@@ -13,9 +13,11 @@ import { versionLine } from '../lib/build-line'
 import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
 import { saveSettings, useSettings } from '../progress/settings'
+import { setSoundOn } from '../sound/player'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
+import { Switch } from '../ui/Switch'
 import { Glyph } from './Glyph'
 import { PressLink } from './PressLink'
 
@@ -37,6 +39,7 @@ export function MeView() {
       <div className="dz-list">
         <ExamDateSetting />
         <ThemeSetting />
+        <SoundSetting />
       </div>
       <h2 className="dz-section-label">{strings.me.data}</h2>
       <div className="dz-list">
@@ -164,6 +167,19 @@ function ThemeSetting() {
           </Pressable>
         ))}
       </fieldset>
+    </div>
+  )
+}
+
+function SoundSetting() {
+  const settings = useSettings()
+  return (
+    <div className="dz-row">
+      <span className="dz-row-main">
+        {strings.me.sound}
+        <small className="dz-footnote sh-row-sub">{strings.me.soundHint}</small>
+      </span>
+      <Switch checked={settings.sound !== false} onChange={setSoundOn} label={strings.me.sound} />
     </div>
   )
 }
