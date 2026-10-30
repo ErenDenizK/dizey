@@ -23,7 +23,7 @@ export const d1Determinant: Lesson = {
       ['c', 'd'],
     ]),
     B: m(
-      'B =',
+      '$|B|$ =',
       [
         ['5', '2'],
         ['3', '4'],
@@ -31,7 +31,7 @@ export const d1Determinant: Lesson = {
       true,
     ),
     C: m(
-      'C =',
+      '$|C|$ =',
       [
         ['2', '-3'],
         ['1', '4'],
@@ -43,7 +43,7 @@ export const d1Determinant: Lesson = {
       ['3', '6'],
     ]),
     K: m(
-      'A =',
+      '$|A|$ =',
       [
         ['k', '4'],
         ['4', 'k'],
@@ -51,7 +51,7 @@ export const d1Determinant: Lesson = {
       true,
     ),
     S: m(
-      'S =',
+      '$|S|$ =',
       [
         ['2', '1', '3'],
         ['0', '4', '1'],
@@ -60,7 +60,7 @@ export const d1Determinant: Lesson = {
       true,
     ),
     N: m(
-      'N =',
+      '$|N|$ =',
       [
         ['1', '-1', '2'],
         ['3', '0', '1'],
@@ -69,7 +69,7 @@ export const d1Determinant: Lesson = {
       true,
     ),
     E: m(
-      'A =',
+      '$|A|$ =',
       [
         ['k', '1', '1'],
         ['1', 'k', '1'],
@@ -92,7 +92,7 @@ export const d1Determinant: Lesson = {
       kind: 'explain',
       eyebrow: 'Sezgi',
       title: 'Determinant alanın kaç katına çıktığını söyler',
-      body: '$A$ birim kareyi, sütunları $(3, 4)$ ve $(1, 2)$ olan bir paralelkenara taşır. Bu paralelkenarın alanı $2$: alan $2$ katına çıktı. $|\\det(A)|$ tam olarak bu katsayıdır.',
+      body: '$A$ birim kareyi, sütunları $(3, 4)$ ve $(1, 2)$ olan bir paralelkenara taşır. Bu paralelkenarın alanı $2$: alan $2$ katına çıktı. $\\det(A)$’nın mutlak değeri tam olarak bu katsayıdır.',
       scene: { items: ['A'] },
       beat: { kind: 'area', matrix: 'A' },
       claims: [{ kind: 'det', matrix: 'A', equals: '2' }],
@@ -255,7 +255,7 @@ export const d1Determinant: Lesson = {
       kind: 'explain',
       eyebrow: 'Tuzak',
       title: 'Sarrus yalnız 3×3’te çalışır',
-      body: '4×4 için köşegen hilesi yanlış sonuç verir. 4×4 ve üstü için satır ya da sütun açılımı (Laplace) ya da satır işlemleri gerekir; sıradaki derslerin konusu.',
+      body: '4×4 için köşegen hilesi genelde yanlış sonuç verir. 4×4 ve üstü için satır ya da sütun açılımı (Laplace) ya da satır işlemleri gerekir; sıradaki derslerin konusu.',
     },
     {
       id: 'exam-k',
@@ -309,7 +309,7 @@ export const d1Determinant: Lesson = {
       eyebrow: 'Özet',
       title: 'Determinant: alan katsayısı ve ters testi',
       points: [
-        '$|A|$, birim karenin (3×3’te birim küpün) alanının ya da hacminin kaç katına çıktığıdır.',
+        '$|A|$’nın mutlak değeri, birim karenin (3×3’te birim küpün) alanının ya da hacminin kaç katına çıktığıdır; işaret yönü söyler.',
         '2×2: $|A| = ad - bc$.',
         '3×3: Sarrus, sağa inen köşegenler eksi sola inenler. Yalnız 3×3’te.',
         '$|A| = 0 \\iff A$ tekil, tersi yok. Sütunlardan biri diğerlerinden elde ediliyorsa $|A| = 0$.',

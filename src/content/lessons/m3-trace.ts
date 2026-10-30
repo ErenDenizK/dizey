@@ -71,7 +71,7 @@ export const m3Trace: Lesson = {
       id: 'linear',
       kind: 'explain',
       eyebrow: 'Kural',
-      title: 'İz toplamaya ve skalere saygılı',
+      title: 'İz doğrusaldır: toplam ve skaler dışarı çıkar',
       body: '$\\text{iz}(A + B) = \\text{iz}(A) + \\text{iz}(B)$, $\\text{iz}(kA) = k \\, \\text{iz}(A)$, $\\text{iz}(A^T) = \\text{iz}(A)$: transpoz köşegeni yerinde bırakır. Ayrıca $\\text{iz}(I_n) = n$.',
       scene: { items: ['A', 'B'] },
       claims: [

@@ -199,7 +199,7 @@ export const m9Orthogonal: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Ortogonal çarpı ortogonal yine ortogonal',
-      body: '$(AB)^T(AB) = B^TA^TAB = B^TB = I$. Aynı şekilde $A^T$ ve $A^{-1}$ de ortogonaldir. Örnek: dönme ardından yansıma, $QF$, yine uzunluk korur.',
+      body: '$(AB)^T(AB) = B^TA^TAB = B^TB = I$. Aynı şekilde $A^T$ ve $A^{-1}$ de ortogonaldir. Örnek: önce yansıma ($F$), sonra dönme ($Q$): $QF$ yine uzunluk korur.',
       scene: { items: ['Q', 'F'] },
       claims: [
         { kind: 'property', expr: 'QF', is: 'orthogonal' },
@@ -274,7 +274,7 @@ export const m9Orthogonal: Lesson = {
       points: [
         '$A^TA = AA^T = I$, yani $A^{-1} = A^T$.',
         'Sütunlar (ve satırlar) birim uzunlukta ve ikişer ikişer dik.',
-        '$|A| = \\pm 1$: dönme $+1$, yansıma $-1$. Tersi geçerli değil.',
+        '$|A| = \\pm 1$ (2×2’de: dönme $+1$, yansıma $-1$). Tersi geçerli değil.',
         'Çarpım, transpoz ve ters yine ortogonal.',
         'Eksik eleman sorusunda boy iki değer verir; dikliği kullanarak birini seç.',
       ],

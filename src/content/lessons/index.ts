@@ -23,27 +23,30 @@ import type { Lesson } from './types'
 
 export type { Beat, Claim, Lesson, Step } from './types'
 
-/** Lessons in exam-weight order. Ids are stable once merged. */
+/**
+ * Lessons in study order: each lesson only builds on lessons before it (topic map prerequisites).
+ * They were written in exam-weight order (docs/research/past-exam-analysis.md). Ids are stable once merged.
+ */
 export const lessons: readonly Lesson[] = [
+  m1ReadingAMatrix,
+  m2MatrixTypes,
+  m4MatrixArithmetic,
+  m5MatrixProduct,
+  m3Trace,
+  m6Transpose,
+  m7SymmetricAntisymmetric,
+  m8PowerClasses,
+  m9Orthogonal,
+  r1RowOperations,
+  r2EchelonForms,
+  r3Rank,
   d1Determinant,
   d2CofactorExpansion,
   d3DeterminantProperties,
   d4AdjugateInverse,
-  m7SymmetricAntisymmetric,
-  m8PowerClasses,
-  m9Orthogonal,
   r4Inverse,
-  m4MatrixArithmetic,
-  m5MatrixProduct,
   s1LinearSystems,
   s2ParametricSystems,
-  m3Trace,
   s3HomogeneousSystems,
-  m1ReadingAMatrix,
-  m2MatrixTypes,
-  m6Transpose,
   s4Cramer,
-  r1RowOperations,
-  r2EchelonForms,
-  r3Rank,
 ]
