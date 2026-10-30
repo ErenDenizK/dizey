@@ -68,7 +68,7 @@ export const d4AdjugateInverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Soru',
       title: 'Tersi var. Peki nasıl bulunur?',
-      body: '$|A| = 4 \\neq 0$, yani $A$’nın tersi var. Bu derste tersi tek bir formülle kuracağız; parçaları önceki dersten tanıdık: kofaktörler.',
+      body: '$|A| = 4 \\neq 0$, yani $A$’nın tersi var. Bu derste tersi tek bir formülle kuracağız; parçaları D2’den tanıdık: kofaktörler.',
       scene: { items: ['A'] },
       claims: [{ kind: 'det', matrix: 'A', equals: '4' }],
     },
@@ -347,7 +347,7 @@ export const d4AdjugateInverse: Lesson = {
         {
           key: 'b',
           content: [text('$\\frac{1}{4}$')],
-          errorType: 'forgot-cofactor-sign',
+          errorType: 'wrong-cofactor-sign',
           feedback: '$C_{13} = (-1)^{1+3}M_{13}$, işaret artı; $M_{13} = 0 \\cdot 0 - 1 \\cdot 1 = -1$.',
         },
         {

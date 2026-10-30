@@ -47,7 +47,7 @@ export const s3HomogeneousSystems: Lesson = {
       kind: 'explain',
       eyebrow: 'Gözlem',
       title: '$Ax = 0$ her zaman çözülür',
-      body: 'Sağ taraf sıfırsa $x = 0$ her denklemi sağlar: buna {ok}aşikâr çözüm{/ok} denir. Bu yüzden homojen bir sistem asla "çözümsüz" olamaz. Tek soru şu: $0$’dan başka çözüm var mı?',
+      body: 'Sağ taraf sıfırsa $x = 0$ her denklemi sağlar: buna {ok}aşikâr (trivial) çözüm{/ok} denir. Bu yüzden homojen bir sistem asla "çözümsüz" olamaz. Tek soru şu: $0$’dan başka çözüm var mı?',
       scene: { items: ['H'] },
     },
     {

@@ -92,6 +92,13 @@ export type Property =
   | 'orthogonal'
   | 'nilpotent'
   | 'periodic'
+  | 'diagonal'
+  | 'scalar'
+  | 'identity'
+  | 'upperTriangular'
+  | 'lowerTriangular'
+  | 'rowEchelon'
+  | 'reducedRowEchelon'
 
 /**
  * Matrix expressions are written as the lesson prints them: "A^T", "AB - BA", "1/2(M + M^T)", "A^{-1}",

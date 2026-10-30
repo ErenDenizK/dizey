@@ -150,7 +150,7 @@ export const m8PowerClasses: Lesson = {
           ],
           errorType: 'diagonal-guess',
           feedback:
-            'Köşegen matrisin karesi köşegenin karesidir: $2^2 = 4 \\neq 2$. Köşegende yalnızca $0$ ve $1$ olabilir.',
+            'Köşegen matrisin karesi köşegenin karesidir: $2^2 = 4 \\neq 2$. İdempotent bir köşegen matriste köşegende yalnızca $0$ ve $1$ olabilir.',
         },
       ],
       answer: 'b',
@@ -175,7 +175,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Nilpotent: bir kuvveti sıfır',
-      body: '$A^p = 0$ olacak şekilde bir $p$ varsa $A$ nilpotenttir; {ok}en küçük $p$ indekstir{/ok}. Köşegeni sıfır üst üçgen $U$’da her kuvvet sıfırları bir köşegen yukarı iter: $U^2$’de yalnız sağ üst köşe kalır, $U^3 = 0$. İndeks $3$. $N$ da öyle, ama bunu görmek için çarpmak gerekir.',
+      body: '$A^p = 0$ olacak şekilde pozitif bir tam sayı $p$ varsa $A$ nilpotenttir; {ok}en küçük $p$ indekstir{/ok}. Köşegeni sıfır üst üçgen $U$’da her kuvvet sıfırları bir köşegen yukarı iter: $U^2$’de yalnız sağ üst köşe kalır, $U^3 = 0$. İndeks $3$. $N$ da öyle, ama bunu görmek için çarpmak gerekir.',
       scene: { items: ['U', 'N'] },
       claims: [
         {

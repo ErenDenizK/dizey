@@ -19,7 +19,7 @@ export const d3DeterminantProperties: Lesson = {
   title: 'Determinant özellikleri: hesaplamadan bulmak',
   matrices: {
     A: m(
-      'A =',
+      '$|A|$ =',
       [
         ['2', '1', '0'],
         ['1', '3', '1'],
@@ -73,7 +73,7 @@ export const d3DeterminantProperties: Lesson = {
       true,
     ),
     B: m(
-      'B =',
+      '$|B|$ =',
       [
         ['1', '2'],
         ['3', '1'],
@@ -81,7 +81,7 @@ export const d3DeterminantProperties: Lesson = {
       true,
     ),
     R: m(
-      'C =',
+      '$|C|$ =',
       [
         ['1', '2', '1'],
         ['2', '5', '3'],
@@ -90,7 +90,7 @@ export const d3DeterminantProperties: Lesson = {
       true,
     ),
     Letters: m(
-      '|A| =',
+      '$|A|$ =',
       [
         ['a', 'b', 'c'],
         ['d', 'e', 'f'],
@@ -312,14 +312,16 @@ export const d3DeterminantProperties: Lesson = {
           key: 'b',
           content: [text('$-30$')],
           errorType: 'row-addition-changes-det',
-          feedback: '$R_3 - 3R_1$ determinantı değiştirmez; $3$ çarpan olarak gelmez.',
+          feedback:
+            '3. satırdan bir satırın $3$ katını çıkarmak determinantı değiştirmez; $-3$ çarpan olarak gelmez.',
         },
         { key: 'c', content: [text('$10$')] },
         {
           key: 'd',
           content: [text('$-40$')],
           errorType: 'k-power-n-for-one-row',
-          feedback: 'Yalnız bir satır $2$ ile çarpıldı, çarpan $2$; $2^3$ değil.',
+          feedback:
+            'Yalnız bir satır $2$ ile çarpıldı, çarpan $2$; $2^3$ değil. Satır değişimini de unutma: $2 \\cdot (-1) \\cdot (-5) = 10$.',
         },
         {
           key: 'e',
@@ -334,12 +336,12 @@ export const d3DeterminantProperties: Lesson = {
         lines: [
           '\\text{1. satırdan } 2 \\text{ çıkar}',
           'R_1 \\leftrightarrow R_2: \\ -1',
-          'R_3 - 3R_1: \\ \\text{değişmez}',
+          'R_3 - 3(a, b, c): \\ \\text{değişmez}',
           '2 \\cdot (-1) \\cdot (-5) = 10',
         ],
       },
       solution:
-        '1. satırdan $2$ çıkar. Kalan matriste 1. ve 2. satır yer değiştirmiş: $-1$. 3. satır $R_3 - 3R_1$: değişmez. Sonuç $2 \\cdot (-1) \\cdot (-5) = 10$.',
+        '1. satırdan $2$ çıkar. Kalan matriste 1. ve 2. satır yer değiştirmiş: $-1$. 3. satırdan $(a, b, c)$ satırının $3$ katı çıkarılmış: değişmez. Sonuç $2 \\cdot (-1) \\cdot (-5) = 10$.',
       claims: [
         { kind: 'det', matrix: 'xLetters', equals: '-5' },
         { kind: 'det', matrix: 'xDerived', equals: '10', answer: true },

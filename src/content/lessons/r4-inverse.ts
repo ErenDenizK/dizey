@@ -97,7 +97,7 @@ export const r4Inverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Fikir',
       title: 'Ters matris, yapılanı geri alır',
-      body: '$A^{-1}$, $AA^{-1} = A^{-1}A = I$ olan matristir. Ek matris formülü küçük matrislerde iyi; 3×3 ve üstünde daha düzenli yol satır işlemleri. Önceki dersteki $A$’nın tersini şimdi bu yolla bulacağız.',
+      body: '$A^{-1}$, $AA^{-1} = A^{-1}A = I$ olan matristir. Ek matris formülü küçük matrislerde iyi; 3×3 ve üstünde daha düzenli yol satır işlemleri. D4’teki $A$’nın tersini şimdi bu yolla bulacağız.',
       scene: { items: ['A'] },
       claims: [{ kind: 'det', matrix: 'A', equals: '4' }],
     },
@@ -106,7 +106,7 @@ export const r4Inverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Yöntem',
       title: '$[A \\mid I]$ yaz, solu $I$ olana kadar satır işlemi yap',
-      body: 'Her satır işlemi bir matrisle soldan çarpmaktır. Sol taraf $I$ olduğunda bu işlemlerin çarpımı $A^{-1}$ olur, ve aynı işlemler sağdaki $I$’yı da $A^{-1}$’e çevirir. Önce köşegenin altını sıfırla.',
+      body: 'Her satır işlemi bir matrisle soldan çarpmaktır. Sol taraf $I$ olduğunda bu işlemlerin çarpımı $A^{-1}$ olur; aynı işlemler sağdaki $I$’yı da $A^{-1}$’e çevirir. Önce köşegenin altını sıfırla.',
       scene: { items: ['Start'] },
       beat: {
         kind: 'rowOps',
@@ -180,7 +180,7 @@ export const r4Inverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Tersin kuralları',
-      body: '$(AB)^{-1} = B^{-1}A^{-1}$: {ok}sıra ters döner{/ok}, tıpkı ayakkabıyı çorabı çıkarmadan önce çıkarmak gibi. Ayrıca $(A^T)^{-1} = (A^{-1})^T$, $(kA)^{-1} = \\frac{1}{k}A^{-1}$ ve $(A^{-1})^{-1} = A$.',
+      body: '$(AB)^{-1} = B^{-1}A^{-1}$: {ok}sıra ters döner{/ok}, tıpkı ayakkabıyı çorabı çıkarmadan önce çıkarmak gibi. Ayrıca $(A^T)^{-1} = (A^{-1})^T$, $(kA)^{-1} = \\frac{1}{k}A^{-1}$ ve $(A^{-1})^{-1} = A$ ($A$, $B$ tersinir, $k \\neq 0$ iken).',
       claims: [
         {
           kind: 'expr',

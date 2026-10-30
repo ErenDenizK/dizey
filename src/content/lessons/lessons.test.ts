@@ -104,8 +104,29 @@ function power(a: Matrix, k: number): Matrix {
   return out
 }
 
+/** Zero rows last, each leading entry right of the one above; reduced: leading 1s alone in their columns. */
+function echelon(a: Matrix, reduced: boolean): boolean {
+  let lastLead = -1
+  let seenZero = false
+  for (const [i, row] of a.entries()) {
+    const lead = row.findIndex((v) => !Q.isZero(v))
+    if (lead === -1) {
+      seenZero = true
+      continue
+    }
+    if (seenZero || lead <= lastLead) return false
+    lastLead = lead
+    if (reduced) {
+      if (!Q.equals(M.at(a, i, lead), Q.ONE)) return false
+      if (a.some((_, r) => r !== i && !Q.isZero(M.at(a, r, lead)))) return false
+    }
+  }
+  return true
+}
+
 function hasProperty(a: Matrix, is: Property, index?: number): boolean {
   const n = M.rowCount(a)
+  if (is === 'rowEchelon' || is === 'reducedRowEchelon') return echelon(a, is === 'reducedRowEchelon')
   if (M.columnCount(a) !== n) return false
   const zero = M.scale(Q.ZERO, a)
   switch (is) {
@@ -124,6 +145,16 @@ function hasProperty(a: Matrix, is: Property, index?: number): boolean {
       return index
         ? M.equals(power(a, index), zero) && !M.equals(power(a, index - 1), zero)
         : M.equals(power(a, n), zero)
+    case 'diagonal':
+      return a.every((row, i) => row.every((v, j) => i === j || Q.isZero(v)))
+    case 'scalar':
+      return hasProperty(a, 'diagonal') && a.every((_, i) => Q.equals(M.at(a, i, i), M.at(a, 0, 0)))
+    case 'identity':
+      return M.equals(a, M.identity(n))
+    case 'upperTriangular':
+      return a.every((row, i) => row.every((v, j) => j >= i || Q.isZero(v)))
+    case 'lowerTriangular':
+      return a.every((row, i) => row.every((v, j) => j <= i || Q.isZero(v)))
     case 'periodic': {
       const limit = index ?? 24
       for (let k = 1; k < limit; k++) if (M.equals(power(a, k + 1), a)) return index === undefined

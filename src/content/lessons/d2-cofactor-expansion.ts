@@ -15,7 +15,7 @@ export const d2CofactorExpansion: Lesson = {
   title: 'Minör, kofaktör ve Laplace açılımı',
   matrices: {
     P: m(
-      'A =',
+      '$|A|$ =',
       [
         ['1', '2', '0'],
         ['3', '-1', '4'],
@@ -29,7 +29,7 @@ export const d2CofactorExpansion: Lesson = {
       ['+', '−', '+'],
     ]),
     Z: m(
-      'B =',
+      '$|B|$ =',
       [
         ['3', '0', '2'],
         ['1', '5', '-1'],
@@ -38,7 +38,7 @@ export const d2CofactorExpansion: Lesson = {
       true,
     ),
     W: m(
-      'C =',
+      '$|D|$ =',
       [
         ['2', '0', '1', '0'],
         ['1', '3', '0', '0'],
@@ -48,7 +48,7 @@ export const d2CofactorExpansion: Lesson = {
       true,
     ),
     U: m(
-      'A =',
+      '$|A|$ =',
       [
         ['2', '5', '-1', '7'],
         ['0', '3', '4', '2'],
@@ -176,24 +176,24 @@ export const d2CofactorExpansion: Lesson = {
       id: 'try-4x4',
       kind: 'keypad',
       eyebrow: 'Senin sıran',
-      title: '$|C|$ kaç?',
+      title: '$|D|$ kaç?',
       body: 'Önce tek sıfırdan farklı elemanı olan sütunu bul, sonra kalan 3×3’te aynı fikri tekrar kullan.',
       skill: 'laplace-zeros',
       scene: { items: ['W', '=', 'result'], result: '?' },
       answer: '24',
       feedbackWrong:
-        '4. sütunda yalnız $c_{44} = 1$ var: $|C| = 1 \\cdot C_{44}$. Kalan 3×3’ün 3. satırında yalnız $4$ var: $4 \\cdot (2 \\cdot 3 - 0 \\cdot 1) = 24$.',
+        '4. sütunda yalnız $d_{44} = 1$ var: $|D| = 1 \\cdot C_{44}$. Kalan 3×3’ün 3. satırında yalnız $4$ var: $4 \\cdot (2 \\cdot 3 - 0 \\cdot 1) = 24$.',
       reveal: {
         kind: 'sequence',
         beats: [
           { kind: 'expand', matrix: 'W', along: 'col', index: 3 },
           {
             kind: 'equation',
-            lines: ['|C| = 1 \\cdot C_{44}', '= 4 \\cdot (2 \\cdot 3 - 0 \\cdot 1)', '= 24'],
+            lines: ['|D| = 1 \\cdot C_{44}', '= 4 \\cdot (2 \\cdot 3 - 0 \\cdot 1)', '= 24'],
           },
         ],
       },
-      solution: '$|C| = C_{44} = 4 \\cdot 6 = 24$. İki adımda 4×4 bitti.',
+      solution: '$|D| = C_{44} = 4 \\cdot 6 = 24$. İki adımda 4×4 bitti.',
       claims: [
         { kind: 'cofactor', matrix: 'W', row: 4, col: 4, equals: '24' },
         { kind: 'det', matrix: 'W', equals: '24', answer: true },
@@ -260,7 +260,7 @@ export const d2CofactorExpansion: Lesson = {
         ],
       },
       solution:
-        '1. sütundan aç: $2 \\cdot C_{11}$. Kalan 3×3’ün de 1. sütununda tek eleman var; her adımda bir köşegen elemanı çıkar. Üst üçgensel matrisin determinantı köşegenin çarpımı: $-12$.',
+        '1. sütundan aç: $2 \\cdot C_{11}$. Kalan 3×3’ün de 1. sütununda tek eleman var; her adımda bir köşegen elemanı çıkar. Üst üçgen matrisin determinantı köşegenin çarpımı: $-12$.',
       claims: [{ kind: 'det', matrix: 'U', equals: '-12' }],
     },
     {
