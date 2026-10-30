@@ -23,7 +23,7 @@ explicit exception), decision 0001 (stack), 0002 (teaching model), 0003 (feedbac
 - Duolingo home screen redesign (company's own account): https://blog.duolingo.com/new-duolingo-home-screen-design/
 - Skills: anthropics/skills frontend-design, pbakaus/impeccable, nextlevelbuilder/ui-ux-pro-max-skill,
   szilu/ux-designer-skill, ceorkm/mobile-app-ui-design, LottieFiles/motion-design-skill, delphi-ai/animate-skill,
-  GarethManning/education-agent-skills
+  GarethManning/education-agent-skills, reyjoypsabino/mobile-app-ux-design-skill (README only)
 - Other GitHub: tijnjh/ios-haptics, mnielsen/cognitive_tools, w3c/audio-session explainer
 - Hacker News: 33673522 (Duolingo Path backlash), 31966919 (streaks), 13620871 (Essence of Linear Algebra),
   40329388 (Immersive Linear Algebra)
@@ -35,13 +35,17 @@ No prompt injection found in any source. Reddit and X block automated access (40
 - No existing skill covers learning app + math notation + iPhone PWA. Good skills share one skeleton: a short
   SKILL.md, reference files loaded on demand, a plan-then-critique loop before building, and a pre-delivery checklist.
 - Catalogue-based skills (palette and font databases) produce exactly the generic look we want to avoid.
-- iOS baselines: body 17 pt, minimum 11 pt, targets 44x44 pt, contrast 4.5:1 text and 3:1 UI, follow the system
+- iOS baselines: body 17 pt, minimum 11 pt, targets 44x44 pt default (28x28 pt minimum), contrast 4.5:1 text, 3:1
+  large text and UI (WCAG 1.4.11), 7:1 for small text in custom colours (HIG Dark Mode), follow the system
   appearance rather than an in-app theme switch, silence sound effects in silent mode, do not stop other apps' music.
-- iOS Safari has no Vibration API; the only known haptic path is the `<input type="checkbox" switch>` control
-  (Safari 17.4+), user-gesture only. Standalone PWA behaviour is unverified.
+- iOS Safari has no Vibration API; the only known haptic path is the `<input type="checkbox" switch>` control.
+  The control shipped in Safari 17.4; which iOS version first plays its haptic is unverified (probably iOS 18). It is
+  one fixed tick, user-gesture only. Standalone PWA behaviour is unverified.
 - Motion references agree: 80-180 ms for feedback, 200-350 ms for cards, 400-600 ms for page transitions, exits
   shorter than entries, total stagger under 500 ms, animate transform and opacity only, springs for interruptible
-  motion. The kept engine's spring presets (press, ui, move, page, land, teach) already cover these.
+  motion. These are CSS duration tables; in our spring engine stiffness sets the time. Computed 2% settle times:
+  press ~95 ms, ui ~125 ms, move ~180 ms, page ~270 ms, teach ~290 ms (~430 ms at lesson tempo 1.5), so page is
+  deliberately faster than the 400-600 ms references.
 - Duolingo's linear path removed decision load but users objected to losing choice ("there is now exactly 1 thing to
   do"). Streak discussions show streaks reward opening the app and invite minimum-effort lessons.
 - Visual intuition (3Blue1Brown) unlocks understanding, but viewers want formulas derived from the picture and
@@ -56,7 +60,8 @@ No prompt injection found in any source. Reddit and X block automated access (40
 - The shell reuses the lesson's colour meanings, matrix rendering, spring names and sound events; no new language.
 - One recommended next step plus a fully open topic map; three areas proposed (Today, Map, Me), pending Eren.
 - Design tokens in the W3C format, three layers (raw, semantic, component), with motion and sound included.
-- `navigator.audioSession.type = "ambient"`; sound stays opt-in; the shell is almost silent.
+- `navigator.audioSession.type = "ambient"` (MDN documents mixing only; silent-switch behaviour to be verified on a
+  device); sound stays opt-in; the shell is almost silent.
 - Accessibility table: WCAG 2.2 AA plus iOS values, the stricter one wins; Turkish accessible labels for matrices.
 
 ## Rejected
@@ -70,5 +75,9 @@ No prompt injection found in any source. Reddit and X block automated access (40
 
 - Eren: three-area structure, locked versus open topics, "sen" versus "siz", system-only theme, reminders, whether
   to turn the doc into a skill, which of the ten principle candidates to adopt.
+- Gaps found in review, to design with the shell: storage durability (home-screen app storage is separate from
+  Safari, `navigator.storage.persist()`, export and restore flow), numeric and matrix input (no minus key on the iOS
+  decimal pad, fractions, keyboard covering the matrix), the mock exam screen, matrices under 200% Dynamic Type,
+  where the version and commit hash are shown.
 - Device tests: haptic switch trick in standalone mode, silent switch with Web Audio, edge-swipe back, Dynamic Type
   via `-apple-system-body`, Turkish VoiceOver reading of MathML.
