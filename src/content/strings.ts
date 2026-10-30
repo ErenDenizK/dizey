@@ -54,6 +54,8 @@ export const strings = {
     settings: 'Ayarlar',
     data: 'Veri',
     appearance: 'Görünüm',
+    sound: 'Ders sesleri',
+    soundHint: 'Telefon sessizdeyken çalmaz.',
     appearanceOptions: { system: 'Sistem', light: 'Açık', dark: 'Koyu' },
     examDate: 'Vize 1 tarihi',
     examDateHint: 'Belli olunca gir; Bugün geri sayımı gösterir.',

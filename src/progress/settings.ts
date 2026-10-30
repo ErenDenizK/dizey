@@ -9,6 +9,8 @@ export type Settings = {
   hideExamClock?: boolean
   /** Manual appearance; absent follows the system. */
   theme?: 'light' | 'dark'
+  /** Lesson sounds turned off; absent means on (iPhone's silent switch still silences them). */
+  sound?: false
 }
 
 const KEY = 'dizey.settings'
@@ -17,11 +19,12 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const value: unknown = JSON.parse(raw ?? '{}')
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-    const { examDate, hideExamClock, theme } = value as Record<string, unknown>
+    const { examDate, hideExamClock, theme, sound } = value as Record<string, unknown>
     const settings: Settings = {}
     if (typeof examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(examDate)) settings.examDate = examDate
     if (hideExamClock === true) settings.hideExamClock = true
     if (theme === 'light' || theme === 'dark') settings.theme = theme
+    if (sound === false) settings.sound = false
     return settings
   } catch {
     return {}
@@ -30,7 +33,7 @@ export function parseSettings(raw: string | null): Settings {
 
 // Read on first use so the pure parser stays importable outside a browser.
 let settings: Settings | null = null
-const current = () => {
+export const readSettings = () => {
   settings ??= parseSettings(appStorage.getItem(KEY))
   return settings
 }
@@ -42,7 +45,7 @@ export function useSettings(): Settings {
     return () => {
       listeners.delete(listener)
     }
-  }, current)
+  }, readSettings)
 }
 
 export function saveSettings(next: Settings) {
