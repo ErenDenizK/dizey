@@ -101,6 +101,10 @@ export type Property =
   | 'rowEchelon'
   | 'reducedRowEchelon'
 
+export type ComplexDerived = 'conjugate' | 'conjugateTranspose'
+
+export type ComplexProperty = 'hermitian' | 'skewHermitian'
+
 /**
  * Matrix expressions are written as the lesson prints them: "A^T", "AB - BA", "1/2(M + M^T)", "A^{-1}",
  * "A^2 - 3A + 2I". Names refer to lesson matrices; `where` maps a printed name to a lesson matrix, so a
@@ -256,6 +260,28 @@ export type Claim =
       /** With a single root: the root is what the step's exercise asks for. */
       readonly answer?: true
     }
+  /**
+   * Complex matrices (entries such as "2-3i", "i"): the conjugate Ā or the conjugate transpose A* of a
+   * lesson matrix, in full.
+   */
+  | {
+      readonly kind: 'complexDerived'
+      readonly of: ComplexDerived
+      readonly matrix: string
+      readonly equals: readonly (readonly string[])[]
+      readonly answer?: true
+    }
+  /** A complex lesson matrix is (or, with `holds: false`, is not) Hermitian or skew-Hermitian. */
+  | {
+      readonly kind: 'complexProperty'
+      readonly matrix: string
+      readonly is: ComplexProperty
+      readonly holds?: false
+    }
+  /** Choice steps: exactly the answer option (a complex matrix block) is in the class. */
+  | { readonly kind: 'optionComplexProperty'; readonly is: ComplexProperty; readonly holds?: false }
+  /** det of a complex lesson matrix, e.g. "-8" or "1-6i". */
+  | { readonly kind: 'complexDet'; readonly matrix: string; readonly equals: string; readonly answer?: true }
   /** Sums of the plus and minus diagonals in Sarrus' rule. */
   | { readonly kind: 'sarrus'; readonly matrix: string; readonly plus: string; readonly minus: string }
 

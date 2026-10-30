@@ -1,11 +1,24 @@
 import { describe, expect, it } from 'vitest'
+import type { ComplexMatrix } from '../../lib/math/complex'
+import * as C from '../../lib/math/complex'
 import type { Matrix } from '../../lib/math/matrix'
 import * as M from '../../lib/math/matrix'
 import type { Rational } from '../../lib/math/rational'
 import * as Q from '../../lib/math/rational'
 import { evaluate, evaluateMatrix } from './expression'
 import { lessons } from './index'
-import type { Beat, Claim, Derived, Lesson, MatrixBlock, Property, RowOp, Step } from './types'
+import type {
+  Beat,
+  Claim,
+  ComplexDerived,
+  ComplexProperty,
+  Derived,
+  Lesson,
+  MatrixBlock,
+  Property,
+  RowOp,
+  Step,
+} from './types'
 
 // Every lesson: structure is sound, and every claimed number is recomputed with the math core.
 
@@ -193,6 +206,18 @@ function system(block: MatrixBlock, params: Readonly<Record<string, Rational>>):
   return [full.map((row) => row.slice(0, bar)), full.map((row) => row.slice(bar))]
 }
 
+const complexOf = (block: MatrixBlock): ComplexMatrix => C.matrixFromStrings(block.rows)
+const formatComplex = (rows: readonly (readonly string[])[]) =>
+  C.matrixFromStrings(rows).map((row) => row.map(C.format))
+
+function deriveComplex(a: ComplexMatrix, of: ComplexDerived): ComplexMatrix {
+  return of === 'conjugate' ? C.conjugate(a) : C.conjugateTranspose(a)
+}
+
+function hasComplexProperty(a: ComplexMatrix, is: ComplexProperty): boolean {
+  return is === 'hermitian' ? C.isHermitian(a) : C.isSkewHermitian(a)
+}
+
 function checkClaim(lesson: Lesson, claim: Claim): void {
   if (claim.kind === 'expr') {
     const rows = formatRows(claim.equals)
@@ -213,6 +238,27 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
     return
   }
   if (claim.kind === 'optionProperty' || claim.kind === 'optionExpr' || claim.kind === 'optionSystem') return
+  if (claim.kind === 'optionComplexProperty') return
+  if (claim.kind === 'complexDerived') {
+    const a = deriveComplex(complexOf(matrixOf(lesson, claim.matrix)), claim.of)
+    expect(
+      a.map((row) => row.map(C.format)),
+      `${claim.of} ${claim.matrix}`,
+    ).toEqual(formatComplex(claim.equals))
+    return
+  }
+  if (claim.kind === 'complexProperty') {
+    const a = complexOf(matrixOf(lesson, claim.matrix))
+    expect(hasComplexProperty(a, claim.is), `${claim.matrix} ${claim.is}`).toBe(claim.holds ?? true)
+    return
+  }
+  if (claim.kind === 'complexDet') {
+    const a = complexOf(matrixOf(lesson, claim.matrix))
+    const expected = C.parse(claim.equals)
+    if (!expected) throw new Error(`Not a complex number: ${claim.equals}`)
+    expect(C.format(C.determinant(a)), `det ${claim.matrix}`).toBe(C.format(expected))
+    return
+  }
   if (claim.kind === 'trace') {
     const a = valueMatrix(claim.expr, scope(lesson, claim.where))
     let total = Q.ZERO
@@ -444,10 +490,11 @@ describe('lessons', () => {
               c.kind === 'rank' ||
               c.kind === 'trace' ||
               (c.kind === 'detRoots' && c.answer === true) ||
-              c.kind === 'solve',
+              c.kind === 'solve' ||
+              c.kind === 'complexDet',
           )
           const matrixAnswer = step.claims?.find(
-            (c) => (c.kind === 'derived' || c.kind === 'expr') && c.answer,
+            (c) => (c.kind === 'derived' || c.kind === 'expr' || c.kind === 'complexDerived') && c.answer,
           )
           const det = matrixAnswer
             ? undefined
@@ -508,6 +555,30 @@ describe('lessons', () => {
                   ? numeric(shown)
                   : valueMatrix(first?.kind === 'text' ? first.text : '', matrices)
               return hasProperty(a, optionClaim.is, optionClaim.index) === (optionClaim.holds ?? true)
+            })
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          const complexAnswer = step.claims?.find((c) => c.kind === 'complexDerived' && c.answer)
+          if (step.kind === 'choice' && complexAnswer?.kind === 'complexDerived') {
+            const expected = JSON.stringify(formatComplex(complexAnswer.equals))
+            const matching = step.options.filter((o) => {
+              const shown = o.content.find((b) => b.kind === 'matrix')
+              return shown?.kind === 'matrix' && JSON.stringify(formatComplex(shown.rows)) === expected
+            })
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          const complexOption = step.claims?.find((c) => c.kind === 'optionComplexProperty')
+          if (step.kind === 'choice' && complexOption?.kind === 'optionComplexProperty') {
+            const matching = step.options.filter((o) => {
+              const shown = o.content.find((b) => b.kind === 'matrix')
+              if (shown?.kind !== 'matrix') throw new Error(`${step.id}: option ${o.key} has no matrix`)
+              return hasComplexProperty(complexOf(shown), complexOption.is) === (complexOption.holds ?? true)
             })
             expect(
               matching.map((o) => o.key),
