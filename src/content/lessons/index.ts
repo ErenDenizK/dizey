@@ -11,6 +11,7 @@ import { m6Transpose } from './m6-transpose'
 import { m7SymmetricAntisymmetric } from './m7-symmetric-antisymmetric'
 import { m8PowerClasses } from './m8-power-classes'
 import { m9Orthogonal } from './m9-orthogonal'
+import { m10ConjugateHermitian } from './m10-conjugate-hermitian'
 import { m11RegularSingular } from './m11-regular-singular'
 import { r1RowOperations } from './r1-row-operations'
 import { r2EchelonForms } from './r2-echelon-forms'
@@ -38,6 +39,7 @@ export const lessons: readonly Lesson[] = [
   m7SymmetricAntisymmetric,
   m8PowerClasses,
   m9Orthogonal,
+  m10ConjugateHermitian,
   r1RowOperations,
   r2EchelonForms,
   r3Rank,
