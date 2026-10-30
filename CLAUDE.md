@@ -34,7 +34,9 @@ Run `.claude/skills/ledger-capture`: split the message into ledger items, route 
 
 ## Git and releases
 
-- Never push to `main`. Work on `type/short-topic` branches (`feat/`, `fix/`, `content/`, `docs/`, `chore/`, `test/`), one vertical slice per branch and PR. Claude pushes branches and opens PRs; Eren reviews and merges (rebase merge).
+- Never push to `main`; `main` stays clean and changes land only through PRs. Work on `type/short-topic` branches (`feat/`, `fix/`, `content/`, `docs/`, `chore/`, `test/`), one vertical slice per branch and PR. Claude pushes branches, opens PRs and may merge them itself (rebase merge) once checks pass; Eren is assigned and can review any PR.
+- Merged head branches are deleted (repo setting "Automatically delete head branches"); delete any branch a closed PR leaves behind.
+- GitHub Pages deploys through a GitHub Actions workflow (Pages source: GitHub Actions), never from a branch.
 - Commits: Conventional Commits, small, each one builds. Author is Eren (`ErenDenizK <109629701+ErenDenizK@users.noreply.github.com>`); every commit ends with the Claude co-author trailer. Never hide or remove the trailer.
 - PRs follow `.github/pull_request_template.md`, in English, with phone-width screenshots for anything visual.
 - Versions: `0.MINOR.PATCH` during development (MINOR = a capability Eren will notice, PATCH = a fix); `1.0.0` = complete for Midterm 1. The app shows its version and short commit hash.
