@@ -9,7 +9,8 @@ import * as Q from '../../lib/math/rational'
  *
  * Names are an optional lowercase prefix, one capital letter and optional digits ("A", "xA", "B2"), so
  * "AB" is the product of A and B. "I" is the identity of whatever size the expression needs. A number
- * is a scalar; juxtaposition multiplies.
+ * is a scalar; juxtaposition multiplies. A scalar unknown is written in braces, "(A + I)^3 - I - {k}A", and
+ * takes its value from `scalars`.
  */
 
 /** A value is a matrix or c·I, which stands for a scalar until its size is known. */
@@ -18,6 +19,7 @@ type Value = { readonly matrix: Matrix } | { readonly scalar: Rational }
 type Token =
   | { readonly kind: 'number'; readonly value: Rational }
   | { readonly kind: 'name'; readonly name: string }
+  | { readonly kind: 'variable'; readonly name: string }
   | { readonly kind: 'op'; readonly op: '+' | '-' | '(' | ')' }
   | { readonly kind: 'power'; readonly power: number | 'T' }
 
@@ -34,7 +36,11 @@ function tokenize(source: string): Token[] {
     const power = /^\^(?:\{(-?\d+|T)\}|(\d|T))/.exec(rest)
     const number = /^\d+(?:\/\d+)?/.exec(rest)
     const name = /^[a-z]*[A-Z]\d*/.exec(rest)
-    if (power) {
+    const variable = /^\{([a-z])\}/.exec(rest)
+    if (variable) {
+      tokens.push({ kind: 'variable', name: variable[1] ?? '' })
+      i += variable[0].length
+    } else if (power) {
       const raw = power[1] ?? power[2] ?? ''
       tokens.push({ kind: 'power', power: raw === 'T' ? 'T' : Number(raw) })
       i += power[0].length
@@ -93,7 +99,11 @@ function raise(a: Value, power: number | 'T'): Value {
   return result
 }
 
-export function evaluate(source: string, matrices: Readonly<Record<string, Matrix>>): Value {
+export function evaluate(
+  source: string,
+  matrices: Readonly<Record<string, Matrix>>,
+  scalars: Readonly<Record<string, Rational>> = {},
+): Value {
   const tokens = tokenize(source)
   let pos = 0
   const peek = () => tokens[pos]
@@ -124,7 +134,11 @@ export function evaluate(source: string, matrices: Readonly<Record<string, Matri
     let value: Value
     if (!t) throw new Error(`Unexpected end of "${source}"`)
     if (t.kind === 'number') value = { scalar: t.value }
-    else if (t.kind === 'name') {
+    else if (t.kind === 'variable') {
+      const found = scalars[t.name]
+      if (!found) throw new Error(`No value for {${t.name}} in "${source}"`)
+      value = { scalar: found }
+    } else if (t.kind === 'name') {
       if (t.name === 'I') value = { scalar: Q.ONE }
       else {
         const found = matrices[t.name]

@@ -88,8 +88,12 @@ function scope(lesson: Lesson, where: Readonly<Record<string, string>> = {}): Re
   return out
 }
 
-function valueMatrix(source: string, matrices: Readonly<Record<string, Matrix>>): Matrix {
-  const value = evaluate(source, matrices)
+function valueMatrix(
+  source: string,
+  matrices: Readonly<Record<string, Matrix>>,
+  scalars: Readonly<Record<string, Rational>> = {},
+): Matrix {
+  const value = evaluate(source, matrices, scalars)
   if (!('matrix' in value)) throw new Error(`"${source}" is a scalar`)
   return value.matrix
 }
@@ -115,14 +119,15 @@ function hasProperty(a: Matrix, is: Property, index?: number): boolean {
       return M.equals(M.multiply(a, a), M.identity(n))
     case 'orthogonal':
       return M.equals(M.multiply(M.transpose(a), a), M.identity(n))
-    case 'nilpotent': {
-      if (!index) throw new Error('nilpotent needs an index')
-      return M.equals(power(a, index), zero) && !M.equals(power(a, index - 1), zero)
-    }
+    case 'nilpotent':
+      // An n×n nilpotent matrix has index at most n.
+      return index
+        ? M.equals(power(a, index), zero) && !M.equals(power(a, index - 1), zero)
+        : M.equals(power(a, n), zero)
     case 'periodic': {
-      if (!index) throw new Error('periodic needs an index')
-      for (let k = 1; k < index; k++) if (M.equals(power(a, k + 1), a)) return false
-      return M.equals(power(a, index + 1), a)
+      const limit = index ?? 24
+      for (let k = 1; k < limit; k++) if (M.equals(power(a, k + 1), a)) return index === undefined
+      return M.equals(power(a, limit + 1), a)
     }
   }
 }
@@ -147,6 +152,17 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
     return
   }
   if (claim.kind === 'optionProperty') return
+  if (claim.kind === 'solve') {
+    const matrices = scope(lesson, claim.where)
+    const isZeroAt = (value: Rational) => {
+      const a = valueMatrix(claim.expr, matrices, { [claim.variable]: value })
+      return M.equals(a, M.scale(Q.ZERO, a))
+    }
+    const at = parse(claim.equals)
+    expect(isZeroAt(at), claim.expr).toBe(true)
+    for (const shift of [-2, -1, 1, 2]) expect(isZeroAt(Q.add(at, Q.rational(shift))), claim.expr).toBe(false)
+    return
+  }
   if (claim.kind === 'detProduct') {
     let product: Matrix | null = null
     for (const factor of claim.factors) {
@@ -324,7 +340,8 @@ describe('lessons', () => {
               c.kind === 'detProduct' ||
               c.kind === 'derivedEntry' ||
               c.kind === 'derivedDet' ||
-              c.kind === 'exprEntry',
+              c.kind === 'exprEntry' ||
+              c.kind === 'solve',
           )
           const matrixAnswer = step.claims?.find((c) => c.kind === 'derived' && c.answer)
           const det = matrixAnswer
@@ -344,14 +361,18 @@ describe('lessons', () => {
                 ? Q.parse(first.text.replaceAll('$', '').replace(/(-?)\\frac\{(\d+)\}\{(\d+)\}/, '$1$2/$3'))
                 : null
             }
+            // Statement items ("I ve II") carry numeric claims as evidence, not as the answer.
+            const numericOptions = step.options.some((o) => value(o.key) !== null)
             const matching = step.options.filter((o) => {
               const v = value(o.key)
               return v !== null && Q.equals(v, parse(expected))
             })
-            expect(
-              matching.map((o) => o.key),
-              step.id,
-            ).toEqual([step.answer])
+            if (numericOptions) {
+              expect(
+                matching.map((o) => o.key),
+                step.id,
+              ).toEqual([step.answer])
+            }
           }
           if (step.kind === 'choice' && matrixAnswer?.kind === 'derived') {
             const expected = JSON.stringify(formatRows(matrixAnswer.equals))

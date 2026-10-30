@@ -60,7 +60,7 @@ export interface Scene {
 
 export type Derived = 'cofactors' | 'adjugate' | 'inverse'
 
-/** Matrix classes; `index` is the nilpotency index or the period, and is required for those two. */
+/** Matrix classes; `index` is the exact nilpotency index or period (left out: any index or period). */
 export type Property =
   | 'symmetric'
   | 'antisymmetric'
@@ -169,6 +169,14 @@ export type Claim =
       readonly is: Property
       readonly index?: number
       readonly holds?: false
+    } & Where)
+  /** The scalar unknown `{variable}` makes the expression the zero matrix exactly at `equals`. */
+  | ({
+      readonly kind: 'solve'
+      readonly expr: string
+      readonly variable: string
+      readonly equals: string
+      readonly answer?: true
     } & Where)
   /** The values of `variable` for which det is 0, exactly (checked on a dense rational grid). */
   | {
