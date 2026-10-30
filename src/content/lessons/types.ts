@@ -204,6 +204,13 @@ export type Claim =
       readonly equals: string
       readonly answer?: true
     } & Where)
+  /** Trace of a matrix expression. */
+  | ({
+      readonly kind: 'trace'
+      readonly expr: string
+      readonly equals: string
+      readonly answer?: true
+    } & Where)
   /** Rank of a lesson matrix (only its first `columns` columns when given, e.g. r_A of [A | b]). */
   | {
       readonly kind: 'rank'
@@ -238,6 +245,8 @@ export type Claim =
       readonly matrix: string
       readonly variable: string
       readonly roots: readonly string[]
+      /** With a single root: the root is what the step's exercise asks for. */
+      readonly answer?: true
     }
   /** Sums of the plus and minus diagonals in Sarrus' rule. */
   | { readonly kind: 'sarrus'; readonly matrix: string; readonly plus: string; readonly minus: string }
