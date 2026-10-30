@@ -2,15 +2,15 @@
 
 ## Motion
 
-- One motion system for lessons and shell (today `src/engine/`: virtual clock, springs; being rebuilt from
-  scratch from the old system's logic, with every value re-derived and checked frame by frame). No CSS
-  transitions or keyframes for movement, no second animation library. Values live only in `src/engine/constants.ts`; changes
-  are logged in `docs/research/motion-tuning.md`.
-- Shell springs: `press` (tap feedback), `ui` (small state changes, tab indicator), `move` (reordering,
-  cards moving), `page` (screen change, a card growing into the lesson stage), `land` (only a real settling
-  moment such as a mastery seal). Teaching springs (`teach`, `carry`, ...) stay in lessons.
-- Approximate 2% settle times at mass 1: press ~95 ms, ui ~125 ms, move ~180 ms, page ~270 ms. Generic CSS
-  guides put page transitions at 400-600 ms; our page spring is deliberately quicker. Tune on device.
+- The full spec is `docs/design/motion-system.md` (laws, springs, gestures, every open/close/tap); read it before
+  any motion work. One engine for lessons and shell: `src/engine/` (virtual clock, closed-form springs, gestures,
+  press physics), rebuilt from scratch on 2026-10-30. No CSS transitions or keyframes for movement, no second
+  animation library. Values live only in `src/engine/tokens.ts`; changes are logged in
+  `docs/research/motion-tuning.md`.
+- Springs (duration / bounce): `tap` 0.14/0 press-down, `release` 0.34/0.22 press-up, `fade` 0.22/0 effects,
+  `snap` 0.32/0.16 small controls, `glide` 0.42/0 medium travel, `page` 0.5/0 screens, `settle` 0.55/0.32 throws
+  and earned moments, `teach` 0.72/0.08 lessons. Components use `src/ui/` (Pressable, TabBar, Sheet, Push, Morph,
+  Switch, Screen) instead of animating by hand.
 - Purpose: every shell animation answers "where did Eren go from, and to where?" Do not animate frequent
   interactions beyond press feedback (HIG). Never make anyone wait for motion; a tap finishes it.
 - Continuity: the lesson card grows into the stage and shrinks back; no empty frame between screens.
@@ -25,7 +25,7 @@ get corrected are remembered better (hypercorrection).
 
 | Moment | Visual | Text | Sound | Haptic |
 | --- | --- | --- | --- | --- |
-| Tap | `press` spring | none | none or quietest | none |
+| Tap | press physics (`tap` / `release`) | none | none or quietest | none |
 | Correct | value settles, mark + colour | short, about the task | `correct` | one tick on tap, if supported |
 | Wrong | wrong step marked, never red alone | error type + how to fix, no blame | `wrong` (unresolved chord) | none |
 | "Anlamadım" | step replays slowly | same idea, other wording | none | none |

@@ -1,5 +1,5 @@
-import { PRESS_SCALE } from '../engine/constants'
 import { engine } from '../engine/driver'
+import { PRESS_SCALE } from '../engine/tokens'
 
 /**
  * Shell motion on the app's engine (src/engine), never CSS transitions: one clock, the same springs

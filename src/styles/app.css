@@ -1,29 +1,82 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss/preflight.css" layer(base);
 @import "tailwindcss/utilities.css" layer(utilities);
+@import "./tokens.css";
 
 /*
- * INTERIM until the motion and visual system lands its token set. Tailwind's default theme is
- * removed: only Dizey's tokens exist as utilities. They point at the
- * kept lesson layer's colour roles (src/legacy/v21.css), which also switch light and dark, so the
- * shell, these utilities and the lessons share one palette. Contrast: src/shell/contrast.test.ts.
+ * Tailwind's default theme is removed: only Dizey's tokens exist as utilities, and every utility
+ * points at a token in tokens.css (docs/design/visual-system.md).
  */
-@theme {
+@theme inline {
   --*: initial;
-  --color-paper: var(--neutral-1);
-  --color-ink: var(--neutral-12);
-  --color-muted: var(--neutral-11);
-  --font-sans: "Onest", system-ui, -apple-system, sans-serif;
-  --text-sm: 0.875rem;
-  --text-lead: 1.125rem;
-  --text-title: 2rem;
-  --spacing: 0.25rem;
-  --radius-card: 1rem;
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-raised: var(--surface-raised);
+  --color-surface-sunk: var(--surface-sunk);
+  --color-ink: var(--ink-1);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-muted: var(--ink-2);
+  --color-paper: var(--bg);
+  --color-action: var(--action);
+  --color-on-action: var(--on-action);
+  --color-hairline: var(--hairline);
+  --font-sans: var(--font-text);
+  --text-large: var(--type-large);
+  --text-title: var(--type-title1);
+  --text-title2: var(--type-title2);
+  --text-title3: var(--type-title3);
+  --text-body: var(--type-body);
+  --text-lead: var(--type-title3);
+  --text-callout: var(--type-callout);
+  --text-sm: var(--type-subhead);
+  --text-footnote: var(--type-footnote);
+  --text-caption: var(--type-caption);
+  --spacing: 4px;
+  --radius-full: var(--corner-pill);
+  --radius-card: var(--corner-card);
+  --font-weight-regular: 400;
+  --font-weight-medium: 500;
   --font-weight-semibold: 600;
+  --font-weight-bold: 700;
 }
 
 html {
-  font-family: var(--font-sans);
+  font-size: 17px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+}
+
+/*
+ * Base text for every screen built on the tokens. Scoped to .dz so the kept v21 layer, which has its
+ * own base styles, is untouched while both live in one document.
+ */
+.dz {
+  font-family: var(--font-text);
+  font-feature-settings: var(--font-features);
+  font-optical-sizing: auto;
+  font-size: var(--type-body);
+  letter-spacing: var(--tracking-body);
+  line-height: var(--leading-body);
+  color: var(--ink-1);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * iOS Dynamic Type sets the root size (17px at the default setting), so the whole type scale follows
+ * the user's text size. Touch only: on macOS the same keyword resolves to 13px.
+ */
+@supports (font: -apple-system-body) {
+  @media (pointer: coarse) {
+    html {
+      /* biome-ignore lint/a11y/useGenericFontNames: a system text style keyword, not a family; .dz sets the family. */
+      font: -apple-system-body;
+    }
+  }
+}
+
+/* Numbers that line up: scores, counts, matrices. */
+.num {
+  font-variant-numeric: tabular-nums;
 }
