@@ -9,3 +9,17 @@
 .st-me .st-me__version {
   grid-row: 6;
 }
+
+/* Embedded in the new shell: the layer sits above it and shows only while a lesson is open. */
+.v21-host {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+}
+.v21-host[data-active="false"] {
+  visibility: hidden;
+  pointer-events: none;
+}
+.v21-host #map-view {
+  display: none;
+}
