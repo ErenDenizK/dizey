@@ -60,6 +60,23 @@ export interface Scene {
 
 export type Derived = 'cofactors' | 'adjugate' | 'inverse'
 
+/** Matrix classes; `index` is the nilpotency index or the period, and is required for those two. */
+export type Property =
+  | 'symmetric'
+  | 'antisymmetric'
+  | 'idempotent'
+  | 'involutory'
+  | 'orthogonal'
+  | 'nilpotent'
+  | 'periodic'
+
+/**
+ * Matrix expressions are written as the lesson prints them: "A^T", "AB - BA", "1/2(M + M^T)", "A^{-1}",
+ * "A^2 - 3A + 2I". Names refer to lesson matrices; `where` maps a printed name to a lesson matrix, so a
+ * letter-only statement can be checked on a hidden numeric instance (e.g. { A: 'xA' }).
+ */
+type Where = { readonly where?: Readonly<Record<string, string>> }
+
 /**
  * Mark a claim with `answer: true` when its value is what the step's exercise asks for; a step with a
  * single numeric claim needs no mark.
@@ -120,6 +137,39 @@ export type Claim =
       readonly equals: string
       readonly answer?: true
     }
+  /** A matrix expression, in full. */
+  | ({
+      readonly kind: 'expr'
+      readonly expr: string
+      readonly equals: readonly (readonly string[])[]
+    } & Where)
+  /** One entry (1-based) of a matrix expression. */
+  | ({
+      readonly kind: 'exprEntry'
+      readonly expr: string
+      readonly row: number
+      readonly col: number
+      readonly equals: string
+      readonly answer?: true
+    } & Where)
+  /** The expression is (or, with `holds: false`, is not) in the class. */
+  | ({
+      readonly kind: 'property'
+      readonly expr: string
+      readonly is: Property
+      readonly index?: number
+      readonly holds?: false
+    } & Where)
+  /**
+   * Choice steps: exactly the answer option is in the class (or, with `holds: false`, exactly the answer
+   * is not). Options are matrix blocks or expressions such as "$AB + A$".
+   */
+  | ({
+      readonly kind: 'optionProperty'
+      readonly is: Property
+      readonly index?: number
+      readonly holds?: false
+    } & Where)
   /** The values of `variable` for which det is 0, exactly (checked on a dense rational grid). */
   | {
       readonly kind: 'detRoots'
