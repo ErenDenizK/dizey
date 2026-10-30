@@ -57,7 +57,7 @@ Defects found:
 | Bank A, item 1 (version 1) | No orthogonal matrix fits the data: row 1 forces b = −1, which breaks row 2's unit length | Left out; version 2 is consistent and used |
 | Bank A, item 7 (version 1) | Option B is option A multiplied by −1: the same system, so two options are correct | Bank replaces B with a sign slip on one right-hand side |
 | 2024 summer, items 5, 6, 14 | Cropped; item 6's answer depends on the cut statement (c or d) | Do not use until a full photo exists |
-| Bank B, item 6 and its twin | Two options are numerically equal (B and E = −1; C and D = 2); key picks the Cramer form | Rewrite before use |
+| Bank B, item 6 and its twin | Two options are numerically equal (B and E = −1; C and D = 2); key picks the Cramer form | Bank: D and E replaced by right-hand-side sign slips; all five values differ |
 | Solved prep, "inverse is unique" proof | Boxed result reads B = I; correct is B = D | Fix if reused |
 | Solved prep, solve with A⁻¹ | Ek(A) entry (3,1) written −2, correct 2; final answer (2, 0, −1) still right | Fix if reused |
 | Bank B, items 8-11 | Vector spaces: outside Midterm 1 scope | Keep for Midterm 2 |
@@ -69,7 +69,7 @@ of all three classic midterms, the booklet's transcriptions and its key.
 
 - Question bank: the 15 usable 2024 items are in `src/content/questions/vize1-2024-summer.ts`, each recomputed by
   `vize1-2024-summer.test.ts` (the keyed option is the only one that passes). Bank A: 17 items in
-  `vize1-practice-a.ts`, same method.
+  `vize1-practice-a.ts`, bank B: 13 items in `vize1-practice-b.ts`, same method.
 
 - Topic priorities: D3 first; then special matrices, inverse, parametric systems.
 - Real exam items, corrected where listed above, as the seed of the question bank and of error-type distractors.
