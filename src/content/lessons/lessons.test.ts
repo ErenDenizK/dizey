@@ -4,7 +4,7 @@ import * as M from '../../lib/math/matrix'
 import type { Rational } from '../../lib/math/rational'
 import * as Q from '../../lib/math/rational'
 import { lessons } from './index'
-import type { Beat, Claim, Lesson, MatrixBlock, Step } from './types'
+import type { Beat, Claim, Derived, Lesson, MatrixBlock, Step } from './types'
 
 // Every lesson: structure is sound, and every claimed number is recomputed with the math core.
 
@@ -56,6 +56,27 @@ function sarrusSums(a: Matrix): [Rational, Rational] {
   return [plus, minus]
 }
 
+function cofactorMatrix(a: Matrix): Matrix {
+  return a.map((row, i) =>
+    row.map((_, j) => {
+      const sub = M.fromNumbers(a.filter((_, r) => r !== i).map((r) => r.filter((_, c) => c !== j)))
+      const minor = M.determinant(sub)
+      return (i + j) % 2 === 0 ? minor : Q.neg(minor)
+    }),
+  )
+}
+
+function derive(a: Matrix, of: Derived): Matrix {
+  const adjugate = M.transpose(cofactorMatrix(a))
+  if (of === 'cofactors') return cofactorMatrix(a)
+  if (of === 'adjugate') return adjugate
+  return M.scale(Q.div(Q.ONE, M.determinant(a)), adjugate)
+}
+
+const formatMatrix = (a: Matrix) => a.map((row) => row.map(Q.format))
+const formatRows = (rows: readonly (readonly string[])[]) =>
+  rows.map((row) => row.map((v) => Q.format(parse(v))))
+
 function checkClaim(lesson: Lesson, claim: Claim): void {
   if (claim.kind === 'detProduct') {
     let product: Matrix | null = null
@@ -85,6 +106,17 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
       expect(Q.format(M.determinant(numeric(block, params)))).toBe(Q.format(parse(claim.equals)))
       return
     }
+    case 'derived':
+      expect(formatMatrix(derive(numeric(block), claim.of))).toEqual(formatRows(claim.equals))
+      return
+    case 'derivedEntry':
+      expect(Q.format(M.at(derive(numeric(block), claim.of), claim.row - 1, claim.col - 1))).toBe(
+        Q.format(parse(claim.equals)),
+      )
+      return
+    case 'derivedDet':
+      expect(Q.format(M.determinant(derive(numeric(block), claim.of)))).toBe(Q.format(parse(claim.equals)))
+      return
     case 'minor':
     case 'cofactor': {
       const a = numeric(block)
@@ -220,16 +252,21 @@ describe('lessons', () => {
               (c.kind === 'det' && !c.at) ||
               c.kind === 'minor' ||
               c.kind === 'cofactor' ||
-              c.kind === 'detProduct',
+              c.kind === 'detProduct' ||
+              c.kind === 'derivedEntry' ||
+              c.kind === 'derivedDet',
           )
-          const det =
-            numericClaims.find((c) => 'answer' in c && c.answer) ??
-            (numericClaims.length === 1 ? numericClaims[0] : undefined)
+          const matrixAnswer = step.claims?.find((c) => c.kind === 'derived' && c.answer)
+          const det = matrixAnswer
+            ? undefined
+            : (numericClaims.find((c) => 'answer' in c && c.answer) ??
+              (numericClaims.length === 1 ? numericClaims[0] : undefined))
+          const expected = det && 'equals' in det && typeof det.equals === 'string' ? det.equals : undefined
           if (step.kind === 'keypad') {
-            expect(det, step.id).toBeDefined()
-            if (det && 'equals' in det) expect(Q.format(parse(step.answer))).toBe(Q.format(parse(det.equals)))
+            expect(expected, step.id).toBeDefined()
+            if (expected) expect(Q.format(parse(step.answer))).toBe(Q.format(parse(expected)))
           }
-          if (step.kind === 'choice' && det && 'equals' in det) {
+          if (step.kind === 'choice' && expected) {
             const value = (key: string) => {
               const option = step.options.find((o) => o.key === key)
               const first = option?.content[0]
@@ -239,7 +276,18 @@ describe('lessons', () => {
             }
             const matching = step.options.filter((o) => {
               const v = value(o.key)
-              return v !== null && Q.equals(v, parse(det.equals))
+              return v !== null && Q.equals(v, parse(expected))
+            })
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          if (step.kind === 'choice' && matrixAnswer?.kind === 'derived') {
+            const expected = JSON.stringify(formatRows(matrixAnswer.equals))
+            const matching = step.options.filter((o) => {
+              const shown = o.content.find((b) => b.kind === 'matrix')
+              return shown?.kind === 'matrix' && JSON.stringify(formatRows(shown.rows)) === expected
             })
             expect(
               matching.map((o) => o.key),
