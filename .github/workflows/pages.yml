@@ -11,16 +11,16 @@ on:
     types: [completed]
   workflow_dispatch:
 
-concurrency:
-  group: pages
-  cancel-in-progress: true
-
 permissions:
   contents: read
 
 jobs:
   build:
     if: github.event_name != 'workflow_run' || (github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.conclusion == 'success')
+    # Job-level, so a skipped run (CI on a push to main) never cancels a real build.
+    concurrency:
+      group: pages-build
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -72,6 +72,10 @@ jobs:
 
   deploy:
     needs: build
+    # Deployments queue instead of being cut off halfway.
+    concurrency:
+      group: pages-deploy
+      cancel-in-progress: false
     runs-on: ubuntu-latest
     permissions:
       pages: write
