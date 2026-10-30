@@ -1,5 +1,5 @@
 /*
- * New shell (Today, Map, Me), from the design thread's prototype. Colours come from the kept lesson
+ * New shell (Today, Map, Me), from the design thread's prototype. INTERIM colours: they come from the kept lesson
  * layer's tokens (v21.css), so shell and lesson speak one language and share light/dark switching.
  * All motion runs on src/engine springs (shell/motion.ts); there are no CSS transitions here.
  */

@@ -3,7 +3,8 @@
 @import "tailwindcss/utilities.css" layer(utilities);
 
 /*
- * Tailwind's default theme is removed: only Dizey's tokens exist as utilities. They point at the
+ * INTERIM until the motion and visual system lands its token set. Tailwind's default theme is
+ * removed: only Dizey's tokens exist as utilities. They point at the
  * kept lesson layer's colour roles (src/legacy/v21.css), which also switch light and dark, so the
  * shell, these utilities and the lessons share one palette. Contrast: src/shell/contrast.test.ts.
  */
