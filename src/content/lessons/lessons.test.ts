@@ -180,6 +180,13 @@ function checkClaim(lesson: Lesson, claim: Claim): void {
     return
   }
   if (claim.kind === 'optionProperty' || claim.kind === 'optionExpr' || claim.kind === 'optionSystem') return
+  if (claim.kind === 'trace') {
+    const a = valueMatrix(claim.expr, scope(lesson, claim.where))
+    let total = Q.ZERO
+    for (let i = 0; i < M.rowCount(a); i++) total = Q.add(total, M.at(a, i, i))
+    expect(Q.format(total), `tr(${claim.expr})`).toBe(Q.format(parse(claim.equals)))
+    return
+  }
   if (claim.kind === 'solve') {
     const matrices = scope(lesson, claim.where)
     const isZeroAt = (value: Rational) => {
@@ -402,6 +409,8 @@ describe('lessons', () => {
               c.kind === 'derivedDet' ||
               c.kind === 'exprEntry' ||
               c.kind === 'rank' ||
+              c.kind === 'trace' ||
+              (c.kind === 'detRoots' && c.answer === true) ||
               c.kind === 'solve',
           )
           const matrixAnswer = step.claims?.find(
@@ -411,7 +420,14 @@ describe('lessons', () => {
             ? undefined
             : (numericClaims.find((c) => 'answer' in c && c.answer) ??
               (numericClaims.length === 1 ? numericClaims[0] : undefined))
-          const expected = det && 'equals' in det && typeof det.equals === 'string' ? det.equals : undefined
+          const expected =
+            det?.kind === 'detRoots'
+              ? det.roots.length === 1
+                ? det.roots[0]
+                : undefined
+              : det && 'equals' in det && typeof det.equals === 'string'
+                ? det.equals
+                : undefined
           if (step.kind === 'keypad') {
             expect(expected, step.id).toBeDefined()
             if (expected) expect(Q.format(parse(step.answer))).toBe(Q.format(parse(expected)))
