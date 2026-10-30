@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { compile } from './timeline'
+import { compile, rowOpLabel } from './timeline'
 
 const lesson: Lesson = {
   id: 'test',
@@ -91,5 +91,28 @@ describe('minor', () => {
   it('strikes the row and column, then lifts the submatrix', () => {
     const frames = compile(lesson, { kind: 'minor', matrix: 'S', row: 0, col: 1 })
     expect(frames.map((f) => f.minor?.lifted)).toEqual([false, true])
+  })
+})
+
+describe('rowOps', () => {
+  it('labels each operation and ends on the lesson result matrix', () => {
+    for (const lesson of lessons) {
+      for (const step of lesson.steps) {
+        const beat = step.kind === 'explain' ? step.beat : 'reveal' in step ? step.reveal : undefined
+        if (beat?.kind !== 'rowOps') continue
+        const frames = compile(lesson, beat)
+        expect(frames).toHaveLength(beat.ops.length * 2 + 1)
+        expect(frames.at(-1)?.working?.rows).toEqual(
+          lesson.matrices[beat.result]?.rows.map((row) => row.map((v) => v.replace(/^\+/, ''))),
+        )
+      }
+    }
+  })
+  it('writes operations the way the board does', () => {
+    expect(rowOpLabel({ kind: 'addMultiple', target: 2, source: 0, factor: '-1' })).toBe(
+      'R_{3} \\to R_{3} - R_{1}',
+    )
+    expect(rowOpLabel({ kind: 'scale', row: 2, factor: '1/4' })).toBe('R_{3} \\to \\tfrac{1}{4}R_{3}')
+    expect(rowOpLabel({ kind: 'swap', a: 0, b: 1 })).toBe('R_{1} \\leftrightarrow R_{2}')
   })
 })

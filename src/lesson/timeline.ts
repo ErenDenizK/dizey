@@ -1,6 +1,12 @@
-import type { Beat, Lesson, Mark, MatrixBlock } from '../content/lessons/types'
-import { determinant, fromNumbers } from '../lib/math/matrix'
-import { add, format, mul, parse, type Rational, sub } from '../lib/math/rational'
+import type { Beat, Lesson, Mark, MatrixBlock, RowOp } from '../content/lessons/types'
+import {
+  applyRowOperation,
+  determinant,
+  fromNumbers,
+  type Matrix,
+  type RowOperation,
+} from '../lib/math/matrix'
+import { add, format, mul, neg, ONE, parse, type Rational, sub } from '../lib/math/rational'
 
 /**
  * A beat compiles into a timeline: an ordered list of stage states, each one a moment the learner can
@@ -17,9 +23,49 @@ export type StageState = {
   area: string | null
   /** Minor beat: the struck row and column, then the lifted submatrix. */
   minor: { matrix: string; row: number; col: number; lifted: boolean } | null
+  /** Row-operation beat: the entries currently shown for a matrix, replacing its own. */
+  working: { matrix: string; rows: string[][] } | null
 }
 
-export const emptyStage: StageState = { marks: [], notes: [], result: null, area: null, minor: null }
+export const emptyStage: StageState = {
+  marks: [],
+  notes: [],
+  result: null,
+  area: null,
+  minor: null,
+  working: null,
+}
+
+/** TeX coefficient in front of a row: "", "-", "2", "\tfrac{1}{4}", "-\tfrac{1}{4}". */
+function coefficient(value: Rational): string {
+  const sign = value.num < 0n ? '-' : ''
+  const size = value.num < 0n ? neg(value) : value
+  if (size.num === 1n && size.den === 1n) return sign
+  if (size.den === 1n) return `${sign}${size.num}`
+  return `${sign}\\tfrac{${size.num}}{${size.den}}`
+}
+
+/** The operation as the lecturer writes it, in TeX: R_3 \to R_3 - R_1. */
+export function rowOpLabel(op: RowOp): string {
+  switch (op.kind) {
+    case 'swap':
+      return `R_{${op.a + 1}} \\leftrightarrow R_{${op.b + 1}}`
+    case 'scale':
+      return `R_{${op.row + 1}} \\to ${coefficient(parse(op.factor) ?? ONE)}R_{${op.row + 1}}`
+    case 'addMultiple': {
+      const factor = parse(op.factor) ?? ONE
+      const sign = factor.num < 0n ? '-' : '+'
+      return `R_{${op.target + 1}} \\to R_{${op.target + 1}} ${sign} ${coefficient(factor.num < 0n ? neg(factor) : factor)}R_{${op.source + 1}}`
+    }
+  }
+}
+
+function toOperation(op: RowOp): RowOperation {
+  if (op.kind === 'swap') return op
+  const factor = parse(op.factor)
+  if (!factor) throw new Error(`Bad factor ${op.factor}`)
+  return { ...op, factor }
+}
 
 /** The submatrix left after deleting one row and one column. */
 export function minorBlock(block: MatrixBlock, row: number, col: number): MatrixBlock {
@@ -220,6 +266,41 @@ function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
       lookup(lesson, matrix)
       b.push((s) => ({ ...s, marks: [], minor: { matrix, row, col, lifted: false }, notes: [] }))
       b.push((s) => ({ ...s, minor: { matrix, row, col, lifted: true } }))
+      return
+    }
+    case 'rowOps': {
+      const block = lookup(lesson, beat.matrix)
+      const start = numeric(block)
+      if (!start) return
+      let values: Matrix = start
+      const name = beat.matrix
+      const text = (rows: Matrix) => rows.map((row) => row.map((v) => format(v)))
+      for (const op of beat.ops) {
+        const label = `$${rowOpLabel(op)}$`
+        const touched =
+          op.kind === 'swap'
+            ? [
+                { cell: [name, op.a, '*'] as const, tone: 'row' as const },
+                { cell: [name, op.b, '*'] as const, tone: 'row' as const },
+              ]
+            : op.kind === 'scale'
+              ? [{ cell: [name, op.row, '*'] as const, tone: 'row' as const }]
+              : [
+                  { cell: [name, op.target, '*'] as const, tone: 'row' as const },
+                  { cell: [name, op.source, '*'] as const, tone: 'col' as const },
+                ]
+        const current = text(values)
+        b.push((s) => ({ ...s, marks: touched, notes: [label], working: { matrix: name, rows: current } }))
+        values = applyRowOperation(values, toOperation(op))
+        const changed = op.kind === 'swap' ? [op.a, op.b] : [op.kind === 'scale' ? op.row : op.target]
+        const next = text(values)
+        b.push((s) => ({
+          ...s,
+          marks: changed.map((row) => ({ cell: [name, row, '*'] as const, tone: 'ok' as const })),
+          working: { matrix: name, rows: next },
+        }))
+      }
+      b.push((s) => ({ ...s, marks: [] }))
       return
     }
     case 'area':
