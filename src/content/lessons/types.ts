@@ -58,6 +58,8 @@ export interface Scene {
   readonly result?: string
 }
 
+export type Derived = 'cofactors' | 'adjugate' | 'inverse'
+
 /**
  * Mark a claim with `answer: true` when its value is what the step's exercise asks for; a step with a
  * single numeric claim needs no mark.
@@ -89,6 +91,32 @@ export type Claim =
         readonly transpose?: true
         readonly power?: number
       }[]
+      readonly equals: string
+      readonly answer?: true
+    }
+  /** The cofactor matrix [C_ij], Ek(A) = [C_ij]ᵀ or A⁻¹ of a lesson matrix, in full. */
+  | {
+      readonly kind: 'derived'
+      readonly of: Derived
+      readonly matrix: string
+      readonly equals: readonly (readonly string[])[]
+      readonly answer?: true
+    }
+  /** One entry (1-based) of a derived matrix. */
+  | {
+      readonly kind: 'derivedEntry'
+      readonly of: Derived
+      readonly matrix: string
+      readonly row: number
+      readonly col: number
+      readonly equals: string
+      readonly answer?: true
+    }
+  /** det of a derived matrix, e.g. |Ek(A)|. */
+  | {
+      readonly kind: 'derivedDet'
+      readonly of: Derived
+      readonly matrix: string
       readonly equals: string
       readonly answer?: true
     }
