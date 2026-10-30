@@ -28,9 +28,9 @@ under its main node):
 
 | Block | Items | Exams |
 | --- | --- | --- |
-| Determinant: cofactor, properties, adjoint (D2-D4) | 12 | all four |
-| Special matrices (M7-M9) | 7 | all four |
-| Inverse (R4) | 5 | 2024, 2017, 2019 fall |
+| Determinant: cofactor, properties, adjoint (D2-D4) | 13 | all four |
+| Special matrices (M7-M9) | 5 | 2024, 2019 spring, 2019 fall |
+| Inverse (R4) | 4 | 2024, 2017, 2019 fall |
 | Matrix operations and product (M4-M5) | 4 | 2024, 2019 fall |
 | Parametric systems (S2) | 3 | 2024, 2017, 2019 spring |
 | Trace (M3) | 3 | 2024, 2019 fall |
