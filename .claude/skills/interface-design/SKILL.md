@@ -5,25 +5,32 @@ description: Use before designing, building or reviewing any Dizey screen, compo
 
 # Interface design
 
-Dizey's shell must speak the language of the kept lesson layer and get Eren to the right lesson fast, while
-showing honestly how ready he is for the exam. Research behind every rule here:
+Dizey's shell must feel premium and deliberate, share one language with the lessons, and get Eren to the
+right lesson fast while showing honestly how ready he is for the exam. Research behind every rule here:
 `docs/research/design-knowledge.md` (English) and the Claude Doc "Dizey Tasarım Dokümantasyonu" (Turkish).
 
-The lesson layer (`src/legacy/`, `src/engine/`) is kept by Eren's choice. Do not redesign it; reuse it.
+Nothing from the old app is used directly (Eren, 2026-10-30 16:45Z). Its lesson presentation, animation and
+sound systems may be studied for their logic, then rebuilt from scratch, tested and verified frame by frame
+for speed, consistency, readability and continuity. `src/legacy/` and the current `src/engine/` values are
+reference material until that rebuild replaces them. The motion and visual system itself is owned by the
+"Build premium motion and visual system" thread; this skill sets the rules it and the screens follow.
 
 ## Status of these rules
 
 The design principles below are **candidates**, applied provisionally (Eren, 2026-10-30) until he adopts them
 through `.claude/skills/principle-adoption`. Platform baselines (Apple HIG, WCAG 2.2 AA) are not candidates.
-Provisional product choices awaiting Eren: three areas Bugün / Harita / Ben; topics open, not locked; "sen"
-address; follow the system theme only; no reminder notifications in v1. When Eren answers, update this file.
+Product choices Eren confirmed (2026-10-30): three areas Bugün / Harita / Ben, with the mock exam as its own
+separate section; "sen" address; a light/dark switch is allowed and more themes may come later; no reminder
+notifications for now (no review system exists yet). Still provisional: topics open, not locked (Eren asked
+what this means; explained in the design-knowledge thread).
 
 ## Principle candidates
 
 1. **Reason from Dizey's world.** Every visual and text choice needs a reason from linear algebra, the exam or
    the student. "Everyone does it" is not a reason. Not a ban list; a question asked of each choice.
-2. **The lesson language spreads to the shell, never the reverse.** Colour roles, matrix drawing, spring
-   names and sound events come from the lesson layer. The shell invents no parallel language.
+2. **One language for lessons and shell.** Colour roles, matrix drawing, motion and sound events are one
+   system shared by lessons and shell. The shell invents no parallel language; the system itself is rebuilt
+   from scratch, taking only the logic of the old lesson layer.
 3. **One recommended step, full freedom.** Bugün names the next step; Harita opens every topic.
 4. **Measure learning, not opening the app.** Readiness map and mastery; no streaks, lives, XP or leagues.
 5. **Feedback is about the task and never rides one channel.** Colour, text, sound and motion each carry it
@@ -33,6 +40,10 @@ address; follow the system theme only; no reminder notifications in v1. When Ere
 8. **Respect silent mode and other apps' music.**
 9. **iPhone native.** 44 pt targets, safe areas, Dynamic Type, system appearance, thumb zone.
 10. **Correct Turkish.** Lecturer's terms, suffix harmony after variables, `lang="tr"`.
+11. **Premium by craft.** Eren wants a UI that feels expensive, not flat. Every menu, button and transition is
+    thought through for function, usability, look and motion: its open, close, press and hand-off states.
+    Premium comes from precision (type, spacing, physics-based motion, depth that means something), never
+    from copying a named app or adding decoration.
 
 ## Process
 
@@ -75,7 +86,8 @@ sequence), default icon sets. In text: "X değil, Y", reflexive triplets, inflat
 - [ ] Safe areas respected; layout holds at 200% text; no horizontal scroll at 390 px.
 - [ ] Meaning never by colour alone (greyscale screenshot check).
 - [ ] All states designed: normal, pressed, focus, disabled, loading, empty, offline, error, update ready.
-- [ ] Motion: engine springs only, interruptible by a tap, reduced-motion path checked.
+- [ ] Motion: the shared motion system only, interruptible by a tap, reduced-motion path checked; reviewed
+      frame by frame (recorded at 60 fps) for speed, readability and continuity.
 - [ ] Sound: only existing events, opt-in, silent in silent mode, nothing in the shell except mastery moments.
 - [ ] Text: Turkish reviewed against `references/writing-tr.md`; strings live in `src/content/`.
 - [ ] Stored data: any new field migrates (Dexie version bump) and survives export and import.

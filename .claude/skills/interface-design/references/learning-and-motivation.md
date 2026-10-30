@@ -2,7 +2,7 @@
 
 Teaching model: decision 0002. Feedback and motivation: decision 0003. Evidence: `docs/research/learning-science.md`.
 
-## Information architecture (provisional, pending Eren)
+## Information architecture (confirmed by Eren 2026-10-30, except locks)
 
 - **Bugün:** continue where you left off, the recommended next step, reviews that are due, open items from the
   error log. One primary button: "Devam et: <lesson name>".
@@ -11,7 +11,9 @@ Teaching model: decision 0002. Feedback and motivation: decision 0003. Evidence:
   görmen iyi olur" note, never a lock.
 - **Ben:** progress, mock exam results, error log, settings (sound, motion), data export and restore, version
   and short commit hash at the bottom.
-- Mock exam opens from Bugün and Ben; no separate tab.
+- **Sınav (mock exam)** is its own separate section, not a card inside Ben (Eren). Whether it is a fourth tab or
+  an entry from Bugün with its own full-screen space is a design call for the shell; results still feed the
+  error log and Ben's progress.
 
 ## Lessons from other products
 
@@ -35,7 +37,7 @@ Teaching model: decision 0002. Feedback and motivation: decision 0003. Evidence:
 | Error log with "fixed" count | yes |
 | Mock exam score | only in mock exams |
 | Daily streak, lives, running wrong counter, XP, leagues, random rewards | no |
-| Reminder notification for due reviews | not in v1 (provisional) |
+| Reminder notification for due reviews | not now (Eren): no review system exists yet; revisit when one does |
 
 Avoid guilt copy ("Seni özledik"), countdowns that exaggerate loss, hidden progress, exit friction. Exit from a
 lesson is always one tap and loses nothing.
