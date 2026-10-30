@@ -8,6 +8,8 @@ import { m7SymmetricAntisymmetric } from './m7-symmetric-antisymmetric'
 import { m8PowerClasses } from './m8-power-classes'
 import { m9Orthogonal } from './m9-orthogonal'
 import { r4Inverse } from './r4-inverse'
+import { s1LinearSystems } from './s1-linear-systems'
+import { s2ParametricSystems } from './s2-parametric-systems'
 import type { Lesson } from './types'
 
 export type { Beat, Claim, Lesson, Step } from './types'
@@ -24,4 +26,6 @@ export const lessons: readonly Lesson[] = [
   r4Inverse,
   m4MatrixArithmetic,
   m5MatrixProduct,
+  s1LinearSystems,
+  s2ParametricSystems,
 ]
