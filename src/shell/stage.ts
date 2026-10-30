@@ -8,3 +8,9 @@ export const overlayHostRef = createRef<HTMLDivElement>()
 
 /** The tab a full-screen route was opened from; closing it returns there. */
 export const returnTab: { current: '/' | '/map' | '/exam' | '/me' } = { current: '/' }
+
+/**
+ * The card a full-screen route was opened from, if any: the route grows out of it and shrinks back
+ * into it (set by the card's tap, cleared when the route closes).
+ */
+export const morphFrom: { current: HTMLElement | null } = { current: null }
