@@ -37,8 +37,8 @@ under its main node):
 | Homogeneous systems (S3) | 2 | 2024, 2017 |
 | Cramer (S4), standalone rank/echelon (R2-R3), Hermitian (M10) | 0 | practice banks only |
 
-- Format moved from 4-7 open items (2017, 2019) to 18 multiple-choice items (2024). This year's format is not
-  confirmed.
+- Format moved from 4-7 open items (2017, 2019) to 18 multiple-choice items (2024). Eren (2026-10-30): this
+  year's Midterm 1 will be multiple choice; no scope announcement from the lecturer.
 - Most 2024 items are solvable in 1-3 minutes by properties rather than computation, above all determinant
   properties (D3). D3 is the top exam-line priority.
 - Distractors already encode error types. Example, 2024 item 3 (|3AᵀBA⁻¹B⁻¹A|, answer 36): 4 = forgot the 3²,
@@ -74,5 +74,5 @@ of all three classic midterms, the booklet's transcriptions and its key.
 
 ## Open
 
-- Full photos of 2024 items 5, 6, 14.
-- This year's exam format and whether vectors are in scope.
+- Full photos of 2024 items 5, 6, 14: Eren most likely has none; these items stay unused.
+- Scope: no announcement, so the working scope is syllabus weeks 1-6 (this map), without vectors.

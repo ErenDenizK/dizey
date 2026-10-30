@@ -7,7 +7,7 @@
 ## Context
 
 Dizey must get Eren through MAT1320 Midterm 1 and build real understanding at the same time. The exam is
-probably multiple choice under time pressure (unverified until past exams are analysed). The topic map is
+multiple choice under time pressure (Eren, 2026-10-30; see `docs/research/past-exam-analysis.md`). The topic map is
 `docs/curriculum/vize1-topic-map.md`; the evidence is `docs/research/learning-science.md`.
 
 ## Options
