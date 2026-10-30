@@ -86,8 +86,9 @@ export function Stage({
                 </span>
               )
             }
-            const block = lesson.matrices[item]
-            if (!block) return null
+            const own = lesson.matrices[item]
+            if (!own) return null
+            const block = state.working?.matrix === item ? { ...own, rows: state.working.rows } : own
             const minor = state.minor?.matrix === item && state.minor.lifted ? state.minor : null
             return (
               // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder

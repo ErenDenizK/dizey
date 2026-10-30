@@ -698,7 +698,16 @@
   border-top: 1.25px solid currentColor;
 }
 .ex-cell[data-bar="before"] {
-  padding-left: 10px;
+  position: relative;
+  margin-left: 10px;
+}
+/* The augment bar sits outside the cell so a highlighted cell never swallows it. */
+.ex-cell[data-bar="before"]::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -10px;
   border-left: 1.5px solid var(--sh-muted);
 }
 .ex-system {
