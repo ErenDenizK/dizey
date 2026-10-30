@@ -1,0 +1,414 @@
+/*
+ * Component styles for the token system. Spec: docs/design/visual-system.md.
+ * Motion is never declared here: no transitions, no keyframes. The engine writes transform,
+ * opacity and a few custom properties (--press, --on, --scrim) that these rules read.
+ */
+
+/* ---- App frame ------------------------------------------------------------ */
+.dz-app {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  /* What shows around a screen that recedes behind a sheet. */
+  background: var(--backdrop);
+}
+
+/* Everything that recedes behind a sheet lives in the stage. */
+.dz-stage {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  background: var(--bg);
+  transform-origin: 50% 0;
+  will-change: transform;
+}
+
+.dz-screen {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  background: var(--bg);
+  padding: calc(env(safe-area-inset-top) + var(--space-3)) var(--page-gutter) var(--bar-clearance);
+}
+
+.dz-screen[data-pushed] {
+  box-shadow:
+    -1px 0 0 var(--hairline),
+    -24px 0 48px -24px oklch(0 0 0 / 0.25);
+}
+
+/* Scroll edge: content fades out under the floating tab bar instead of colliding with it. */
+.dz-edge-bottom {
+  position: absolute;
+  inset: auto 0 0 0;
+  height: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
+  pointer-events: none;
+  background: linear-gradient(to bottom, transparent, var(--bg) 78%);
+  opacity: 0.92;
+}
+
+/* ---- Type roles ------------------------------------------------------------ */
+.dz-large-title {
+  font-size: var(--type-large);
+  line-height: var(--leading-large);
+  letter-spacing: var(--tracking-large);
+  font-weight: var(--weight-bold);
+  margin: var(--space-6) 0 var(--space-5);
+}
+.dz-title2 {
+  font-size: var(--type-title2);
+  line-height: var(--leading-title2);
+  letter-spacing: var(--tracking-title);
+  font-weight: var(--weight-bold);
+}
+.dz-title3 {
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title);
+  font-weight: var(--weight-semibold);
+}
+.dz-headline {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  font-weight: var(--weight-semibold);
+}
+.dz-callout {
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-small);
+}
+.dz-subhead {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+.dz-footnote {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  color: var(--ink-2);
+}
+.dz-section-label {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-2);
+  margin: var(--group-gap) var(--space-1) var(--space-2);
+}
+.dz-read {
+  line-height: var(--leading-read);
+  max-width: 34em;
+}
+
+/* ---- Inline title bar (appears once the large title scrolls away) ---------- */
+.dz-navbar {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 5;
+  height: calc(env(safe-area-inset-top) + var(--nav-height));
+  padding-top: env(safe-area-inset-top);
+  display: grid;
+  grid-template-columns: var(--target) 1fr var(--target);
+  align-items: center;
+  padding-inline: var(--space-2);
+  pointer-events: none;
+}
+.dz-navbar > * {
+  pointer-events: auto;
+}
+.dz-navbar-material {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: inset 0 -0.5px 0 var(--hairline);
+  opacity: 0;
+}
+.dz-navbar-title {
+  grid-column: 2;
+  text-align: center;
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-body);
+  opacity: 0;
+}
+
+/* ---- Pressables ------------------------------------------------------------- */
+.dz-pressable {
+  position: relative;
+  isolation: isolate;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  will-change: transform;
+}
+.dz-pressable::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--press-tone, var(--press-overlay));
+  opacity: calc(var(--press, 0) * var(--press-strength, 0.06));
+}
+.dz-pressable:focus-visible {
+  outline: 2px solid var(--ink-1);
+  outline-offset: 3px;
+}
+
+/* ---- Card ------------------------------------------------------------------- */
+.dz-card {
+  display: block;
+  width: 100%;
+  text-align: start;
+  background: var(--surface);
+  border-radius: var(--corner-card);
+  box-shadow: var(--shadow-1), var(--edge-light);
+  padding: var(--card-pad);
+}
+
+/* Grouped list: rows separated by an inset hairline, one card around the group. */
+.dz-list {
+  background: var(--surface);
+  border-radius: var(--corner-card);
+  box-shadow: var(--shadow-1), var(--edge-light);
+  overflow: hidden;
+}
+.dz-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: var(--row-height);
+  padding: var(--space-2) var(--card-pad);
+  text-align: start;
+  border-radius: 0;
+}
+.dz-row + .dz-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--card-pad);
+  right: 0;
+  height: 0.5px;
+  background: var(--hairline-strong);
+}
+.dz-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.dz-chevron {
+  color: var(--ink-3);
+  flex: none;
+}
+
+/* ---- Buttons ---------------------------------------------------------------- */
+.dz-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: 52px;
+  padding: 0 var(--space-6);
+  border-radius: var(--corner-pill);
+  font-weight: var(--weight-semibold);
+  font-size: var(--type-body);
+  letter-spacing: var(--tracking-body);
+}
+.dz-button[data-kind="primary"] {
+  background: var(--action);
+  color: var(--on-action);
+  box-shadow:
+    var(--shadow-1),
+    inset 0 0.5px 0 oklch(1 0 0 / 0.14);
+  --press-tone: var(--on-action);
+  --press-strength: 0.14;
+}
+.dz-button[data-kind="secondary"] {
+  background: var(--surface-sunk);
+  color: var(--ink-1);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+}
+.dz-button[data-wide] {
+  width: 100%;
+}
+.dz-icon-button {
+  display: inline-grid;
+  place-items: center;
+  width: var(--target);
+  height: var(--target);
+  border-radius: var(--corner-pill);
+  color: var(--ink-1);
+}
+
+/* ---- Switch ------------------------------------------------------------------ */
+.dz-switch {
+  position: relative;
+  flex: none;
+  width: 52px;
+  height: 32px;
+  --on: 0;
+}
+.dz-switch-track,
+.dz-switch-knob {
+  pointer-events: none;
+}
+.dz-switch-track {
+  position: absolute;
+  inset: 0;
+  border-radius: var(--corner-pill);
+  background: color-mix(in oklch, var(--action) calc(var(--on) * 100%), var(--surface-sunk));
+  box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--action) calc(var(--on) * 100%), var(--ink-3));
+}
+.dz-switch-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 26px;
+  height: 26px;
+  border-radius: var(--corner-pill);
+  background: color-mix(in oklch, var(--on-action) calc(var(--on) * 100%), var(--surface-raised));
+  box-shadow:
+    0 0 0 0.5px oklch(0 0 0 / 0.06),
+    0 2px 5px oklch(0 0 0 / 0.18);
+  transform-origin: 13px 50%;
+}
+/* The native switch takes the tap: it carries the semantics and, on iOS 18+, the haptic tick. */
+.dz-switch input {
+  position: absolute;
+  inset: -6px;
+  width: calc(100% + 12px);
+  height: calc(100% + 12px);
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.dz-switch input:focus-visible + .dz-switch-track {
+  outline: 2px solid var(--ink-1);
+  outline-offset: 3px;
+}
+
+/* ---- Tab bar ------------------------------------------------------------------ */
+.dz-tabbar {
+  position: absolute;
+  left: var(--bar-inset);
+  right: var(--bar-inset);
+  bottom: var(--bar-bottom);
+  z-index: 20;
+  height: var(--bar-height);
+  border-radius: var(--corner-pill);
+  display: grid;
+  grid-template-columns: repeat(var(--tabs), 1fr);
+  padding: 6px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.dz-tabbar-material {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-rim), var(--glass-edge), var(--shadow-2);
+}
+.dz-tabbar-lens {
+  position: absolute;
+  top: 6px;
+  bottom: 6px;
+  left: 0;
+  width: 100px;
+  border-radius: var(--corner-pill);
+  background: var(--lens-fill);
+  box-shadow: var(--lens-shadow);
+  transform-origin: 0 50%;
+  will-change: transform;
+}
+.dz-tab {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-width: var(--target);
+  color: var(--ink-2);
+  font-size: 11px;
+  line-height: 13px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.01em;
+  border-radius: var(--corner-pill);
+}
+.dz-tab[aria-current="page"] {
+  color: var(--ink-1);
+  font-weight: var(--weight-semibold);
+}
+.dz-tab svg {
+  width: 26px;
+  height: 26px;
+}
+.dz-tab:focus-visible {
+  outline: 2px solid var(--ink-1);
+  outline-offset: -2px;
+}
+
+/* ---- Sheet --------------------------------------------------------------------- */
+.dz-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  background: var(--scrim);
+  opacity: 0;
+}
+.dz-sheet {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 31;
+  height: 100%;
+  background: var(--surface-raised);
+  border-radius: var(--corner-sheet) var(--corner-sheet) 0 0;
+  box-shadow: var(--shadow-3), var(--edge-light);
+  padding: var(--space-3) var(--page-gutter) calc(env(safe-area-inset-bottom) + var(--space-6));
+  touch-action: none;
+  will-change: transform;
+}
+.dz-grabber {
+  display: block;
+  width: 36px;
+  height: 5px;
+  margin: 0 auto var(--space-4);
+  border-radius: var(--corner-pill);
+  background: var(--hairline-strong);
+}
+.dz-grabber-hit {
+  display: block;
+  width: 100%;
+  height: var(--target);
+  margin: calc(-1 * var(--space-3)) 0 calc(-1 * var(--space-4));
+  padding-top: var(--space-3);
+}
+
+/* ---- Lesson stage overlay (card grows into it) ----------------------------------- */
+.dz-morph {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  background: var(--surface);
+  will-change: clip-path;
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .dz-tabbar-material,
+  .dz-navbar-material {
+    background: var(--surface-raised);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}

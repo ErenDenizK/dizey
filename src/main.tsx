@@ -1,7 +1,7 @@
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { startDriver } from './engine/driver'
+import { startAppDriver } from './engine/driver'
 import { requestPersistentStorage } from './lib/storage/db'
 import { routeTree } from './routeTree.gen'
 import './styles/app.css'
@@ -14,7 +14,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
-startDriver()
+startAppDriver()
 void requestPersistentStorage()
 
 const root = document.getElementById('root')

@@ -196,3 +196,31 @@ test('unknown paths show the not-found view', async ({ page }) => {
   await page.goto('./no-such-page')
   await expect(page.getByText('Bu sayfa yok.')).toBeVisible()
 })
+
+test.describe('motion and visual system lab', () => {
+  test('tabs, sheet and switch respond', async ({ page }) => {
+    await page.goto('./lab')
+    await expect(page.getByRole('heading', { name: 'Bugün' })).toBeVisible()
+    await page.getByRole('navigation').getByRole('button', { name: 'Harita' }).click()
+    await expect(page.getByRole('heading', { name: 'Harita' })).toBeVisible()
+    await page.getByRole('button', { name: /Laplace açılımı/ }).click()
+    await expect(page.getByRole('dialog')).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('dialog')).toBeHidden()
+    await page.getByRole('navigation').getByRole('button', { name: 'Ben' }).click()
+    const sound = page.getByRole('switch', { name: 'Ses' })
+    await sound.click()
+    await expect(sound).toBeChecked()
+  })
+
+  test('has no serious accessibility violations', async ({ page }) => {
+    await page.goto('./lab')
+    await expect(page.getByRole('heading', { name: 'Bugün' })).toBeVisible()
+    const results = await new AxeBuilder({ page })
+      .include('.lab-pane:first-child')
+      .include('.dz-tabbar')
+      .analyze()
+    const serious = results.violations.filter((v) => v.impact === 'serious' || v.impact === 'critical')
+    expect(serious, JSON.stringify(serious.map((v) => [v.id, v.nodes.length]))).toEqual([])
+  })
+})

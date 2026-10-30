@@ -1,0 +1,223 @@
+/*
+ * Dizey design tokens: the only place raw values live. Components use these names only.
+ * Spec and reasons: docs/design/visual-system.md. Contrast pairs are tested in tokens.test.ts.
+ *
+ * Theme: follows the system unless <html data-theme="light|dark"> is set by the in-app switch.
+ * Root font size comes from iOS Dynamic Type (-apple-system-body, 17px by default), so every rem
+ * below scales with the user's text size. Spacing stays in px: it is layout, not reading.
+ */
+
+@font-face {
+  font-family: "Inter";
+  src: url("./fonts/InterVariable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: light dark;
+
+  /* ---- Type ---------------------------------------------------------- */
+  --font-text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  /* l with a tail, I with serifs: never confuse l, 1 and I next to matrix indices. */
+  --font-features: "cv05" 1, "cv08" 1;
+  --type-large: 2rem; /* 34 */
+  --type-title1: 1.647rem; /* 28 */
+  --type-title2: 1.294rem; /* 22 */
+  --type-title3: 1.176rem; /* 20 */
+  --type-body: 1rem; /* 17 */
+  --type-callout: 0.941rem; /* 16 */
+  --type-subhead: 0.882rem; /* 15 */
+  --type-footnote: 0.765rem; /* 13 */
+  --type-caption: 0.706rem; /* 12 */
+  --leading-large: 1.206;
+  --leading-title1: 1.214;
+  --leading-title2: 1.273;
+  --leading-title3: 1.25;
+  --leading-body: 1.294; /* 22 / 17: one-line UI text */
+  --leading-read: 1.5; /* paragraphs of lesson text */
+  --leading-callout: 1.313;
+  --leading-subhead: 1.333;
+  --leading-footnote: 1.385;
+  --leading-caption: 1.333;
+  --tracking-large: -0.024em;
+  --tracking-title: -0.019em;
+  --tracking-body: -0.011em;
+  --tracking-small: -0.004em;
+  --tracking-caption: 0.01em;
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---- Space: 4 px grid ------------------------------------------------ */
+  --space-0-5: 2px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+
+  /* ---- Layout ---------------------------------------------------------- */
+  --page-gutter: 20px; /* screen edge to content */
+  --card-pad: 16px;
+  --group-gap: 32px; /* between unrelated groups */
+  --stack-gap: 12px; /* between items of one group */
+  --target: 44px; /* minimum touch target */
+  --row-height: 52px; /* list rows */
+  --bar-height: 62px; /* floating tab bar */
+  --bar-inset: 14px; /* tab bar distance from the screen sides */
+  --bar-bottom: max(14px, calc(env(safe-area-inset-bottom) - 10px));
+  --bar-clearance: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
+  --nav-height: 44px; /* inline title bar */
+
+  /* ---- Radius: concentric (inner = outer - inset) ---------------------- */
+  --corner-device: 55px; /* current iPhone screen corners, for full-bleed surfaces */
+  --corner-sheet: 38px;
+  --corner-card: 22px;
+  --corner-inner: 12px; /* controls inside a card */
+  --corner-chip: 10px;
+  --corner-pill: 999px;
+
+  /* ---- Glass: the functional layer (tab bar, floating controls) -------- */
+  --glass-blur: 22px;
+  --glass-saturate: 1.7;
+
+  /* ---- Light theme ------------------------------------------------------ */
+  --bg: oklch(0.968 0.005 262);
+  --surface: oklch(1 0 0);
+  --surface-raised: oklch(1 0 0);
+  --surface-sunk: oklch(0.945 0.006 262);
+  --ink-1: oklch(0.22 0.018 265);
+  --ink-2: oklch(0.45 0.016 265);
+  --ink-3: oklch(0.6 0.012 265);
+  --hairline: oklch(0.22 0.018 265 / 0.1);
+  --hairline-strong: oklch(0.22 0.018 265 / 0.18);
+  --action: oklch(0.22 0.018 265);
+  --on-action: oklch(0.99 0 0);
+  --press-overlay: oklch(0.22 0.018 265);
+  --scrim: oklch(0.12 0.01 265);
+  --backdrop: oklch(0 0 0);
+  --glass-fill: oklch(0.985 0.003 262 / 0.7);
+  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.95), inset 0 0 0 0.5px oklch(1 0 0 / 0.45);
+  --glass-edge: 0 0 0 0.5px oklch(0.22 0.02 265 / 0.09);
+  --lens-fill: oklch(1 0 0 / 0.92);
+  --lens-shadow: 0 0 0 0.5px oklch(0.22 0.02 265 / 0.06), 0 2px 8px -2px oklch(0.22 0.02 265 / 0.16);
+  --shadow-1:
+    0 0 0 0.5px oklch(0.22 0.02 265 / 0.06), 0 1px 2px oklch(0.22 0.02 265 / 0.04),
+    0 6px 16px -6px oklch(0.22 0.02 265 / 0.08);
+  --shadow-2: 0 2px 6px oklch(0.22 0.02 265 / 0.06), 0 14px 36px -10px oklch(0.22 0.02 265 / 0.22);
+  --shadow-3: 0 -1px 0 oklch(0.22 0.02 265 / 0.04), 0 -16px 48px -16px oklch(0.22 0.02 265 / 0.22);
+  --edge-light: inset 0 0 0 0 transparent;
+
+  /* Meaning colours: never decoration (see visual-system.md, "Colour means something"). */
+  --ok-ink: oklch(0.5 0.11 165);
+  --ok-fill: oklch(0.6 0.13 165);
+  --ok-tint: oklch(0.955 0.03 165);
+  --bad-ink: oklch(0.52 0.18 22);
+  --bad-fill: oklch(0.6 0.2 22);
+  --bad-tint: oklch(0.955 0.025 22);
+  --row-ink: oklch(0.5 0.14 248);
+  --row-fill: oklch(0.6 0.15 248);
+  --row-tint: oklch(0.95 0.03 248);
+  --col-ink: oklch(0.54 0.13 62);
+  --col-fill: oklch(0.76 0.15 72);
+  --col-tint: oklch(0.96 0.04 75);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: oklch(0.155 0.01 265);
+    --surface: oklch(0.205 0.012 265);
+    --surface-raised: oklch(0.24 0.013 265);
+    --surface-sunk: oklch(0.175 0.01 265);
+    --ink-1: oklch(0.96 0.004 265);
+    --ink-2: oklch(0.77 0.01 265);
+    --ink-3: oklch(0.62 0.01 265);
+    --hairline: oklch(1 0 0 / 0.09);
+    --hairline-strong: oklch(1 0 0 / 0.16);
+    --action: oklch(0.96 0.004 265);
+    --on-action: oklch(0.17 0.012 265);
+    --press-overlay: oklch(1 0 0);
+    --scrim: oklch(0 0 0);
+    --glass-fill: oklch(0.27 0.012 265 / 0.62);
+    --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.18), inset 0 0 0 0.5px oklch(1 0 0 / 0.07);
+    --glass-edge: 0 0 0 0.5px oklch(0 0 0 / 0.5);
+    --lens-fill: oklch(1 0 0 / 0.12);
+    --lens-shadow: inset 0 0.5px 0 oklch(1 0 0 / 0.14);
+    --shadow-1: 0 0 0 0.5px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3);
+    --shadow-2: 0 2px 6px oklch(0 0 0 / 0.3), 0 16px 40px -10px oklch(0 0 0 / 0.6);
+    --shadow-3: 0 -16px 48px -16px oklch(0 0 0 / 0.6);
+    --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
+    --ok-ink: oklch(0.79 0.12 165);
+    --ok-fill: oklch(0.68 0.13 165);
+    --ok-tint: oklch(0.27 0.04 165);
+    --bad-ink: oklch(0.75 0.14 22);
+    --bad-fill: oklch(0.66 0.18 22);
+    --bad-tint: oklch(0.27 0.05 22);
+    --row-ink: oklch(0.77 0.11 248);
+    --row-fill: oklch(0.66 0.14 248);
+    --row-tint: oklch(0.27 0.05 248);
+    --col-ink: oklch(0.83 0.13 72);
+    --col-fill: oklch(0.76 0.15 72);
+    --col-tint: oklch(0.28 0.05 72);
+  }
+}
+
+/* The in-app switch: same values as the dark block above (kept in sync by tokens.test.ts). */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: oklch(0.155 0.01 265);
+  --surface: oklch(0.205 0.012 265);
+  --surface-raised: oklch(0.24 0.013 265);
+  --surface-sunk: oklch(0.175 0.01 265);
+  --ink-1: oklch(0.96 0.004 265);
+  --ink-2: oklch(0.77 0.01 265);
+  --ink-3: oklch(0.62 0.01 265);
+  --hairline: oklch(1 0 0 / 0.09);
+  --hairline-strong: oklch(1 0 0 / 0.16);
+  --action: oklch(0.96 0.004 265);
+  --on-action: oklch(0.17 0.012 265);
+  --press-overlay: oklch(1 0 0);
+  --scrim: oklch(0 0 0);
+  --glass-fill: oklch(0.27 0.012 265 / 0.62);
+  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.18), inset 0 0 0 0.5px oklch(1 0 0 / 0.07);
+  --glass-edge: 0 0 0 0.5px oklch(0 0 0 / 0.5);
+  --lens-fill: oklch(1 0 0 / 0.12);
+  --lens-shadow: inset 0 0.5px 0 oklch(1 0 0 / 0.14);
+  --shadow-1: 0 0 0 0.5px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3);
+  --shadow-2: 0 2px 6px oklch(0 0 0 / 0.3), 0 16px 40px -10px oklch(0 0 0 / 0.6);
+  --shadow-3: 0 -16px 48px -16px oklch(0 0 0 / 0.6);
+  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
+  --ok-ink: oklch(0.79 0.12 165);
+  --ok-fill: oklch(0.68 0.13 165);
+  --ok-tint: oklch(0.27 0.04 165);
+  --bad-ink: oklch(0.75 0.14 22);
+  --bad-fill: oklch(0.66 0.18 22);
+  --bad-tint: oklch(0.27 0.05 22);
+  --row-ink: oklch(0.77 0.11 248);
+  --row-fill: oklch(0.66 0.14 248);
+  --row-tint: oklch(0.27 0.05 248);
+  --col-ink: oklch(0.83 0.13 72);
+  --col-fill: oklch(0.76 0.15 72);
+  --col-tint: oklch(0.28 0.05 72);
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Increase Contrast: glass turns solid and secondary ink darkens. */
+@media (prefers-contrast: more) {
+  :root {
+    --glass-fill: var(--surface-raised);
+    --ink-2: var(--ink-1);
+    --hairline: var(--hairline-strong);
+  }
+}

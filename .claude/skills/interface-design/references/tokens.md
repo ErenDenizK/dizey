@@ -2,9 +2,11 @@
 
 ## Source of truth today
 
-Eren (2026-10-30): nothing from the old app is used directly. The values below are **reference only**: study
-their logic, then define new tokens from scratch in the motion and visual system thread, verify contrast and
-feel, and only then replace the placeholders. Until that lands, the old values are what the running app uses.
+The token system is `src/styles/tokens.css` (colour in OKLCH for light and dark, type, space, layout, corners,
+glass, shadows), specified in `docs/design/visual-system.md`, with contrast tested in `src/styles/tokens.test.ts`.
+Components read tokens through `src/ui/ui.css` and the `.dz` base class. Eren (2026-10-30): nothing from the old
+app is used directly; the old values below are kept only because the v21 lesson layer still runs on them until
+its rebuild.
 
 The old lesson layer has a full token layer in `src/legacy/v21.css` (between `@tokens begin` and
 `@tokens end`, then the role block): 12-step palettes (neutral, brand, accent, success, warning, danger, row,
@@ -14,8 +16,8 @@ column) for light and dark, semantic colour roles (`--color-bg`, `--color-ink`, 
 strokes. `src/styles/app.css` holds placeholders only; replace them with the new token set, used by both lessons and
 shell.
 
-Motion tokens: `src/engine/constants.ts` today (ported starting values), to be re-derived and verified frame by
-frame in the rebuild. Sound events: the kept sound system's event table.
+Motion tokens: `src/engine/tokens.ts` (see `docs/design/motion-system.md`). Sound events: the kept sound
+system's event table.
 
 ## Three tiers
 
