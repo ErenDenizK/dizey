@@ -12,6 +12,7 @@ import { ChevronRight } from '../ui/icons'
 import { Screen } from '../ui/Screen'
 import { Glyph } from './Glyph'
 import { PressLink } from './PressLink'
+import { morphFrom } from './stage'
 
 export function TodayView() {
   const records = useLessonRecords()
@@ -38,6 +39,9 @@ export function TodayView() {
               params={{ id: main.id }}
               className="dz-card sh-continue"
               data-testid="continue-card"
+              onClick={(event) => {
+                morphFrom.current = event.currentTarget
+              }}
               aria-label={
                 resuming ? strings.today.continueAction(main.title) : strings.today.startAction(main.title)
               }
