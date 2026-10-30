@@ -367,7 +367,9 @@ describe('lessons', () => {
               c.kind === 'exprEntry' ||
               c.kind === 'solve',
           )
-          const matrixAnswer = step.claims?.find((c) => c.kind === 'derived' && c.answer)
+          const matrixAnswer = step.claims?.find(
+            (c) => (c.kind === 'derived' || c.kind === 'expr') && c.answer,
+          )
           const det = matrixAnswer
             ? undefined
             : (numericClaims.find((c) => 'answer' in c && c.answer) ??
@@ -398,7 +400,7 @@ describe('lessons', () => {
               ).toEqual([step.answer])
             }
           }
-          if (step.kind === 'choice' && matrixAnswer?.kind === 'derived') {
+          if (step.kind === 'choice' && (matrixAnswer?.kind === 'derived' || matrixAnswer?.kind === 'expr')) {
             const expected = JSON.stringify(formatRows(matrixAnswer.equals))
             const matching = step.options.filter((o) => {
               const shown = o.content.find((b) => b.kind === 'matrix')

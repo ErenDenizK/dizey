@@ -163,6 +163,7 @@ export type Claim =
       readonly kind: 'expr'
       readonly expr: string
       readonly equals: readonly (readonly string[])[]
+      readonly answer?: true
     } & Where)
   /** One entry (1-based) of a matrix expression. */
   | ({
