@@ -3,8 +3,9 @@ import type { Matrix } from '../../lib/math/matrix'
 import * as M from '../../lib/math/matrix'
 import type { Rational } from '../../lib/math/rational'
 import * as Q from '../../lib/math/rational'
+import { evaluate, evaluateMatrix } from './expression'
 import { lessons } from './index'
-import type { Beat, Claim, Derived, Lesson, MatrixBlock, Step } from './types'
+import type { Beat, Claim, Derived, Lesson, MatrixBlock, Property, Step } from './types'
 
 // Every lesson: structure is sound, and every claimed number is recomputed with the math core.
 
@@ -77,7 +78,91 @@ const formatMatrix = (a: Matrix) => a.map((row) => row.map(Q.format))
 const formatRows = (rows: readonly (readonly string[])[]) =>
   rows.map((row) => row.map((v) => Q.format(parse(v))))
 
+/** Lesson matrices by name (those with numeric entries), plus `where` aliases. */
+function scope(lesson: Lesson, where: Readonly<Record<string, string>> = {}): Record<string, Matrix> {
+  const out: Record<string, Matrix> = {}
+  for (const [name, block] of Object.entries(lesson.matrices)) {
+    if (block.rows.every((row) => row.every((v) => Q.parse(v)))) out[name] = numeric(block)
+  }
+  for (const [alias, name] of Object.entries(where)) out[alias] = numeric(matrixOf(lesson, name))
+  return out
+}
+
+function valueMatrix(
+  source: string,
+  matrices: Readonly<Record<string, Matrix>>,
+  scalars: Readonly<Record<string, Rational>> = {},
+): Matrix {
+  const value = evaluate(source, matrices, scalars)
+  if (!('matrix' in value)) throw new Error(`"${source}" is a scalar`)
+  return value.matrix
+}
+
+function power(a: Matrix, k: number): Matrix {
+  let out = M.identity(M.rowCount(a))
+  for (let i = 0; i < k; i++) out = M.multiply(out, a)
+  return out
+}
+
+function hasProperty(a: Matrix, is: Property, index?: number): boolean {
+  const n = M.rowCount(a)
+  if (M.columnCount(a) !== n) return false
+  const zero = M.scale(Q.ZERO, a)
+  switch (is) {
+    case 'symmetric':
+      return M.equals(M.transpose(a), a)
+    case 'antisymmetric':
+      return M.equals(M.transpose(a), M.scale(Q.neg(Q.ONE), a))
+    case 'idempotent':
+      return M.equals(M.multiply(a, a), a)
+    case 'involutory':
+      return M.equals(M.multiply(a, a), M.identity(n))
+    case 'orthogonal':
+      return M.equals(M.multiply(M.transpose(a), a), M.identity(n))
+    case 'nilpotent':
+      // An n×n nilpotent matrix has index at most n.
+      return index
+        ? M.equals(power(a, index), zero) && !M.equals(power(a, index - 1), zero)
+        : M.equals(power(a, n), zero)
+    case 'periodic': {
+      const limit = index ?? 24
+      for (let k = 1; k < limit; k++) if (M.equals(power(a, k + 1), a)) return index === undefined
+      return M.equals(power(a, limit + 1), a)
+    }
+  }
+}
+
 function checkClaim(lesson: Lesson, claim: Claim): void {
+  if (claim.kind === 'expr') {
+    const rows = formatRows(claim.equals)
+    expect(
+      formatMatrix(evaluateMatrix(claim.expr, scope(lesson, claim.where), rows.length)),
+      claim.expr,
+    ).toEqual(rows)
+    return
+  }
+  if (claim.kind === 'exprEntry') {
+    const a = valueMatrix(claim.expr, scope(lesson, claim.where))
+    expect(Q.format(M.at(a, claim.row - 1, claim.col - 1)), claim.expr).toBe(Q.format(parse(claim.equals)))
+    return
+  }
+  if (claim.kind === 'property') {
+    const a = valueMatrix(claim.expr, scope(lesson, claim.where))
+    expect(hasProperty(a, claim.is, claim.index), `${claim.expr} ${claim.is}`).toBe(claim.holds ?? true)
+    return
+  }
+  if (claim.kind === 'optionProperty') return
+  if (claim.kind === 'solve') {
+    const matrices = scope(lesson, claim.where)
+    const isZeroAt = (value: Rational) => {
+      const a = valueMatrix(claim.expr, matrices, { [claim.variable]: value })
+      return M.equals(a, M.scale(Q.ZERO, a))
+    }
+    const at = parse(claim.equals)
+    expect(isZeroAt(at), claim.expr).toBe(true)
+    for (const shift of [-2, -1, 1, 2]) expect(isZeroAt(Q.add(at, Q.rational(shift))), claim.expr).toBe(false)
+    return
+  }
   if (claim.kind === 'detProduct') {
     let product: Matrix | null = null
     for (const factor of claim.factors) {
@@ -254,7 +339,9 @@ describe('lessons', () => {
               c.kind === 'cofactor' ||
               c.kind === 'detProduct' ||
               c.kind === 'derivedEntry' ||
-              c.kind === 'derivedDet',
+              c.kind === 'derivedDet' ||
+              c.kind === 'exprEntry' ||
+              c.kind === 'solve',
           )
           const matrixAnswer = step.claims?.find((c) => c.kind === 'derived' && c.answer)
           const det = matrixAnswer
@@ -274,20 +361,41 @@ describe('lessons', () => {
                 ? Q.parse(first.text.replaceAll('$', '').replace(/(-?)\\frac\{(\d+)\}\{(\d+)\}/, '$1$2/$3'))
                 : null
             }
+            // Statement items ("I ve II") carry numeric claims as evidence, not as the answer.
+            const numericOptions = step.options.some((o) => value(o.key) !== null)
             const matching = step.options.filter((o) => {
               const v = value(o.key)
               return v !== null && Q.equals(v, parse(expected))
             })
-            expect(
-              matching.map((o) => o.key),
-              step.id,
-            ).toEqual([step.answer])
+            if (numericOptions) {
+              expect(
+                matching.map((o) => o.key),
+                step.id,
+              ).toEqual([step.answer])
+            }
           }
           if (step.kind === 'choice' && matrixAnswer?.kind === 'derived') {
             const expected = JSON.stringify(formatRows(matrixAnswer.equals))
             const matching = step.options.filter((o) => {
               const shown = o.content.find((b) => b.kind === 'matrix')
               return shown?.kind === 'matrix' && JSON.stringify(formatRows(shown.rows)) === expected
+            })
+            expect(
+              matching.map((o) => o.key),
+              step.id,
+            ).toEqual([step.answer])
+          }
+          const optionClaim = step.claims?.find((c) => c.kind === 'optionProperty')
+          if (step.kind === 'choice' && optionClaim?.kind === 'optionProperty') {
+            const matrices = scope(lesson, optionClaim.where)
+            const matching = step.options.filter((o) => {
+              const shown = o.content.find((b) => b.kind === 'matrix')
+              const first = o.content[0]
+              const a =
+                shown?.kind === 'matrix'
+                  ? numeric(shown)
+                  : valueMatrix(first?.kind === 'text' ? first.text : '', matrices)
+              return hasProperty(a, optionClaim.is, optionClaim.index) === (optionClaim.holds ?? true)
             })
             expect(
               matching.map((o) => o.key),
