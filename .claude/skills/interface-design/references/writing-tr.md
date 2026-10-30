@@ -6,7 +6,7 @@ through a flow, give empty screens a next step, make errors say what happened an
 
 ## Rules (provisional where noted)
 
-1. Address: "sen" (provisional, pending Eren).
+1. Address: "sen" (Eren, 2026-10-30).
 2. Buttons say what happens: "Devam et: Satır indirgeme", "Tekrarı başlat". No bare "Tamam", "Başla",
    "Gönder". The same action uses the same word everywhere.
 3. Terms are fixed and the lecturer's: |A|, Ek(A), r_A / r_B, rang, aşikar çözüm (lecturer's spelling). English

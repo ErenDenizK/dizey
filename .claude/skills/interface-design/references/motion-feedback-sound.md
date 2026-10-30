@@ -2,8 +2,9 @@
 
 ## Motion
 
-- One engine: `src/engine/` (virtual clock, springs). The shell uses the same springs; no CSS transitions or
-  keyframes for movement, no second animation library. Values live only in `src/engine/constants.ts`; changes
+- One motion system for lessons and shell (today `src/engine/`: virtual clock, springs; being rebuilt from
+  scratch from the old system's logic, with every value re-derived and checked frame by frame). No CSS
+  transitions or keyframes for movement, no second animation library. Values live only in `src/engine/constants.ts`; changes
   are logged in `docs/research/motion-tuning.md`.
 - Shell springs: `press` (tap feedback), `ui` (small state changes, tab indicator), `move` (reordering,
   cards moving), `page` (screen change, a card growing into the lesson stage), `land` (only a real settling

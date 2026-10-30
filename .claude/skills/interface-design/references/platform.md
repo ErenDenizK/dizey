@@ -17,7 +17,7 @@ playing-audio, playing-haptics, writing), WCAG 2.2, MDN. Details and links: `doc
 | Dragging | Every drag has a non-drag single-pointer alternative (select, then tap target) | WCAG 2.5.7 |
 | Focus | A focused element is never fully hidden under a fixed bar | WCAG 2.4.11 |
 | Text size | Layout holds at 200%; side-by-side items stack | HIG Dynamic Type, WCAG 1.4.4 |
-| Appearance | Follow the system light/dark setting; no in-app switch unless Eren asks | HIG Dark Mode |
+| Appearance | Follow the system setting by default; an in-app light/dark/system choice is allowed (Eren); more themes later | HIG Dark Mode |
 | Motion | Reduced-motion path; no fast blinking | HIG Motion, Accessibility |
 
 ## Layout

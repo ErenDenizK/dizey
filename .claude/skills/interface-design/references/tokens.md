@@ -2,15 +2,20 @@
 
 ## Source of truth today
 
-The kept lesson layer already has a full token layer in `src/legacy/v21.css` (between `@tokens begin` and
+Eren (2026-10-30): nothing from the old app is used directly. The values below are **reference only**: study
+their logic, then define new tokens from scratch in the motion and visual system thread, verify contrast and
+feel, and only then replace the placeholders. Until that lands, the old values are what the running app uses.
+
+The old lesson layer has a full token layer in `src/legacy/v21.css` (between `@tokens begin` and
 `@tokens end`, then the role block): 12-step palettes (neutral, brand, accent, success, warning, danger, row,
 column) for light and dark, semantic colour roles (`--color-bg`, `--color-ink`, `--color-action`,
 `--color-row-*`, `--color-col-*`, `--color-ok-*`, `--color-bad-*`, ...), type scale (`--text-caption` 13 px to
 `--text-display` 30 px, body 17 px), spacing (`--space-2xs` 2 px to `--space-xl` 24 px), radii, shadows,
-strokes. The shell uses these roles so it matches the lessons. `src/styles/app.css` holds placeholders only;
-replace them by mapping to the same values when the shell moves off v21.
+strokes. `src/styles/app.css` holds placeholders only; replace them with the new token set, used by both lessons and
+shell.
 
-Motion tokens: `src/engine/constants.ts`. Sound events: the kept sound system's event table.
+Motion tokens: `src/engine/constants.ts` today (ported starting values), to be re-derived and verified frame by
+frame in the rebuild. Sound events: the kept sound system's event table.
 
 ## Three tiers
 
