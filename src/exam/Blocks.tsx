@@ -38,6 +38,21 @@ export function RichText({ text }: { text: string }) {
   )
 }
 
+/** A matrix entry; plain fractions stack, as on the board. */
+function Entry({ value }: { value: string }) {
+  const fraction = /^(-?)(\d+)\/(\d+)$/.exec(value)
+  if (!fraction) return <>{entryText(value)}</>
+  return (
+    <>
+      {fraction[1] ? '−' : null}
+      <span className="ex-frac">
+        <span>{fraction[2]}</span>
+        <span>{fraction[3]}</span>
+      </span>
+    </>
+  )
+}
+
 export function Matrix({
   block,
   toneAt,
@@ -73,7 +88,7 @@ export function Matrix({
               data-bar={block.augmentedAt !== undefined && c === block.augmentedAt ? 'before' : undefined}
               data-tone={toneAt?.(r, c)}
             >
-              {entryText(entry)}
+              <Entry value={entry} />
             </span>
           )),
         )}

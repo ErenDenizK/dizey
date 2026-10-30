@@ -40,7 +40,12 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
   const [typed, setTyped] = useState('')
   const step = lesson.steps[index] as Step
   const frames = compile(lesson, beatOf(step, attempt))
-  const [shown, setShown] = useState(0)
+  // Playback position, tied to the beat it belongs to so a new beat never renders a stale count.
+  const beatKey = `${step.id}:${attempt.revealed}`
+  const startAt = reducedMotion() ? frames.length : Math.min(frames.length, 1)
+  const [play, setPlay] = useState({ key: beatKey, shown: startAt })
+  const shown = play.key === beatKey ? play.shown : startAt
+  const setShown = (value: number) => setPlay({ key: beatKey, shown: value })
   const playing = shown < frames.length
 
   // Resume point: the step on screen.
@@ -55,28 +60,18 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
     scroller.current?.scrollTo(0, 0)
   }, [index])
 
-  // Beat playback: one frame per tick; reduced motion shows the end state at once.
-  const beatKey = `${step.id}:${attempt.revealed}`
-  // biome-ignore lint/correctness/useExhaustiveDependencies: restarts when the beat changes
+  // Beat playback: one frame per tick; reduced motion starts at the end state.
   useEffect(() => {
-    if (reducedMotion()) {
-      setShown(frames.length)
-      return
-    }
-    setShown(frames.length ? 1 : 0)
-  }, [beatKey])
-  useEffect(() => {
-    if (!playing || shown === 0) return
-    const timer = window.setTimeout(() => setShown((value) => value + 1), FRAME_MS)
+    if (!playing) return
+    const timer = window.setTimeout(() => setPlay({ key: beatKey, shown: shown + 1 }), FRAME_MS)
     return () => window.clearTimeout(timer)
-  }, [playing, shown])
+  }, [playing, shown, beatKey])
 
   const state = shown > 0 ? (frames[shown - 1] ?? emptyStage) : emptyStage
 
   const go = (next: number) => {
     setAttempt(freshAttempt)
     setTyped('')
-    setShown(0)
     setIndex(next)
   }
 
@@ -128,7 +123,10 @@ export function LessonPlayer({ lesson }: { lesson: Lesson }) {
           aria-valuenow={index + 1}
           aria-label={strings.lesson.count(index + 1, lesson.steps.length)}
         >
-          <span style={{ width: `${((index + 1) / lesson.steps.length) * 100}%` }} />
+          <span
+            className="ls-progress__fill"
+            style={{ width: `${((index + 1) / lesson.steps.length) * 100}%` }}
+          />
         </div>
         <button
           type="button"
