@@ -598,10 +598,138 @@ function product(lesson: Lesson, beat: Extract<Beat, { kind: 'product' }>, b: Bu
   })
 }
 
+/**
+ * Entry by entry: for each cell, the same cell of every term matrix lights (first term row colour, the
+ * rest column colour), each entry flies into one line "2·1 − 3·4", the values row follows when a term
+ * is scaled, and the sum lands in that cell of `into`. Later cells play at half dwell.
+ */
+function combine(lesson: Lesson, beat: Extract<Beat, { kind: 'combine' }>, b: Builder) {
+  const terms = beat.terms.map((term, index) => {
+    const scale = parse(term.scale ?? '1')
+    if (!scale) throw new Error(`Bad scale ${term.scale}`)
+    const block = lookup(lesson, term.matrix)
+    return { name: term.matrix, block, values: numeric(block), scale, role: (index ? 'col' : 'row') as Role }
+  })
+  const name = beat.into
+  const into = name ? lookup(lesson, name) : null
+  const rows = into ? into.rows.map((row) => [...row]) : []
+  const table = DWELLS[b.family]
+  const working = () => (name ? { working: { matrix: name, rows: rows.map((r) => [...r]) } } : {})
+  const scaled = terms.some((t) => t.scale.num !== t.scale.den)
+  b.push('line', (s) => ({ ...s, ...working() }), 0)
+  beat.cells.forEach(([i, j], index) => {
+    const slow = index ? REPEAT_DWELL : 1
+    const l = lineOf(`c${b.frames.length}`)
+    const parts = terms.map((t, k) => {
+      if (k) l.group()
+      const negative = t.scale.num < 0n
+      const size = negative ? neg(t.scale) : t.scale
+      const keys: string[] = []
+      if (k || negative) keys.push(l.op(negative ? '−' : '+'))
+      if (size.num !== size.den) keys.push(l.num(show(size)), l.op('·'))
+      // A bare first entry needs no brackets: "−1 + 0", but "2 · (−1)" and "+ (−1)".
+      const raw = at(t.block, i, j)
+      const bare = keys.length === 0 ? parse(raw) : null
+      const entry = l.num(bare ? show(bare) : factor(raw), t.role)
+      keys.push(entry)
+      const value = t.values ? mul(t.scale, cell(t.values, i, j)) : null
+      return { t, keys, entry, value }
+    })
+    const valueKeys: string[] = []
+    const resultKeys: string[] = []
+    let stored: string | null = null
+    if (parts.every((p) => p.value)) {
+      if (scaled && parts.length > 1) {
+        l.group()
+        parts.forEach((p, k) => {
+          const v = p.value as Rational
+          if (!k) valueKeys.push(l.op('='), l.num(show(v)))
+          else valueKeys.push(l.op(v.num < 0n ? '−' : '+'), l.num(show(v.num < 0n ? neg(v) : v)))
+        })
+      }
+      l.group()
+      const total = parts.reduce<Rational>((acc, p) => add(acc, p.value as Rational), { num: 0n, den: 1n })
+      stored = format(total)
+      resultKeys.push(l.op('='), l.num(show(total), 'ok'))
+    }
+    const line = l.line()
+    b.push('line', (s) => ({ ...s, lines: [...s.lines, line] }), table.line * slow)
+    const target: Mark[] = name ? [{ cell: [name, i, j], tone: 'ok' }] : []
+    const marks: Mark[] = [...terms.map((t): Mark => ({ cell: [t.name, i, j], tone: t.role })), ...target]
+    b.push('highlight', (s) => withMarks(s, marks, true), table.highlight * slow)
+    parts.forEach((p, k) => {
+      b.push(
+        'carry',
+        (s) => ({
+          ...reveal(s, p.keys),
+          flights: [{ token: p.entry, from: { matrix: p.t.name, row: i, col: j }, role: p.t.role }],
+        }),
+        table.carry * (index || k ? REPEAT_DWELL : 1),
+      )
+    })
+    if (valueKeys.length) b.push('value', (s) => reveal(s, valueKeys), table.value * slow)
+    if (stored !== null) {
+      const row = rows[i]
+      if (row) row[j] = stored
+      const filled = working()
+      b.push(
+        'collect',
+        (s) => ({ ...reveal(withMarks(s, name ? target : marks, true), resultKeys), ...filled }),
+        table.collect * slow,
+      )
+    }
+  })
+}
+
+/** Trace: the diagonal lights, its entries fly into one line one by one, and the sum is written. */
+function trace(lesson: Lesson, name: string, b: Builder) {
+  const block = lookup(lesson, name)
+  const values = numeric(block)
+  const n = Math.min(block.rows.length, block.rows[0]?.length ?? 0)
+  const table = DWELLS[b.family]
+  const l = lineOf(`t${b.frames.length}`)
+  const terms = Array.from({ length: n }, (_, k) => {
+    if (k) l.group()
+    const keys: string[] = k ? [l.op('+')] : []
+    const raw = at(block, k, k)
+    const bare = k ? null : parse(raw)
+    const token = l.num(bare ? show(bare) : factor(raw), 'ok')
+    keys.push(token)
+    return { k, keys, token }
+  })
+  const resultKeys: string[] = []
+  if (values) {
+    l.group()
+    const total = terms.reduce<Rational>((acc, t) => add(acc, cell(values, t.k, t.k)), { num: 0n, den: 1n })
+    resultKeys.push(l.op('='), l.num(show(total), 'ok'))
+  }
+  const line = l.line()
+  b.push('line', (s) => ({ ...s, marks: [], lines: [...s.lines, line] }))
+  const diagonal: Mark[] = terms.map((t) => ({ cell: [name, t.k, t.k], tone: 'ok' }))
+  b.push('highlight', (s) => withMarks(s, diagonal, true))
+  for (const t of terms) {
+    b.push(
+      'carry',
+      (s) => ({
+        ...reveal(s, t.keys),
+        flights: [{ token: t.token, from: { matrix: name, row: t.k, col: t.k }, role: 'ok' }],
+      }),
+      table.carry * (t.k ? REPEAT_DWELL : 1),
+    )
+  }
+  if (resultKeys.length) b.push('collect', (s) => reveal(s, resultKeys))
+}
+
 function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
   switch (beat.kind) {
+    case 'trace':
+      trace(lesson, beat.matrix, b)
+      return
     case 'product':
       product(lesson, beat, b)
+      return
+    case 'combine':
+      combine(lesson, beat, b)
       return
     case 'det2':
       det2(lesson, beat.matrix, b)

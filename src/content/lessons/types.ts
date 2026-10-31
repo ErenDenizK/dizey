@@ -84,13 +84,26 @@ export type Beat =
       readonly into?: string
       readonly cells: readonly (readonly [row: number, col: number])[]
     }
+  /**
+   * Entry by entry, a sum of scaled matrices such as 2A − 3B: for each cell of `into` (0-based), the same
+   * cell of every term lights, its entries fly into one line, and the sum lands in that cell. `scale` is
+   * an exact rational ("2", "-3", "1/2"), 1 when left out. The tests check `into` against the sum.
+   */
+  | {
+      readonly kind: 'combine'
+      readonly terms: readonly { readonly matrix: string; readonly scale?: string }[]
+      readonly into?: string
+      readonly cells: readonly (readonly [row: number, col: number])[]
+    }
+  /** Trace: the diagonal lights and its entries fly into one line that sums them. */
+  | { readonly kind: 'trace'; readonly matrix: string }
   /** Highlight frames played in order. */
   | { readonly kind: 'frames'; readonly frames: readonly Frame[] }
   /** A chain of equalities written one line at a time. */
   | { readonly kind: 'equation'; readonly lines: readonly string[] }
   | { readonly kind: 'sequence'; readonly beats: readonly Beat[] }
 
-/** What is on the stage: matrix names from `Lesson.matrices`, `=`, `·` (product), and `result` (the answer slot). */
+/** What is on the stage: matrix names from `Lesson.matrices`, `=`, `·` (product), `+`, and `result` (the answer slot). */
 export interface Scene {
   readonly items: readonly string[]
   /** Text shown in the result slot before it is computed, e.g. "?" or "0". */

@@ -114,3 +114,19 @@ lesson length above ~18 steps.
 ## 6. Open questions
 
 None for Eren: he judges the result on the phone.
+
+## 7. Progress: lessons converted
+
+Same metric script as 3.1. "Replays" counts questions whose answer plays its working on the stage.
+
+| Lesson | Steps | Questions | Replays | Words per step (avg / max) | Opens with |
+| --- | --- | --- | --- | --- | --- |
+| M1 before → after | 5 → 9 | 40 % → 44 % | 0/2 → 4/4 | 26 / 30 → 11 / 14 | Tanım → Soru |
+| M2 before → after | 5 → 11 | 20 % → 36 % | 0/1 → 4/4 | 25.5 / 40 → 15 / 18 | Türler → Soru |
+| M3 before → after | 6 → 11 | 33 % → 45 % | 0/2 → 5/5 | 29.8 / 44 → 13.5 / 22 | Tanım → Soru |
+| M4 before → after | 6 → 12 | 33 % → 42 % | 0/2 → 5/5 | 29.3 / 55 → 13 / 17 | Tanım → Soru |
+| M5 before → after | 8 → 18 | 38 % → 50 % | 0/3 → 9/9 | 29.7 / 50 → 12.8 / 19 | Kural → Soru |
+
+New beats for these lessons: `combine` (sums and scalar multiples entry by entry: the same cell of each term
+lights, its numbers fly into the line, the sum lands in its "?" slot) and `trace` (the diagonal lights and its
+entries fly into one sum).

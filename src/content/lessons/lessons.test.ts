@@ -185,6 +185,24 @@ function rowOp(op: RowOp): M.RowOperation {
 
 function checkBeat(lesson: Lesson, beat: Beat): void {
   if (beat.kind === 'sequence') for (const b of beat.beats) checkBeat(lesson, b)
+  if (beat.kind === 'combine') {
+    // Every entry the stage shows (or the beat writes) is the scaled sum; "?" marks one still unknown.
+    let sum: Matrix | null = null
+    for (const term of beat.terms) {
+      const scaled = M.scale(parse(term.scale ?? '1'), numeric(matrixOf(lesson, term.matrix)))
+      sum = sum ? M.add(sum, scaled) : scaled
+    }
+    if (!sum || !beat.into) return
+    const into = matrixOf(lesson, beat.into)
+    into.rows.forEach((row, i) => {
+      row.forEach((value, j) => {
+        if (value !== '?')
+          expect(Q.format(parse(value)), `${beat.into}[${i}][${j}]`).toBe(Q.format(M.at(sum as Matrix, i, j)))
+      })
+    })
+    for (const [i, j] of beat.cells) expect(into.rows[i]?.[j], `${beat.into} cell ${i},${j}`).toBe('?')
+    return
+  }
   if (beat.kind === 'product') {
     // Every entry the stage shows (or the beat writes) is left · right; "?" marks one still unknown.
     const product = M.multiply(numeric(matrixOf(lesson, beat.left)), numeric(matrixOf(lesson, beat.right)))
@@ -393,6 +411,8 @@ function beatMatrices(beat: Beat): string[] {
       return []
     case 'product':
       return [beat.left, beat.right, ...(beat.into ? [beat.into] : [])]
+    case 'combine':
+      return [...beat.terms.map((t) => t.matrix), ...(beat.into ? [beat.into] : [])]
     default:
       return [beat.matrix]
   }
@@ -431,7 +451,7 @@ describe('lessons', () => {
       it('refers only to its own matrices, with cells in range', () => {
         for (const step of lesson.steps) {
           for (const item of step.scene?.items ?? []) {
-            if (item !== '=' && item !== '·' && item !== 'result') matrixOf(lesson, item)
+            if (!['=', '·', '+', 'result'].includes(item)) matrixOf(lesson, item)
           }
           const beats = [
             step.kind === 'explain' ? step.beat : undefined,

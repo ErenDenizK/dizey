@@ -122,6 +122,43 @@ describe('product', () => {
   })
 })
 
+describe('combine', () => {
+  it('writes each scaled entry, the values, and lands the sum', () => {
+    const frames = compile(lesson, {
+      kind: 'combine',
+      terms: [
+        { matrix: 'L', scale: '2' },
+        { matrix: 'R', scale: '-3' },
+      ],
+      into: 'P',
+      cells: [[0, 0]],
+    })
+    expect(frames.map((f) => f.action)).toEqual([
+      'line',
+      'line',
+      'highlight',
+      'carry',
+      'carry',
+      'value',
+      'collect',
+    ])
+    expect(frames[0]?.lines[0]?.tokens.map((t) => t.text).join(' ')).toBe('2 · 2 − 3 · 1 = 4 − 3 = 1')
+    expect(frames.at(-1)?.working?.rows).toEqual([
+      ['1', '?'],
+      ['?', '?'],
+    ])
+  })
+
+  it('writes a plain sum without a values row', () => {
+    const frames = compile(lesson, {
+      kind: 'combine',
+      terms: [{ matrix: 'L' }, { matrix: 'R' }],
+      cells: [[1, 1]],
+    })
+    expect(frames[0]?.lines[0]?.tokens.map((t) => t.text).join(' ')).toBe('−1 + 0 = −1')
+  })
+})
+
 describe('det2', () => {
   it('lays out one line, lights each diagonal, carries its numbers, writes the values, then collects', () => {
     const frames = compile(lesson, { kind: 'det2', matrix: 'A' })

@@ -513,7 +513,7 @@ export function Stage({
       {scene ? (
         <div ref={sceneBox} className="ls-scene">
           {scene.items.map((item, index) => {
-            if (item === '=' || item === '·') {
+            if (item === '=' || item === '·' || item === '+') {
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
                 <span key={index} className="ls-op" data-obj={`op${index}`}>
