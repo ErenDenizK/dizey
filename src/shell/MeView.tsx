@@ -13,8 +13,9 @@ import { buildInfo } from '../lib/build-info'
 import { versionLine } from '../lib/build-line'
 import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
-import { saveSettings, useSettings } from '../progress/settings'
-import { setSoundOn } from '../sound/player'
+import { readSettings, saveSettings, useSettings } from '../progress/settings'
+import { haptic } from '../sound/haptics'
+import { setSoundInSilent, setSoundOn } from '../sound/player'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
@@ -245,18 +246,68 @@ function ThemeSetting() {
 
 function SoundSetting() {
   const settings = useSettings()
+  const on = settings.sound !== false
   return (
-    <div className="dz-row">
-      <Lead>
-        <path d="M3.5 8v4h3l4 3.5v-11L6.5 8z" />
-        <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" />
-      </Lead>
-      <span className="dz-row-main">
-        {strings.me.sound}
-        <small className="dz-footnote sh-row-sub">{strings.me.soundHint}</small>
-      </span>
-      <Switch checked={settings.sound !== false} onChange={setSoundOn} label={strings.me.sound} />
-    </div>
+    <>
+      <div className="dz-row">
+        <Lead>
+          <path d="M3.5 8v4h3l4 3.5v-11L6.5 8z" />
+          <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" />
+        </Lead>
+        <span className="dz-row-main">
+          {strings.me.sound}
+          <small className="dz-footnote sh-row-sub">{strings.me.soundHint}</small>
+        </span>
+        <Switch checked={on} onChange={setSoundOn} label={strings.me.sound} />
+      </div>
+      {on ? (
+        <PressLink to="/lab/sounds" className="dz-row" data-sound="open">
+          <Lead>
+            <path d="M4 12.5V8M7.5 15V5.5M11 13V7M14.5 11V9" />
+          </Lead>
+          <span className="dz-row-main">{strings.me.soundLab}</span>
+          <span className="dz-chevron">
+            <ChevronRight />
+          </span>
+        </PressLink>
+      ) : null}
+      {on ? (
+        <div className="dz-row">
+          <Lead>
+            <path d="M7 3.5h6a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 15V5A1.5 1.5 0 0 1 7 3.5z" />
+            <path d="M5.5 6.5h-2M5.5 9h-2" />
+          </Lead>
+          <span className="dz-row-main">
+            {strings.me.soundInSilent}
+            <small className="dz-footnote sh-row-sub">{strings.me.soundInSilentHint}</small>
+          </span>
+          <Switch
+            checked={settings.soundInSilent === true}
+            onChange={setSoundInSilent}
+            label={strings.me.soundInSilent}
+          />
+        </div>
+      ) : null}
+      <div className="dz-row">
+        <Lead>
+          <rect x="6.5" y="3.5" width="7" height="13" rx="2" />
+          <path d="M3.5 7.5v5M16.5 7.5v5" />
+        </Lead>
+        <span className="dz-row-main">
+          {strings.me.haptics}
+          <small className="dz-footnote sh-row-sub">{strings.me.hapticsHint}</small>
+        </span>
+        <Switch
+          checked={settings.haptics !== false}
+          onChange={(next) => {
+            const { haptics: _, ...rest } = readSettings()
+            saveSettings(next ? rest : { ...rest, haptics: false })
+            if (next) haptic()
+          }}
+          label={strings.me.haptics}
+        />
+      </div>
+    </>
   )
 }
 

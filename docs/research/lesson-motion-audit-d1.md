@@ -67,7 +67,7 @@ Same script, same session, light and dark (7 611 frames, 126 s of lesson time ea
 | "Sarrus: rule" (first real computation) | 20.1 s (repeat pace) | 25.4 s (teaching pace) |
 | Whole play-through | 136.8 s | 126.3 s |
 
-Contact sheets and videos for Eren: project files `screenshots/0.16.0/lesson-motion/` (step change, wrong
+Contact sheets and videos for Eren: project files `screenshots/0.17.0/lesson-motion/` (step change, wrong
 answer, area beat, keypad reveal before/after; end states light and dark; full videos before, after and side
 by side).
 

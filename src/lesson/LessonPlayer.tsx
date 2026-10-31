@@ -7,7 +7,8 @@ import { engine } from '../engine/driver'
 import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
-import { playSound } from '../sound/player'
+import { haptic } from '../sound/haptics'
+import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
 import { Keypad } from './Keypad'
 import { useAnswerMotion, useLessonMotion } from './motion'
@@ -83,6 +84,17 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   // First-try answers in a row during this visit.
   const run = useRef(0)
 
+  // The interface's taps take the step's chord; a new step sounds its chord (the lesson opening has its own).
+  const sounded = useRef<number | null>(null)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one cue per step change
+  useEffect(() => {
+    setSoundContext({ step: index, steps: lesson.steps.length })
+    if (sounded.current === null) playSound('lessonOpen')
+    else if (sounded.current !== index) cue('step')
+    sounded.current = index
+  }, [index])
+  useEffect(() => () => setSoundContext({}), [])
+
   // Resume point: the step on screen.
   useEffect(() => {
     const record = recordOf(lesson.id)
@@ -151,10 +163,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     if (correct) {
       run.current = attempt.wrong.length === 0 ? run.current + 1 : 0
       cue(run.current >= STREAK ? 'streak' : 'correct')
+      haptic(14)
       setAttempt((a) => ({ ...a, solved: true, revealed: true }))
     } else {
       run.current = 0
       cue('wrong')
+      haptic([10, 60, 10])
       setAttempt((a) => ({ ...a, wrong: [...a.wrong, given] }))
     }
   }
@@ -163,6 +177,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     const doneBefore = lessons.filter((other) => stateOf(recordOf(other.id)) === 'done')
     saveRecord(lesson.id, { ...recordOf(lesson.id), at: null, doneAt: Date.now() })
     cue(rewardFor(lesson, doneBefore))
+    haptic(20)
     void navigate({ to: returnTab.current })
   }
 
@@ -206,7 +221,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
 
   const options =
     step.kind === 'choice' ? (
-      <fieldset className="ex-opts ls-opts" aria-label={step.title}>
+      <fieldset className="ex-opts ls-opts" aria-label={step.title} data-sound="none">
         {step.options.map((option) => {
           const wrong = attempt.wrong.includes(option.key)
           const right = attempt.revealed && option.key === step.answer
@@ -232,13 +247,19 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   return (
     <div ref={root} className="ls-run" data-testid="lesson-player">
       <div className="ls-top">
-        <Link to={returnTab.current} className="ls-top__btn" aria-label={strings.lesson.close}>
+        <Link
+          to={returnTab.current}
+          className="ls-top__btn"
+          aria-label={strings.lesson.close}
+          data-sound="close"
+        >
           ✕
         </Link>
         <button
           type="button"
           className="ls-top__btn sh-press"
           aria-label={strings.lesson.back}
+          data-sound="none"
           disabled={index === 0}
           onClick={() => go(index - 1)}
         >
@@ -321,6 +342,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         {options}
         {step.kind === 'keypad' && !attempt.revealed ? (
           <Keypad
+            sound="none"
             value={typed}
             onChange={(value) => {
               setTyped(value)
@@ -345,6 +367,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           <button
             type="button"
             className="sh-btn sh-btn--primary sh-press"
+            // Skipping a beat taps; the next step and the lesson end play their own sounds.
+            data-sound={skipping ? undefined : 'none'}
             data-soft={skipping || undefined}
             aria-label={skipping ? strings.lesson.finishBeat : undefined}
             onClick={primary}
