@@ -25,7 +25,25 @@ export type StageState = {
   minor: { matrix: string; row: number; col: number; lifted: boolean } | null
   /** Row-operation beat: the entries currently shown for a matrix, replacing its own. */
   working: { matrix: string; rows: string[][] } | null
+  /**
+   * Cells whose values the newest working line uses, in the order its numbers appear: the stage flies
+   * each value from its cell into the line. Empty on frames that add no such line.
+   */
+  sources: readonly SourceCell[]
+  /** Sarrus: the matrix whose first two columns are copied to its right, so every diagonal is straight. */
+  extended: string | null
 }
+
+/** A cell on the stage; `copy` is the Sarrus copy of the first two columns. */
+export type SourceCell = {
+  readonly matrix: string
+  readonly row: number
+  readonly col: number
+  readonly copy?: true
+}
+
+/** Name the stage uses for the Sarrus copy of a matrix's first two columns. */
+export const copyName = (name: string) => `${name}+`
 
 export const emptyStage: StageState = {
   marks: [],
@@ -34,6 +52,8 @@ export const emptyStage: StageState = {
   area: null,
   minor: null,
   working: null,
+  sources: [],
+  extended: null,
 }
 
 /** TeX coefficient in front of a row: "", "-", "2", "\tfrac{1}{4}", "-\tfrac{1}{4}". */
@@ -123,7 +143,8 @@ function builder(start: StageState): Builder {
   return {
     frames,
     push(change) {
-      current = change(current)
+      // Flights belong to the frame that writes their line.
+      current = change({ ...current, sources: [] })
       frames.push(current)
     },
   }
@@ -151,6 +172,10 @@ function det2(lesson: Lesson, name: string, b: Builder) {
       true,
     ),
     notes: [mainText],
+    sources: [
+      { matrix: name, row: 0, col: 0 },
+      { matrix: name, row: 1, col: 1 },
+    ],
   }))
   b.push((s) => ({
     ...withMarks(s, [
@@ -158,6 +183,10 @@ function det2(lesson: Lesson, name: string, b: Builder) {
       { cell: [name, 1, 0], tone: 'col' },
     ]),
     notes: [mainText, otherText],
+    sources: [
+      { matrix: name, row: 0, col: 1 },
+      { matrix: name, row: 1, col: 0 },
+    ],
   }))
   if (main && other) {
     const value = sub(main, other)
@@ -175,40 +204,57 @@ function det2(lesson: Lesson, name: string, b: Builder) {
 function sarrus(lesson: Lesson, name: string, b: Builder) {
   const m = lookup(lesson, name)
   const values = numeric(m)
-  const diagonal = (start: number, step: 1 | -1) =>
-    [0, 1, 2].map((r) => [r, (((start + step * r) % 3) + 3) % 3] as const)
-  const term = (cells: readonly (readonly [number, number])[]) => {
-    const text = cells.map(([r, c]) => factor(at(m, r, c))).join(' · ')
+  const copy = copyName(name)
+  // With the first two columns copied to the right, every diagonal is a straight line of three cells.
+  const diagonal = (start: number, step: 1 | -1) => [0, 1, 2].map((r) => ({ row: r, col: start + step * r }))
+  const placed = (d: { row: number; col: number }): SourceCell =>
+    d.col < 3
+      ? { matrix: name, row: d.row, col: d.col }
+      : { matrix: name, row: d.row, col: d.col - 3, copy: true }
+  const markOf = (cellAt: SourceCell, tone: 'row' | 'col'): Mark => ({
+    cell: [cellAt.copy ? copy : name, cellAt.row, cellAt.col] as const,
+    tone,
+  })
+  const term = (cells: readonly { row: number; col: number }[]) => {
+    const text = cells.map((d) => factor(at(m, d.row, d.col % 3))).join(' · ')
     if (!values) return { text, value: null }
-    const value = cells.reduce<Rational>((acc, [r, c]) => mul(acc, cell(values, r, c)), { num: 1n, den: 1n })
+    const value = cells.reduce<Rational>((acc, d) => mul(acc, cell(values, d.row, d.col % 3)), {
+      num: 1n,
+      den: 1n,
+    })
     return { text: `${text} = ${show(value)}`, value }
   }
+  b.push((s) => ({ ...s, marks: [], notes: [], extended: name }))
   let plus: Rational = { num: 0n, den: 1n }
   for (const [index, start] of [0, 1, 2].entries()) {
     const cells = diagonal(start, 1)
     const t = term(cells)
     if (t.value) plus = add(plus, t.value)
+    const sources = cells.map(placed)
     b.push((s) => ({
       ...withMarks(
         s,
-        cells.map(([r, c]) => ({ cell: [name, r, c] as const, tone: 'row' as const })),
+        sources.map((c) => markOf(c, 'row')),
         index === 0,
       ),
       notes: [...(index === 0 ? [] : s.notes), `+ ${t.text}`],
+      sources,
     }))
   }
   let minus: Rational = { num: 0n, den: 1n }
-  for (const [index, start] of [2, 0, 1].entries()) {
+  for (const [index, start] of [2, 3, 4].entries()) {
     const cells = diagonal(start, -1)
     const t = term(cells)
     if (t.value) minus = add(minus, t.value)
+    const sources = cells.map(placed)
     b.push((s) => ({
       ...withMarks(
         s,
-        cells.map(([r, c]) => ({ cell: [name, r, c] as const, tone: 'col' as const })),
+        sources.map((c) => markOf(c, 'col')),
         index === 0,
       ),
       notes: [...s.notes, `− ${t.text}`],
+      sources,
     }))
   }
   const value = detOf(m)

@@ -56,7 +56,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const step = lesson.steps[index] as Step
   const frames = compile(lesson, beatOf(step, attempt))
   // Playback position, tied to the beat it belongs to so a new beat never renders a stale count.
-  const beatKey = `${step.id}:${attempt.revealed}`
+  const [replays, setReplays] = useState(0)
+  const beatKey = `${step.id}:${attempt.revealed}:${replays}`
   const startAt = reducedMotion() ? frames.length : Math.min(frames.length, 1)
   const [play, setPlay] = useState({ key: beatKey, shown: startAt })
   const shown = play.key === beatKey ? play.shown : startAt
@@ -106,6 +107,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const state = shown > 0 ? (frames[shown - 1] ?? emptyStage) : emptyStage
 
   const go = (next: number) => {
+    setReplays(0)
     setAttempt(freshAttempt)
     setTyped('')
     setIndex(next)
@@ -218,7 +220,15 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       </div>
 
       <div className="ls-main" data-stage={hasStage}>
-        {hasStage ? <Stage lesson={lesson} scene={step.scene} state={state} reserve={reserve} /> : null}
+        {hasStage ? (
+          <Stage
+            lesson={lesson}
+            scene={step.scene}
+            state={state}
+            reserve={reserve}
+            onReplay={!playing && frames.length > 1 ? () => setReplays((n) => n + 1) : undefined}
+          />
+        ) : null}
 
         <div ref={scroller} className="ls-narr">
           <p className="ls-eyebrow">{step.eyebrow}</p>
