@@ -383,12 +383,19 @@ function useReveal(
     const stageRect = box.getBoundingClientRect()
     const landed = new Set<string>()
     engine.withChannel('lesson', () => {
-      for (const key of fresh) {
+      const order = flights.map((flight) => flight.token)
+      fresh.forEach((key, at) => {
         const el = tokenOf(key)
-        if (!el) continue
+        if (!el) return
         engine.set(el, { opacity: 0 })
-        if (!flown.has(key)) engine.to(el, { opacity: 1 }, 'draw', { effect: true })
-      }
+        if (flown.has(key)) return
+        // An operator is written with the number after it, as that number's chip lifts off (old
+        // showWithOperator): "a ·" never waits on the line for a "d" still in its cell.
+        const next = el.hasAttribute('data-op') ? fresh.slice(at + 1).find((k) => flown.has(k)) : undefined
+        const draw = () => engine.to(el, { opacity: 1 }, 'draw', { effect: true })
+        if (next === undefined) draw()
+        else engine.after(order.indexOf(next) * stagger, draw)
+      })
       flights.forEach((flight, index) => {
         const to = tokenOf(flight.token)
         const from = box.querySelector<HTMLElement>(sourceSelector(flight.from))
@@ -437,7 +444,8 @@ function useReveal(
           playSound('land')
         }
         engine.after(index * stagger, () => {
-          engine.to(chip, { opacity: 1 }, 'fade', { effect: true })
+          // Visible from lift-off (old makeChip): the number lifts out of its cell, it does not fade up.
+          engine.set(chip, { opacity: 1 })
           engine.to(chip, { x: dx, scale: ratio }, spring(SPRINGS.carry), { onArrive: land, epsilon: 0.75 })
           engine.to(chip, { y: dy }, spring(SPRINGS.carryY))
         })
