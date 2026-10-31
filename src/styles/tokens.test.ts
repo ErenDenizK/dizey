@@ -98,6 +98,14 @@ describe.each([['dark', dark]])('%s theme', (_name, theme) => {
     expect(contrast(theme, '--on-action', '--action')).toBeGreaterThanOrEqual(7)
   })
 
+  it.each([
+    ['--on-bad', '--bad-fill'],
+    ['--on-ok', '--ok-fill'],
+    ['--on-row', '--row-fill'],
+  ])('%s on %s marks read at 3:1 (icons and key letters)', (ink, fill) => {
+    expect(contrast(theme, ink, fill)).toBeGreaterThanOrEqual(3)
+  })
+
   it.each(['--ok-fill', '--bad-fill', '--row-fill'])(
     '%s is visible as a UI part (3:1 on surface)',
     (fill) => {

@@ -877,7 +877,7 @@ a.sh-node {
 }
 .ex-opt[data-state="wrong"] .ex-opt__key {
   background: var(--bad-fill);
-  color: oklch(1 0 0);
+  color: var(--on-bad);
 }
 .ex-opt__key svg {
   width: 13px;
@@ -906,7 +906,7 @@ a.sh-node {
   margin-top: 1px;
   border-radius: var(--corner-pill);
   background: var(--bad-fill);
-  color: oklch(1 0 0);
+  color: var(--on-bad);
 }
 .ls-feedback__mark svg {
   width: 12px;

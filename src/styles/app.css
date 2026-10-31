@@ -190,7 +190,7 @@ html {
   line-height: 1.1;
 }
 .dz-m-error {
-  color: var(--color-danger, currentColor);
+  color: var(--bad-ink);
   text-decoration: underline wavy;
 }
 /* A matrix inside a formula: the stage's bracket grid at text size, never the stage's tiles. */
