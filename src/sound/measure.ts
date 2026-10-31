@@ -1,6 +1,7 @@
 import { PROGRESSION, seeded } from './harmony'
+import { composeSection, idleChord, SECTION } from './music'
 import { EVENTS, type SoundEvent } from './score'
-import { createSynth } from './synth'
+import { createSynth, PALETTES, type PaletteId } from './synth'
 
 /**
  * Offline measurement of the instrument: peak, loudness and clicks for each event. calibrate()
@@ -98,7 +99,7 @@ export type Measurement = {
 
 export async function measure(
   event: SoundEvent,
-  options: { levelDb?: number; masterDb?: number; step?: number; steps?: number } = {},
+  options: { levelDb?: number; masterDb?: number; step?: number; steps?: number; palette?: PaletteId } = {},
 ): Promise<Measurement> {
   const ctx = new OfflineAudioContext(2, RATE * 10, RATE)
   const synth = createSynth(ctx, { random: seeded(7), ...options })
@@ -124,12 +125,12 @@ export async function measure(
 }
 
 /** Events that follow the lesson's chord are measured on every chord of the progression and power-averaged. */
-async function averageLoudness(event: SoundEvent, levelDb: number) {
+async function averageLoudness(event: SoundEvent, levelDb: number, palette: PaletteId) {
   const followsStep = EVENTS[event].parts.some((part) => part.chord === 'step')
   const steps = followsStep ? PROGRESSION.map((_, i) => i) : [0]
   let power = 0
   for (const step of steps) {
-    const m = await measure(event, { levelDb, masterDb: 0, step, steps: PROGRESSION.length })
+    const m = await measure(event, { levelDb, masterDb: 0, step, steps: PROGRESSION.length, palette })
     power += 10 ** (m.loudness / 10)
   }
   return 10 * Math.log10(power / steps.length)
@@ -137,13 +138,36 @@ async function averageLoudness(event: SoundEvent, levelDb: number) {
 
 /** Bus level per event that meets EVENTS.loudness: render, correct, render again (the limiter is not linear). */
 export async function calibrate() {
-  const table: Partial<Record<SoundEvent, number>> = {}
-  for (const event of Object.keys(EVENTS) as SoundEvent[]) {
-    let level = -20
-    for (let pass = 0; pass < 2; pass++) {
-      level = round(level + EVENTS[event].loudness - (await averageLoudness(event, level)))
+  const table = {} as Record<PaletteId, Record<SoundEvent, number>>
+  for (const palette of Object.keys(PALETTES) as PaletteId[]) {
+    const row: Partial<Record<SoundEvent, number>> = {}
+    for (const event of Object.keys(EVENTS) as SoundEvent[]) {
+      let level = -20
+      for (let pass = 0; pass < 2; pass++) {
+        level = round(level + EVENTS[event].loudness - (await averageLoudness(event, level, palette)))
+      }
+      row[event] = level
     }
-    table[event] = level
+    table[palette] = row as Record<SoundEvent, number>
   }
-  return table as Record<SoundEvent, number>
+  return table
+}
+
+/** Background music: loudness of eight sections (the whole idle walk) at the normal level, per palette. */
+export async function measureMusic(palette: PaletteId = 'rhodes', masterDb = 0) {
+  const sections = 8
+  const ctx = new OfflineAudioContext(2, Math.ceil(RATE * (SECTION * sections + 4)), RATE)
+  const synth = createSynth(ctx, { random: seeded(7), palette, masterDb })
+  const random = seeded(11)
+  let last: number | undefined
+  for (let n = 0; n < sections; n++) {
+    const written = composeSection(idleChord(n), 0.05 + n * SECTION, random, last)
+    last = written.last
+    synth.playMusic(written.notes)
+  }
+  const buffer = await ctx.startRendering()
+  const channels = [buffer.getChannelData(0), buffer.getChannelData(1)]
+  let peak = 0
+  for (const d of channels) for (const x of d) peak = Math.max(peak, Math.abs(x))
+  return { palette, loudness: round(momentary(channels, false)), peakDb: round(20 * Math.log10(peak)) }
 }

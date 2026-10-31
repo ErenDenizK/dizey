@@ -26,6 +26,8 @@ export type SoundEvent =
   | 'lessonEnd'
   | 'halfway'
   | 'milestone'
+  | 'seal'
+  | 'secret'
   | 'tap'
   | 'tab'
   | 'toggleOn'
@@ -198,6 +200,28 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
       { chord: 'iv', ring: 1.8 },
       { chord: 'bVII', ring: 2.2, bloom: 0.3, arpeggio: { count: 6 } },
       { chord: 'I', ring: 5, bloom: 1, halo: 0.8 },
+    ],
+  },
+  // A mastery seal closes: the dominant, held open, rises into home.
+  seal: {
+    tier: 'reward',
+    loudness: -27.5,
+    cutoff: 5600,
+    wet: 1.2,
+    parts: [
+      { chord: 'V', sus: 'hold', ring: 1.8, bloom: 0.3, arpeggio: { count: 4 } },
+      { chord: 'I', ring: 5.8, bloom: 0.8, halo: 0.4 },
+    ],
+  },
+  // A hidden insight found: a colour heard nowhere else (♭VI to a Lydian tonic).
+  secret: {
+    tier: 'reward',
+    loudness: -27,
+    cutoff: 6400,
+    wet: 1.3,
+    parts: [
+      { chord: 'bVI', ring: 2.4, bloom: 0.5, arpeggio: { count: 5 } },
+      { chord: 'Is11', ring: 4.6, bloom: 0.9, halo: 0.8 },
     ],
   },
   tap: {

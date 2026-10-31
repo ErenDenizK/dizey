@@ -1,6 +1,8 @@
 import { readSettings, saveSettings } from '../progress/settings'
-import { EVENTS, type SoundContext, type SoundEvent } from './score'
-import { createSynth, type Synth } from './synth'
+import { chordAt, seeded } from './harmony'
+import { composeSection, idleChord, SECTION } from './music'
+import { EVENTS, type Plan, type SoundContext, type SoundEvent } from './score'
+import { createSynth, PALETTES, type PaletteId, type Synth } from './synth'
 
 /**
  * The app's one sound instance. Sound is on unless the learner turns it off in Ben. By default it
@@ -49,7 +51,7 @@ export function setSoundContext(context: SoundContext) {
 function armIdle() {
   clearTimeout(idle)
   idle = setTimeout(() => {
-    if (synth?.ringing) armIdle()
+    if (synth?.ringing || musicWanted()) armIdle()
     else void ctx?.suspend().catch(() => {})
   }, IDLE_MS)
 }
@@ -75,9 +77,18 @@ function unlock() {
     } catch {
       // Nothing to unlock.
     }
-    synth = createSynth(ctx)
+    const settings = readSettings()
+    synth = createSynth(ctx, { palette: paletteOf(settings.palette) })
+    synth.setMusicLevel(settings.musicSoft ? MUSIC_SOFT_DB : 0)
+    synth.listen((plan) => {
+      const now = ctx?.currentTime ?? 0
+      for (const listener of heard) listener(plan, now)
+    })
     ctx.addEventListener('statechange', () => {
-      if (ctx?.state === 'running') armIdle()
+      if (ctx?.state === 'running') {
+        armIdle()
+        syncMusic()
+      }
     })
   }
   if (ctx.state !== 'running') void ctx.resume().catch(() => {})
@@ -85,6 +96,7 @@ function unlock() {
 
 function quiet() {
   synth?.stopAll()
+  stopMusic(0.05)
   clearTimeout(idle)
   // Suspend once the 30 ms fades are done, so no old tail comes back on resume.
   setTimeout(() => void ctx?.suspend().catch(() => {}), 300)
@@ -101,6 +113,7 @@ export function installSound() {
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) quiet()
   })
+  setInterval(syncMusic, TICK_MS)
 }
 
 /** Plays a cue on the frame its motion lands. Silent when sound is off or audio is not yet unlocked. */
@@ -129,7 +142,92 @@ export function setSoundOn(on: boolean) {
   if (on) {
     unlock()
     playSound('toggleOn')
+    syncMusic()
   } else quiet()
+}
+
+const paletteOf = (id: string | undefined): PaletteId => (id && id in PALETTES ? (id as PaletteId) : 'rhodes')
+
+/** The learner's palette: timbre only, the same notes. */
+export function setPalette(id: PaletteId) {
+  const { palette: _, ...rest } = readSettings()
+  saveSettings(id === 'rhodes' ? rest : { ...rest, palette: id })
+  synth?.setPalette(id)
+}
+
+/* ---------- Background music ---------- */
+
+/** Softer music setting, dB under normal. */
+const MUSIC_SOFT_DB = -7
+/** How often the music scheduler looks ahead, ms, and how far ahead a section is written, s. */
+const TICK_MS = 400
+const LOOKAHEAD = 1.2
+
+let musicTimer = false
+let held = false
+let nextAt = 0
+let section = 0
+let lastNote: number | undefined
+const musicRandom = seeded(Date.now() & 0xffff)
+
+const musicWanted = () => soundOn() && readSettings().music !== false && !held && !document.hidden
+
+function stopMusic(tau = 0.8) {
+  if (!musicTimer) return
+  musicTimer = false
+  synth?.stopMusic(tau)
+}
+
+/** Writes the next section when it is due; starts and stops with the settings, the page and the exam. */
+function syncMusic() {
+  if (!ctx || !synth || ctx.state !== 'running' || !musicWanted()) {
+    if (!musicWanted()) stopMusic()
+    return
+  }
+  if (!musicTimer) {
+    musicTimer = true
+    nextAt = ctx.currentTime + 0.3
+  }
+  if (nextAt - ctx.currentTime > LOOKAHEAD) return
+  if (nextAt < ctx.currentTime) nextAt = ctx.currentTime + 0.05
+  const { step, steps } = ambientContext
+  const chord = steps ? chordAt(step, steps) : idleChord(section)
+  const written = composeSection(chord, nextAt, musicRandom, lastNote)
+  lastNote = written.last
+  synth.playMusic(written.notes)
+  section++
+  nextAt += SECTION
+}
+
+/** Ben's music switch: inside the tap, so turning it on can start at once. */
+export function setMusicOn(on: boolean) {
+  const { music: _, ...rest } = readSettings()
+  saveSettings(on ? rest : { ...rest, music: false })
+  if (on) {
+    unlock()
+    syncMusic()
+  } else stopMusic()
+}
+
+export function setMusicSoft(soft: boolean) {
+  const { musicSoft: _, ...rest } = readSettings()
+  saveSettings(soft ? { ...rest, musicSoft: true } : rest)
+  synth?.setMusicLevel(soft ? MUSIC_SOFT_DB : 0)
+}
+
+/** The exam rehearsal holds the music (and nothing else plays there). */
+export function holdMusic(hold: boolean) {
+  held = hold
+  syncMusic()
+}
+
+const heard = new Set<(plan: Plan, now: number) => void>()
+/** Every sound as it is scheduled, with the context time it was scheduled at (the sound lab draws from it). */
+export function listenSounds(listener: (plan: Plan, now: number) => void) {
+  heard.add(listener)
+  return () => {
+    heard.delete(listener)
+  }
 }
 
 /** Ben's "Sessiz modda da çal" switch: takes effect at once, inside the tap. */

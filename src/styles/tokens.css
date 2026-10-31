@@ -182,7 +182,7 @@
   --corner-pill: 999px;
 
   /* ---- Glass: the functional layer (tab bar, floating controls) -------- */
-  --glass-blur: 22px;
+  --glass-blur: 30px;
   --glass-saturate: 1.4;
 
   /* ---- Light theme: soft stone ground, lifted cards, dark ink, one navy action ----------
@@ -243,39 +243,39 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: oklch(0.21 0.007 78.2);
-    --surface: oklch(0.187 0.006 91.7);
-    --surface-raised: oklch(0.244 0.008 84.6);
-    --surface-sunk: oklch(0.244 0.008 84.6);
+    --bg: oklch(0.195 0.007 78.2);
+    --surface: oklch(0.245 0.008 84.6);
+    --surface-raised: oklch(0.27 0.008 84.6);
+    --surface-sunk: oklch(0.17 0.006 84.6);
     --ink-1: oklch(0.9 0.007 80);
     --ink-2: oklch(0.78 0.01 80);
     --ink-3: oklch(0.628 0.012 81.8);
     --hairline: oklch(0.9 0.007 80 / 0.1);
     --hairline-strong: oklch(0.9 0.007 80 / 0.18);
-    --action: oklch(0.86 0.03 255);
+    --action: oklch(0.8 0.045 255);
     --on-action: oklch(0.187 0.011 268.1);
     --press-overlay: oklch(0.9 0.007 80);
     --scrim: oklch(0 0 0);
-    --glass-fill: oklch(0.244 0.008 84.6 / 0.82);
+    --glass-fill: oklch(0.27 0.008 84.6 / 0.9);
     --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.12);
     --glass-edge: 0 0 0 0.5px oklch(0.9 0.007 80 / 0.08);
     --lens-fill: oklch(0.313 0.009 88.8 / 0.95);
     --lens-shadow: 0 1px 2px oklch(0 0 0 / 0.5);
     --shadow-color: oklch(0 0 0 / 0.5);
-    --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5);
-    --shadow-2: 0 3px 10px oklch(0 0 0 / 0.5);
+    --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5), 0 4px 14px -4px oklch(0 0 0 / 0.45);
+    --shadow-2: 0 2px 4px oklch(0 0 0 / 0.4), 0 8px 24px -6px oklch(0 0 0 / 0.6);
     --shadow-3: 0 -6px 24px oklch(0 0 0 / 0.5);
-    --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.06);
+    --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
     --ok-ink: oklch(0.78 0.08 165);
     --ok-fill: oklch(0.62 0.09 165);
     --ok-tint: oklch(0.27 0.025 165);
     --ok-edge: oklch(0.45 0.06 165);
     --bad-ink: oklch(0.78 0.08 25);
-    --bad-fill: oklch(0.52 0.14 25);
+    --bad-fill: oklch(0.57 0.14 25);
     --bad-tint: oklch(0.25 0.022 25);
     --bad-edge: oklch(0.45 0.09 25);
     --row-ink: oklch(0.78 0.09 245);
-    --row-fill: oklch(0.5 0.1 248);
+    --row-fill: oklch(0.57 0.1 248);
     --row-tint: oklch(0.27 0.028 248);
     --row-edge: oklch(0.45 0.07 248);
     --col-ink: oklch(0.78 0.09 322);
@@ -289,39 +289,39 @@
 /* The in-app switch: same values as the dark block above (kept in sync by tokens.test.ts). */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: oklch(0.21 0.007 78.2);
-  --surface: oklch(0.187 0.006 91.7);
-  --surface-raised: oklch(0.244 0.008 84.6);
-  --surface-sunk: oklch(0.244 0.008 84.6);
+  --bg: oklch(0.195 0.007 78.2);
+  --surface: oklch(0.245 0.008 84.6);
+  --surface-raised: oklch(0.27 0.008 84.6);
+  --surface-sunk: oklch(0.17 0.006 84.6);
   --ink-1: oklch(0.9 0.007 80);
   --ink-2: oklch(0.78 0.01 80);
   --ink-3: oklch(0.628 0.012 81.8);
   --hairline: oklch(0.9 0.007 80 / 0.1);
   --hairline-strong: oklch(0.9 0.007 80 / 0.18);
-  --action: oklch(0.86 0.03 255);
+  --action: oklch(0.8 0.045 255);
   --on-action: oklch(0.187 0.011 268.1);
   --press-overlay: oklch(0.9 0.007 80);
   --scrim: oklch(0 0 0);
-  --glass-fill: oklch(0.244 0.008 84.6 / 0.82);
+  --glass-fill: oklch(0.27 0.008 84.6 / 0.9);
   --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.12);
   --glass-edge: 0 0 0 0.5px oklch(0.9 0.007 80 / 0.08);
   --lens-fill: oklch(0.313 0.009 88.8 / 0.95);
   --lens-shadow: 0 1px 2px oklch(0 0 0 / 0.5);
   --shadow-color: oklch(0 0 0 / 0.5);
-  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5);
-  --shadow-2: 0 3px 10px oklch(0 0 0 / 0.5);
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5), 0 4px 14px -4px oklch(0 0 0 / 0.45);
+  --shadow-2: 0 2px 4px oklch(0 0 0 / 0.4), 0 8px 24px -6px oklch(0 0 0 / 0.6);
   --shadow-3: 0 -6px 24px oklch(0 0 0 / 0.5);
-  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.06);
+  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
   --ok-ink: oklch(0.78 0.08 165);
   --ok-fill: oklch(0.62 0.09 165);
   --ok-tint: oklch(0.27 0.025 165);
   --ok-edge: oklch(0.45 0.06 165);
   --bad-ink: oklch(0.78 0.08 25);
-  --bad-fill: oklch(0.52 0.14 25);
+  --bad-fill: oklch(0.57 0.14 25);
   --bad-tint: oklch(0.25 0.022 25);
   --bad-edge: oklch(0.45 0.09 25);
   --row-ink: oklch(0.78 0.09 245);
-  --row-fill: oklch(0.5 0.1 248);
+  --row-fill: oklch(0.57 0.1 248);
   --row-tint: oklch(0.27 0.028 248);
   --row-edge: oklch(0.45 0.07 248);
   --col-ink: oklch(0.78 0.09 322);

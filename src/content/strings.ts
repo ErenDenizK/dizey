@@ -61,7 +61,9 @@ export const strings = {
     soundHint: 'Dokunuşlar, adımlar, cevaplar ve ödüller.',
     soundInSilent: 'Sessiz modda da çal',
     soundInSilentHint: 'Kapalıyken telefon sessizdeyse ses çıkmaz. Açıkken arkadaki müzik durabilir.',
-    soundLab: 'Sesleri dinle',
+    soundLab: 'Ses laboratuvarı',
+    music: 'Arka plan müziği',
+    musicHint: 'Dersin akorlarından, sakin ve kısık. Sınavda susar.',
     haptics: 'Titreşim',
     hapticsHint: 'Cevaplarda ve ders sonunda hafif bir dokunuş.',
     appearanceOptions: { system: 'Sistem', light: 'Açık', dark: 'Koyu' },
@@ -163,6 +165,19 @@ export const strings = {
     newGroup: 'Yeni anlatım',
     newGroupNote: 'Sıfırdan yazılan dersler',
     open: 'Derse gir',
+  },
+
+  lessonEnd: {
+    eyebrow: (code: string) => `${code} · Ders tamam`,
+    title: 'Bu dersi bitirdin',
+    chapterTitle: (chapter: string) => `${chapter} bölümü bitti`,
+    chapterWeight: (items: number) => `Vizede ${items} / 34 soru bu bölümden.`,
+    score: (correct: number, total: number) => `Her kare bir soru: ilk denemede ${correct} / ${total} doğru.`,
+    noQuestions: 'Bu derste soru yoktu; sıradakine geçebilirsin.',
+    sealName: 'Cevapların',
+    sealLabel: (correct: number, total: number) => `${total} sorunun cevapları, ${correct} doğru`,
+    next: (code: string) => `Sıradaki · ${code}`,
+    back: 'Derslere dön',
   },
 
   onboarding: {

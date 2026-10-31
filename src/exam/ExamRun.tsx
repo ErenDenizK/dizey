@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { saveSettings, useSettings } from '../progress/settings'
+import { holdMusic } from '../sound/player'
 import { Blocks } from './Blocks'
 import { clock } from './format'
 import { choose, goTo, remainingMs, toggleFlag } from './session'
@@ -21,6 +22,12 @@ export function ExamRun() {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000)
     return () => window.clearInterval(timer)
+  }, [])
+
+  // An exam hall has no music either.
+  useEffect(() => {
+    holdMusic(true)
+    return () => holdMusic(false)
   }, [])
 
   const scroller = useRef<HTMLDivElement>(null)

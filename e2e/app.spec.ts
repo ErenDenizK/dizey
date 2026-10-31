@@ -72,6 +72,21 @@ test('a lesson plays, checks answers and resumes where it was left', async ({ pa
   await expect(screen(page).getByTestId('continue-card')).toHaveAttribute('aria-label', /^Devam et: 3\.1 /)
 })
 
+test('finishing a lesson shows its answers seal and offers the next lesson', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './lesson/r2-echelon-forms?step=summary')
+  await page.getByTestId('lesson-player').getByRole('button', { name: 'Dersi bitir' }).click()
+  const end = page.getByTestId('lesson-end')
+  await expect(end).toContainText('Ders tamam')
+  await expect(end.getByRole('img', { name: /1 sorunun cevapları/ })).toBeVisible()
+  await end.getByRole('button', { name: /Sıradaki · 2\.3/ }).click()
+  await expect(page).toHaveURL(/lesson\/r3-rank/)
+  await expect(page.getByTestId('lesson-player').getByRole('progressbar')).toHaveAttribute(
+    'aria-valuenow',
+    '1',
+  )
+})
+
 test('a wrong first try lands in the mistake log and leaves it when fixed', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await openApp(page, './lesson/d1-determinant')

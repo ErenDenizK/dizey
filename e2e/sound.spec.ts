@@ -68,7 +68,7 @@ test('turning lesson sounds on plays a preview', async ({ page }) => {
 })
 
 test('the interface sounds: a tab switch and a switch both play', async ({ page }) => {
-  await openApp(page, './')
+  await openApp(page, './', { music: false })
   // The first tap unlocks audio; later taps sound.
   await page.locator('.dz-tab').nth(1).click()
   const before = await oscillators(page)
@@ -82,12 +82,12 @@ test('the interface sounds: a tab switch and a switch both play', async ({ page 
 test('the sound lab plays every sound without an error', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.message))
-  await openApp(page, './lab/sounds')
+  await openApp(page, './lab/sounds', { music: false })
   const rows = page.locator('[data-testid^="sound-"]')
   // The lab is a lazy route: wait for it to render before counting.
   await expect(rows.first()).toBeVisible()
   const count = await rows.count()
-  expect(count).toBeGreaterThanOrEqual(17)
+  expect(count).toBeGreaterThanOrEqual(20)
   for (let i = 0; i < count; i++) {
     const before = await oscillators(page)
     await rows.nth(i).click()
@@ -107,4 +107,20 @@ test('the exam rehearsal stays silent', async ({ page }) => {
   await options.nth(1).click()
   await page.waitForTimeout(300)
   expect(await oscillators(page)).toBe(before)
+})
+
+test('background music plays after the first tap and stops when turned off', async ({ page }) => {
+  await openApp(page, './')
+  await page.locator('.dz-tab').last().click()
+  await page.waitForTimeout(1500)
+  const playing = await oscillators(page)
+  await page.waitForTimeout(8500)
+  // A new section has been written without any tap.
+  expect(await oscillators(page)).toBeGreaterThan(playing)
+
+  await page.getByRole('switch', { name: 'Arka plan müziği' }).click()
+  await page.waitForTimeout(1000)
+  const stopped = await oscillators(page)
+  await page.waitForTimeout(9000)
+  expect(await oscillators(page)).toBe(stopped)
 })
