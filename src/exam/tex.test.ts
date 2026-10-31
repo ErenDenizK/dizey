@@ -111,6 +111,9 @@ describe('mathToHtml', () => {
     expect(html).toContain('ex-mat')
     expect(html.match(/ex-cell/g)?.length).toBe(4)
   })
+  it('draws vmatrix with bars', () => {
+    expect(texToHtml('\\begin{vmatrix} 1 & 2 \\\\ 3 & 4 \\end{vmatrix}')).toContain('data-delimiter="bars"')
+  })
   it('marks unknown commands', () => {
     expect(texToHtml('\\foo')).toContain('dz-m-error')
   })
