@@ -49,12 +49,13 @@ export function PathView() {
 
   const root = useRef<HTMLDivElement>(null)
   useCelebrations(root, records)
-  useScrollToMain(root, main?.id ?? null)
+  useOpening(root, main?.id ?? null)
+  useFocusLens(root)
 
   return (
     <Screen title={strings.path.title}>
       <div ref={root} className="pa-root">
-        <div className="pa-summary">
+        <div className="pa-summary" data-focus="">
           <p className="pa-summary__count">
             <b className="num">{doneCount}</b>
             <span>{strings.path.overallRest(lessons.length)}</span>
@@ -146,16 +147,16 @@ function ChapterMatrix({
   useLayoutEffect(() => {
     const el = box.current
     if (!el) return
+    // Layout offsets, not client rects: the focus lens scales the cells, and the path must not follow it.
     const measure = () => {
-      const outer = el.getBoundingClientRect()
-      if (!outer.width) return
+      if (!el.offsetWidth) return
       const tiles = [...el.querySelectorAll<HTMLElement>('.pa-tile')]
       setGeometry({
-        width: outer.width,
-        height: outer.height,
+        width: el.offsetWidth,
+        height: el.offsetHeight,
         centers: tiles.map((tile) => {
-          const r = tile.getBoundingClientRect()
-          return { x: r.left - outer.left + r.width / 2, y: r.top - outer.top + r.height / 2 }
+          const at = offsetWithin(tile, el)
+          return { x: at.left + tile.offsetWidth / 2, y: at.top + tile.offsetHeight / 2 }
         }),
       })
     }
@@ -172,7 +173,7 @@ function ChapterMatrix({
       data-last={last || undefined}
       aria-labelledby={`chapter-${chapter.id}`}
     >
-      <header className="pa-chapter__head">
+      <header className="pa-chapter__head" data-focus="">
         <span className="pa-chapter__no num" aria-hidden="true">
           {number}
         </span>
@@ -193,7 +194,7 @@ function ChapterMatrix({
             const row = Math.floor(index / COLUMNS)
             const column = row % 2 === 0 ? index % COLUMNS : COLUMNS - 1 - (index % COLUMNS)
             return (
-              <li key={lesson.id} style={{ gridRow: row + 1, gridColumn: column + 1 }}>
+              <li key={lesson.id} data-focus="" style={{ gridRow: row + 1, gridColumn: column + 1 }}>
                 <Tile
                   lesson={lesson}
                   record={records[lesson.id]}
@@ -412,17 +413,121 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
 }
 
 /** Opens the path where you are: the current tile sits in the upper half of the screen. */
-function useScrollToMain(root: React.RefObject<HTMLDivElement | null>, mainId: string | null) {
-  const placed = useRef(false)
+/** An element's layout position inside one of its ancestors, ignoring transforms. */
+function offsetWithin(el: HTMLElement, ancestor: HTMLElement): { left: number; top: number } {
+  let left = 0
+  let top = 0
+  let node: HTMLElement | null = el
+  while (node && node !== ancestor) {
+    left += node.offsetLeft
+    top += node.offsetTop
+    const parent = node.offsetParent as HTMLElement | null
+    if (parent && parent !== ancestor && !ancestor.contains(parent)) break
+    node = parent
+  }
+  return { left, top }
+}
+
+/** How far from the focus line the lens starts to act, and where it is fully on, in half-screens. */
+const LENS = { calm: 0.22, full: 1.05, scale: 0.12, fade: 0.5 } as const
+
+/**
+ * The focus lens: whatever sits at the middle of the screen is full size; toward the top and bottom edges
+ * the path recedes (smaller, quieter), so the screen reads like a wheel turning past you and the scroll
+ * position is felt without a scrollbar. Tied 1:1 to the scroll (no spring of its own), set through the
+ * engine so it never fights a running motion on the tiles inside.
+ */
+function useFocusLens(root: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    const host = root.current
+    const scroller = host?.closest<HTMLElement>('.dz-screen')
+    if (!host || !scroller) return
+    let items: { el: HTMLElement; center: number; last: number }[] = []
+    const measure = () => {
+      items = [...host.querySelectorAll<HTMLElement>('[data-focus]')].map((el) => ({
+        el,
+        center: offsetWithin(el, scroller).top + el.offsetHeight / 2,
+        last: -1,
+      }))
+      apply()
+    }
+    // Scroll events already arrive once per frame, so the lens is applied straight from them.
+    const apply = () => {
+      const height = scroller.clientHeight
+      if (!height) return
+      const half = height / 2
+      const focus = scroller.scrollTop + height * 0.46
+      for (const item of items) {
+        const d = Math.abs(item.center - focus) / half
+        const t = Math.min(1, Math.max(0, (d - LENS.calm) / (LENS.full - LENS.calm)))
+        const e = t * t * (3 - 2 * t)
+        if (Math.abs(e - item.last) < 0.002) continue
+        item.last = e
+        engine.set(item.el, {
+          scale: engine.reducedMotion ? 1 : 1 - LENS.scale * e,
+          opacity: 1 - LENS.fade * e,
+        })
+      }
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
+    observer.observe(host)
+    observer.observe(scroller)
+    scroller.addEventListener('scroll', apply, { passive: true })
+    return () => {
+      observer.disconnect()
+      scroller.removeEventListener('scroll', apply)
+    }
+  }, [root])
+}
+
+/**
+ * Opening the app: the screen starts at the top (title, where you stand), the tiles rise in from the
+ * lesson you are on outward, and if that lesson is below the fold the view glides down to it, like a
+ * camera finding your place on a map. A touch stops the glide at once.
+ */
+function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string | null) {
+  const played = useRef(false)
   useLayoutEffect(() => {
-    if (placed.current || !mainId) return
-    const tile = root.current?.querySelector<HTMLElement>(`[data-lesson="${mainId}"]`)
-    const scroller = tile?.closest<HTMLElement>('.dz-screen')
-    if (!tile || !scroller || !scroller.clientHeight) return
-    placed.current = true
-    const top = tile.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop
-    const goal = top - scroller.clientHeight * 0.38
-    if (goal > 0) scroller.scrollTop = goal
+    const host = root.current
+    const scroller = host?.closest<HTMLElement>('.dz-screen')
+    if (played.current || !host || !scroller || !scroller.clientHeight) return
+    played.current = true
+    const tiles = [...host.querySelectorAll<HTMLElement>('.pa-tile')]
+    const from = Math.max(
+      0,
+      tiles.findIndex((tile) => tile.dataset.lesson === mainId),
+    )
+    tiles.forEach((tile, index) => {
+      const order = Math.abs(index - from)
+      if (order > 9) return
+      engine.set(tile, { opacity: 0, scale: 0.9, y: 14 })
+      engine.after(40 + order * 28, () => engine.to(tile, { opacity: 1, scale: 1, y: 0 }, 'enter'))
+    })
+
+    const tile = tiles[from]
+    if (!tile || !mainId) return
+    const center = offsetWithin(tile, scroller).top + tile.offsetHeight / 2
+    const goal = Math.min(
+      center - scroller.clientHeight * 0.46,
+      scroller.scrollHeight - scroller.clientHeight,
+    )
+    if (center < scroller.clientHeight * 0.72 || goal <= 0) return
+    const camera = {}
+    let stopped = false
+    const stop = () => {
+      stopped = true
+      engine.set(camera, { top: scroller.scrollTop })
+    }
+    engine.bind(camera, (v) => {
+      if (!stopped) scroller.scrollTop = v.top ?? 0
+    })
+    engine.set(camera, { top: 0 })
+    for (const type of ['pointerdown', 'wheel', 'touchstart', 'keydown'] as const)
+      scroller.addEventListener(type, stop, { once: true, passive: true })
+    engine.after(420, () => {
+      if (!stopped) engine.to(camera, { top: goal }, 'page')
+    })
   }, [root, mainId])
 }
 

@@ -22,10 +22,7 @@ function vars(text: string): Record<string, string> {
   return out
 }
 
-const light = vars(block(':root {'))
-const darkSystem = vars(block(':root:not([data-theme="light"])'))
-const darkSwitch = vars(block(':root[data-theme="dark"]'))
-const dark = { ...light, ...darkSystem }
+const dark = vars(block(':root {'))
 
 /** OKLCH to linear sRGB (Björn Ottosson's matrices), then WCAG relative luminance. */
 function luminance(value: string): number {
@@ -60,10 +57,7 @@ function contrast(theme: Record<string, string>, fg: string, bg: string): number
 const grounds = ['--bg', '--surface', '--surface-raised', '--surface-sunk']
 const text = ['--ink-1', '--ink-2', '--ok-ink', '--bad-ink', '--row-ink', '--col-ink']
 
-describe.each([
-  ['light', light],
-  ['dark', dark],
-])('%s theme', (_name, theme) => {
+describe.each([['dark', dark]])('%s theme', (_name, theme) => {
   it.each(text.flatMap((fg) => grounds.map((bg) => [fg, bg])))('%s on %s reads at 4.5:1', (fg, bg) => {
     expect(contrast(theme, fg, bg)).toBeGreaterThanOrEqual(4.5)
   })
@@ -112,6 +106,8 @@ describe.each([
   )
 })
 
-it('the in-app dark switch matches the system dark theme exactly', () => {
-  expect(darkSwitch).toEqual(darkSystem)
+it('the app is dark only: no light theme and no theme switch', () => {
+  expect(css).toContain('color-scheme: dark;')
+  expect(css).not.toContain('data-theme')
+  expect(css).not.toContain('prefers-color-scheme')
 })
