@@ -73,7 +73,7 @@ export const s1LinearSystems: Lesson = {
       id: 'eliminate',
       kind: 'explain',
       eyebrow: 'Yöntem',
-      title: 'Basamak forma getir, sondan geri çöz',
+      title: 'Eşelon forma getir, sondan geri çöz',
       body: 'Köşegenin altını sıfırla. Son satır $z = 0$ der; 2. satır $y + 3z = 1$, yani $y = 1$; 1. satır $x + 2y - z = 3$, yani $x = 1$. {ok}Tek çözüm: $(1, 1, 0)$.{/ok}',
       scene: { items: ['U'] },
       beat: {
@@ -93,7 +93,7 @@ export const s1LinearSystems: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Üç sonuç, iki rank',
-      body: 'Basamak formda $r_A$: $A$ kısmındaki sıfır olmayan satır sayısı, $r_B$: $[A \\mid b]$’deki sıfır olmayan satır sayısı. {ok}$r_A < r_B$ ise çözüm yok{/ok} (solda sıfır, sağda sayı: $0 = 1$). $r_A = r_B = n$ ise tek çözüm, $r_A = r_B < n$ ise sonsuz çözüm. Burada $n$ bilinmeyen sayısı.',
+      body: 'Eşelon formda $r_A$: $A$ kısmındaki sıfır olmayan satır sayısı, $r_B$: $[A \\mid b]$’deki sıfır olmayan satır sayısı. {ok}$r_A < r_B$ ise çözüm yok{/ok} (solda sıfır, sağda sayı: $0 = 1$). $r_A = r_B = n$ ise tek çözüm, $r_A = r_B < n$ ise sonsuz çözüm. Burada $n$ bilinmeyen sayısı.',
       scene: { items: ['IEnd', 'NEnd'] },
       claims: [
         { kind: 'rank', matrix: 'IEnd', columns: 3, equals: '2' },
@@ -130,7 +130,7 @@ export const s1LinearSystems: Lesson = {
       id: 'try-rank',
       kind: 'keypad',
       eyebrow: 'Senin sıran',
-      title: 'Bu basamak formda $r_A$ kaç?',
+      title: 'Bu eşelon formda $r_A$ kaç?',
       body: 'Yalnız çizginin solundaki kısma bak.',
       skill: 'rank-from-echelon',
       scene: { items: ['IEnd'] },
@@ -143,7 +143,7 @@ export const s1LinearSystems: Lesson = {
       id: 'try-classify',
       kind: 'choice',
       eyebrow: 'Senin sıran',
-      title: 'Basamak formu verilen sistemin kaç çözümü var?',
+      title: 'Eşelon formu verilen sistemin kaç çözümü var?',
       skill: 'classify-system',
       scene: { items: ['Q'] },
       options: [
@@ -175,7 +175,7 @@ export const s1LinearSystems: Lesson = {
       eyebrow: 'Özet',
       title: 'Sistemi rankla oku',
       points: [
-        '$Ax = b$ → $[A \\mid b]$ → basamak form → sondan geri çöz.',
+        '$Ax = b$ → $[A \\mid b]$ → eşelon form → sondan geri çöz.',
         '$r_A < r_B$: çözüm yok.',
         '$r_A = r_B = n$: tek çözüm.',
         '$r_A = r_B < n$: sonsuz çözüm, $n - r_A$ serbest değişken.',

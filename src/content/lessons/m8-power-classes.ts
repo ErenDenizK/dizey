@@ -12,7 +12,7 @@ const m = (label: string, rows: readonly (readonly string[])[]): MatrixBlock => 
 export const m8PowerClasses: Lesson = {
   id: 'm8-power-classes',
   node: 'M8',
-  title: 'Periyodik, idempotent, nilpotent, involutif',
+  title: 'Periyodik, idempotent, nilpotent, involutive',
   matrices: {
     R: m('R =', [
       ['0', '-1'],
@@ -138,7 +138,7 @@ export const m8PowerClasses: Lesson = {
             ]),
           ],
           errorType: 'class-mixup',
-          feedback: 'Karesi $I$: bu involutif. İdempotent için kare matrisin kendisine eşit olmalı.',
+          feedback: 'Karesi $I$: bu involutive. İdempotent için kare matrisin kendisine eşit olmalı.',
         },
         {
           key: 'd',
@@ -218,8 +218,8 @@ export const m8PowerClasses: Lesson = {
       id: 'involutory',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'İnvolutif: $A^2 = I$, yani $A^{-1} = A$',
-      body: '{ok}$A^2 = I$ ise{/ok} $A$ involutiftir: kendisinin tersidir. Geometrisi yansıma: iki kez yansıtınca başa dönersin. $B^2 = I$, bu yüzden $B^{-1}$ için hiç hesap gerekmez.',
+      title: 'Involutive: $A^2 = I$, yani $A^{-1} = A$',
+      body: '{ok}$A^2 = I$ ise{/ok} $A$ involutive’dir: kendisinin tersidir. Geometrisi yansıma: iki kez yansıtınca başa dönersin. $B^2 = I$, bu yüzden $B^{-1}$ için hiç hesap gerekmez.',
       scene: { items: ['V'] },
       claims: [
         { kind: 'property', expr: 'V', is: 'involutory' },
@@ -313,7 +313,7 @@ export const m8PowerClasses: Lesson = {
         'Periyodik: $A^{k+1} = A$, en küçük $k$ periyot.',
         'İdempotent: $A^2 = A$ (periyot $1$); izdüşüm. Tersinirse $A = I$.',
         'Nilpotent: $A^p = 0$, en küçük $p$ indeks; $|A| = 0$ ve $I + A$ tersinir.',
-        'İnvolutif: $A^2 = I$, yani $A^{-1} = A$; yansıma.',
+        'Involutive: $A^2 = I$, yani $A^{-1} = A$; yansıma.',
         'Matrislerde $AB = 0$ iken $A = 0$ ya da $B = 0$ sonucu çıkmaz.',
       ],
     },

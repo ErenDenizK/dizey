@@ -12,7 +12,7 @@ const m = (label: string, rows: readonly (readonly string[])[]): MatrixBlock => 
 export const r2EchelonForms: Lesson = {
   id: 'r2-echelon-forms',
   node: 'R2',
-  title: 'Basamak form ve indirgenmiş basamak form',
+  title: 'Eşelon form ve indirgenmiş eşelon form',
   matrices: {
     G: m('', [
       ['1', '2', '-1', '4'],
@@ -30,8 +30,8 @@ export const r2EchelonForms: Lesson = {
       id: 'echelon',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'Basamak form (Gauss)',
-      body: 'Sıfır satırlar en altta; her satırın ilk sıfırdan farklı elemanı (pivot) bir üstteki satırın pivotunun {ok}sağında{/ok}. Pivotların altı sıfırdır, merdiven gibi. Bu matris basamak formda.',
+      title: 'Eşelon form (Gauss)',
+      body: 'Sıfır satırlar en altta; her satırın ilk sıfırdan farklı elemanı (pivot) bir üstteki satırın pivotunun {ok}sağında{/ok}. Pivotların altı sıfırdır, merdiven gibi. Bu matris eşelon formda.',
       scene: { items: ['G'] },
       beat: {
         kind: 'frames',
@@ -56,8 +56,8 @@ export const r2EchelonForms: Lesson = {
       id: 'reduced',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'İndirgenmiş basamak form (Gauss-Jordan)',
-      body: 'Ek olarak: her pivot $1$ ve pivot sütununda başka her eleman $0$, {ok}pivotun üstü de{/ok}. Alttan yukarı temizle. Basamak form tek değildir, indirgenmiş basamak form tektir.',
+      title: 'İndirgenmiş eşelon form (Gauss-Jordan)',
+      body: 'Ek olarak: her pivot $1$ ve pivot sütununda başka her eleman $0$, {ok}pivotun üstü de{/ok}. Alttan yukarı temizle. Eşelon form tek değildir, indirgenmiş eşelon form tektir.',
       scene: { items: ['G'] },
       beat: {
         kind: 'rowOps',
@@ -83,7 +83,7 @@ export const r2EchelonForms: Lesson = {
       id: 'try-which',
       kind: 'choice',
       eyebrow: 'Senin sıran',
-      title: 'Hangisi indirgenmiş basamak formdadır?',
+      title: 'Hangisi indirgenmiş eşelon formdadır?',
       skill: 'recognize-rref',
       options: [
         {
@@ -96,7 +96,7 @@ export const r2EchelonForms: Lesson = {
             ]),
           ],
           errorType: 'nonzero-above-pivot',
-          feedback: 'Basamak formda ama 2. pivotun üstünde $3$ var.',
+          feedback: 'Eşelon formda ama 2. pivotun üstünde $3$ var.',
         },
         {
           key: 'b',
@@ -154,11 +154,11 @@ export const r2EchelonForms: Lesson = {
       id: 'summary',
       kind: 'summary',
       eyebrow: 'Özet',
-      title: 'Basamak formlar',
+      title: 'Eşelon formlar',
       points: [
-        'Basamak form: sıfır satırlar altta, pivotlar sağa kayar, pivotların altı $0$.',
+        'Eşelon form: sıfır satırlar altta, pivotlar sağa kayar, pivotların altı $0$.',
         'İndirgenmiş: pivotlar $1$, pivot sütununun geri kalanı $0$.',
-        'Basamak form tek değil; indirgenmiş basamak form tek.',
+        'Eşelon form tek değil; indirgenmiş eşelon form tek.',
         'İndirgenmiş formdan çözüm doğrudan okunur.',
       ],
     },
