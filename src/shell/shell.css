@@ -1202,7 +1202,7 @@ a.dz-button[data-kind="primary"] {
   color: var(--ink-2);
 }
 .sh-segment[aria-pressed="true"] {
-  background: var(--surface-raised);
+  background: var(--control-selected);
   color: var(--ink-1);
   font-weight: var(--weight-semibold);
   box-shadow: var(--shadow-1);
