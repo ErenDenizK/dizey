@@ -8,7 +8,9 @@
 .dz-app {
   position: fixed;
   inset: 0;
-  overflow: hidden;
+  /* clip, not just hidden: a hidden box can still be scrolled by focus or find-in-page, which
+     carried the tab bar and the routes out of place. */
+  overflow: clip;
   /* What shows around a screen that recedes behind a sheet. */
   background: var(--backdrop);
 }

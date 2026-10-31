@@ -155,7 +155,10 @@ test('backup round-trips progress', async ({ page }) => {
     mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(backup)),
   })
+  // Restoring reloads the page; wait for that load, not for the old page still on screen.
+  const reloaded = page.waitForEvent('load')
   await page.getByRole('button', { name: 'Geri yükle', exact: true }).click()
+  await reloaded
   await expect(page.getByTestId('app-version')).toBeVisible()
   expect(await page.evaluate((k) => localStorage.getItem(k), key)).toBe(
     '{"d1-determinant":{"at":null,"doneAt":1,"answers":{}}}',
