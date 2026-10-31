@@ -2,6 +2,7 @@ import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, use
 import { engine } from '../engine/driver'
 import { project, VelocityTracker } from '../engine/gesture'
 import { CHOREO, GESTURE, PRESS } from '../engine/tokens'
+import { playSound } from '../sound/player'
 
 /**
  * A pushed screen over a root screen (hierarchical navigation inside a tab).
@@ -48,6 +49,15 @@ export function Push({
       if (under.current) under.current.style.transform = ''
     }
   }, [shown !== null, under])
+
+  // A pushed screen sounds as it comes in and as it goes back, by tap or by swipe.
+  const isOpen = content !== null
+  const wasOpen = useRef(isOpen)
+  useEffect(() => {
+    if (isOpen === wasOpen.current) return
+    wasOpen.current = isOpen
+    playSound(isOpen ? 'open' : 'close')
+  }, [isOpen])
 
   useEffect(() => {
     const el = layer.current

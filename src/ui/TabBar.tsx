@@ -2,6 +2,7 @@ import { type ComponentType, useEffect, useLayoutEffect, useRef } from 'react'
 import { engine } from '../engine/driver'
 import { rubberClamp, VelocityTracker } from '../engine/gesture'
 import { PRESS } from '../engine/tokens'
+import { playSound } from '../sound/player'
 import { Pressable } from './Pressable'
 
 export interface Tab<Id extends string> {
@@ -152,7 +153,10 @@ export function TabBar<Id extends string>({
       const goal = edgesOf(el, tabs.length, i)
       engine.withChannel('chrome', () => engine.to(lensEl, goal, 'snap', { velocity: { l: vx, r: vx } }))
       const tab = tabs[i]
-      if (tab && tab.id !== current) onSelect(tab.id)
+      if (tab && tab.id !== current) {
+        playSound('tab', { index: i })
+        onSelect(tab.id)
+      }
     }
     el.addEventListener('pointerdown', down)
     el.addEventListener('pointermove', move)
@@ -170,12 +174,15 @@ export function TabBar<Id extends string>({
     <nav ref={bar} className="dz-tabbar" aria-label={label} style={{ ['--tabs' as string]: tabs.length }}>
       <div className="dz-tabbar-material" />
       <div ref={lens} className="dz-tabbar-lens" style={{ width: LENS_BASE }} />
-      {tabs.map((tab) => {
+      {tabs.map((tab, i) => {
         const active = tab.id === current
         return (
           <Pressable
             key={tab.id}
             className="dz-tab"
+            // Each tab has its own note of the home chord; the tab already open just taps.
+            data-sound={active ? 'tap' : 'tab'}
+            data-sound-index={i}
             aria-current={active ? 'page' : undefined}
             onClick={() => {
               if (!active) onSelect(tab.id)

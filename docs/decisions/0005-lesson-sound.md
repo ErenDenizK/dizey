@@ -44,3 +44,18 @@ Each event has a loudness target (LUFS, momentary maximum), and frequent sounds 
 - If a voice, chord or event changes, rerun `calibrate()` in a browser and paste the new values into `TRIM`.
 - Sounds start on the beat frame's cue. They do not wait for the motion to settle, so a long spring can sound slightly early.
 - We have not yet tested on a real iPhone how this behaves alongside Bluetooth latency and other apps' audio. That is the first thing to check on Eren's phone.
+
+## Addendum (0.16.0): every interaction sounds
+
+Eren asked (2026-10-31) for a sound system that makes every interaction fun, fully integrated. Before this, only lesson beats and answers made a sound, so the shell was silent, and on an iPhone with the silent switch on nothing played at all, which reads as "sound is broken".
+
+- **Touch tier**, quieter than every lesson sound, all drawn from the chord on screen (the home chord in the shell, the step's chord inside a lesson):
+  - **tap** (−50): any button or link. **tab** (−47): each tab its own note of the home chord. **toggleOn / toggleOff** (−47 / −48): two notes rising or falling. **open / close** (−46 / −49): sheets and pushed screens, however they are opened or dismissed. **step** (−47): a new lesson step sounds its chord with the bass, so the chord walk is heard as you move.
+  - Touch sounds never lift the pedal (`pedal: false`), so a tap cannot cut off the lesson end still ringing, and they take part in the half-pedal ducking with the frequent sounds.
+- **lessonOpen** (−36, question tier): the home chord and a short rise when a lesson opens.
+- **Wiring:** one capture `click` listener in `player.ts` plays `tap` for any control. The nearest `data-sound` overrides it with an event name or `none` (answers, keypad, next step and the exam rehearsal play their own sound or stay silent); `data-sound-index` picks a voice. New controls therefore sound without extra code.
+- **Silent switch:** still obeyed by default. Ben has "Sessiz modda da çal", which sets `navigator.audioSession.type = 'playback'` (sounds through the switch, may pause other apps' music).
+- **Haptics** (`haptics.ts`): one light tick on an answer and on a finished lesson. iOS 18+ via a hidden native switch toggled inside the tap; Android via `navigator.vibrate`. Off switch in Ben.
+- **iOS unlock:** a one-sample silent buffer plays inside the first tap, for older iOS versions.
+- **Sound lab** at `/lab/sounds` (Ben → Sesler → Sesleri dinle): every event, the place in the lesson that picks its chord, and a short lesson played as sound.
+- Levels were recalibrated with `calibrate()`; the nine existing events came out at exactly their previous trims.
