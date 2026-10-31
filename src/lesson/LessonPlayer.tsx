@@ -4,7 +4,7 @@ import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { SPRINGS } from '../engine/tokens'
+import { SPRINGS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
 import { playSound } from '../sound/player'
@@ -23,6 +23,8 @@ import { compile, emptyStage } from './timeline'
  */
 const LESSON_CHANNEL = 'lesson'
 const FRAME_MS = Math.round(SPRINGS.teach.duration * 1000 * 1.25)
+// Teaching motion plays at the old app's teaching pace until beats infer their own tempo class.
+engine.setTempo(LESSON_CHANNEL, TEMPO_CLASSES.teach.pace)
 
 /** First-try answers in a row that turn the correct chord into a streak. */
 const STREAK = 3

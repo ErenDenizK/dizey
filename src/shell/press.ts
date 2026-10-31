@@ -1,5 +1,5 @@
 import { engine } from '../engine/driver'
-import { PRESS_SCALE } from '../engine/tokens'
+import { pressIn, pressOut } from '../engine/press'
 
 /**
  * Press feedback for plain `.sh-press` buttons in the lesson player and the rehearsal, which are not
@@ -11,13 +11,13 @@ export function installPressFeedback(): () => void {
     const target = event.target instanceof Element ? event.target.closest<HTMLElement>('.sh-press') : null
     if (!target || target.matches(':disabled')) return
     pressed = target
-    engine.withChannel('chrome', () => engine.to(target, { scale: PRESS_SCALE }, 'tap'))
+    engine.withChannel('chrome', () => pressIn(engine, target))
   }
   const up = () => {
     if (!pressed) return
     const target = pressed
     pressed = null
-    engine.withChannel('chrome', () => engine.to(target, { scale: 1 }, 'release'))
+    engine.withChannel('chrome', () => pressOut(engine, target))
   }
   document.addEventListener('pointerdown', down)
   document.addEventListener('pointerup', up)

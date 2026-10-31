@@ -1,69 +1,93 @@
 import type { SpringSpec } from './spring'
 
 /**
- * Dizey's motion vocabulary. Every value is a decision recorded in docs/design/motion-system.md,
- * with its evidence; changes are logged in docs/research/motion-tuning.md. Components never
- * write a duration or curve of their own: they name one of these.
- *
- * Durations are perceptual (seconds until the motion looks finished). For bounce 0 the motion is
- * within 1% of its distance at about 1.05x the duration and within 5% at about 0.75x.
+ * Converts the old app's spring notation (stiffness k at mass 1, damping ratio zeta) into ours. The two
+ * are exactly equivalent: w0 = sqrt(k) = 2*pi / duration and bounce = 1 - zeta (see spring.ts).
  */
+function fromStiffness(k: number, zeta: number): SpringSpec {
+  return { duration: (2 * Math.PI) / Math.sqrt(k), bounce: 1 - zeta }
+}
+
+/**
+ * Dizey's motion vocabulary: the old app's spring table, value for value (decision 0006; inventory
+ * docs/research/old-ui-inventory.md section 1.1). Components name one of these and never write a duration
+ * or curve of their own. Teaching motion is never played at the raw table time: the lesson channel's
+ * tempo (TEMPO_CLASSES) scales it.
+ */
+const OLD = {
+  /** A finger landing on a control. */
+  press: fromStiffness(3800, 1),
+  /** Small controls changing state; the release of a press. */
+  ui: fromStiffness(1400, 0.9),
+  /** Things that move across part of the screen. */
+  move: fromStiffness(700, 0.9),
+  /** Whole screens and sheets. */
+  page: fromStiffness(300, 0.9),
+  /** Teaching motion (before the tempo class scales it). */
+  teach: fromStiffness(170, 0.8),
+  /** The vertical half of a teaching move. */
+  teachY: fromStiffness(260, 0.86),
+  /** A value landing with one bounce. */
+  land: fromStiffness(400, 0.6),
+  /** Opacity and colour; also every effect whose preset would overshoot. */
+  fade: fromStiffness(1600, 1),
+  /** A shake started with a push (velocity), e.g. a wrong option. */
+  shake: fromStiffness(1300, 0.2),
+  /** A stroke or word being drawn; it reads from half ink (DRAW_READ). */
+  draw: fromStiffness(200, 1),
+  /** Leaving: quick and without bounce. */
+  leave: fromStiffness(2600, 1),
+  /** The quickest any appearance may be: invisible to 0.9 opacity in 175 ms (the entrance floor). */
+  enter: fromStiffness(500, 1),
+  /** A carried number, horizontal: peaks under the eye's pursuit limit and lands in about 0.6 s. */
+  carry: fromStiffness(110, 0.9),
+  /** A carried number, vertical: stiffer than `carry`, so the path curves (down first). */
+  carryY: fromStiffness(160, 0.95),
+  /** A carried number in a group whose paths would cross: sideways first, a row apart. */
+  carrySide: fromStiffness(300, 1),
+} as const satisfies Record<string, SpringSpec>
+
 export const SPRINGS = {
-  /** A finger landing on a control: the press-down. Fast enough to feel caused by the touch. */
-  tap: { duration: 0.14, bounce: 0 },
-  /** The finger lifting: the control springs back with a trace of give, like a real key. */
-  release: { duration: 0.34, bounce: 0.22 },
-  /** Opacity, colour and blur. Effects never overshoot (an opacity of 1.08 means nothing). */
-  fade: { duration: 0.22, bounce: 0 },
-  /** Small controls changing state: tab lens, switch knob, check marks, segmented choice. */
-  snap: { duration: 0.32, bounce: 0.16 },
-  /** Things that move across part of the screen: cards reordering, a sheet changing detent. */
-  glide: { duration: 0.42, bounce: 0 },
-  /** Whole screens: push, pop, a sheet opening, a card growing into the lesson stage. */
-  page: { duration: 0.5, bounce: 0 },
-  /** The end of a throw, or a rare earned moment (mastery seal): physical, with momentum. */
-  settle: { duration: 0.55, bounce: 0.32 },
-  /** Teaching motion inside lessons: slower so the eye can follow a number to its place. */
-  teach: { duration: 0.72, bounce: 0.08 },
+  ...OLD,
+  // Names the current components use, bound to the old preset that does the same job.
+  /** = press */
+  tap: OLD.press,
+  /** = ui (the old release of a press) */
+  release: OLD.ui,
+  /** = ui */
+  snap: OLD.ui,
+  /** = move */
+  glide: OLD.move,
+  /** = land */
+  settle: OLD.land,
 } as const satisfies Record<string, SpringSpec>
 
 export type SpringName = keyof typeof SPRINGS
 
-/**
- * Names used by code written against the previous engine, mapped to the new tokens so that code keeps
- * working. Deprecated: new code names a token from SPRINGS.
- */
-export const LEGACY_NAMES = {
-  press: 'tap',
-  land: 'settle',
-  ui: 'snap',
-  move: 'glide',
-} as const satisfies Record<string, SpringName>
-export type LegacyName = keyof typeof LEGACY_NAMES
+/** Kept for type compatibility; every old name is now a real token. */
+export const LEGACY_NAMES = {} as const satisfies Record<string, SpringName>
+export type LegacyName = never
 
-/** Deprecated fixed press scale; new code uses pressScale(width). */
-export const PRESS_SCALE = 0.97
+/** An opacity spring from at most ENTRANCE.low to at least ENTRANCE.full is an entrance: never quicker than `enter`. */
+export const ENTRANCE = { low: 0.1, full: 0.9 } as const
+
+/** Every press, buttons, tabs, tiles and the stage card alike ("a softer press is missed"). */
+export const PRESS_SCALE = 0.96
 
 /**
- * Press depth: every pressable sinks by the same physical distance, so a wide card and a small
- * button feel like the same material. Scale is derived from the element's width.
+ * Press feel: half the depth is drawn in the same frame as the touch, the spring takes the rest; a press
+ * released before it was drawn is drawn now at its full depth, so the next frame always shows the tap.
  */
 export const PRESS = {
-  /** Pixels the element's edges move inwards on each side. */
-  depth: 3,
-  /** Bounds so tiny icons do not collapse and huge cards still respond visibly. */
-  minScale: 0.92,
-  maxScale: 0.985,
-  /** Highlight overlay opacity while pressed. */
-  dim: 0.06,
+  /** Fraction of the depth drawn at once on touch. */
+  first: 0.5,
   /** A finger that moves farther than this (px) is scrolling, not pressing: the press cancels. */
   slop: 10,
 } as const
 
-export function pressScale(width: number): number {
-  if (!(width > 0)) return PRESS.maxScale
-  const scale = 1 - (2 * PRESS.depth) / width
-  return Math.min(PRESS.maxScale, Math.max(PRESS.minScale, scale))
+/** Deprecated: every pressable now uses PRESS_SCALE, as in the old app. */
+export function pressScale(_width?: number): number {
+  return PRESS_SCALE
 }
 
 /** Gesture physics (UIKit's documented values; see the research report). */
@@ -80,10 +104,47 @@ export const GESTURE = {
   edge: 24,
 } as const
 
-/** Choreography: offsets between related motions. Short, and never blocking input. */
+/** Choreography timings (ms) for the chrome, from the old app (inventory 1.4). Beats keep their own cue times. */
+export const CHOREO_MS = {
+  stagger: 35,
+  beatDelay: 420,
+  openDelay: 180,
+  revealDelay: 160,
+  correctDelay: 220,
+  sheetDelay: 380,
+  mascotDelay: 140,
+  /** Ripple across tiles and progress segments: px per ms, and the longest delay. */
+  waveSpeed: 1.4,
+  waveMax: 240,
+  cellStagger: 80,
+  glideHead: 90,
+  tilesHead: 70,
+  mapFadeDelay: 120,
+  leaveHead: 120,
+  markHold: 360,
+  endMarksDelay: 600,
+  noticeHold: 1800,
+  prepHold: 1000,
+  fontWait: 500,
+  idlePoll: 50,
+} as const
+
+/** Entrance travel (px) per part of the screen, from the old app. */
+export const SHIFT = { enter: 12, narr: 14, scene: 10, dock: 16, tiles: 36, count: 6 } as const
+
+/** Narration and dock enter from this opacity, so a step change never shows an empty frame. */
+export const ENTER_FLOOR = 0.35
+
+/** A drawn word reads from half ink: when the critically damped `draw` spring passes 0.5 (w0*t = 1.678), in ms. */
+export const DRAW_READ = (1678 / (2 * Math.PI)) * SPRINGS.draw.duration
+
+/** Particle physics for celebrations (px, ms). */
+export const PHYSICS = { gravity: 2.2e-3, drag: 0.9985, spin: 0.7 } as const
+
+/** Choreography used by the current shell components (sheet, push). */
 export const CHOREO = {
-  /** Delay between items of a list entering for the first time. */
-  stagger: 0.03,
+  /** Delay between items of a list entering for the first time (s). */
+  stagger: CHOREO_MS.stagger / 1000,
   /** At most this many items get a stagger; the rest enter with the last one. */
   staggerMax: 6,
   /** How far outgoing screens drift during a push, as a fraction of the screen width. */
@@ -94,17 +155,33 @@ export const CHOREO = {
   sheetScrim: 0.36,
   /** The screen behind a sheet recedes to this scale. */
   sheetRecede: 0.94,
-  /**
-   * Launch for tap-started screen motion (push, pop, sheet open): the first frame after a tap already
-   * moves, as if the finger had flicked it. 1 would be a pure ease-out; 0.6 keeps a soft start.
-   */
+  /** Launch for tap-started screen motion: the first frame after a tap already moves. */
   launch: 0.6,
-  /** Entrance travel in px: items rise into place from this far below. */
-  rise: 8,
+  /** Entrance travel in px (old SHIFT.enter). */
+  rise: SHIFT.enter,
 } as const
 
-/** The lesson tempo multiplies teaching durations (1 = as written). */
-export const TEMPO = { chrome: 1, teach: 1 } as const
+/**
+ * Teaching pace: every teaching motion takes TEACH_PACE times its table time (Eren 2026-10-26: "slower
+ * teaching tempo"). Chrome motion never uses it.
+ */
+export const TEACH_PACE = 1.6
+/** Cue-timed beats also scale their cue times by this, so each line is readable for about 1.2 s. */
+export const CUE_TEMPO = 1.5
+
+/**
+ * Tempo classes: a beat's pace comes from what it teaches, inferred from the beat, never set per lesson.
+ * `pace` scales a runner beat (springs, leads, staggers); `cue` scales a cue-timed beat.
+ */
+export const TEMPO_CLASSES = {
+  /** Marks, signs, labels, layout: nothing travels and nothing is calculated. */
+  quick: { pace: 1, cue: 1 },
+  /** A move this lesson has already shown at the teaching pace. */
+  repeat: { pace: 1.1, cue: CUE_TEMPO * 1.1 },
+  /** The new idea, the first time. */
+  teach: { pace: TEACH_PACE, cue: CUE_TEMPO * TEACH_PACE },
+} as const
+export type TempoClass = keyof typeof TEMPO_CLASSES
 
 /** The longest frame step the driver feeds the clock (ms); longer gaps are treated as this. */
 export const MAX_FRAME_MS = 64

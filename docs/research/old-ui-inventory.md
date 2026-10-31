@@ -81,25 +81,25 @@ The architecture is the same as ours: one virtual clock for cues, springs and ti
 
 The old engine is written as stiffness `k` (mass 1) and damping ratio `zeta`. Ours is written as perceptual duration
 and bounce, with `w0 = 2π / duration` and `zeta = 1 - bounce` (`src/engine/spring.ts`). The two are exactly
-equivalent: `duration = 2π / √k`, `bounce = 1 - zeta`. Porting means adding these presets under their old names.
+equivalent: `duration = 2π / √k`, `bounce = 1 - zeta`. Ported in 0.13.0: `src/engine/tokens.ts` holds the table under the old names; the current names (`tap`, `release`, `snap`, `glide`, `settle`) are bound to the old preset doing the same job.
 
 | Old preset | k | zeta | = duration (s) | = bounce | Current nearest | Status |
 | --- | --- | --- | --- | --- | --- | --- |
-| `press` | 3800 | 1 | 0.102 | 0.00 | `tap` 0.14 / 0 | differs |
-| `ui` | 1400 | 0.9 | 0.168 | 0.10 | `snap` 0.32 / 0.16 | differs |
-| `move` | 700 | 0.9 | 0.237 | 0.10 | `glide` 0.42 / 0 | differs |
-| `page` | 300 | 0.9 | 0.363 | 0.10 | `page` 0.5 / 0 | differs |
-| `teach` | 170 | 0.8 | 0.482 | 0.20 | `teach` 0.72 / 0.08 | differs |
-| `teachY` | 260 | 0.86 | 0.390 | 0.14 | none | missing |
-| `land` | 400 | 0.6 | 0.314 | 0.40 | `settle` 0.55 / 0.32 | differs |
-| `fade` | 1600 | 1 | 0.157 | 0.00 | `fade` 0.22 / 0 | differs |
-| `shake` | 1300 | 0.2 | 0.174 | 0.80 | none | missing |
-| `draw` | 200 | 1 | 0.444 | 0.00 | none | missing |
-| `leave` | 2600 | 1 | 0.123 | 0.00 | none | missing |
-| `enter` | 500 | 1 | 0.281 | 0.00 | none | missing |
-| `carry` | 110 | 0.9 | 0.599 | 0.10 | none (chips use `teach`) | missing |
-| `carryY` | 160 | 0.95 | 0.497 | 0.05 | none | missing |
-| `carrySide` | 300 | 1 | 0.363 | 0.00 | none | missing |
+| `press` | 3800 | 1 | 0.102 | 0.00 | `tap` 0.14 / 0 | same |
+| `ui` | 1400 | 0.9 | 0.168 | 0.10 | `snap` 0.32 / 0.16 | same |
+| `move` | 700 | 0.9 | 0.237 | 0.10 | `glide` 0.42 / 0 | same |
+| `page` | 300 | 0.9 | 0.363 | 0.10 | `page` 0.5 / 0 | same |
+| `teach` | 170 | 0.8 | 0.482 | 0.20 | `teach` 0.72 / 0.08 | same |
+| `teachY` | 260 | 0.86 | 0.390 | 0.14 | none | same |
+| `land` | 400 | 0.6 | 0.314 | 0.40 | `settle` 0.55 / 0.32 | same |
+| `fade` | 1600 | 1 | 0.157 | 0.00 | `fade` 0.22 / 0 | same |
+| `shake` | 1300 | 0.2 | 0.174 | 0.80 | none | same |
+| `draw` | 200 | 1 | 0.444 | 0.00 | none | same |
+| `leave` | 2600 | 1 | 0.123 | 0.00 | none | same |
+| `enter` | 500 | 1 | 0.281 | 0.00 | none | same |
+| `carry` | 110 | 0.9 | 0.599 | 0.10 | none (chips use `teach`) | same |
+| `carryY` | 160 | 0.95 | 0.497 | 0.05 | none | same |
+| `carrySide` | 300 | 1 | 0.363 | 0.00 | none | same |
 
 The old app's teaching motion is never played at the raw table time; see 1.2.
 
@@ -107,9 +107,9 @@ The old app's teaching motion is never played at the raw table time; see 1.2.
 
 | Old | Value and meaning | Current | Status |
 | --- | --- | --- | --- |
-| `TEACH_PACE` | 1.6: every teaching motion takes 1.6 × its spring-table time (Eren 2026-10-26: "slower teaching tempo"). Chrome motion never uses it | `TEMPO.teach` 1 | differs |
+| `TEACH_PACE` | 1.6: every teaching motion takes 1.6 × its spring-table time (Eren 2026-10-26: "slower teaching tempo"). Chrome motion never uses it | `TEACH_PACE` 1.6 on the lesson channel (0.13.0) | same |
 | `CUE_TEMPO` | 1.5: cue-timed beats (entry beat, answer reveal) also scale their cue times, so each line is readable about 1.2 s | `FRAME_MS` = teach duration × 1.25 per frame | differs |
-| Tempo classes | `quick` {pace 1, cue 1}: marks, signs, labels, layout, nothing travels. `repeat` {pace 1.1, cue 1.65}: a move this lesson already showed. `teach` {pace 1.6, cue 2.4}: the new idea the first time. Class is inferred from the beat (`tempoClass`, old 12829), never set per lesson | one tempo for all beats | missing |
+| Tempo classes (values in `TEMPO_CLASSES` since 0.13.0; inference comes with the runner) | `quick` {pace 1, cue 1}: marks, signs, labels, layout, nothing travels. `repeat` {pace 1.1, cue 1.65}: a move this lesson already showed. `teach` {pace 1.6, cue 2.4}: the new idea the first time. Class is inferred from the beat (`tempoClass`, old 12829), never set per lesson | one tempo for all beats | missing |
 | Tempo maths | Tempo `t` scales stiffness by 1/t² and pushes (initial velocities) by 1/t; damping ratio stays | same (duration × tempo) | same |
 | `chromeDelay` | A wait scheduled on a teaching channel that belongs to the chrome timeline undoes the channel tempo | none | missing |
 | `whenIdle(name, fn)` | Runs `fn` once a channel has no cues, motion or runner left (polls every 50 ms) | none | missing |
@@ -119,8 +119,8 @@ The old app's teaching motion is never played at the raw table time; see 1.2.
 | Rule (old) | Current | Status |
 | --- | --- | --- |
 | Reduced motion: only opacity animates; every other property lands at once | same (`effect` props still animate) | same |
-| Effects (opacity and custom channels) never overshoot: an underdamped preset is replaced by `fade` for them | effects use the preset's duration with bounce 0 | differs (duration) |
-| Entrance floor: an opacity spring from ≤ 0.1 to ≥ 0.9 is never quicker than `enter` (0.281 s), "nothing pops in" | none | missing |
+| Effects (opacity and custom channels) never overshoot: an underdamped preset is replaced by `fade` for them | same (0.13.0) | same |
+| Entrance floor: an opacity spring from ≤ 0.1 to ≥ 0.9 is never quicker than `enter` (0.281 s), "nothing pops in" | same (0.13.0, `ENTRANCE`) | same |
 | A new target starts from the live value and velocity (interruptible) | same | same |
 | `velocity` option: a push in units/s (shake, hop start at rest with a push), divided by tempo | `velocity` exists | check in step 2 |
 | `kScale` option: a long carry softens its stiffness to stay under the eye's pursuit limit (~1000 px/s) | none | missing |
@@ -161,7 +161,7 @@ The old app's teaching motion is never played at the raw table time; see 1.2.
 
 | Old `SHIFT` (px, entrance travel) | Value | Current | Status |
 | --- | --- | --- | --- |
-| `enter` | 12 | `CHOREO.rise` 8 | differs |
+| `enter` | 12 | `SHIFT.enter` / `CHOREO.rise` 12 | same |
 | `narr` | 14 | none | missing |
 | `scene` | 10 | none | missing |
 | `dock` | 16 | none | missing |
@@ -171,7 +171,7 @@ The old app's teaching motion is never played at the raw table time; see 1.2.
 | Other | Old | Current | Status |
 | --- | --- | --- | --- |
 | `ENTER_FLOOR` | Narration and dock enter from opacity 0.35, so a step change never shows an empty frame | none | missing |
-| `PRESS_SCALE` | 0.96 for every pressable: buttons, tabs, tiles, stage card ("a softer press is missed") | width-based depth 3 px, scale 0.92-0.985 | differs |
+| `PRESS_SCALE` | 0.96 for every pressable: buttons, tabs, tiles, stage card ("a softer press is missed"); half the depth drawn on touch, minimum depth on release, release on `ui` | same (0.13.0, `pressIn`/`pressOut`); stage-card press comes with step 3 | same |
 | `LOCKED_SHAKE` | A locked tile shakes about 5 px (push 180 px/s on `shake`) | no locks | dropped (no locks, decision 0003) |
 | `DRAW_READ` | A drawn word reads from half ink: `1678 / √k(draw)` ms ≈ 119 ms | none | missing |
 | Particles | gravity 0.0022 px/ms², drag 0.9985 per ms, spin 0.7 | none | missing |
