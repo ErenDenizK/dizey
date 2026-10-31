@@ -1,11 +1,12 @@
 import { useRef, useState } from 'react'
 import { dayLabel } from '../content/exam'
 import { lessons } from '../content/lessons'
+import { chapters } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { RichText } from '../exam/Blocks'
 import { useExam } from '../exam/store'
-import { type LessonState, stateOf } from '../lesson/state'
+import { stateOf } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { type Backup, createBackup, parseBackup, readEntries, restoreEntries } from '../lib/backup/backup'
 import { buildInfo } from '../lib/build-info'
@@ -18,54 +19,99 @@ import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Switch } from '../ui/Switch'
-import { Glyph } from './Glyph'
 import { PressLink } from './PressLink'
+import './me.css'
 
 export function MeView() {
-  const records = useLessonRecords()
-  const counts = { done: 0, current: 0, new: 0 }
-  for (const lesson of lessons) counts[stateOf(records[lesson.id])]++
-
   return (
     <Screen title={strings.me.title}>
-      <p className="dz-subhead sh-lead">{strings.me.subtitle}</p>
-      <div className="dz-card sh-stats">
-        <Stat state="done" value={counts.done} label={strings.me.statDone} />
-        <Stat state="current" value={counts.current} label={strings.me.statOpen} />
-        <Stat state="new" value={counts.new} label={strings.me.statNew} />
-      </div>
+      <CourseMatrix />
       <MistakeLog />
       <h2 className="dz-section-label">{strings.me.settings}</h2>
       <div className="dz-list">
-        <ExamDateSetting />
         <ThemeSetting />
         <SoundSetting />
+        <ExamDateSetting />
       </div>
       <h2 className="dz-section-label">{strings.me.data}</h2>
       <div className="dz-list">
         <BackupSettings />
       </div>
-      <p className="dz-footnote sh-version" data-testid="app-version">
-        {versionLine()}
-      </p>
+      <footer className="me-foot">
+        <span className="me-foot__mark" aria-hidden="true">
+          [<b>{strings.appName}</b>]
+        </span>
+        <span className="dz-footnote" data-testid="app-version">
+          {versionLine()}
+        </span>
+      </footer>
     </Screen>
   )
 }
 
-function Stat({ state, value, label }: { state: LessonState; value: number; label: string }) {
+/**
+ * The profile's head: the whole course as one matrix, a row per chapter and a cell per lesson, beside the
+ * three numbers that matter before the exam. It is the same picture as the Dersler path, folded small.
+ */
+function CourseMatrix() {
+  const records = useLessonRecords()
+  const { outcomes, history } = useExam()
+  const done = lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
+  const mistakes = openMistakes(lessons, records, questions, outcomes).length
+  const best = history.reduce<(typeof history)[number] | null>(
+    (top, entry) => (!top || entry.percent > top.percent ? entry : top),
+    null,
+  )
+  const widest = Math.max(...chapters.map((chapter) => chapter.lessons.length))
   return (
-    <div className="sh-stat">
-      <Glyph state={state} />
-      <b className="dz-title2 num">{value}</b>
-      <span className="dz-footnote">{label}</span>
-    </div>
+    <section className="me-hero" aria-label={strings.me.matrix}>
+      <div className="me-hero__matrix" style={{ '--cols': widest } as React.CSSProperties}>
+        {chapters.map((chapter) => (
+          <div key={chapter.id} className="me-hero__row" title={chapter.label}>
+            {chapter.lessons.map((lesson) => (
+              <i key={lesson.id} data-state={stateOf(records[lesson.id])} />
+            ))}
+          </div>
+        ))}
+      </div>
+      <dl className="me-hero__stats">
+        <div>
+          <dt className="dz-footnote">{strings.me.statLessons}</dt>
+          <dd className="num">
+            {done}
+            <small> / {lessons.length}</small>
+          </dd>
+        </div>
+        <div>
+          <dt className="dz-footnote">{strings.me.statMistakes}</dt>
+          <dd className="num">{mistakes}</dd>
+        </div>
+        <div>
+          <dt className="dz-footnote">{strings.me.statExam}</dt>
+          <dd className="num">
+            {best ? (
+              <>
+                {best.correct}
+                <small> / {best.total}</small>
+              </>
+            ) : (
+              <small>{strings.me.statExamNone}</small>
+            )}
+          </dd>
+        </div>
+      </dl>
+    </section>
   )
 }
+
+const MISTAKES_SHOWN = 3
 
 function MistakeLog() {
   const records = useLessonRecords()
   const { outcomes } = useExam()
+  const [all, setAll] = useState(false)
   const list = openMistakes(lessons, records, questions, outcomes)
+  const shown = all ? list : list.slice(0, MISTAKES_SHOWN)
   return (
     <section aria-labelledby="mistakes">
       <h2 id="mistakes" className="dz-section-label">
@@ -75,7 +121,7 @@ function MistakeLog() {
       {list.length ? (
         <>
           <ul className="dz-list sh-mistakes">
-            {list.map((mistake) => (
+            {shown.map((mistake) => (
               <li
                 key={
                   mistake.source === 'lesson' ? `${mistake.lessonId}:${mistake.stepId}` : mistake.questionId
@@ -107,6 +153,13 @@ function MistakeLog() {
                 )}
               </li>
             ))}
+            {list.length > MISTAKES_SHOWN ? (
+              <li>
+                <Pressable className="me-more" aria-expanded={all} onClick={() => setAll(!all)}>
+                  {all ? strings.me.mistakesLess : strings.me.mistakesMore(list.length - MISTAKES_SHOWN)}
+                </Pressable>
+              </li>
+            ) : null}
           </ul>
           <p className="dz-footnote sh-hint">{strings.me.mistakesHint}</p>
         </>
@@ -117,10 +170,25 @@ function MistakeLog() {
   )
 }
 
+/** A setting's leading mark: a small tile in the row, like the lesson tiles. */
+function Lead({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="me-lead" aria-hidden="true">
+      <svg viewBox="0 0 20 20" aria-hidden="true">
+        {children}
+      </svg>
+    </span>
+  )
+}
+
 function ExamDateSetting() {
   const settings = useSettings()
   return (
     <label className="dz-row">
+      <Lead>
+        <rect x="3" y="4.5" width="14" height="12.5" rx="3" />
+        <path d="M3 8.5h14M7 2.5v4M13 2.5v4" />
+      </Lead>
       <span className="dz-row-main">
         {strings.me.examDate}
         <small className="dz-footnote sh-row-sub">
@@ -148,7 +216,11 @@ function ThemeSetting() {
   const settings = useSettings()
   const value = settings.theme ?? 'system'
   return (
-    <div className="dz-row">
+    <div className="dz-row me-theme">
+      <Lead>
+        <circle cx="10" cy="10" r="6.5" />
+        <path d="M10 3.5a6.5 6.5 0 0 0 0 13z" className="me-lead__fill" />
+      </Lead>
       <span className="dz-row-main" id="theme-label">
         {strings.me.appearance}
       </span>
@@ -175,6 +247,10 @@ function SoundSetting() {
   const settings = useSettings()
   return (
     <div className="dz-row">
+      <Lead>
+        <path d="M3.5 8v4h3l4 3.5v-11L6.5 8z" />
+        <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" />
+      </Lead>
       <span className="dz-row-main">
         {strings.me.sound}
         <small className="dz-footnote sh-row-sub">{strings.me.soundHint}</small>
@@ -230,6 +306,9 @@ function BackupSettings() {
         onChange={(event) => void chooseFile(event.currentTarget.files?.[0])}
       />
       <Pressable className="dz-row" onClick={() => void exportBackup()}>
+        <Lead>
+          <path d="M10 3v9M6.5 6.5 10 3l3.5 3.5M4 11.5V15a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.5" />
+        </Lead>
         <span className="dz-row-main">
           {strings.me.backup}
           <small className="dz-footnote sh-row-sub">{strings.me.backupHint}</small>
@@ -239,6 +318,9 @@ function BackupSettings() {
         </span>
       </Pressable>
       <Pressable className="dz-row" onClick={() => file.current?.click()}>
+        <Lead>
+          <path d="M10 12V3M6.5 8.5 10 12l3.5-3.5M4 11.5V15a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.5" />
+        </Lead>
         <span className="dz-row-main">
           {strings.me.restore}
           <small className="dz-footnote sh-row-sub">{strings.me.restoreHint}</small>

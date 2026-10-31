@@ -16,25 +16,15 @@ const stroke = {
 
 const softFill = (active?: boolean) => ({ fill: 'currentColor', fillOpacity: active ? 0.18 : 0 })
 
-/** Today: the next step, a filled cell in a 2 x 2 matrix. */
-export function TodayIcon({ active }: IconProps) {
+/** Dersler: a 2 x 2 matrix in brackets, its first entry done. */
+export function PathIcon({ active }: IconProps) {
   return (
     <svg viewBox="0 0 26 26" aria-hidden="true">
-      <rect x="4" y="4" width="18" height="18" rx="5" {...stroke} {...softFill(active)} />
-      <path d="M13 4v18M4 13h18" {...stroke} strokeOpacity={0.55} />
-      <rect x="5.6" y="5.6" width="5.8" height="5.8" rx="1.6" fill="currentColor" />
-    </svg>
-  )
-}
-
-/** Map: topics connected by prerequisites. */
-export function MapIcon({ active }: IconProps) {
-  return (
-    <svg viewBox="0 0 26 26" aria-hidden="true">
-      <path d="M8 8.5 13 17.5M18 8.5 13 17.5" {...stroke} />
-      <circle cx="7.5" cy="7.5" r="3.2" {...stroke} {...softFill(active)} />
-      <circle cx="18.5" cy="7.5" r="3.2" {...stroke} {...softFill(active)} />
-      <circle cx="13" cy="19" r="3.2" {...stroke} {...softFill(active)} />
+      <path d="M5.5 4H4v18h1.5M20.5 4H22v18h-1.5" {...stroke} />
+      <rect x="6.6" y="6.2" width="5.6" height="5.6" rx="1.6" fill="currentColor" />
+      <rect x="13.8" y="6.2" width="5.6" height="5.6" rx="1.6" {...stroke} {...softFill(active)} />
+      <rect x="13.8" y="14.2" width="5.6" height="5.6" rx="1.6" {...stroke} {...softFill(active)} />
+      <rect x="6.6" y="14.2" width="5.6" height="5.6" rx="1.6" {...stroke} {...softFill(active)} />
     </svg>
   )
 }

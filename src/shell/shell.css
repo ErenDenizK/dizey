@@ -100,27 +100,6 @@
 }
 
 /* mastery glyph */
-.sh-glyph {
-  display: grid;
-  grid-template-columns: repeat(2, 7px);
-  gap: 2px;
-  flex: none;
-}
-.sh-glyph i {
-  width: 7px;
-  height: 7px;
-  border-radius: 2px;
-  border: 1.25px solid var(--sh-soft-strong);
-}
-.sh-glyph i.on {
-  background: var(--sh-ink);
-  border-color: var(--sh-ink);
-}
-.sh-glyph[data-state="soon"] i {
-  border-style: dashed;
-}
-
-/* first launch */
 .sh-onb {
   position: fixed;
   inset: 0;
@@ -1154,49 +1133,6 @@ a.sh-node {
   margin-top: var(--stack-gap);
 }
 
-/* Today */
-.sh-continue {
-  display: grid;
-  gap: var(--space-2);
-  color: inherit;
-  text-decoration: none;
-}
-.sh-progress {
-  height: 6px;
-  margin-top: var(--space-2);
-  border-radius: var(--corner-pill);
-  background: var(--surface-sunk);
-  overflow: hidden;
-}
-.sh-progress__fill {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--action);
-}
-
-/* Map */
-.sh-unit-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: var(--space-3);
-  margin: var(--group-gap) var(--space-1) 0;
-}
-.sh-unit-head h2 {
-  margin: 0;
-}
-.sh-unit-weight {
-  margin: var(--space-0-5) var(--space-1) var(--space-2);
-}
-.sh-node {
-  display: grid;
-  grid-template-columns: 2.4em 1fr;
-  column-gap: var(--space-2);
-}
-.sh-node > :last-child {
-  grid-column: 2;
-}
 a.dz-row,
 a.dz-card,
 a.dz-button {
@@ -1224,16 +1160,6 @@ a.dz-button[data-kind="primary"] {
   margin: var(--space-0-5) 0 0;
 }
 
-/* Me */
-.sh-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-3);
-}
-.sh-stat {
-  display: grid;
-  gap: var(--space-1);
-}
 .sh-segments {
   display: inline-flex;
   gap: 2px;
@@ -1255,10 +1181,6 @@ a.dz-button[data-kind="primary"] {
   color: var(--ink-1);
   font-weight: var(--weight-semibold);
   box-shadow: var(--shadow-1);
-}
-.sh-version {
-  margin: var(--group-gap) var(--space-1) 0;
-  text-align: center;
 }
 .ex-history__pct {
   min-width: 3.2em;
