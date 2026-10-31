@@ -11,11 +11,14 @@ export function Keypad({
   onChange,
   onSubmit,
   disabled,
+  sound,
 }: {
   value: string
   onChange: (value: string) => void
   onSubmit: () => void
   disabled?: boolean
+  /** data-sound for the whole pad: "none" when the caller plays the keys' sounds itself. */
+  sound?: string
 }) {
   const press = (key: (typeof keys)[number]) => {
     if (key === '⌫') onChange(value.slice(0, -1))
@@ -24,7 +27,7 @@ export function Keypad({
     else if (value.length < 8) onChange(value + key)
   }
   return (
-    <div className="ls-keypad-wrap">
+    <div className="ls-keypad-wrap" data-sound={sound}>
       <output className="ls-answer" aria-label={strings.lesson.answerField}>
         {value || <span className="sh-muted">{strings.lesson.answerPlaceholder}</span>}
       </output>

@@ -11,6 +11,10 @@ export type Settings = {
   theme?: 'light' | 'dark'
   /** Lesson sounds turned off; absent means on (iPhone's silent switch still silences them). */
   sound?: false
+  /** Sounds play even with iPhone's silent switch on (pauses other apps' music); absent means they obey it. */
+  soundInSilent?: true
+  /** Haptic ticks turned off; absent means on. */
+  haptics?: false
 }
 
 const KEY = 'dizey.settings'
@@ -19,12 +23,14 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const value: unknown = JSON.parse(raw ?? '{}')
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-    const { examDate, hideExamClock, theme, sound } = value as Record<string, unknown>
+    const { examDate, hideExamClock, theme, sound, soundInSilent, haptics } = value as Record<string, unknown>
     const settings: Settings = {}
     if (typeof examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(examDate)) settings.examDate = examDate
     if (hideExamClock === true) settings.hideExamClock = true
     if (theme === 'light' || theme === 'dark') settings.theme = theme
     if (sound === false) settings.sound = false
+    if (soundInSilent === true) settings.soundInSilent = true
+    if (haptics === false) settings.haptics = false
     return settings
   } catch {
     return {}
