@@ -31,9 +31,8 @@ type Records = Readonly<Record<string, LessonRecord>>
 /**
  * Dersler: today's next step and the whole map in one screen. The study order is drawn as a path through
  * a stack of matrices, one per chapter, whose entries are the lessons: the path snakes through each
- * matrix row by row, the walked part is solid, the part ahead is dotted, and each matrix's brackets
- * fill as its chapter is finished. The lesson you are on is the one dark tile; the button at the bottom
- * always opens it. Any tile opens its card, so every lesson stays open (no locks).
+ * matrix row by row, the walked part is solid, the part ahead is a quiet rail, and each matrix's brackets
+ * fill as its chapter is finished. The lesson you are on is the one dark tile, and it opens in one tap. Any other tile opens its card, so every lesson stays open (no locks).
  */
 export function PathView() {
   const records = useLessonRecords()
@@ -56,10 +55,11 @@ export function PathView() {
     <Screen title={strings.path.title}>
       <div ref={root} className="pa-root">
         <div className="pa-summary">
-          <p className="dz-subhead">{examLine}</p>
           <p className="pa-summary__count">
-            <b className="num">{doneCount}</b> {strings.path.overallRest(lessons.length)}
+            <b className="num">{doneCount}</b>
+            <span>{strings.path.overallRest(lessons.length)}</span>
           </p>
+          <p className="pa-summary__exam">{examLine}</p>
           <Meter records={records} done={doneCount} />
           {mistakes ? (
             <PressLink to="/me" className="pa-mistakes" pressClass="dz-pressable">
@@ -83,7 +83,7 @@ export function PathView() {
             }}
           />
         ))}
-        <Continue main={main} records={records} />
+        {main ? null : <AllDone />}
       </div>
       {overlayHostRef.current
         ? createPortal(
@@ -180,14 +180,10 @@ function ChapterMatrix({
           <h2 id={`chapter-${chapter.id}`} className="pa-chapter__title">
             {chapter.label}
           </h2>
-          {chapter.examItems ? (
-            <span className="dz-footnote">
-              {strings.path.chapterWeight(chapter.examItems, examItemTotal)}
-            </span>
-          ) : null}
-        </span>
-        <span className="pa-chapter__count num" data-complete={complete || undefined}>
-          {complete ? strings.path.chapterDone : strings.path.chapterCount(done, total)}
+          <span className="pa-chapter__sub" data-complete={complete || undefined}>
+            {complete ? strings.path.chapterDone : strings.path.chapterCount(done, total)}
+            {chapter.examItems ? ` · ${strings.path.chapterWeight(chapter.examItems, examItemTotal)}` : ''}
+          </span>
         </span>
       </header>
       <div ref={box} className="pa-matrix">
@@ -275,25 +271,52 @@ function Tile({
 }) {
   const resuming = main && state === 'current' && record
   const step = resuming ? resumeIndex(lesson, record) + 1 : 0
+  const face = (
+    <>
+      <span className="pa-tile__code num">{pathCode(lesson)}</span>
+      <span className="pa-tile__title">{tileTitle(lesson)}</span>
+      {state === 'done' ? <Check /> : null}
+      {resuming ? (
+        <span className="pa-tile__bar" aria-hidden="true">
+          <i style={{ width: `${(step / lesson.steps.length) * 100}%` }} />
+        </span>
+      ) : null}
+    </>
+  )
   return (
     <>
-      <Pressable
-        className="pa-tile"
-        data-state={state}
-        data-main={main || undefined}
-        data-lesson={lesson.id}
-        aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
-        onClick={() => onPick(lesson)}
-      >
-        <span className="pa-tile__code num">{pathCode(lesson)}</span>
-        <span className="pa-tile__title">{tileTitle(lesson)}</span>
-        {state === 'done' ? <Check /> : null}
-        {resuming ? (
-          <span className="pa-tile__bar" aria-hidden="true">
-            <i style={{ width: `${(step / lesson.steps.length) * 100}%` }} />
-          </span>
-        ) : null}
-      </Pressable>
+      {main ? (
+        // The lesson you are on opens in one tap and grows out of its tile; the others show their card.
+        <PressLink
+          to="/lesson/$id"
+          params={{ id: lesson.id }}
+          className="pa-tile"
+          data-state={state}
+          data-main=""
+          data-lesson={lesson.id}
+          data-testid="continue-card"
+          onClick={(event) => {
+            morphFrom.current = event.currentTarget
+          }}
+          aria-label={
+            resuming
+              ? strings.path.continueAction(pathCode(lesson), lesson.title)
+              : strings.path.startAction(pathCode(lesson), lesson.title)
+          }
+        >
+          {face}
+        </PressLink>
+      ) : (
+        <Pressable
+          className="pa-tile"
+          data-state={state}
+          data-lesson={lesson.id}
+          aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
+          onClick={() => onPick(lesson)}
+        >
+          {face}
+        </Pressable>
+      )}
       {main ? (
         <span className="pa-here" aria-hidden="true">
           {state === 'current' ? strings.path.here.resume : strings.path.here.start}
@@ -312,47 +335,13 @@ function Check() {
   )
 }
 
-/** The one primary action: always the lesson you are on, docked above the tab bar. */
-function Continue({ main, records }: { main: Lesson | null; records: Records }) {
-  if (!main)
-    return (
-      <div className="pa-dock">
-        <p className="pa-dock__note dz-subhead">{strings.path.allDone}</p>
-        <PressLink to="/exam" className="dz-button pa-continue" data-kind="primary" data-wide="">
-          {strings.path.allDoneAction}
-        </PressLink>
-      </div>
-    )
-  const record = records[main.id]
-  const resuming = stateOf(record) === 'current' && record
-  const step = resuming ? resumeIndex(main, record) + 1 : 0
+/** Every lesson done: the path ends in the exam rehearsal. */
+function AllDone() {
   return (
-    <div className="pa-dock">
-      <PressLink
-        to="/lesson/$id"
-        params={{ id: main.id }}
-        className="dz-button pa-continue"
-        data-kind="primary"
-        data-wide=""
-        data-testid="continue-card"
-        onClick={(event) => {
-          morphFrom.current = event.currentTarget
-        }}
-        aria-label={
-          resuming
-            ? strings.path.continueAction(pathCode(main), main.title)
-            : strings.path.startAction(pathCode(main), main.title)
-        }
-      >
-        <span className="pa-continue__verb">{resuming ? strings.path.resume : strings.path.start}</span>
-        <span className="pa-continue__name">
-          {pathCode(main)} · {main.title}
-        </span>
-        <span className="pa-continue__meta num">
-          {resuming
-            ? strings.path.stepCount(step, main.steps.length)
-            : strings.path.lessonSteps(main.steps.length)}
-        </span>
+    <div className="pa-end">
+      <p className="dz-subhead">{strings.path.allDone}</p>
+      <PressLink to="/exam" className="dz-button" data-kind="primary" data-wide="">
+        {strings.path.allDoneAction}
       </PressLink>
     </div>
   )

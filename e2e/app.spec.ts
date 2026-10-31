@@ -18,15 +18,14 @@ const tab = (page: Page, name: string) => page.getByRole('navigation').getByRole
 test('Dersler offers the first lesson on the path', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByRole('heading', { name: 'Dersler', level: 1 })).toBeVisible()
-  await expect(screen(page).getByTestId('continue-card')).toContainText('Başla')
-  await expect(screen(page).getByTestId('continue-card')).toContainText('1.1')
-  await expect(screen(page).getByText('Vize 1 haftası 15 Kasım civarı')).toBeVisible()
+  await expect(screen(page).getByTestId('continue-card')).toHaveAttribute('aria-label', /^Başla: 1\.1 /)
+  await expect(screen(page).getByText('Vize 1 · 15 Kasım civarı')).toBeVisible()
 })
 
 test('the path groups lessons into chapters and Profil shows version and commit', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
-  await expect(screen(page).getByText('Geçmiş sınavlarda 13 / 34 soru')).toBeVisible()
+  await expect(screen(page).getByText(/sınavda 13 \/ 34 soru/)).toBeVisible()
   await tab(page, 'Profil').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
   if (channel !== 'production') await expect(page.getByTestId('app-version')).toContainText(channel)
@@ -70,8 +69,7 @@ test('a lesson plays, checks answers and resumes where it was left', async ({ pa
     step ?? '',
   )
   await page.getByRole('link', { name: 'Dersten çık' }).click()
-  await expect(screen(page).getByTestId('continue-card')).toContainText('Devam et')
-  await expect(screen(page).getByTestId('continue-card')).toContainText('3.1')
+  await expect(screen(page).getByTestId('continue-card')).toHaveAttribute('aria-label', /^Devam et: 3\.1 /)
 })
 
 test('a wrong first try lands in the mistake log and leaves it when fixed', async ({ page }) => {
