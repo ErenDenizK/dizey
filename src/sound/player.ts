@@ -46,6 +46,9 @@ function applySession() {
 let ambientContext: SoundContext = {}
 export function setSoundContext(context: SoundContext) {
   const before = wantedChord()
+  // A new lesson opens over a lesson end still ringing: its opening fades that cadence (the pedal in
+  // synth.ts), so the music may come back with the new lesson's first chord.
+  if (context.steps && !ambientContext.steps) quietUntil = 0
   ambientContext = context
   // A new chord on screen: the music moves with it at once (a quick crossfade), never a beat late.
   if (musicTimer && wantedChord() !== before) {
