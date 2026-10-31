@@ -84,6 +84,18 @@ by side).
 - **Effects.** Chips fly on curved paths and slow under the eye's pursuit limit (900 px/s); no frame showed a
   chip outside the stage. Marks are colour only (no motion); that matches the old app.
 
+## Follow-up: one thing at a time on a work line (0.20.1)
+
+Eren (21:57Z) prefers the old app's arithmetic rhythm: two numbers fly in slowly and are written, then the
+next two, then the result. Frame check of the 2x2 rule line showed `·` and `−` written the moment the line
+became active, before the chips of their numbers had left the matrix, so "a · d − b · c" appeared as a
+skeleton first. Chips also faded in at lift-off. The old `showWithOperator` writes an operator together with
+the number after it, and `makeChip` shows the chip at full opacity from lift-off.
+
+Fix (`Stage.tsx` `useReveal`): an operator is drawn on `draw` at the lift-off of the next flown token on its
+line; chips are opaque from lift-off. After: `a`, `d` fly and land, `a · d` is written; then `−` with `b`'s
+lift-off, `b`, `c` fly; the result comes last. Recorded frame by frame on D1 (2x2 rule and Sarrus lines).
+
 ## Where this still breaks
 
 - Leaving objects vanish in one frame rather than fading out (the old app ghosted them out over 123 ms); a
