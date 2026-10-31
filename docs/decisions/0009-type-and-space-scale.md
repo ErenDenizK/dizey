@@ -28,6 +28,9 @@ Ten type roles with fixed size, line height, tracking and weight, line heights a
 may only use these tokens; `src/styles/type-space.test.ts` enforces it, with math (sized relative to its stage)
 as the only exception. Spec: `docs/design/type-and-space.md`.
 
+Follow-up the same night (Eren 23:28Z, "bigger, fuller, readable; nothing small or thin"): the whole scale moved
+one step up (body 17 → 18, floor 13 → 14, display 30 → 32) and weights became theme tokens, lifted in dark.
+
 ## Consequences
 
 - Every screen now uses the same nine sizes and the same gaps; a new screen gets them by default.
