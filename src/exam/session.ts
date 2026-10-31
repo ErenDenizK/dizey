@@ -142,3 +142,53 @@ export function parseSession(raw: string | null, bank: readonly Question[]): Exa
     return null
   }
 }
+
+export type QuestionStatus = 'correct' | 'wrong' | 'blank'
+
+export function statusOf(session: ExamSession, question: Question): QuestionStatus {
+  const chosen = session.answers[question.id] ?? null
+  if (chosen === null) return 'blank'
+  return chosen === question.answer ? 'correct' : 'wrong'
+}
+
+/** Where the attempt stands: what the question map and the finish summary show. */
+export function tally(session: ExamSession): { answered: number; blank: number; flagged: number } {
+  const answered = session.questionIds.filter((id) => session.answers[id]).length
+  const flagged = session.questionIds.filter((id) => session.flagged.includes(id)).length
+  return { answered, blank: session.questionIds.length - answered, flagged }
+}
+
+/**
+ * The topics a finished attempt sends the learner back to: every node with a wrong or blank item,
+ * most missed first, ties in paper order. A rehearsal is only worth its review.
+ */
+export function topicsToReview(
+  session: ExamSession,
+  bank: readonly Question[],
+): { node: Question['node']; missed: number; total: number }[] {
+  const byId = new Map(bank.map((question) => [question.id, question]))
+  const topics = new Map<Question['node'], { node: Question['node']; missed: number; total: number }>()
+  for (const id of session.questionIds) {
+    const question = byId.get(id)
+    if (!question) continue
+    const topic = topics.get(question.node) ?? { node: question.node, missed: 0, total: 0 }
+    topic.total++
+    if (statusOf(session, question) !== 'correct') topic.missed++
+    topics.set(question.node, topic)
+  }
+  return [...topics.values()].filter((topic) => topic.missed > 0).sort((a, b) => b.missed - a.missed)
+}
+
+/** Columns of the result seal: whole rows where the count allows, never wider than six cells. */
+export function sealColumnsFor(count: number): number {
+  if (count <= 6) return Math.max(count, 1)
+  for (const cols of [6, 5, 4]) if (count % cols === 0) return cols
+  return 6
+}
+
+/** Best score per set, for the Sınav cards. */
+export function bestBySet(history: readonly { set: ExamSet['id']; percent: number }[]) {
+  const best: Partial<Record<ExamSet['id'], number>> = {}
+  for (const entry of history) best[entry.set] = Math.max(best[entry.set] ?? 0, entry.percent)
+  return best
+}

@@ -44,8 +44,9 @@ export function Shell() {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const routeTab = tabOf(pathname)
   const overlay = routeTab === null
-  // Under a full-screen route the tab it came from stays where it was.
-  const [tab, setTab] = useState<TabPath>(routeTab ?? '/')
+  // Under a full-screen route the tab it came from stays where it was. Opened straight onto one (a
+  // reload, the home-screen app coming back), the route's own section is home: a rehearsal is Sınav's.
+  const [tab, setTab] = useState<TabPath>(routeTab ?? (pathname.startsWith('/exam') ? '/exam' : '/'))
   if (routeTab && routeTab !== tab) setTab(routeTab)
   returnTab.current = tab
 
@@ -100,7 +101,9 @@ export function Shell() {
     // The route's DOM outlives its unmount as a ghost that plays the exit.
     return () => {
       const host = frame.current
-      if (host) leave(el, host, visibleCard())
+      // React has already detached the route when it really unmounts. A route still attached is a
+      // development StrictMode re-run: moving it would leave React a node it can no longer remove.
+      if (host && !el.isConnected) leave(el, host, visibleCard())
       morphFrom.current = null
     }
   }, [overlay])

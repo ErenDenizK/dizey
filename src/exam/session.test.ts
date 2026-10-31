@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { questions } from '../content/questions'
 import {
+  bestBySet,
   choose,
   createSession,
   durationFor,
@@ -9,8 +10,12 @@ import {
   parseSession,
   remainingMs,
   score,
+  sealColumnsFor,
   shuffled,
+  statusOf,
+  tally,
   toggleFlag,
+  topicsToReview,
 } from './session'
 
 const now = Date.UTC(2026, 9, 30, 17)
@@ -82,5 +87,52 @@ describe('exam session', () => {
 
   it('shuffle keeps every item', () => {
     expect([...shuffled([1, 2, 3, 4, 5], 9)].sort()).toEqual([1, 2, 3, 4, 5])
+  })
+})
+
+describe('exam review helpers', () => {
+  const paper = createSession(questions, 'summer-2024', now, 1)
+  const bank = questions.filter((q) => paper.questionIds.includes(q.id))
+  const [first, second, third] = bank as [(typeof bank)[0], (typeof bank)[0], (typeof bank)[0]]
+  const wrongKey = (['a', 'b', 'c', 'd', 'e'] as const).find((key) => key !== second.answer) ?? 'a'
+  let session = choose(paper, first.id, first.answer)
+  session = choose(session, second.id, wrongKey)
+  session = toggleFlag(session, third.id)
+
+  it('tells correct, wrong and blank apart', () => {
+    expect(statusOf(session, first)).toBe('correct')
+    expect(statusOf(session, second)).toBe('wrong')
+    expect(statusOf(session, third)).toBe('blank')
+  })
+
+  it('tallies answered, blank and flagged items', () => {
+    expect(tally(session)).toEqual({ answered: 2, blank: paper.questionIds.length - 2, flagged: 1 })
+  })
+
+  it('lists only topics with misses, most missed first', () => {
+    const topics = topicsToReview(session, questions)
+    expect(topics.every((topic) => topic.missed > 0 && topic.missed <= topic.total)).toBe(true)
+    expect(topics.reduce((sum, topic) => sum + topic.missed, 0)).toBe(paper.questionIds.length - 1)
+    for (let i = 1; i < topics.length; i++)
+      expect((topics[i - 1] as { missed: number }).missed).toBeGreaterThanOrEqual(
+        (topics[i] as { missed: number }).missed,
+      )
+  })
+
+  it('lays the seal out in whole rows of at most six', () => {
+    expect(sealColumnsFor(15)).toBe(5)
+    expect(sealColumnsFor(18)).toBe(6)
+    expect(sealColumnsFor(4)).toBe(4)
+    expect(sealColumnsFor(16)).toBe(4)
+  })
+
+  it('keeps the best score per set', () => {
+    expect(
+      bestBySet([
+        { set: 'mixed', percent: 40 },
+        { set: 'mixed', percent: 70 },
+        { set: 'summer-2024', percent: 20 },
+      ]),
+    ).toEqual({ mixed: 70, 'summer-2024': 20 })
   })
 })

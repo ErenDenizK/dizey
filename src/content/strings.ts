@@ -90,48 +90,78 @@ export const strings = {
 
   exam: {
     title: 'Sınav',
-    subtitle: 'Gerçek Vize 1 biçiminde süreli prova. Puan ve doğru cevaplar prova bitince görünür.',
+    subtitle: 'Vize 1 biçiminde, süreli, 5 şıklı. Puan ve cevaplar prova bitince açılır.',
     setTitle: { 'summer-2024': '2024 Yaz Okulu Vizesi', mixed: 'Karışık deneme' },
     setBody: {
       'summer-2024': 'Gerçek sınavın soruları, kâğıttaki sırayla.',
-      mixed: 'Soru bankasından karışık 18 soru.',
+      mixed: 'Bankadan her seferinde yeni 18 soru.',
     },
-    setMeta: (count: number, minutes: number) => `${count} soru · ${minutes} dakika`,
-    start: 'Başlat',
+    setMeta: (count: number, minutes: number) => `${count} soru · ${minutes} dk`,
+    best: (percent: number) => `En iyi %${percent}`,
+    sets: 'Provalar',
+    start: 'Provayı başlat',
+    startRules: [
+      'Puan ve doğru cevaplar prova bitince açılır.',
+      'Seçtiğin şıkka yeniden dokunursan soru boş kalır.',
+      'Çıkarsan kaldığın yerden devam edersin; süre işlemeye devam eder.',
+    ],
+    replaces: 'Yarım kalan provan silinir.',
+    cancel: 'Vazgeç',
     inProgress: 'Yarım kalan prova',
-    inProgressMeta: (index: number, total: number, left: string) =>
-      `Soru ${index} / ${total} · ${left} kaldı`,
+    inProgressMeta: (answered: number, total: number, left: string) =>
+      `${answered} / ${total} cevaplı · ${left} kaldı`,
     resume: 'Devam et',
-    history: 'Geçmiş provalar',
+    history: 'Geçmiş',
     historyRow: (correct: number, total: number) => `${correct} / ${total} doğru`,
-    finishTop: 'Bitir',
+    leave: 'Provadan çık, sonra devam et',
     hideClock: 'Süreyi gizle',
     showClock: 'Süreyi göster',
-    clockHidden: 'Süre',
     counter: (index: number, total: number) => `Soru ${index} / ${total}`,
     flag: 'İşaretle',
+    unflag: 'İşareti kaldır',
     flagged: 'İşaretli',
-    next: 'Sonraki soru',
-    last: 'Provayı bitir',
+    previous: 'Önceki soru',
+    next: 'Sonraki',
+    last: 'Bitir',
     questions: 'Sorular',
-    confirmTitle: 'Provayı bitir?',
-    confirmBody: (blank: number) =>
-      blank > 0
-        ? `${blank} soru boş. Bitirince cevaplar ve puan görünür.`
-        : 'Bitirince cevaplar ve puan görünür.',
-    confirmKeep: 'Devam et',
-    confirmEnd: 'Bitir',
-    timeUp: 'Süre doldu.',
+    map: 'Soru haritası',
+    mapTally: (answered: number, blank: number, flagged: number) =>
+      [`${answered} cevaplı`, `${blank} boş`, flagged ? `${flagged} işaretli` : '']
+        .filter(Boolean)
+        .join(' · '),
+    finish: 'Provayı bitir',
+    finishBlank: (blank: number) => `${blank} soru boş. Bitirince puan ve cevaplar açılır.`,
+    finishAll: 'Hepsi cevaplı. Bitirince puan ve cevaplar açılır.',
+    keepGoing: 'Sorulara dön',
     resultTitle: 'Prova sonucu',
-    resultScore: (correct: number, total: number) => `${correct} / ${total} doğru`,
-    resultSplit: (wrong: number, blank: number) => `${wrong} yanlış · ${blank} boş`,
-    resultTime: (minutes: number) => `${minutes} dakikada bitti`,
-    status: { correct: 'doğru', wrong: 'yanlış', blank: 'boş' },
+    resultEyebrow: (set: string) => set,
+    sealName: 'Kâğıdın',
+    sealLabel: (correct: number, total: number) => `${total} sorudan ${correct} doğru`,
+    stat: { correct: 'Doğru', wrong: 'Yanlış', blank: 'Boş' },
+    resultTime: (percent: number, used: number, allowed: number) =>
+      `%${percent} başarı · ${used} / ${allowed} dk`,
+    moreTopics: (count: number) => `${count} konu daha`,
+    verdict: (percent: number) =>
+      percent >= 85
+        ? 'Sınava hazırsın.'
+        : percent >= 60
+          ? 'İyi gidiyor. Kaçanlar aşağıda.'
+          : percent >= 35
+            ? 'Temel yerinde, birkaç konu eksik.'
+            : 'Önce derslere dönelim.',
+    review: 'Tekrar et',
+    reviewTopic: (missed: number, total: number) => `${total} sorudan ${missed} kaçtı`,
+    filter: { all: 'Tümü', wrong: 'Yanlış', blank: 'Boş' },
+    filterLabel: 'Soruları süz',
+    noneInFilter: 'Bu grupta soru yok.',
+    questionN: (n: number) => `Soru ${n}`,
+    status: { correct: 'Doğru', wrong: 'Yanlış', blank: 'Boş bıraktın' },
     yourAnswer: 'Senin cevabın',
     rightAnswer: 'Doğru cevap',
     solution: 'Çözüm',
-    newAttempt: 'Yeni prova',
-    noResult: 'Gösterilecek prova yok.',
+    done: 'Bitti',
+    close: 'Sonucu kapat',
+    lastResult: 'Son prova sonucu',
   },
 
   lesson: {
