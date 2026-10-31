@@ -185,6 +185,21 @@ function rowOp(op: RowOp): M.RowOperation {
 
 function checkBeat(lesson: Lesson, beat: Beat): void {
   if (beat.kind === 'sequence') for (const b of beat.beats) checkBeat(lesson, b)
+  if (beat.kind === 'transpose') {
+    // Every entry `into` shows is the transpose's; the rows the beat writes start as "?".
+    const t = M.transpose(numeric(matrixOf(lesson, beat.matrix)))
+    const into = matrixOf(lesson, beat.into)
+    expect(into.rows.length, `${beat.into} rows`).toBe(t.length)
+    into.rows.forEach((row, i) => {
+      row.forEach((value, j) => {
+        if (value !== '?')
+          expect(Q.format(parse(value)), `${beat.into}[${i}][${j}]`).toBe(Q.format(M.at(t, i, j)))
+      })
+    })
+    const written = beat.rows ?? t[0]?.map((_, r) => r) ?? []
+    for (const r of written) for (const row of into.rows) expect(row[r], `${beat.into} column ${r}`).toBe('?')
+    return
+  }
   if (beat.kind === 'combine') {
     // Every entry the stage shows (or the beat writes) is the scaled sum; "?" marks one still unknown.
     let sum: Matrix | null = null
@@ -413,6 +428,8 @@ function beatMatrices(beat: Beat): string[] {
       return [beat.left, beat.right, ...(beat.into ? [beat.into] : [])]
     case 'combine':
       return [...beat.terms.map((t) => t.matrix), ...(beat.into ? [beat.into] : [])]
+    case 'transpose':
+      return [beat.matrix, beat.into]
     default:
       return [beat.matrix]
   }

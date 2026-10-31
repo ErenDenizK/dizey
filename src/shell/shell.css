@@ -300,6 +300,13 @@
   text-align: center;
   line-height: 1.8;
 }
+/* A sign and its stacked fraction stay on one line, also inside grid cells. */
+.ex-signed {
+  gap: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+}
 .ex-frac {
   display: inline-grid;
   vertical-align: middle;

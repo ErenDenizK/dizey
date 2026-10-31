@@ -95,6 +95,16 @@ export type Beat =
       readonly into?: string
       readonly cells: readonly (readonly [row: number, col: number])[]
     }
+  /**
+   * Transpose: row by row (all rows, or the listed ones, 0-based), a row of `matrix` lights and lands down
+   * the same-numbered column of `into`, which shows "?" where it is still empty. The tests check `into`.
+   */
+  | {
+      readonly kind: 'transpose'
+      readonly matrix: string
+      readonly into: string
+      readonly rows?: readonly number[]
+    }
   /** Trace: the diagonal lights and its entries fly into one line that sums them. */
   | { readonly kind: 'trace'; readonly matrix: string }
   /** Highlight frames played in order. */

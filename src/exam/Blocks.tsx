@@ -67,13 +67,13 @@ function Entry({ value }: { value: string }) {
   const fraction = /^(-?)(\d+)\/(\d+)$/.exec(value)
   if (!fraction) return <>{entryText(value)}</>
   return (
-    <>
+    <span className="ex-signed">
       {fraction[1] ? '−' : null}
       <span className="ex-frac">
         <span>{fraction[2]}</span>
         <span>{fraction[3]}</span>
       </span>
-    </>
+    </span>
   )
 }
 

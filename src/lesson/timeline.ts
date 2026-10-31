@@ -681,6 +681,40 @@ function combine(lesson: Lesson, beat: Extract<Beat, { kind: 'combine' }>, b: Bu
   })
 }
 
+/**
+ * Transpose: row by row, a row of `matrix` lights, the column of the same number in `into` lights, and
+ * the row's numbers land down that column ("1. satır → 1. sütun").
+ */
+function transpose(lesson: Lesson, beat: Extract<Beat, { kind: 'transpose' }>, b: Builder) {
+  const block = lookup(lesson, beat.matrix)
+  const into = lookup(lesson, beat.into)
+  const rows = into.rows.map((row) => [...row])
+  const order = beat.rows ?? block.rows.map((_, r) => r)
+  b.push(
+    'line',
+    (s) => ({ ...s, marks: [], working: { matrix: beat.into, rows: rows.map((x) => [...x]) } }),
+    0,
+  )
+  order.forEach((r, index) => {
+    const line = textLine(`p${b.frames.length}`, `${r + 1}. satır → ${r + 1}. sütun`)
+    const marks: Mark[] = [
+      { cell: [beat.matrix, r, '*'], tone: 'row' },
+      { cell: [beat.into, '*', r], tone: 'ok' },
+    ]
+    b.push(
+      'highlight',
+      (s) => reveal({ ...withMarks(s, marks, true), lines: [...s.lines, line] }, keysOf(line)),
+      DWELLS[b.family].highlight * (index ? REPEAT_DWELL : 1),
+    )
+    block.rows[r]?.forEach((entry, c) => {
+      const target = rows[c]
+      if (target) target[r] = entry
+    })
+    const filled = rows.map((x) => [...x])
+    b.push('write', (s) => ({ ...s, working: { matrix: beat.into, rows: filled } }))
+  })
+}
+
 /** Trace: the diagonal lights, its entries fly into one line one by one, and the sum is written. */
 function trace(lesson: Lesson, name: string, b: Builder) {
   const block = lookup(lesson, name)
@@ -724,6 +758,9 @@ function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
   switch (beat.kind) {
     case 'trace':
       trace(lesson, beat.matrix, b)
+      return
+    case 'transpose':
+      transpose(lesson, beat, b)
       return
     case 'product':
       product(lesson, beat, b)

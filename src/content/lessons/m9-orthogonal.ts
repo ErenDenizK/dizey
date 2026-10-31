@@ -56,9 +56,9 @@ export const m9Orthogonal: Lesson = {
     {
       id: 'hook',
       kind: 'explain',
-      eyebrow: 'Gözlem',
-      title: 'Uzunluğu bozmayan matrisler',
-      body: '$Q$ düzlemi döndürür; hiçbir vektörün boyu değişmez. Sütunlarına bak: ikisinin de boyu $1$ ($\\frac{9}{25} + \\frac{16}{25} = 1$) ve birbirine diktir ($\\frac{3}{5} \\cdot (-\\frac{4}{5}) + \\frac{4}{5} \\cdot \\frac{3}{5} = 0$).',
+      eyebrow: 'Soru',
+      title: 'Hangi matris boyları hiç değiştirmez?',
+      body: '$Q$ düzlemi döndürür, hiçbir vektör uzamaz. Sırrı sütunlarında.',
       scene: { items: ['Q'] },
       beat: {
         kind: 'frames',
@@ -81,8 +81,8 @@ export const m9Orthogonal: Lesson = {
       id: 'definition',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'Ortogonal: $A^TA = I$, yani $A^{-1} = A^T$',
-      body: '$A^TA$’nın $(i, j)$ elemanı $i.$ ve $j.$ sütunların iç çarpımıdır. Sütunlar birim uzunlukta ve ikişer ikişer dik ise bu tam olarak $I$ olur. Kazanç: {ok}tersi almak için sadece transpoz al{/ok}.',
+      title: 'Ortogonal: $A^TA = I$',
+      body: 'Sütunların boyu 1 ve hepsi birbirine dik. Kazanç: {ok}tersi, transpozudur{/ok}.',
       scene: { items: ['Q'] },
       claims: [
         {
@@ -112,6 +112,14 @@ export const m9Orthogonal: Lesson = {
       skill: 'orthogonal-inverse',
       scene: { items: ['Q'] },
       answer: '4/5',
+      reveal: {
+        kind: 'frames',
+        frames: [
+          { clear: true, marks: [{ cell: ['Q', 1, '*'], tone: 'row' }] },
+          { marks: [{ cell: ['Q', '*', 0], tone: 'col' }] },
+          { clear: true, marks: [{ cell: ['Q', 1, 0], tone: 'ok' }], note: '(Qᵀ)₁₂ = q₂₁ = 4/5' },
+        ],
+      },
       feedbackWrong: '$Q^T$’nin $(1, 2)$ elemanı, $Q$’nun $(2, 1)$ elemanıdır.',
       solution: '$(Q^{-1})_{12} = (Q^T)_{12} = q_{21} = \\frac{4}{5}$.',
       claims: [{ kind: 'exprEntry', expr: 'Q^{-1}', row: 1, col: 2, equals: '4/5' }],
@@ -121,7 +129,11 @@ export const m9Orthogonal: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: '$|A| = \\pm 1$',
-      body: '$|A^TA| = |A^T||A| = |A|^2 = |I| = 1$, yani $|A| = 1$ ya da $-1$. Dönme $|Q| = 1$, yansıma $|F| = -1$. Tersi doğru değil: $|A| = 1$ olan her matris ortogonal değildir.',
+      body: '$|A|^2 = |A^TA| = |I| = 1$. Dönme: $|Q| = 1$. Yansıma: $|F| = -1$.',
+      beat: {
+        kind: 'equation',
+        lines: ['|A^TA| = |A|^2 = 1', '|A| = \\pm 1'],
+      },
       scene: { items: ['Q', 'F'] },
       claims: [
         { kind: 'det', matrix: 'Q', equals: '1' },
@@ -130,12 +142,52 @@ export const m9Orthogonal: Lesson = {
       ],
     },
     {
+      id: 'try-det',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: 'Ortogonal bir matrisin determinantı hangisi olabilir?',
+      skill: 'orthogonal-det',
+      options: [
+        {
+          key: 'a',
+          content: [text('$0$')],
+          errorType: 'singular-orthogonal',
+          feedback: 'Ortogonal matrisin tersi var ($A^T$): determinant 0 olamaz.',
+        },
+        { key: 'b', content: [text('$-1$')] },
+        {
+          key: 'c',
+          content: [text('$2$')],
+          errorType: 'any-det',
+          feedback: '$|A|^2 = 1$ olmalı; $2^2 = 4$.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'equation', lines: ['|A|^2 = |A^TA| = |I| = 1', '|A| = \\pm 1'] },
+      solution: '$|A|^2 = 1$, yani $|A| = \\pm 1$. Yansıma $F$ için $-1$.',
+      claims: [{ kind: 'det', matrix: 'F', equals: '-1' }],
+    },
+    {
       id: 'trap-length',
       kind: 'explain',
       eyebrow: 'Tuzak',
       title: 'Dik sütunlar yetmez, boyları da $1$ olmalı',
-      body: '$W$’nin sütunları dik ($1 \\cdot (-1) + 1 \\cdot 1 = 0$) ama boyları $\\sqrt{2}$. $W^TW = 2I$, $|W| = 2$: ortogonal değil. $\\frac{1}{\\sqrt{2}}$ ile ölçeklersen olur.',
+      body: '$W$’nin sütunları dik ama boyları $\\sqrt{2}$. $|W| = 2$: ortogonal değil.',
       scene: { items: ['W'] },
+      beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['W', '*', 0], tone: 'row' },
+              { cell: ['W', '*', 1], tone: 'col' },
+            ],
+            note: '−1 + 1 = 0: dik',
+          },
+          { clear: true, marks: [{ cell: ['W', '*', 0], tone: 'col' }], note: 'boy² = 1 + 1 = 2' },
+        ],
+      },
       claims: [
         {
           kind: 'expr',
@@ -154,7 +206,7 @@ export const m9Orthogonal: Lesson = {
       kind: 'choice',
       eyebrow: 'Senin sıran',
       title: '$A$ ortogonal ise $x$ kaçtır?',
-      body: 'Boy koşulu iki değer verir; dikliği de kontrol et.',
+      body: 'Boy iki değer verir. Dikliği de dene.',
       skill: 'orthogonal-missing-entry',
       scene: { items: ['X'] },
       options: [
@@ -186,6 +238,13 @@ export const m9Orthogonal: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '\\tfrac{4}{9} + \\tfrac{4}{9} + x^2 = 1 \\Rightarrow x = \\pm\\tfrac{1}{3}',
+          '\\tfrac{2}{9} - \\tfrac{4}{9} + \\tfrac{2}{3}x = 0 \\Rightarrow x = \\tfrac{1}{3}',
+        ],
+      },
       solution:
         'Boy: $\\frac{4}{9} + \\frac{4}{9} + x^2 = 1$, $x = \\pm\\frac{1}{3}$. Diklik (1. ve 3. sütun): $\\frac{2}{9} - \\frac{4}{9} + \\frac{2}{3}x = 0$, $x = \\frac{1}{3}$.',
       claims: [
@@ -199,7 +258,11 @@ export const m9Orthogonal: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Ortogonal çarpı ortogonal yine ortogonal',
-      body: '$(AB)^T(AB) = B^TA^TAB = B^TB = I$. Aynı şekilde $A^T$ ve $A^{-1}$ de ortogonaldir. Örnek: önce yansıma ($F$), sonra dönme ($Q$): $QF$ yine uzunluk korur.',
+      body: 'Yansıt, sonra döndür: $QF$ de boyları korur. $A^T$ ve $A^{-1}$ de ortogonaldir.',
+      beat: {
+        kind: 'equation',
+        lines: ['(AB)^T(AB) = B^T(A^TA)B', '= B^TB = I'],
+      },
       scene: { items: ['Q', 'F'] },
       claims: [
         { kind: 'property', expr: 'QF', is: 'orthogonal' },

@@ -159,6 +159,25 @@ describe('combine', () => {
   })
 })
 
+describe('transpose', () => {
+  it('lands each row down the matching column', () => {
+    const frames = compile(lesson, { kind: 'transpose', matrix: 'L', into: 'P' })
+    expect(frames.map((f) => f.action)).toEqual(['line', 'highlight', 'write', 'highlight', 'write'])
+    expect(frames[1]?.marks).toEqual([
+      { cell: ['L', 0, '*'], tone: 'row' },
+      { cell: ['P', '*', 0], tone: 'ok' },
+    ])
+    expect(frames[2]?.working?.rows).toEqual([
+      ['2', '?'],
+      ['1', '?'],
+    ])
+    expect(frames.at(-1)?.working?.rows).toEqual([
+      ['2', '3'],
+      ['1', '-1'],
+    ])
+  })
+})
+
 describe('det2', () => {
   it('lays out one line, lights each diagonal, carries its numbers, writes the values, then collects', () => {
     const frames = compile(lesson, { kind: 'det2', matrix: 'A' })
