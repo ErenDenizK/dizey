@@ -80,3 +80,28 @@ html {
 .num {
   font-variant-numeric: tabular-nums;
 }
+
+/*
+ * Math speaks the interface's language: KaTeX lays formulas out, but letters, digits and operators are
+ * set in the text face, upright, with tabular figures (Inter's cv08 gives the identity I its serifs).
+ * Stretchy delimiters and size variants keep KaTeX's own fonts, which only those glyphs use.
+ */
+.dz .katex {
+  font-family: var(--font-text);
+  font-size: 1em;
+  font-weight: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.dz .katex .mathnormal,
+.dz .katex .mathit,
+.dz .katex .mathrm,
+.dz .katex .textrm,
+.dz .katex .boldsymbol {
+  font-family: var(--font-text);
+  font-style: normal;
+}
+/* KaTeX's italic correction is written inline for its own italic face; upright letters need none. */
+.dz .katex .mathnormal {
+  /* biome-ignore lint/complexity/noImportantStyles: overrides KaTeX's inline italic-correction margin */
+  margin-right: 0 !important;
+}
