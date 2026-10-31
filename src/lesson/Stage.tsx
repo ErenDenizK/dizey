@@ -472,6 +472,11 @@ function useLanding(
     const root = box.current
     if (!root || !working || was?.matrix !== working.matrix) return
     const chips: HTMLElement[] = []
+    // Only one value can travel from the line; a jump (a tap that lands the beat) changes several at once.
+    const changed = working.rows.flatMap((row, r) =>
+      row.filter((entry, c) => was.rows[r]?.[c] !== entry),
+    ).length
+    const carried = changed === 1 ? landFrom : null
     working.rows.forEach((row, r) => {
       row.forEach((entry, c) => {
         if (was.rows[r]?.[c] === entry) return
@@ -479,7 +484,7 @@ function useLanding(
           `[data-matrix="${working.matrix}"] [data-cell="${r}-${c}"]`,
         )
         if (!el) return
-        const from = landFrom ? root.querySelector<HTMLElement>(`[data-tok="${landFrom}"]`) : null
+        const from = carried ? root.querySelector<HTMLElement>(`[data-tok="${carried}"]`) : null
         if (!from) {
           engine.set(el, { opacity: 0, y: SHIFT.scene, scale: 0.7 })
           engine.withChannel('lesson', () => {
