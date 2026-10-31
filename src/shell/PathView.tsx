@@ -55,7 +55,7 @@ export function PathView() {
   return (
     <Screen title={strings.path.title}>
       <div ref={root} className="pa-root">
-        <div className="pa-summary" data-focus="">
+        <div className="pa-summary" data-focus="fade">
           <p className="pa-summary__count">
             <b className="num">{doneCount}</b>
             <span>{strings.path.overallRest(lessons.length)}</span>
@@ -173,7 +173,7 @@ function ChapterMatrix({
       data-last={last || undefined}
       aria-labelledby={`chapter-${chapter.id}`}
     >
-      <header className="pa-chapter__head" data-focus="">
+      <header className="pa-chapter__head" data-focus="fade">
         <span className="pa-chapter__no num" aria-hidden="true">
           {number}
         </span>
@@ -429,12 +429,13 @@ function offsetWithin(el: HTMLElement, ancestor: HTMLElement): { left: number; t
 }
 
 /** How far from the focus line the lens starts to act, and where it is fully on, in half-screens. */
-const LENS = { calm: 0.22, full: 1.05, scale: 0.12, fade: 0.5 } as const
+const LENS = { calm: 0.22, full: 1.05, scale: 0.16, fade: 0.5 } as const
 
 /**
  * The focus lens: whatever sits at the middle of the screen is full size; toward the top and bottom edges
  * the path recedes (smaller, quieter), so the screen reads like a wheel turning past you and the scroll
- * position is felt without a scrollbar. Tied 1:1 to the scroll (no spring of its own), set through the
+ * position is felt without a scrollbar. Tiles only shrink (the path runs behind them, so a see-through
+ * tile would show it); headings also fade. Tied 1:1 to the scroll (no spring of its own), set through the
  * engine so it never fights a running motion on the tiles inside.
  */
 function useFocusLens(root: React.RefObject<HTMLDivElement | null>) {
@@ -442,11 +443,12 @@ function useFocusLens(root: React.RefObject<HTMLDivElement | null>) {
     const host = root.current
     const scroller = host?.closest<HTMLElement>('.dz-screen')
     if (!host || !scroller) return
-    let items: { el: HTMLElement; center: number; last: number }[] = []
+    let items: { el: HTMLElement; center: number; fade: boolean; last: number }[] = []
     const measure = () => {
       items = [...host.querySelectorAll<HTMLElement>('[data-focus]')].map((el) => ({
         el,
         center: offsetWithin(el, scroller).top + el.offsetHeight / 2,
+        fade: el.dataset.focus === 'fade',
         last: -1,
       }))
       apply()
@@ -465,7 +467,7 @@ function useFocusLens(root: React.RefObject<HTMLDivElement | null>) {
         item.last = e
         engine.set(item.el, {
           scale: engine.reducedMotion ? 1 : 1 - LENS.scale * e,
-          opacity: 1 - LENS.fade * e,
+          opacity: item.fade ? 1 - LENS.fade * e : 1,
         })
       }
     }
