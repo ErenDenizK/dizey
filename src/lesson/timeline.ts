@@ -59,6 +59,8 @@ export type StageState = {
   working: { matrix: string; rows: string[][] } | null
   /** Tokens this action shows by flying a chip into them, in departure order. */
   flights: readonly Flight[]
+  /** A work-line token whose value this action carries into the changed cell of `working` (the result). */
+  landFrom: string | null
   /** Sarrus: the matrix whose first two columns are copied to its right, so every diagonal is straight. */
   extended: string | null
   /** What this action is, for its dwell and its sound. */
@@ -79,6 +81,7 @@ export const emptyStage: StageState = {
   minor: null,
   working: null,
   flights: [],
+  landFrom: null,
   extended: null,
   action: 'show',
   dwell: 0,
@@ -227,7 +230,11 @@ function builder(start: StageState, family: Family): Builder {
     push(action, change, dwell) {
       const table = DWELLS[family] as Record<string, number>
       // Flights belong to the action that makes them.
-      current = { ...change({ ...current, flights: [] }), action, dwell: dwell ?? table[action] ?? 0 }
+      current = {
+        ...change({ ...current, flights: [], landFrom: null }),
+        action,
+        dwell: dwell ?? table[action] ?? 0,
+      }
       frames.push(current)
     },
   }
@@ -589,11 +596,14 @@ function product(lesson: Lesson, beat: Extract<Beat, { kind: 'product' }>, b: Bu
       const row = rows[i]
       if (row) row[j] = stored
       const filled = working()
+      const from = resultKeys[resultKeys.length - 1] ?? null
+      // The sum is written first; then it travels from the line into its cell (old "result flies in").
       b.push(
         'collect',
-        (s) => ({ ...reveal(withMarks(s, name ? target : marks, true), resultKeys), ...filled }),
+        (s) => reveal(withMarks(s, name ? target : marks, true), resultKeys),
         table.collect * scale,
       )
+      if (name) b.push('write', (s) => ({ ...s, ...filled, landFrom: from }), table.write * scale)
     }
   })
 }
@@ -672,11 +682,13 @@ function combine(lesson: Lesson, beat: Extract<Beat, { kind: 'combine' }>, b: Bu
       const row = rows[i]
       if (row) row[j] = stored
       const filled = working()
+      const from = resultKeys[resultKeys.length - 1] ?? null
       b.push(
         'collect',
-        (s) => ({ ...reveal(withMarks(s, name ? target : marks, true), resultKeys), ...filled }),
+        (s) => reveal(withMarks(s, name ? target : marks, true), resultKeys),
         table.collect * slow,
       )
+      if (name) b.push('write', (s) => ({ ...s, ...filled, landFrom: from }), table.write * slow)
     }
   })
 }

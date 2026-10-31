@@ -80,7 +80,15 @@ const textOf = (frame: StageState | undefined) =>
 describe('product', () => {
   it('lights a row and a column, carries each pair, then lands the sum in its cell', () => {
     const frames = compile(lesson, { kind: 'product', left: 'L', right: 'R', into: 'P', cells: [[1, 0]] })
-    expect(frames.map((f) => f.action)).toEqual(['line', 'line', 'highlight', 'carry', 'carry', 'collect'])
+    expect(frames.map((f) => f.action)).toEqual([
+      'line',
+      'line',
+      'highlight',
+      'carry',
+      'carry',
+      'collect',
+      'write',
+    ])
     expect(frames[0]?.lines[0]?.tokens.map((t) => t.text).join(' ')).toBe('3 · 1 + (−1) · 2 = 1')
     expect(frames[0]?.working?.rows).toEqual([
       ['?', '?'],
@@ -97,10 +105,16 @@ describe('product', () => {
       { matrix: 'R', row: 1, col: 0 },
     ])
     expect(textOf(frames[5])).toEqual(['3 · 1 + (−1) · 2 = 1'])
+    // The sum is written first, then carried from the line into its cell.
     expect(frames[5]?.working?.rows).toEqual([
+      ['?', '?'],
+      ['?', '?'],
+    ])
+    expect(frames[6]?.working?.rows).toEqual([
       ['?', '?'],
       ['1', '?'],
     ])
+    expect(frames[6]?.landFrom).toBe(frames[0]?.lines[0]?.tokens.at(-1)?.key)
   })
 
   it('fills every listed cell in turn and keeps the earlier ones', () => {
@@ -141,6 +155,7 @@ describe('combine', () => {
       'carry',
       'value',
       'collect',
+      'write',
     ])
     expect(frames[0]?.lines[0]?.tokens.map((t) => t.text).join(' ')).toBe('2 · 2 − 3 · 1 = 4 − 3 = 1')
     expect(frames.at(-1)?.working?.rows).toEqual([

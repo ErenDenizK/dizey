@@ -2,7 +2,16 @@ import type { Beat, Lesson, Step } from '../content/lessons/types'
 import type { TempoClass } from '../engine/tokens'
 
 /** Beat kinds whose numbers travel and combine: their first showing in a lesson teaches. */
-const CALCULATING = new Set<Beat['kind']>(['det2', 'sarrus', 'expand', 'rowOps'])
+const CALCULATING = new Set<Beat['kind']>([
+  'det2',
+  'sarrus',
+  'expand',
+  'rowOps',
+  'product',
+  'combine',
+  'trace',
+  'transpose',
+])
 
 function kindsOf(beat: Beat | undefined): Beat['kind'][] {
   if (!beat) return []
