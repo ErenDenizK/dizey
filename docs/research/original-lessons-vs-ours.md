@@ -23,7 +23,7 @@ or the way the lessons are written?
 - Lesson data: the original's 17 lessons were read from its content block (object literals only, evaluated in a
   sandboxed `vm` with no globals); ours from `src/content/lessons`. Same metric script for both.
 - Recordings: one full walk-through per lesson (each step, then the right answer and its replay), video at 390 px,
-  frames extracted with ffmpeg at 8 fps. Media in project files `screenshots/0.18-lessons/` (not committed).
+  frames extracted with ffmpeg at 8 fps. Media in project files `screenshots/0.19.0/` (not committed).
 
 ## 3. Findings
 
@@ -97,7 +97,7 @@ Taken in this PR (rebuilt on our engine, no old code):
   "A = … B = … = AB =", which crowded the row and caused a double "=".
 - A formula and the suffix after it ("A’nın") no longer wrap apart.
 - **M5 rewritten in the original's rhythm**: 18 steps, 9 questions (50 %), every question replays its working,
-  average text about 15 words, opens with a question, one pair of matrices for the core idea, AB filled cell by cell.
+  average text 13 words (max 19), opens with a question, one pair of matrices for the core idea, AB filled cell by cell.
 
 Rejected: copying the original's wording or numbers (lesson content stays ours), its 4-option tag scheme, and
 lesson length above ~18 steps.
