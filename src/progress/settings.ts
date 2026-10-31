@@ -15,6 +15,12 @@ export type Settings = {
   soundInSilent?: true
   /** Haptic ticks turned off; absent means on. */
   haptics?: false
+  /** Sound palette (timbre); absent means Rhodes. */
+  palette?: 'felt' | 'glass'
+  /** Background music turned off; absent means on. */
+  music?: false
+  /** Background music at the softer level. */
+  musicSoft?: true
 }
 
 const KEY = 'dizey.settings'
@@ -23,7 +29,8 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const value: unknown = JSON.parse(raw ?? '{}')
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-    const { examDate, hideExamClock, theme, sound, soundInSilent, haptics } = value as Record<string, unknown>
+    const { examDate, hideExamClock, theme, sound, soundInSilent, haptics, palette, music, musicSoft } =
+      value as Record<string, unknown>
     const settings: Settings = {}
     if (typeof examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(examDate)) settings.examDate = examDate
     if (hideExamClock === true) settings.hideExamClock = true
@@ -31,6 +38,9 @@ export function parseSettings(raw: string | null): Settings {
     if (sound === false) settings.sound = false
     if (soundInSilent === true) settings.soundInSilent = true
     if (haptics === false) settings.haptics = false
+    if (palette === 'felt' || palette === 'glass') settings.palette = palette
+    if (music === false) settings.music = false
+    if (musicSoft === true) settings.musicSoft = true
     return settings
   } catch {
     return {}

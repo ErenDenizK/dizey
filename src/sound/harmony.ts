@@ -11,7 +11,7 @@ export const clamp = (x: number, low: number, high: number) => Math.min(high, Ma
 export const midiToHz = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
 export const dbToGain = (db: number) => 10 ** (db / 20)
 
-export type ChordId = 'I' | 'IV' | 'iii' | 'vi' | 'ii' | 'V' | 'iv' | 'bVII'
+export type ChordId = 'I' | 'IV' | 'iii' | 'vi' | 'ii' | 'V' | 'iv' | 'bVII' | 'bVI' | 'Is11'
 
 export type Chord = {
   /** Root, semitones above the tonic. */
@@ -33,6 +33,9 @@ export const CHORDS: Record<ChordId, Chord> = {
   V: { root: 7, bass: -17, voicing: [5, 9, 11, 16], arpeggio: [0, 4, 7, 10, 14] },
   iv: { root: 5, bass: -7, voicing: [8, 12, 15, 19], arpeggio: [0, 3, 7, 10, 14] },
   bVII: { root: 10, bass: -14, voicing: [8, 12, 14, 19], arpeggio: [0, 4, 7, 10, 14, 21] },
+  // A borrowed colour (A maj7♯11) and the Lydian tonic it resolves to: heard only for a rare insight.
+  bVI: { root: 8, bass: -16, voicing: [3, 7, 12, 14], arpeggio: [0, 4, 7, 11, 18] },
+  Is11: { root: 0, bass: -12, voicing: [4, 7, 11, 18], arpeggio: [0, 4, 7, 11, 18] },
 }
 
 /**
