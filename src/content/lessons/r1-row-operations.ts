@@ -185,7 +185,11 @@ export const r1RowOperations: Lesson = {
       body: 'Yer değiştirme işaret çevirir. $k$ ile çarpma $k$ ile çarpar. Kat ekleme değiştirmez.',
       beat: {
         kind: 'equation',
-        lines: ['R_i \\leftrightarrow R_j: \; -|A|', 'R_i \\to kR_i: \; k|A|', 'R_i \\to R_i + kR_j: \; |A|'],
+        lines: [
+          'R_i \\leftrightarrow R_j: \\; -|A|',
+          'R_i \\to kR_i: \\; k|A|',
+          'R_i \\to R_i + kR_j: \\; |A|',
+        ],
       },
     },
     {
