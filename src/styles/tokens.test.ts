@@ -68,6 +68,18 @@ describe.each([
     expect(contrast(theme, '--ink-3', bg)).toBeGreaterThanOrEqual(3)
   })
 
+  it('row and column inks are told apart at a glance (OKLab distance >= 0.1)', () => {
+    const lab = (value: string) => {
+      const m = value.match(/^oklch\(([\d.]+) ([\d.]+) ([\d.]+)\)$/)
+      if (!m) throw new Error(`not an opaque oklch colour: ${value}`)
+      const [L, C, H] = [Number(m[1]), Number(m[2]), (Number(m[3]) * Math.PI) / 180]
+      return [L, C * Math.cos(H), C * Math.sin(H)]
+    }
+    const [r, c] = [lab(theme['--row-ink'] as string), lab(theme['--col-ink'] as string)]
+    const distance = Math.hypot(...r.map((v, i) => v - (c[i] as number)))
+    expect(distance, `${theme['--row-ink']} vs ${theme['--col-ink']}`).toBeGreaterThanOrEqual(0.1)
+  })
+
   it('primary action label reads at 7:1', () => {
     expect(contrast(theme, '--on-action', '--action')).toBeGreaterThanOrEqual(7)
   })

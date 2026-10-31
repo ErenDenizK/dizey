@@ -593,10 +593,18 @@ a.sh-node {
   gap: 8px;
   overscroll-behavior: contain;
 }
+/*
+ * A step with no math (a trap, a summary) takes the stage's place as one card, its text centred in it, so the
+ * screen keeps the same footprint as the steps around it instead of leaving the lower half empty.
+ */
 .ls-main[data-stage="false"] .ls-narr {
   flex: 1;
   gap: 12px;
-  padding-top: 8px;
+  align-content: safe center;
+  padding: 24px 20px;
+  border-radius: var(--corner-stage);
+  background: var(--sh-surface);
+  box-shadow: 0 1px 2px var(--sh-shadow);
 }
 .ls-eyebrow {
   margin: 0;
@@ -1265,4 +1273,17 @@ a.dz-button[data-kind="primary"] {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Text-only steps (see .ls-main[data-stage="false"] .ls-narr): larger reading type, points without a nested card. */
+.ls-main[data-stage="false"] .ls-title {
+  font-size: 1.6rem;
+}
+.ls-main[data-stage="false"] .ls-body {
+  font-size: 1.06rem;
+}
+.ls-main[data-stage="false"] .ls-points {
+  padding: 4px 0;
+  background: none;
+  box-shadow: none;
 }

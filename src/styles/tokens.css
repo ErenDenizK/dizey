@@ -187,7 +187,8 @@
 
   /* ---- Light theme: dimmed warm paper, dark ink, one navy action ----------
    * Eren 2026-10-31: the brighter paper and pastel roles tired the eyes; grounds sit at L 0.89-0.94 and
-   * role colours are muted (chroma <= 0.09 except the verdict red).
+   * role colours are muted (chroma <= 0.09 except the verdict red). Row (blue 245) and column (plum 322) sit 77 degrees
+   * apart so a Sarrus line in one never reads as the other (design review 2026-10-31, tested in tokens.test.ts).
    * Chrome stays ink-neutral; colour energy comes from the math roles (row blue, column purple) and the
    * verdicts (green, red), plus one yellow spark for celebration only. */
   --bg: oklch(0.915 0.007 80);
@@ -221,14 +222,14 @@
   --bad-fill: oklch(0.52 0.14 28);
   --bad-tint: oklch(0.91 0.022 28);
   --bad-edge: oklch(0.72 0.08 28);
-  --row-ink: oklch(0.42 0.08 250);
-  --row-fill: oklch(0.5 0.09 250);
-  --row-tint: oklch(0.9 0.022 250);
-  --row-edge: oklch(0.72 0.05 250);
-  --col-ink: oklch(0.42 0.07 305);
-  --col-fill: oklch(0.72 0.06 305);
-  --col-tint: oklch(0.9 0.02 305);
-  --col-edge: oklch(0.72 0.045 305);
+  --row-ink: oklch(0.42 0.09 245);
+  --row-fill: oklch(0.5 0.09 245);
+  --row-tint: oklch(0.9 0.022 245);
+  --row-edge: oklch(0.72 0.05 245);
+  --col-ink: oklch(0.42 0.09 322);
+  --col-fill: oklch(0.72 0.06 322);
+  --col-tint: oklch(0.9 0.02 322);
+  --col-edge: oklch(0.72 0.045 322);
   --on-row: oklch(1 0 0);
   --on-col: oklch(0.183 0.009 268.6);
   --on-ok: oklch(0.183 0.009 268.6);
@@ -269,14 +270,14 @@
     --bad-fill: oklch(0.52 0.14 25);
     --bad-tint: oklch(0.25 0.022 25);
     --bad-edge: oklch(0.45 0.09 25);
-    --row-ink: oklch(0.78 0.07 255);
-    --row-fill: oklch(0.5 0.1 255);
-    --row-tint: oklch(0.27 0.028 255);
-    --row-edge: oklch(0.45 0.07 255);
-    --col-ink: oklch(0.78 0.07 305);
-    --col-fill: oklch(0.7 0.07 305);
-    --col-tint: oklch(0.27 0.025 305);
-    --col-edge: oklch(0.45 0.06 305);
+    --row-ink: oklch(0.78 0.09 245);
+    --row-fill: oklch(0.5 0.1 248);
+    --row-tint: oklch(0.27 0.028 248);
+    --row-edge: oklch(0.45 0.07 248);
+    --col-ink: oklch(0.78 0.09 322);
+    --col-fill: oklch(0.7 0.07 322);
+    --col-tint: oklch(0.27 0.025 322);
+    --col-edge: oklch(0.45 0.06 322);
     --spark: oklch(0.86 0.09 95);
   }
 }
@@ -315,14 +316,14 @@
   --bad-fill: oklch(0.52 0.14 25);
   --bad-tint: oklch(0.25 0.022 25);
   --bad-edge: oklch(0.45 0.09 25);
-  --row-ink: oklch(0.78 0.07 255);
-  --row-fill: oklch(0.5 0.1 255);
-  --row-tint: oklch(0.27 0.028 255);
-  --row-edge: oklch(0.45 0.07 255);
-  --col-ink: oklch(0.78 0.07 305);
-  --col-fill: oklch(0.7 0.07 305);
-  --col-tint: oklch(0.27 0.025 305);
-  --col-edge: oklch(0.45 0.06 305);
+  --row-ink: oklch(0.78 0.09 245);
+  --row-fill: oklch(0.5 0.1 248);
+  --row-tint: oklch(0.27 0.028 248);
+  --row-edge: oklch(0.45 0.07 248);
+  --col-ink: oklch(0.78 0.09 322);
+  --col-fill: oklch(0.7 0.07 322);
+  --col-tint: oklch(0.27 0.025 322);
+  --col-edge: oklch(0.45 0.06 322);
   --spark: oklch(0.86 0.09 95);
 }
 
