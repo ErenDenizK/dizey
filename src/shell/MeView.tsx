@@ -30,7 +30,6 @@ export function MeView() {
       <MistakeLog />
       <h2 className="dz-section-label">{strings.me.settings}</h2>
       <div className="dz-list">
-        <ThemeSetting />
         <SoundSetting />
         <ExamDateSetting />
       </div>
@@ -217,37 +216,6 @@ function ExamDateSetting() {
         />
       </span>
     </label>
-  )
-}
-
-function ThemeSetting() {
-  const settings = useSettings()
-  const value = settings.theme ?? 'system'
-  return (
-    <div className="dz-row me-theme">
-      <Lead>
-        <circle cx="10" cy="10" r="6.5" />
-        <path d="M10 3.5a6.5 6.5 0 0 0 0 13z" className="me-lead__fill" />
-      </Lead>
-      <span className="dz-row-main" id="theme-label">
-        {strings.me.appearance}
-      </span>
-      <fieldset className="sh-segments" aria-labelledby="theme-label">
-        {(['system', 'light', 'dark'] as const).map((option) => (
-          <Pressable
-            key={option}
-            className="sh-segment"
-            aria-pressed={value === option}
-            onClick={() => {
-              const { theme: _old, ...rest } = settings
-              saveSettings(option === 'system' ? rest : { ...rest, theme: option })
-            }}
-          >
-            {strings.me.appearanceOptions[option]}
-          </Pressable>
-        ))}
-      </fieldset>
-    </div>
   )
 }
 

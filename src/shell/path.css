@@ -337,3 +337,9 @@
 .pa-facts {
   grid-template-columns: repeat(auto-fit, minmax(6.5em, 1fr));
 }
+
+/* The focus lens scales headings toward their own left edge, so they stay aligned with the page. */
+.pa-summary,
+.pa-chapter__head {
+  transform-origin: left center;
+}

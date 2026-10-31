@@ -45,6 +45,19 @@ html {
   font-size: 17px;
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
+  background: var(--bg);
+}
+
+/*
+ * No scrollbars anywhere (Eren 2026-10-31 23:02Z: "Scroll bar olmasın"). Scrolling still works by touch,
+ * wheel and keyboard; position is shown by the screens themselves (the Dersler focus scaling, the navbar
+ * title that appears once the large title scrolls away).
+ */
+* {
+  scrollbar-width: none;
+}
+*::-webkit-scrollbar {
+  display: none;
 }
 
 /*

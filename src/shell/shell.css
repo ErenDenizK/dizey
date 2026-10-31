@@ -1,6 +1,6 @@
 /*
  * Shell and lesson-player styles that are not yet components in src/ui. Colours alias the token system
- * (src/styles/tokens.css), so light, dark and the in-app theme switch come from one place.
+ * (src/styles/tokens.css), so every colour comes from one place.
  * No CSS transitions here: motion runs on src/engine.
  */
 :root {

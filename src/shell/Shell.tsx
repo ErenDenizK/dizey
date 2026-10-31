@@ -4,7 +4,6 @@ import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO } from '../engine/tokens'
 import { ExamHome } from '../exam/ExamHome'
-import { useSettings } from '../progress/settings'
 import { ExamIcon, MeIcon, PathIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
 import { MeView } from './MeView'
@@ -107,12 +106,6 @@ export function Shell() {
   }, [overlay])
 
   useEffect(installPressFeedback, [])
-
-  const { theme } = useSettings()
-  useEffect(() => {
-    if (theme) document.documentElement.dataset.theme = theme
-    else delete document.documentElement.dataset.theme
-  }, [theme])
 
   return (
     <div ref={frame} className="dz dz-app">
