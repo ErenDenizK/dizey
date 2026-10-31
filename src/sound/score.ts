@@ -238,7 +238,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     cutoff: 5200,
     wet: 0.7,
     pedal: false,
-    parts: [{ ...TOUCH, chord: 'I', part: 'one', pick: 'index', voice: 'glass', ring: 1 }],
+    parts: [{ ...TOUCH, chord: 'step', part: 'one', pick: 'index', voice: 'glass', ring: 1 }],
   },
   toggleOn: {
     tier: 'touch',
@@ -316,6 +316,11 @@ export type SoundContext = {
   steps?: number
   /** Cell or option number: it chooses the voice, so the same cell always sounds the same. */
   index?: number
+  /**
+   * The chord the background music is holding outside a lesson: a 'step' sound plays it instead of
+   * the home chord, so a tap never sounds against the music.
+   */
+  chord?: ChordId
 }
 
 export type Plan = {
@@ -355,7 +360,12 @@ export function createScore(random: () => number) {
 
     for (const raw of spec.parts) {
       const part = { ...DEFAULT_PART, ...raw }
-      const id = part.chord === 'step' ? chordAt(context.step, context.steps) : part.chord
+      const id =
+        part.chord !== 'step'
+          ? part.chord
+          : context.steps
+            ? chordAt(context.step, context.steps)
+            : (context.chord ?? chordAt(context.step, context.steps))
       const chord = CHORDS[id]
       const voicing: number[] = previous ? nearest(chord.voicing, previous) : [...chord.voicing]
       const voiceKind: NoteKind = part.voice === 'glass' ? 'shine' : 'main'
