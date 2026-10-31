@@ -927,7 +927,7 @@ a.sh-node {
   /* A wrong try: a red mark beside the hint on a plain card, never a tinted box with a stripe. */
   display: grid;
   grid-template-columns: 24px 1fr;
-  gap: var(--space-2);
+  gap: var(--gap-related);
   align-items: start;
   background: var(--surface);
   box-shadow: var(--shadow-1), var(--edge-light);
@@ -937,7 +937,8 @@ a.sh-node {
   place-items: center;
   width: 24px;
   height: 24px;
-  margin-top: 1px;
+  /* Centred on the first line of the hint, whatever its line height. */
+  margin-top: calc((var(--leading-read) - var(--space-6)) / 2); /* the mark is 24 */
   border-radius: var(--corner-pill);
   background: var(--bad-fill);
   color: oklch(1 0 0);

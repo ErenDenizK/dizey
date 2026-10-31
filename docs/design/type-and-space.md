@@ -13,23 +13,29 @@ one of these roles; there is no eleventh size.
 
 | Role | Size / line (px) | Weight | Tracking | Use |
 | --- | --- | --- | --- | --- |
-| display | 30 / 36 | 700 | −0.022 em | Screen titles, hero numerals (lesson count, exam score) |
-| title1 | 24 / 30 | 700 | −0.017 em | Lesson step titles, the typed answer |
-| title2 | 20 / 26 | 700 | −0.012 em | Chapter titles, verdict titles, stat values, keypad digits |
-| title3 (headline) | 17 / 22 | 600 | −0.004 em | Card titles, every button label |
-| body | 17 / 24 | 400 | 0 | Rows, UI text, lesson options (500: they carry math) |
-| read | 17 / 26 | 400 | 0 | Paragraphs: lesson narration, exam stems, solutions |
-| callout | 16 / 22 | 400 | 0 | Dense reading: exam feedback and solutions |
-| subhead | 15 / 20 | 400 | 0 | The secondary line under a title, segmented controls |
-| footnote | 14 / 20 | 400 / 600 | +0.004 em | Metadata, section labels (600), counters |
-| caption | 13 / 16 | 500 / 600 | +0.01 em | Tab labels, badges, tile names; eyebrows are caption 600 uppercase at +0.06 em |
+| display | 32 / 38 | 740 | −0.022 em | Screen titles, hero numerals (lesson count, exam score) |
+| title1 | 26 / 32 | 740 | −0.017 em | Lesson step titles, the typed answer |
+| title2 | 22 / 28 | 740 | −0.012 em | Chapter titles, verdict titles, stat values, keypad digits |
+| title3 (headline) | 18 / 24 | 650 | −0.004 em | Card titles, every button label |
+| body | 18 / 26 | 460 | 0 | Rows, UI text, lesson options (medium: they carry math) |
+| read | 18 / 28 | 460 | 0 | Paragraphs: lesson narration, exam stems, solutions |
+| callout | 17 / 24 | 460 | 0 | Dense reading: exam feedback and solutions |
+| subhead | 16 / 22 | 460 | 0 | The secondary line under a title, segmented controls |
+| footnote | 15 / 22 | regular or semibold | +0.004 em | Metadata, section labels (semibold), counters |
+| caption | 14 / 20 | medium or semibold | +0.01 em | Tab labels, badges, tile names; eyebrows are caption semibold uppercase at +0.06 em |
+
+**Larger and fuller (Eren 2026-10-31 23:28Z).** "Everything a bit bigger, fuller, comfortably readable; some
+things feel small and thin." So the scale sits one step above the iOS defaults (body 18, floor 14), and every weight
+sits above its nominal value: the app is dark only (0.24.0), and light text on a dark ground looks thinner than the
+same weight dark on light (irradiation). Onest is variable, so 460 and 650 are real weights, not synthesised.
+Weight names: regular 460, medium 560, semibold 650, bold 740.
 
 Sizes are rem off the root, and the root is iOS Dynamic Type (`font: -apple-system-body`, 17 px by default), so
 every role follows the user's text size. Line heights are rem too, so a role's line grows with it.
 
 **Why these line heights.** Each is a whole even pixel at the default size, so text boxes stack on a 2 px grid
 and two cards side by side line up. The ratio falls as size grows: 1.2 at display, 1.25 at title1, 1.3 at
-title2 and title3, 1.41 for UI body, 1.53 for reading and 1.43 at footnote. Large type needs less line space,
+title2, 1.33 at title3, 1.44 for UI body, 1.56 for reading and 1.47 at footnote. Large type needs less line space,
 small type more; reading text gets the most because the eye has to find the next line.
 
 **Why tracking changes with size.** Fonts are spaced for text sizes. Large sizes look loose and small sizes look
@@ -76,9 +82,9 @@ reads as one thing before a word is read (proximity). Tested.
 
 ## Where this breaks
 
-- At 200 % text the 13 px tab labels grow to 26 px and may not fit three tabs; plan: icon only with accessible
+- At 200 % text the 14 px tab labels grow to 28 px and may not fit three tabs; plan: icon only with accessible
   names at the largest sizes (unchanged from the earlier plan).
-- Lesson tile names on the path are caption (13 px) to fit three tiles in 390 px; at larger text they clamp at
+- Lesson tile names on the path are caption (14 px) to fit three tiles in 390 px; at larger text they clamp at
   three lines. A lesson with a longer name must be checked on the path.
 - `lab/sound-lab.css` is exempt until the sound lab rebuild lands (PR #57); the test fails once that file is clean
   so the exemption cannot be forgotten.

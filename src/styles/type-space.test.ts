@@ -129,12 +129,21 @@ describe('the scale itself', () => {
     expect(ratio).toBeLessThanOrEqual(1.6)
   })
 
+  it('every weight sits above its nominal value (light text on the dark ground reads thinner)', () => {
+    const nominal = { regular: 400, medium: 500, semibold: 600, bold: 700 }
+    for (const [name, base] of Object.entries(nominal)) {
+      const value = Number(css.match(new RegExp(`--weight-${name}:\\s*(\\d+)`))?.[1])
+      expect(value).toBeGreaterThan(base)
+      expect(value).toBeLessThan(base + 100)
+    }
+  })
+
   it('reading text is more open than UI text', () => {
     expect(px('--leading-read')).toBeGreaterThan(px('--leading-body'))
   })
 
-  it('no text is smaller than 13 px', () => {
-    for (const role of roles) expect(Math.round(px(`--type-${role}`))).toBeGreaterThanOrEqual(13)
+  it('no text is smaller than 14 px (Eren: nothing small)', () => {
+    for (const role of roles) expect(Math.round(px(`--type-${role}`))).toBeGreaterThanOrEqual(14)
   })
 
   it('each proximity step is larger than the one inside it, and a group at least twice a block', () => {
