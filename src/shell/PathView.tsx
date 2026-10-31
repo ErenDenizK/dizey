@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { type Chapter, chapterOf, chapters, examItemTotal, pathCode } from '../content/path'
+import { type Chapter, chapterOf, chapters, examItemTotal, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
@@ -101,13 +101,18 @@ export function PathView() {
 function Meter({ records, done }: { records: Records; done: number }) {
   return (
     <div className="pa-meter" role="img" aria-label={strings.path.meterLabel(done, lessons.length)}>
-      {chapters.map((chapter) => (
-        <span key={chapter.id} className="pa-meter__group" style={{ flexGrow: chapter.lessons.length }}>
-          {chapter.lessons.map((lesson) => (
-            <i key={lesson.id} data-state={stateOf(records[lesson.id])} />
-          ))}
-        </span>
-      ))}
+      {chapters.map((chapter) => {
+        const states = chapter.lessons.map((lesson) => stateOf(records[lesson.id]))
+        const done = states.filter((state) => state === 'done').length
+        const current = states.includes('current') ? 1 : 0
+        const total = chapter.lessons.length
+        return (
+          <span key={chapter.id} className="pa-meter__track" style={{ flexGrow: total }}>
+            <i className="pa-meter__now" style={{ width: `${((done + current) / total) * 100}%` }} />
+            <i className="pa-meter__done" style={{ width: `${(done / total) * 100}%` }} />
+          </span>
+        )
+      })}
     </div>
   )
 }
@@ -281,7 +286,7 @@ function Tile({
         onClick={() => onPick(lesson)}
       >
         <span className="pa-tile__code num">{pathCode(lesson)}</span>
-        <span className="pa-tile__title">{lesson.title}</span>
+        <span className="pa-tile__title">{tileTitle(lesson)}</span>
         {state === 'done' ? <Check /> : null}
         {resuming ? (
           <span className="pa-tile__bar" aria-hidden="true">

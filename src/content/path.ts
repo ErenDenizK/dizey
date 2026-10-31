@@ -85,3 +85,21 @@ export function codeOfNode(node: string, list: readonly Chapter[] = chapters): s
   const lesson = list.flatMap((chapter) => chapter.lessons).find((candidate) => candidate.node === node)
   return lesson ? pathCode(lesson, list) : node
 }
+
+/**
+ * Tile labels: a tile holds about three short lines, so long lesson titles get a short name here (the full
+ * title stays on the lesson card and in the lesson).
+ */
+const tileTitles: Readonly<Record<string, string>> = {
+  'm4-matrix-arithmetic': 'Matris işlemleri',
+  'm8-power-classes': 'Kuvvet sınıfları',
+  'r2-echelon-forms': 'Eşelon formlar',
+  'r4-inverse': 'Ters matris: Gauss-Jordan',
+  'd1-determinant': 'Determinant ve Sarrus',
+  'd2-cofactor-expansion': 'Laplace açılımı',
+  'd3-determinant-properties': 'Determinant özellikleri',
+}
+
+export function tileTitle(lesson: Lesson): string {
+  return tileTitles[lesson.id] ?? lesson.title
+}

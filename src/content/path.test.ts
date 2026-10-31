@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { lessons } from './lessons'
-import { chapters, codeOfNode, examItemTotal, pathCode } from './path'
+import { chapters, codeOfNode, examItemTotal, pathCode, tileTitle } from './path'
 
 describe('lesson path', () => {
   it('cuts the study order into chapters without leaving out, repeating or reordering a lesson', () => {
@@ -16,5 +16,8 @@ describe('lesson path', () => {
     expect(new Set(codes).size).toBe(lessons.length)
     expect(codeOfNode('M11')).toBe('4.1')
     expect(codeOfNode('X9')).toBe('X9')
+  })
+  it('keeps tile labels short enough for three lines', () => {
+    for (const lesson of lessons) expect(tileTitle(lesson).length, lesson.id).toBeLessThanOrEqual(34)
   })
 })
