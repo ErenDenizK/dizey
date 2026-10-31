@@ -180,6 +180,14 @@ export const d4AdjugateInverse: Lesson = {
       scene: { items: ['K'] },
       answer: '-3/2',
       feedbackWrong: '$|C| = 8 - 6 = 2$. $\\text{Ek}(C)$’nin satırları $(2, -2)$ ve $(-3, 4)$; $2$’ye böl.',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '|C| = 8 - 6 = 2',
+          'C^{-1} = \\tfrac{1}{2} \\begin{bmatrix} 2 & -2 \\\\ -3 & 4 \\end{bmatrix}',
+          '(C^{-1})_{21} = -\\tfrac{3}{2}',
+        ],
+      },
       solution: '$C^{-1} = \\frac{1}{2}\\text{Ek}(C)$, 2. satır 1. sütun: $\\frac{-3}{2}$.',
       claims: [
         { kind: 'det', matrix: 'K', equals: '2' },
@@ -242,6 +250,13 @@ export const d4AdjugateInverse: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '[C_{ij}] = \\begin{bmatrix} 3 & -6 & 2 \\\\ 2 & 3 & -1 \\\\ -2 & 4 & 1 \\end{bmatrix}',
+          '\\text{Ek}(A) = [C_{ij}]^T = \\begin{bmatrix} 3 & 2 & -2 \\\\ -6 & 3 & 4 \\\\ 2 & -1 & 1 \\end{bmatrix}',
+        ],
+      },
       solution:
         'Kofaktörler: 1. satır $3, -6, 2$; 2. satır $2, 3, -1$; 3. satır $-2, 4, 1$. Transpoz: bunlar sütun olur. Kontrol: $A \\cdot \\text{Ek}(A) = 7I$, çünkü $|A| = 7$.',
       claims: [
@@ -264,7 +279,7 @@ export const d4AdjugateInverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Tuzak',
       title: 'Transpozu unutma; kontrolü $A \\cdot \\text{Ek}(A)$ ile yap',
-      body: 'Sınavda şıklarda hem $[C_{ij}]$ hem $\\text{Ek}(A)$ bulunur. Hızlı eleme: $\\text{Ek}(A)$’nın 1. satır 2. sütun elemanı $C_{21}$’dir, $C_{12}$ değil. Tek bir elemanı hesaplayıp şıkları ele.',
+      body: 'Şıklarda ikisi de olur. $\\text{Ek}(A)$’nın $(1, 2)$ elemanı {ok}C₂₁{/ok}: tek elemanla ele.',
       scene: { items: ['Cof', 'Adj'] },
       beat: {
         kind: 'frames',
@@ -279,7 +294,11 @@ export const d4AdjugateInverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: '$|\\text{Ek}(A)| = |A|^{n-1}$',
-      body: '$A \\cdot \\text{Ek}(A) = |A|I$ eşitliğinin iki yanının determinantını al: $|A| \\cdot |\\text{Ek}(A)| = |A|^n$. $|A| \\neq 0$ ise $|\\text{Ek}(A)| = |A|^{n-1}$. Örnekteki $A$ için $4^2 = 16$.',
+      body: '$A \\cdot \\text{Ek}(A) = |A|I$’nın determinantını al. Örnekte $4^2 = 16$.',
+      beat: {
+        kind: 'equation',
+        lines: ['|A| \\cdot |\\text{Ek}(A)| = |A|^n', '|\\text{Ek}(A)| = |A|^{n-1}'],
+      },
       scene: { items: ['Adj'] },
       claims: [{ kind: 'derivedDet', of: 'adjugate', matrix: 'A', equals: '16' }],
     },
@@ -370,6 +389,7 @@ export const d4AdjugateInverse: Lesson = {
         },
       ],
       answer: 'a',
+      reveal: { kind: 'minor', matrix: 'A', row: 0, col: 2 },
       solution: '$(A^{-1})_{31} = \\frac{C_{13}}{|A|} = \\frac{-1}{4}$.',
       claims: [
         { kind: 'cofactor', matrix: 'A', row: 1, col: 3, equals: '-1' },
