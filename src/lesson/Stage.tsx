@@ -1,10 +1,11 @@
 import { type ReactNode, type RefObject, useLayoutEffect, useRef } from 'react'
 import type { Lesson, Scene } from '../content/lessons/types'
+import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { CHOREO } from '../engine/tokens'
+import { CHOREO, SPRINGS } from '../engine/tokens'
 import { Matrix, RichText } from '../exam/Blocks'
 import { parse } from '../lib/math/rational'
-import { minorBlock, type StageState } from './timeline'
+import { copyName, minorBlock, type SourceCell, type StageState } from './timeline'
 
 /** A new line of working rises into place on the lesson channel (finished at once by a tap). */
 function Rise({ children, className }: { children: ReactNode; className?: string }) {
@@ -138,17 +139,128 @@ function useSceneFit(
   }, [stage, scene, area, reserve, layoutKey])
 }
 
+/**
+ * A working line written without TeX is set token by token, so the numbers it takes from the matrix
+ * can be targeted: `data-num` counts the tokens that hold a digit, in reading order.
+ */
+function NoteTokens({ text }: { text: string }) {
+  if (/[$\\{]/.test(text)) return <RichText text={text} />
+  let numbers = 0
+  return (
+    <>
+      {text.split(' ').map((token, index) => (
+        // biome-ignore lint/suspicious/noArrayIndexKey: tokens of one line never reorder
+        <span key={index}>
+          {index ? ' ' : null}
+          <span className="ls-tok" data-num={/\d/.test(token) ? numbers++ : undefined}>
+            {token}
+          </span>
+        </span>
+      ))}
+    </>
+  )
+}
+
+const cellSelector = (source: SourceCell) =>
+  `[data-matrix="${source.copy ? copyName(source.matrix) : source.matrix}"] [data-cell="${source.row}-${source.col}"]`
+
+/**
+ * Flights: each number the newest working line takes from the matrix lifts out of its cell as a chip and
+ * travels into its place in the line, one after another; the line's own number appears as the chip lands,
+ * and what follows the last one (= result) fades in after it. Runs on the lesson channel, so a tap that
+ * finishes the beat lands every chip at once.
+ */
+function useFlights(stage: RefObject<HTMLDivElement | null>, sources: readonly SourceCell[], key: string) {
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one flight per new working line (key)
+  useLayoutEffect(() => {
+    const box = stage.current
+    if (!box || !sources.length) return
+    const line = box.querySelector<HTMLElement>('.ls-note:last-child')
+    if (!line) return
+    const tokens = [...line.querySelectorAll<HTMLElement>('[data-num]')]
+    const all = [...line.querySelectorAll<HTMLElement>('.ls-tok')]
+    const lastTarget = tokens[sources.length - 1]
+    const tail = lastTarget ? all.slice(all.indexOf(lastTarget) + 1) : []
+    const stageRect = box.getBoundingClientRect()
+    // The line is still rising into place: aim at where it will rest.
+    const lineLift = engine.value(line, 'y')
+    const chips: HTMLElement[] = []
+    for (const el of [...tokens.slice(0, sources.length), ...tail]) engine.set(el, { opacity: 0 })
+    engine.withChannel(FLIGHT_CHANNEL, () => {
+      sources.forEach((source, index) => {
+        const from = box.querySelector<HTMLElement>(cellSelector(source))
+        const to = tokens[index]
+        if (!from || !to) return
+        const a = from.getBoundingClientRect()
+        const b = to.getBoundingClientRect()
+        const chip = document.createElement('span')
+        chip.className = 'ls-chip'
+        chip.dataset.tone = from.dataset.tone ?? ''
+        chip.textContent = from.textContent
+        chip.setAttribute('aria-hidden', 'true')
+        chip.style.left = `${a.left - stageRect.left}px`
+        chip.style.top = `${a.top - stageRect.top}px`
+        chip.style.width = `${a.width}px`
+        chip.style.height = `${a.height}px`
+        chip.style.fontSize = getComputedStyle(from).fontSize
+        box.append(chip)
+        chips.push(chip)
+        engine.set(chip, { opacity: 0 })
+        const ratio =
+          Number.parseFloat(getComputedStyle(to).fontSize) / Number.parseFloat(chip.style.fontSize)
+        const land = () => {
+          if (!chip.isConnected) return
+          chip.remove()
+          engine.to(to, { opacity: 1 }, 'fade', { effect: true })
+          if (index === sources.length - 1) {
+            for (const el of tail) engine.to(el, { opacity: 1 }, 'fade', { effect: true })
+          }
+        }
+        engine.after(index * FLIGHT_STAGGER_MS, () => {
+          engine.to(chip, { opacity: 1 }, 'fade', { effect: true })
+          engine.to(
+            chip,
+            {
+              x: b.left + b.width / 2 - (a.left + a.width / 2),
+              y: b.top + b.height / 2 - lineLift - (a.top + a.height / 2),
+              scale: ratio,
+            },
+            'teach',
+            // The spring's last hundredths of a pixel are invisible: the number lands when it looks landed.
+            { onArrive: land, epsilon: 0.5 },
+          )
+          engine.after(FLIGHT_LAND_MS, land)
+        })
+      })
+    })
+    return () => {
+      for (const chip of chips) chip.remove()
+      for (const el of [...tokens, ...tail]) engine.set(el, { opacity: 1 })
+    }
+  }, [key])
+}
+
+/** Flights share the lesson channel: İleri finishes them with the beat. */
+const FLIGHT_CHANNEL = 'lesson'
+/** One chip leaves a beat after the one before it, so the eye can follow each to its place. */
+const FLIGHT_STAGGER_MS = 110
+/** A chip has visibly arrived by the teach spring's perceptual duration. */
+const FLIGHT_LAND_MS = SPRINGS.teach.duration * 1000
+
 export function Stage({
   lesson,
   scene,
   state,
   reserve = 0,
+  onReplay,
 }: {
   lesson: Lesson
   scene: Scene | undefined
   state: StageState
   /** Working lines the current beat will show at most. */
   reserve?: number
+  /** Plays the step's beat again; shown once the beat has finished. */
+  onReplay?: (() => void) | undefined
 }) {
   const box = useRef<HTMLDivElement>(null)
   const sceneBox = useRef<HTMLDivElement>(null)
@@ -160,8 +272,10 @@ export function Stage({
     state.working,
     state.result,
     state.area,
+    state.extended,
   ])
   useSceneFit(box, sceneBox, areaBox, reserve, layoutKey)
+  useFlights(box, state.sources, `${layoutKey}:${state.notes.length}:${JSON.stringify(state.sources)}`)
   return (
     <div ref={box} className="ls-stage" data-testid="lesson-stage">
       {scene ? (
@@ -190,7 +304,23 @@ export function Stage({
             return (
               // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
               <span key={index} className="ls-item">
-                <Matrix block={block} toneAt={toneFor(state, item)} />
+                <span className="ls-mat" data-matrix={item}>
+                  <Matrix block={block} toneAt={toneFor(state, item)} />
+                </span>
+                {state.extended === item ? (
+                  <Rise className="ls-mat ls-copy">
+                    <span data-matrix={copyName(item)}>
+                      <Matrix
+                        block={{
+                          kind: 'matrix',
+                          delimiter: 'brackets',
+                          rows: block.rows.map((row) => row.slice(0, 2)),
+                        }}
+                        toneAt={toneFor(state, copyName(item))}
+                      />
+                    </span>
+                  </Rise>
+                ) : null}
                 {minor ? (
                   <span className="ls-minor">
                     <RichText text={`$M_{${minor.row + 1}${minor.col + 1}} =$`} />
@@ -202,13 +332,30 @@ export function Stage({
           })}
         </div>
       ) : null}
+      {onReplay ? (
+        <button
+          type="button"
+          className="ls-replay sh-press"
+          aria-label={strings.lesson.replay}
+          onClick={onReplay}
+        >
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M5 12a7 7 0 1 0 2.1-5M5 4v4h4" />
+          </svg>
+        </button>
+      ) : null}
       {state.area ? <Area ref={areaBox} lesson={lesson} name={state.area} /> : null}
-      {state.notes.length ? (
-        <div className="ls-notes" aria-live="polite">
+      {state.notes.length || reserve ? (
+        <div
+          className="ls-notes"
+          aria-live="polite"
+          // The beat's lines have their room from the first frame, so nothing above them moves.
+          style={{ minHeight: `${reserve * NOTE_LINE}px` }}
+        >
           {state.notes.map((note, index) => (
             // biome-ignore lint/suspicious/noArrayIndexKey: notes only append
             <Rise key={`${index}:${note}`} className="ls-note">
-              <RichText text={note} />
+              <NoteTokens text={note} />
             </Rise>
           ))}
         </div>

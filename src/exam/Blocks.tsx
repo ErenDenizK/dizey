@@ -85,6 +85,7 @@ export function Matrix({
               // biome-ignore lint/suspicious/noArrayIndexKey: fixed grid
               key={`${r}-${c}`}
               className="ex-cell"
+              data-cell={`${r}-${c}`}
               data-bar={block.augmentedAt !== undefined && c === block.augmentedAt ? 'before' : undefined}
               data-tone={toneAt?.(r, c)}
             >

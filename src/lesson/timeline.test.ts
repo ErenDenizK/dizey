@@ -53,6 +53,12 @@ describe('det2', () => {
     expect(frames[1]?.notes).toEqual(['3 · 2 = 6', '1 · 4 = 4'])
     expect(frames[2]?.result).toBe('2')
     expect(frames[2]?.notes.at(-1)).toBe('6 − 4 = 2')
+    // Each product line flies its two factors out of their cells; the difference line flies nothing.
+    expect(frames[0]?.sources).toEqual([
+      { matrix: 'A', row: 0, col: 0 },
+      { matrix: 'A', row: 1, col: 1 },
+    ])
+    expect(frames[2]?.sources).toEqual([])
   })
   it('keeps signs readable with negative entries', () => {
     const frames = compile(lesson, { kind: 'det2', matrix: 'C' })
@@ -69,7 +75,16 @@ describe('det2', () => {
 describe('sarrus', () => {
   it('plays three plus and three minus diagonals and lands on the determinant', () => {
     const frames = compile(lesson, { kind: 'sarrus', matrix: 'S' })
-    expect(frames).toHaveLength(7)
+    expect(frames).toHaveLength(8)
+    // First the copy of the first two columns appears, then each diagonal is a straight line.
+    expect(frames[0]?.extended).toBe('S')
+    expect(frames[1]?.sources).toEqual([
+      { matrix: 'S', row: 0, col: 0 },
+      { matrix: 'S', row: 1, col: 1 },
+      { matrix: 'S', row: 2, col: 2 },
+    ])
+    expect(frames[3]?.sources.map((c) => c.copy ?? false)).toEqual([false, true, true])
+    expect(frames[4]?.notes.at(-1)).toBe('− 3 · 4 · 1 = 12')
     // 2·4·5 + 1·1·1 + 3·0·2 = 41; 3·4·1 + 2·1·2 + 1·0·5 = 16; 41 − 16 = 25
     expect(frames.at(-1)?.notes).toEqual(['41 − 16 = 25'])
     expect(frames.at(-1)?.result).toBe('25')
