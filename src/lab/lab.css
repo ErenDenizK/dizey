@@ -24,22 +24,25 @@
   color: var(--on-action);
   font-weight: var(--weight-semibold);
   font-size: var(--type-callout);
+  line-height: var(--leading-callout);
 }
 
 .lab-matrix {
   display: inline-grid;
-  gap: 2px;
-  padding: 2px 8px;
+  gap: var(--space-0-5);
+  padding: var(--space-0-5) var(--space-2);
   border-inline: 1.5px solid var(--ink-1);
   border-radius: 6px;
   font-size: var(--type-callout);
   font-weight: var(--weight-medium);
+  line-height: var(--leading-callout);
 }
 .lab-matrix-large {
   font-size: var(--type-title2);
-  gap: 6px;
-  padding: 6px 14px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
   border-inline-width: 2px;
+  line-height: var(--leading-title2);
 }
 .lab-matrix-row {
   display: grid;
@@ -125,7 +128,7 @@
 .lab-track .dz-button {
   position: relative;
   z-index: 1;
-  margin-top: 64px;
+  margin-top: var(--space-16);
 }
 
 .lab-roles {
