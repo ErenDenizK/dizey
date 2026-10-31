@@ -9,6 +9,15 @@ describe('parseSettings', () => {
     expect(parseSettings('{"sound":"off"}').sound).toBeUndefined()
   })
 
+  it('keeps silent-mode playback and haptics at their defaults unless changed', () => {
+    expect(parseSettings(null)).toEqual({})
+    expect(parseSettings('{"soundInSilent":true,"haptics":false}')).toEqual({
+      soundInSilent: true,
+      haptics: false,
+    })
+    expect(parseSettings('{"soundInSilent":"yes","haptics":true}')).toEqual({})
+  })
+
   it('reads older saves and ignores junk', () => {
     expect(parseSettings('{"theme":"dark","examDate":"2026-11-18"}')).toEqual({
       theme: 'dark',

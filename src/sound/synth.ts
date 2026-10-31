@@ -20,6 +20,14 @@ export const TRIM: Record<SoundEvent, number> = {
   lessonEnd: -21.7,
   halfway: -20,
   milestone: -19.2,
+  tap: -33.5,
+  tab: -30.4,
+  toggleOn: -34,
+  toggleOff: -35.4,
+  open: -35.7,
+  close: -36.3,
+  step: -34.9,
+  lessonOpen: -28.9,
 }
 
 /** Boost ahead of the limiter: a phone speaker needs it, and overlaps are still caught. */
@@ -29,12 +37,15 @@ const MAX_LIVE = 6
 /** A change of harmony fades older tails with this time constant, s. */
 const PEDAL_TAU = 0.25
 /**
- * Half-pedal: a new frequent sound turns frequent sounds still ringing down by 9 dB just before its
+ * Half-pedal: a new frequent or touch sound turns such sounds still ringing down by 9 dB just before its
  * contact, so a quick run of taps stays distinct while the chord keeps sounding underneath.
  */
 const DUCK = dbToGain(-9)
 const DUCK_TAU = 0.02
 const DUCK_EARLY = 0.02
+
+/** Sounds that come in quick runs: each new one ducks the others still ringing. */
+const quick = (event: SoundEvent) => EVENTS[event].tier === 'frequent' || EVENTS[event].tier === 'touch'
 
 /** Strike envelope: a short attack, a first decay to `hold` over `knee` s, then a straight dB line to −80 dB. */
 function strike(
@@ -337,12 +348,13 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     const start = Math.max(when ?? now + 0.01, now + 0.005)
     const plan = score.plan(event, context, start)
     // Pedal: a different harmony, or any multi-chord event, fades the tails still ringing.
-    for (const bus of live)
-      if (plan.harmony === '*' || bus.harmony !== plan.harmony) release(bus, start, PEDAL_TAU)
-    if (EVENTS[event].tier === 'frequent') {
+    if (EVENTS[event].pedal !== false)
+      for (const bus of live)
+        if (plan.harmony === '*' || bus.harmony !== plan.harmony) release(bus, start, PEDAL_TAU)
+    if (quick(event)) {
       const duckAt = Math.max(now, start - DUCK_EARLY)
       for (const bus of live) {
-        if (bus.released || EVENTS[bus.event].tier !== 'frequent') continue
+        if (bus.released || !quick(bus.event)) continue
         bus.duck *= DUCK
         bus.fade.gain.cancelScheduledValues(duckAt)
         bus.fade.gain.setTargetAtTime(bus.duck, duckAt, DUCK_TAU)

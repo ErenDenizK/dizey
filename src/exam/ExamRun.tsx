@@ -54,7 +54,8 @@ export function ExamRun() {
   }
 
   return (
-    <div className="ex-run">
+    // The rehearsal is an exam hall: no sound (decision 0005).
+    <div className="ex-run" data-sound="none">
       <div className="ex-top">
         <button type="button" className="ex-top__btn" onClick={() => setConfirming(true)}>
           {strings.exam.finishTop}
