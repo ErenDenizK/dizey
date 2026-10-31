@@ -1,4 +1,4 @@
-import { matrix } from '../questions/blocks'
+import { matrix, text } from '../questions/blocks'
 import type { Lesson, MatrixBlock } from './types'
 
 const m = (label: string, rows: readonly (readonly string[])[]): MatrixBlock => ({
@@ -41,12 +41,63 @@ export const m10ConjugateHermitian: Lesson = {
   },
   steps: [
     {
+      id: 'hook',
+      kind: 'explain',
+      eyebrow: 'Soru',
+      title: 'Karmaşık sayılarda transpoz yeter mi?',
+      body: 'Elemanlarda $i$ varsa transpozun bir adımı eksik kalır. O adım: eşlenik.',
+      scene: { items: ['A'] },
+      beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['A', 0, 0], tone: 'ok' },
+              { cell: ['A', 1, 0], tone: 'ok' },
+              { cell: ['A', 1, 1], tone: 'ok' },
+            ],
+            note: 'i içeren elemanlar',
+          },
+        ],
+      },
+    },
+    {
       id: 'conjugate',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'Eşlenik: her elemanda $i$’nin işaretini çevir',
-      body: '$z = a + bi$ sayısının eşleniği $\\bar{z} = a - bi$. Bir matrisin eşleniği $\\bar{A}$, her elemanın eşleniği alınarak bulunur. {ok}Gerçek elemanlar değişmez{/ok}: $3$ yine $3$.',
+      title: 'Eşlenik: $i$’nin işaretini çevir',
+      body: '$a + bi$ olur $a - bi$. {ok}Gerçek elemanlar değişmez{/ok}: $3$ yine $3$.',
       scene: { items: ['A', 'aC'] },
+      beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['A', 0, 0], tone: 'row' },
+              { cell: ['aC', 0, 0], tone: 'ok' },
+            ],
+            note: '1 + 2i → 1 − 2i',
+          },
+          {
+            clear: true,
+            marks: [
+              { cell: ['A', 1, 0], tone: 'row' },
+              { cell: ['aC', 1, 0], tone: 'ok' },
+            ],
+            note: '−i → i',
+          },
+          {
+            clear: true,
+            marks: [
+              { cell: ['A', 0, 1], tone: 'col' },
+              { cell: ['aC', 0, 1], tone: 'col' },
+            ],
+            note: '3 aynen kalır',
+          },
+        ],
+      },
       claims: [
         {
           kind: 'complexDerived',
@@ -63,9 +114,30 @@ export const m10ConjugateHermitian: Lesson = {
       id: 'conjugate-transpose',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'Eşlenik transpoz: $A^* = (\\bar{A})^T$',
-      body: 'Önce eşleniğini al, sonra transpozunu: satırlar sütun olur. Sıra fark etmez, $(\\bar{A})^T = \\overline{A^T}$. Gerçek bir matriste $A^* = A^T$; yani $A^*$, transpozun karmaşık sayılardaki karşılığıdır.',
-      scene: { items: ['A', 'aS'] },
+      title: 'Eşlenik transpoz: $A^*$',
+      body: 'Önce eşlenik, sonra transpoz: satırlar sütun olur. Gerçek matriste $A^* = A^T$.',
+      scene: { items: ['aC', 'aS'] },
+      beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['aC', 0, '*'], tone: 'row' },
+              { cell: ['aS', '*', 0], tone: 'row' },
+            ],
+            note: '1. satır → 1. sütun',
+          },
+          {
+            clear: true,
+            marks: [
+              { cell: ['aC', 1, '*'], tone: 'col' },
+              { cell: ['aS', '*', 1], tone: 'col' },
+            ],
+            note: '2. satır → 2. sütun',
+          },
+        ],
+      },
       claims: [
         {
           kind: 'complexDerived',
@@ -77,6 +149,31 @@ export const m10ConjugateHermitian: Lesson = {
           ],
         },
       ],
+    },
+    {
+      id: 'try-conjugate',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$\\overline{4 - 3i}$ hangisi?',
+      skill: 'conjugate-transpose',
+      options: [
+        {
+          key: 'a',
+          content: [text('$-4 + 3i$')],
+          errorType: 'negated-whole',
+          feedback: 'Gerçek kısım aynen kalır; yalnız $i$’nin işareti döner.',
+        },
+        { key: 'b', content: [text('$4 + 3i$')] },
+        {
+          key: 'c',
+          content: [text('$4 - 3i$')],
+          errorType: 'no-change',
+          feedback: 'İşaret değişmeli: $-3i$ olur $+3i$.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'equation', lines: ['\\overline{4 - 3i} = 4 + 3i'] },
+      solution: 'Gerçek kısım $4$ kalır, $-3i$ olur $+3i$.',
     },
     {
       id: 'try-conjugate-transpose',
@@ -130,6 +227,13 @@ export const m10ConjugateHermitian: Lesson = {
         },
       ],
       answer: 'c',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '\\bar{B} = \\begin{bmatrix} 2 & 1-i \\\\ -3i & 4+i \\end{bmatrix}',
+          'B^* = \\begin{bmatrix} 2 & -3i \\\\ 1-i & 4+i \\end{bmatrix}',
+        ],
+      },
       solution: '$\\bar{B}$’nin satırları $(2, 1 - i)$ ve $(-3i, 4 + i)$; transpozu alınınca $B^*$ bulunur.',
       claims: [
         {
@@ -148,9 +252,30 @@ export const m10ConjugateHermitian: Lesson = {
       id: 'hermitian',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: '$A^* = A$ ise Hermitian, $A^* = -A$ ise ters Hermitian',
-      body: 'Hermitian, simetrik matrisin karmaşık karşılığıdır: $a_{ji} = \\overline{a_{ij}}$. Köşegende $a_{ii} = \\overline{a_{ii}}$ olmalı, yani {ok}Hermitian matrisin köşegeni gerçektir{/ok}. Ters Hermitian’da ($S^* = -S$) köşegen saf sanaldır ya da $0$.',
+      title: 'Hermitian: $A^* = A$',
+      body: 'Karşılıklı elemanlar birbirinin eşleniği. {ok}Köşegen gerçek{/ok}. $S^* = -S$ ise ters Hermitian.',
       scene: { items: ['H', 'S'] },
+      beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['H', 0, 1], tone: 'row' },
+              { cell: ['H', 1, 0], tone: 'col' },
+            ],
+            note: '1 + i ve 1 − i',
+          },
+          {
+            clear: true,
+            marks: [
+              { cell: ['H', 0, 0], tone: 'ok' },
+              { cell: ['H', 1, 1], tone: 'ok' },
+            ],
+            note: 'köşegen gerçek',
+          },
+        ],
+      },
       claims: [
         { kind: 'complexProperty', matrix: 'H', is: 'hermitian' },
         { kind: 'complexProperty', matrix: 'S', is: 'skewHermitian' },
@@ -208,6 +333,10 @@ export const m10ConjugateHermitian: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: {
+        kind: 'equation',
+        lines: ['\\overline{2 - i} = 2 + i', '\\text{köşegen: } 3, 0 \\text{ gerçek}'],
+      },
       solution: 'Köşegen gerçek ($3$ ve $0$), $2 - i$ ile $2 + i$ birbirinin eşleniği: $A^* = A$.',
       claims: [{ kind: 'optionComplexProperty', is: 'hermitian' }],
     },
@@ -216,18 +345,23 @@ export const m10ConjugateHermitian: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: '$(AB)^* = B^*A^*$',
-      body: 'Transpozun kuralları eşlenik transpozda da geçerli: $(A^*)^* = A$, $(A + B)^* = A^* + B^*$, $(AB)^* = B^*A^*$, {ok}sıra ters döner{/ok}. Tek fark skalerde: $(kA)^* = \\bar{k}A^*$, yani $(iA)^* = -iA^*$.',
+      body: 'Transpozun kuralları aynen geçerli, {ok}sıra ters döner{/ok}. Tek fark: skalerin de eşleniği alınır.',
+      beat: { kind: 'equation', lines: ['(AB)^* = B^*A^*', '(kA)^* = \\bar{k}A^*', '(iA)^* = -iA^*'] },
     },
     {
       id: 'try-det',
       kind: 'keypad',
       eyebrow: 'Senin sıran',
       title: '$|H|$ kaç?',
-      body: 'Hermitian bir matrisin determinantı her zaman gerçek sayıdır.',
+      body: 'Hermitian ise cevap gerçek sayı çıkar.',
       skill: 'det-2x2',
       scene: { items: ['H'] },
       answer: '-8',
       feedbackWrong: '$(1 + i)(1 - i) = 1 - i^2 = 2$. Sonra $2 \\cdot (-3) - 2$.',
+      reveal: {
+        kind: 'equation',
+        lines: ['|H| = 2 \\cdot (-3) - (1+i)(1-i)', '= -6 - 2 = -8'],
+      },
       solution: '$|H| = 2 \\cdot (-3) - (1 + i)(1 - i) = -6 - 2 = -8$.',
       claims: [{ kind: 'complexDet', matrix: 'H', equals: '-8' }],
     },

@@ -1,4 +1,4 @@
-import katex from 'katex'
+import { mathToHtml } from './math'
 
 export type TextPart = { tex: boolean; value: string }
 
@@ -17,27 +17,9 @@ export function splitTex(text: string): TextPart[] {
   return parts
 }
 
-const cache = new Map<string, string>()
-
-/**
- * KaTeX draws \neq as its private-use \not slash laid over "=". Set in the math face that slash has no glyph
- * and "≠" read as "=I"; the math face has a real ≠, so the relation uses it.
- */
-const macros = { '\\neq': '\\mathrel{\\char"2260}', '\\ne': '\\mathrel{\\char"2260}' }
-
-/** Inline TeX to HTML (KaTeX, decision 0001). Content is ours and checked by tests; errors render red, never throw. */
+/** Inline TeX to HTML with Dizey's own typesetter (decision 0008, which replaced KaTeX). */
 export function texToHtml(tex: string): string {
-  let html = cache.get(tex)
-  if (html === undefined) {
-    html = katex.renderToString(tex, {
-      throwOnError: false,
-      output: 'html',
-      strict: 'ignore',
-      macros: { ...macros },
-    })
-    cache.set(tex, html)
-  }
-  return html
+  return mathToHtml(tex)
 }
 
 /** Matrix entries are plain strings ("-1", "4/3"); typeset the minus as a real minus sign. */

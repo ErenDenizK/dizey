@@ -84,6 +84,8 @@ test('the sound lab plays every sound without an error', async ({ page }) => {
   page.on('pageerror', (error) => errors.push(error.message))
   await openApp(page, './lab/sounds', { music: false })
   const rows = page.locator('[data-testid^="sound-"]')
+  // The lab is a lazy route: wait for it to render before counting.
+  await expect(rows.first()).toBeVisible()
   const count = await rows.count()
   expect(count).toBeGreaterThanOrEqual(20)
   for (let i = 0; i < count; i++) {

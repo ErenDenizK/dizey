@@ -49,6 +49,10 @@ export const m7SymmetricAntisymmetric: Lesson = {
       ['1', '0'],
       ['0', '2'],
     ]),
+    XY0: m('XY =', [
+      ['1', '?'],
+      ['?', '2'],
+    ]),
     xA: m('', [
       ['0', '1', '0'],
       ['-1', '0', '0'],
@@ -64,9 +68,9 @@ export const m7SymmetricAntisymmetric: Lesson = {
     {
       id: 'hook',
       kind: 'explain',
-      eyebrow: 'Gözlem',
-      title: 'Köşegene ayna tut',
-      body: '$S$’nin köşegenine bir ayna koy: üst üçgendeki her sayı alt üçgende aynen görünür. Transpoz almak tam olarak bu aynadır, bu yüzden $S^T = S$.',
+      eyebrow: 'Soru',
+      title: 'Köşegene ayna tutarsan ne görürsün?',
+      body: 'Üstteki her sayı, köşegenin altında aynen tekrar ediyor. Bu matrisin adı simetrik.',
       scene: { items: ['S'] },
       beat: {
         kind: 'frames',
@@ -99,7 +103,7 @@ export const m7SymmetricAntisymmetric: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Simetrik: $A^T = A$',
-      body: 'Kare bir $A$ için {ok}$A^T = A$ ise{/ok} $A$ simetriktir. Eleman eleman: her $i, j$ için $a_{ij} = a_{ji}$. Köşegen serbesttir; kısıt yalnızca karşılıklı çiftlerdedir.',
+      body: 'Kare $A$ için {ok}Aᵀ = A{/ok}: her çiftte $a_{ij} = a_{ji}$. Köşegen serbest.',
       scene: { items: ['S'] },
       claims: [
         {
@@ -114,11 +118,49 @@ export const m7SymmetricAntisymmetric: Lesson = {
       ],
     },
     {
+      id: 'try-pair',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: 'Simetrik bir matriste $a_{12} = 7$. $a_{21}$ kaç?',
+      skill: 'recognize-symmetric',
+      options: [
+        { key: 'a', content: [text('$7$')] },
+        {
+          key: 'b',
+          content: [text('$-7$')],
+          errorType: 'sign-slip',
+          feedback: 'Zıt işaret antisimetrikte olur. Simetrikte çift eşit.',
+        },
+        {
+          key: 'c',
+          content: [text('$0$')],
+          errorType: 'diagonal-confused',
+          feedback: '$a_{21}$ köşegende değil; çifti $a_{12}$ ile eşit.',
+        },
+      ],
+      answer: 'a',
+      reveal: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['S', 0, 1], tone: 'row' },
+              { cell: ['S', 1, 0], tone: 'col' },
+            ],
+            note: 'a₁₂ = a₂₁',
+          },
+        ],
+      },
+      scene: { items: ['S'] },
+      solution: 'Simetrikte çiftler eşit: $a_{21} = a_{12} = 7$.',
+    },
+    {
       id: 'antisymmetric',
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Antisimetrik: $A^T = -A$',
-      body: '{ok}$A^T = -A$ olunca{/ok} karşılıklı çiftler zıt işaretlidir, $a_{ij} = -a_{ji}$. Köşegende $a_{ii} = -a_{ii}$ olur, yani köşegen hep $0$’dır.',
+      body: '{ok}Aᵀ = −A{/ok}: çiftler zıt işaretli. Köşegen kendi zıttına eşit, yani hep 0.',
       scene: { items: ['K'] },
       beat: {
         kind: 'frames',
@@ -195,6 +237,13 @@ export const m7SymmetricAntisymmetric: Lesson = {
         },
       ],
       answer: 'c',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '\\begin{bmatrix} 0 & -3 \\\\ 3 & 0 \\end{bmatrix}',
+          '\\text{köşegen } 0,\\; -3 \\leftrightarrow 3',
+        ],
+      },
       solution: 'Köşegen $0$, karşılıklı çift $-3$ ve $3$: $A^T = -A$.',
       claims: [{ kind: 'optionProperty', is: 'antisymmetric' }],
     },
@@ -203,7 +252,7 @@ export const m7SymmetricAntisymmetric: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Her kare matristen ikisi de üretilir',
-      body: 'Herhangi bir kare $A$ için: {ok}$A + A^T$ simetrik{/ok}, {ok}$A - A^T$ antisimetrik{/ok}, $AA^T$ ve $A^TA$ simetrik. Kanıt tek satır: $(A + A^T)^T = A^T + A$, $(AA^T)^T = (A^T)^TA^T = AA^T$.',
+      body: 'Her kare $A$ için {ok}$A + A^T$ simetrik{/ok}, {ok}$A - A^T$ antisimetrik{/ok}. $AA^T$ ve $A^TA$ da simetrik.',
       scene: { items: ['P'] },
       claims: [
         { kind: 'property', expr: 'P + P^T', is: 'symmetric' },
@@ -217,7 +266,7 @@ export const m7SymmetricAntisymmetric: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: '$A = S + K$: simetrik artı antisimetrik',
-      body: '$S = \\frac{1}{2}(A + A^T)$ ve $K = \\frac{1}{2}(A - A^T)$ alınırsa $S + K = A$ olur. Bu ayrışım tektir. Örnekte $S$’nin karşılıklı elemanı $\\frac{4 + 2}{2} = 3$, $K$’nınki $\\frac{4 - 2}{2} = 1$.',
+      body: 'Çiftin ortalaması $S$’ye, farkının yarısı $K$’ya gider. Örnekte 4 ve 2: ortalama 3, farkın yarısı 1.',
       scene: { items: ['N', '=', 'sN', 'kN'] },
       beat: {
         kind: 'equation',
@@ -255,11 +304,24 @@ export const m7SymmetricAntisymmetric: Lesson = {
       id: 'try-entry',
       kind: 'keypad',
       eyebrow: 'Senin sıran',
-      title: '$P = S + K$ ayrışımında $K$’nın 2. satır 3. sütun elemanı kaç?',
+      title: '$P = S + K$ ise $k_{23}$ kaç?',
       skill: 'decompose-entry',
       scene: { items: ['P'] },
       answer: '3',
       feedbackWrong: '$k_{23} = \\frac{p_{23} - p_{32}}{2}$. $p_{23} = 4$, $p_{32} = -2$.',
+      reveal: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['P', 1, 2], tone: 'row' },
+              { cell: ['P', 2, 1], tone: 'col' },
+            ],
+            note: '(4 − (−2)) / 2 = 3',
+          },
+        ],
+      },
       solution: '$k_{23} = \\frac{4 - (-2)}{2} = 3$.',
       claims: [{ kind: 'exprEntry', expr: '1/2(P - P^T)', row: 2, col: 3, equals: '3' }],
     },
@@ -268,8 +330,18 @@ export const m7SymmetricAntisymmetric: Lesson = {
       kind: 'explain',
       eyebrow: 'Tuzak',
       title: 'İki simetriğin çarpımı simetrik olmayabilir',
-      body: '$(XY)^T = Y^TX^T = YX$. Bu, $XY$’ye ancak {ok}$XY = YX$ ise{/ok} eşittir. Örnekte $X$ ve $Y$ simetrik, ama $XY$’nin karşılıklı elemanları $4$ ve $2$.',
-      scene: { items: ['X', 'Y'] },
+      body: '$(XY)^T = YX$. Bu ancak {ok}$XY = YX$ ise{/ok} $XY$’ye eşit. İzle: çift 4 ve 2 çıkıyor.',
+      scene: { items: ['X', '·', 'Y', '=', 'XY0'] },
+      beat: {
+        kind: 'product',
+        left: 'X',
+        right: 'Y',
+        into: 'XY0',
+        cells: [
+          [0, 1],
+          [1, 0],
+        ],
+      },
       claims: [
         { kind: 'property', expr: 'X', is: 'symmetric' },
         { kind: 'property', expr: 'Y', is: 'symmetric' },
