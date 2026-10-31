@@ -270,7 +270,9 @@ function escapeHtml(text: string): string {
 }
 
 /** Binary operators take spaces between operands; a sign at the start or after an operator is unary. */
-function render(nodes: readonly Node[]): string {
+function render(nodes: readonly Node[], breakable = false): string {
+  // At the top level a long formula may wrap, but only after a relation or a binary operator, as in print.
+  const BREAK = '</span><wbr><span class="dz-m-seg">'
   let html = ''
   let previous: Node | undefined
   for (const node of nodes) {
@@ -284,9 +286,10 @@ function render(nodes: readonly Node[]): string {
         previous.kind === 'space'
       html += unary
         ? `<span class="dz-m-sign">${escapeHtml(node.text)}</span>`
-        : `<span class="dz-m-bin">${escapeHtml(node.text)}</span>`
+        : `<span class="dz-m-bin">${escapeHtml(node.text)}</span>${breakable ? BREAK : ''}`
     } else {
       html += one(node)
+      if (breakable && node.kind === 'atom' && node.role === 'rel') html += BREAK
     }
     previous = node
   }
@@ -337,7 +340,7 @@ const cache = new Map<string, string>()
 export function mathToHtml(tex: string): string {
   let html = cache.get(tex)
   if (html === undefined) {
-    html = `<span class="dz-m">${render(new Parser(tex).parse())}</span>`
+    html = `<span class="dz-m"><span class="dz-m-seg">${render(new Parser(tex).parse(), true)}</span></span>`
     cache.set(tex, html)
   }
   return html

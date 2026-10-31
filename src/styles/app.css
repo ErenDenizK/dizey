@@ -89,6 +89,9 @@ html {
 .dz-m {
   font-family: var(--font-math);
   font-variant-numeric: tabular-nums;
+}
+/* A formula wraps only between segments, which end after a relation or binary operator (<wbr>). */
+.dz-m-seg {
   white-space: nowrap;
 }
 .dz-m-bin,
