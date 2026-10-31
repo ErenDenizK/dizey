@@ -117,12 +117,12 @@ test('the exam line counts down once a date is set', async ({ page }) => {
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
 })
 
-test('the appearance switch sets the theme', async ({ page }) => {
+test('the app is dark even when the phone is in light mode', async ({ page }) => {
+  await page.emulateMedia({ colorScheme: 'light' })
   await openApp(page, './me')
-  await screen(page).getByRole('button', { name: 'Koyu' }).click()
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
-  await screen(page).getByRole('button', { name: 'Sistem' }).click()
-  await expect(page.locator('html')).not.toHaveAttribute('data-theme', /./)
+  await expect(screen(page).getByRole('button', { name: 'Koyu' })).toHaveCount(0)
+  const ground = await page.evaluate(() => getComputedStyle(document.documentElement).colorScheme)
+  expect(ground).toBe('dark')
 })
 
 test('an exam rehearsal runs, survives a reload and shows its result', async ({ page }) => {
@@ -205,7 +205,7 @@ for (const path of ['./', './exam', './me']) {
   })
 }
 
-for (const colorScheme of ['light', 'dark'] as const) {
+for (const colorScheme of ['dark'] as const) {
   test(`phone screenshots, ${colorScheme}`, async ({ page }, testInfo) => {
     await page.emulateMedia({ colorScheme })
     for (const [name, path] of [

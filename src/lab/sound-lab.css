@@ -1,16 +1,6 @@
 /* The sound lab (/lab/sounds): a console that shows every note as it plays, and the sounds below it. */
-/* A keyboard keeps its own colours in both themes: ivory and ebony, a little dimmed in the dark. */
+/* A keyboard keeps its own colours: ivory and ebony, dimmed for the dark app. */
 :root {
-  --sl-key-white: #f3f0ea;
-  --sl-key-black: #26231f;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --sl-key-white: #8d887f;
-    --sl-key-black: #151412;
-  }
-}
-:root[data-theme="dark"] {
   --sl-key-white: #8d887f;
   --sl-key-black: #151412;
 }
