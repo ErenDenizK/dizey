@@ -131,6 +131,15 @@ Same metric script as 3.1. "Replays" counts questions whose answer plays its wor
 | M8 before → after | 11 → 12 | 36 % → 42 % | 2/4 → 5/5 | 24.2 / 49 → 14.2 / 24 | Gözlem → Soru |
 | M9 before → after | 9 → 10 | 33 % → 40 % | 1/3 → 4/4 | 18.9 / 33 → 11 / 17 | Gözlem → Soru |
 | M10 before → after | 8 → 10 | 38 % → 40 % | 0/3 → 4/4 | 16.1 / 30 → 9.1 / 16 | Tanım → Soru |
+| R1 before → after | 6 → 12 | 17 % → 42 % | 0/1 → 5/5 | 22.6 / 38 → 10.8 / 17 | Tanım → Soru |
+| R2 before → after | 5 → 9 | 20 % → 33 % | 0/1 → 3/3 | 21.5 / 30 → 10.3 / 15 | Tanım → Soru |
+| R3 before → after | 5 → 8 | 20 % → 38 % | 0/1 → 3/3 | 21.8 / 30 → 11.1 / 16 | Tanım → Soru |
+| M11 before → after | 5 → 9 | 20 % → 44 % | 0/1 → 4/4 | 26.8 / 38 → 10.8 / 19 | Tanım → Soru |
+| R4 before → after | 9 → 12 | 22 % → 33 % | 1/2 → 4/4 | 23.5 / 36 → 11 / 16 | Fikir → Soru |
+| S1 before → after | 7 → 9 | 29 % → 33 % | 0/2 → 3/3 | 23.3 / 40 → 10.8 / 14 | Kurulum → Soru |
+| S2 before → after | 8 → 9 | 25 % → 33 % | 0/2 → 3/3 | 17.6 / 29 → 10.5 / 16 | Soru → Soru |
+| S3 before → after | 6 → 8 | 33 % → 38 % | 0/2 → 3/3 | 21 / 32 → 12.6 / 18 | Gözlem → Soru |
+| S4 before → after | 6 → 8 | 33 % → 38 % | 0/2 → 3/3 | 17.4 / 31 → 10.4 / 16 | Kural → Soru |
 
 New beats for these lessons: `combine` (sums and scalar multiples entry by entry: the same cell of each term
 lights, its numbers fly into the line, the sum lands in its "?" slot) and `trace` (the diagonal lights and its
@@ -140,3 +149,14 @@ transpose). Chapter 1 (M1 to M10) is now complete in this rhythm.
 Found while recording M9: a negative stacked fraction split its sign onto its own grid row inside stage cells.
 Fixed with a nowrap sign wrapper (`.ex-signed`). Open: question steps with no scene leave an empty stage; the
 original filled it with the object of the question. Candidate for the next pass.
+
+### Operation pacing (2026-10-31, Eren: "two numbers slowly come and get written, then the next two, then the result")
+
+Frame bursts every 140 ms of the original's A3 multiplication and our M5 step 2 (project files
+`screenshots/0.21.0/`): ours finished an entry in about 3.7 s against the original's 6.5 s. Cause: the new beats
+(`product`, `combine`, `trace`, `transpose`) were missing from the calculating set in `src/lesson/tempo.ts`, so they
+played at the quick pace instead of the teaching pace (1.6x). Second difference: in the original the sum is written on
+the line and then flies into its cell; ours popped it into the cell together with "= r". Both fixed in 0.21.0.
+
+Remaining: D1-D4 already open with a question; their bodies are still about 18-20 words per step and D4 replays one
+answer in four.
