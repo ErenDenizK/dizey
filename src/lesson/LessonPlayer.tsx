@@ -10,6 +10,7 @@ import { returnTab } from '../shell/stage'
 import { playSound } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
 import { Keypad } from './Keypad'
+import { useAnswerMotion, useLessonMotion } from './motion'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { rewardFor } from './reward'
 import { Stage } from './Stage'
@@ -87,6 +88,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     const record = recordOf(lesson.id)
     if (record.at !== step.id) saveRecord(lesson.id, { ...record, at: step.id })
   }, [lesson.id, step.id])
+
+  const root = useRef<HTMLDivElement>(null)
+  useLessonMotion(root, index, lesson.steps.length)
+  useAnswerMotion(root, attempt.wrong, attempt.solved)
 
   const scroller = useRef<HTMLDivElement>(null)
   // biome-ignore lint/correctness/useExhaustiveDependencies: each step opens at its top
@@ -172,12 +177,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     } else if (isLast) finish()
     else go(index + 1)
   }
-  const primaryLabel =
-    playing && frames.length
-      ? strings.lesson.finishBeat
-      : isLast
-        ? strings.lesson.finish
-        : strings.lesson.next
+  // While a beat plays the button keeps its label and turns soft (old UC-2): a tap lands the beat.
+  const skipping = playing && frames.length > 0
+  const primaryLabel = isLast ? strings.lesson.finish : strings.lesson.next
 
   const lastWrong = attempt.wrong.at(-1)
   const wrongFeedback =
@@ -187,7 +189,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         ? step.feedbackWrong
         : undefined
 
-  const hasStage = Boolean(step.scene || state.area || state.lines.length)
+  const final = frames.at(-1) ?? emptyStage
+  const hasStage = Boolean(step.scene || state.area || final.area || state.lines.length)
   const transport =
     frames.length > 0
       ? {
@@ -227,7 +230,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     ) : null
 
   return (
-    <div className="ls-run" data-testid="lesson-player">
+    <div ref={root} className="ls-run" data-testid="lesson-player">
       <div className="ls-top">
         <Link to={returnTab.current} className="ls-top__btn" aria-label={strings.lesson.close}>
           ✕
@@ -249,10 +252,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           aria-valuenow={index + 1}
           aria-label={strings.lesson.count(index + 1, lesson.steps.length)}
         >
-          <span
-            className="ls-progress__fill"
-            style={{ width: `${((index + 1) / lesson.steps.length) * 100}%` }}
-          />
+          <span className="ls-progress__fill" />
         </div>
         <span className="ls-count" aria-hidden="true">
           {lesson.node} · {strings.lesson.count(index + 1, lesson.steps.length)}
@@ -265,6 +265,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             lesson={lesson}
             scene={step.scene}
             state={state}
+            final={final}
             stagger={CARRY.stagger}
             transport={transport}
           />
@@ -341,7 +342,13 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           </button>
         ) : null}
         {locked ? null : (
-          <button type="button" className="sh-btn sh-btn--primary sh-press" onClick={primary}>
+          <button
+            type="button"
+            className="sh-btn sh-btn--primary sh-press"
+            data-soft={skipping || undefined}
+            aria-label={skipping ? strings.lesson.finishBeat : undefined}
+            onClick={primary}
+          >
             {primaryLabel}
           </button>
         )}

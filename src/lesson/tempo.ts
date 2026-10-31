@@ -6,7 +6,10 @@ const CALCULATING = new Set<Beat['kind']>(['det2', 'sarrus', 'expand', 'rowOps']
 
 function kindsOf(beat: Beat | undefined): Beat['kind'][] {
   if (!beat) return []
-  return beat.kind === 'sequence' ? beat.beats.flatMap(kindsOf) : [beat.kind]
+  if (beat.kind === 'sequence') return beat.beats.flatMap(kindsOf)
+  // Lighting the Sarrus diagonals calculates nothing: it is a layout beat.
+  if (beat.kind === 'sarrus' && beat.diagonalsOnly) return ['frames']
+  return [beat.kind]
 }
 
 function beatsOf(step: Step): (Beat | undefined)[] {

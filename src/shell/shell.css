@@ -1115,3 +1115,24 @@ a.dz-button[data-kind="primary"] {
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+/* The result slot keeps the room of the beat's final value from the first frame, so the scene never refits
+   when the value lands. */
+.ls-result {
+  display: inline-grid;
+  justify-items: start;
+}
+.ls-result > * {
+  grid-area: 1 / 1;
+}
+.ls-result__room {
+  visibility: hidden;
+}
+/* İleri while a beat plays (old UC-2 soft İleri): same label, soft colours; a tap lands the beat. The
+   engine drives --soft (0 primary, 1 soft) on the fade spring and flips the label ink at the midpoint, so
+   no frame shows grey text on a grey fill. */
+.ls-dock .sh-btn--primary {
+  background: color-mix(in oklab, var(--sh-soft) calc(var(--soft, 0) * 100%), var(--sh-action));
+}
+.ls-dock .sh-btn--primary[data-ink="soft"] {
+  color: var(--sh-ink);
+}
