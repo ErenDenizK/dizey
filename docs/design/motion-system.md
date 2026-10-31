@@ -1,5 +1,9 @@
 # Motion system
 
+> Superseded in part by decision 0006 (2026-10-31): spring values now come from the old app's table
+> (`src/engine/tokens.ts`, inventory `docs/research/old-ui-inventory.md` section 1). The engine architecture below
+> still holds; preset values and the press depth rule do not.
+
 How everything in Dizey moves, opens, closes and answers a touch. Visuals are in
 [`visual-system.md`](visual-system.md); research and sources in
 [`docs/research/motion-and-visual-system.md`](../research/motion-and-visual-system.md); decision

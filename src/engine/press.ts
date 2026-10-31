@@ -1,13 +1,14 @@
 import { engine as appEngine } from './driver'
 import type { Engine } from './engine'
-import { PRESS, pressScale } from './tokens'
+import { PRESS, PRESS_SCALE } from './tokens'
 
 /**
  * Press physics for any pressable element.
  *
- * - The press-down starts on pointerdown in the same frame (iOS does not apply :active reliably),
- *   with the fast `tap` spring; the release uses `release`, which has a trace of give.
- * - Depth is physical: every element sinks by PRESS.depth px per side, so scale depends on width.
+ * - The press-down starts on pointerdown in the same frame (iOS does not apply :active reliably): half
+ *   the depth is drawn at once, the `press` spring takes the rest. The release springs back on `ui`.
+ * - Every element sinks to PRESS_SCALE (0.96), as in the old app. A press released before it was drawn
+ *   is drawn now at full depth, so even the shortest tap shows.
  * - A finger that moves past PRESS.slop is scrolling: the press cancels and nothing fires.
  * - The action fires on release, never after the animation: motion never delays a result.
  * - Keyboard activation does not animate (frequent, and already confirmed by focus).
@@ -29,9 +30,8 @@ export function attachPress(
     pointer = event.pointerId
     startX = event.clientX
     startY = event.clientY
-    const scale = pressScale(element.offsetWidth)
+    engine.withChannel('chrome', () => pressIn(engine, element))
     engine.withChannel('chrome', () => {
-      engine.to(element, { scale }, 'tap')
       engine.to(dim, { '--press': 1 }, 'tap', { effect: true })
     })
   }
@@ -39,7 +39,7 @@ export function attachPress(
     if (pointer === null) return
     pointer = null
     engine.withChannel('chrome', () => {
-      engine.to(element, { scale: 1 }, 'release')
+      pressOut(engine, element)
       engine.to(dim, { '--press': 0 }, 'fade', { effect: true })
     })
   }
@@ -66,3 +66,18 @@ export function attachPress(
 }
 
 function noop() {}
+
+/** Draws the first part of a press at once and lets the `press` spring take it the rest of the way. */
+export function pressIn(engine: Engine, element: object): void {
+  const depth = 1 - PRESS_SCALE
+  if (1 - engine.value(element, 'scale') < depth * PRESS.first)
+    engine.set(element, { scale: 1 - depth * PRESS.first })
+  engine.to(element, { scale: PRESS_SCALE }, 'press')
+}
+
+/** Springs a press back; one released before half its depth showed is drawn at full depth first. */
+export function pressOut(engine: Engine, element: object): void {
+  const depth = 1 - PRESS_SCALE
+  if (1 - engine.value(element, 'scale') < depth / 2) engine.set(element, { scale: PRESS_SCALE })
+  engine.to(element, { scale: 1 }, 'ui')
+}

@@ -45,20 +45,20 @@ describe('spring math', () => {
     }
   })
 
-  it('keeps every token inside the limits written in the motion spec', () => {
+  it("keeps the old table's character: only shake and land bounce visibly", () => {
     for (const [name, spec] of Object.entries(SPRINGS)) {
-      expect(spec.bounce, name).toBeLessThanOrEqual(0.35)
+      if (name !== 'shake') expect(spec.bounce, name).toBeLessThanOrEqual(0.4)
       // Perceptual duration and the 1% settle time stay within 10% for bounce 0.
       if (spec.bounce === 0) expect(settleTime(spec)).toBeLessThan(spec.duration * 1.1)
     }
-    expect(overshoot(SPRINGS.page)).toBe(0)
-    expect(overshoot(SPRINGS.snap)).toBeLessThan(0.02)
-    expect(overshoot(SPRINGS.settle)).toBeLessThan(0.08)
+    expect(overshoot(SPRINGS.page)).toBeLessThan(0.01)
+    expect(overshoot(SPRINGS.snap)).toBeLessThan(0.01)
+    expect(overshoot(SPRINGS.settle)).toBeLessThan(0.3)
   })
 
   it('carries an initial velocity: a flick keeps moving before it returns', () => {
     const [u] = solve(physicsOf(SPRINGS.glide), 0, 2000, 0.03)
-    expect(u).toBeGreaterThan(30)
+    expect(u).toBeGreaterThan(20)
   })
 })
 
@@ -130,7 +130,8 @@ describe('engine', () => {
       engine.advance(1000 / 60)
       min = Math.min(min, engine.value(launched, 'x'))
     }
-    expect(min).toBeGreaterThanOrEqual(0)
+    // `page` has the old table's trace of bounce (ζ 0.9): under 1 % of the travel.
+    expect(min).toBeGreaterThanOrEqual(-390 * 0.01)
   })
 
   it('never overshoots effects, even with a bouncy spring', () => {
@@ -204,12 +205,35 @@ describe('engine', () => {
     expect(el.style.vars['--press']).toBe('1')
   })
 
-  it('accepts the previous engine names while callers migrate', () => {
+  it('ports the old spring table exactly (duration = 2π/√k, bounce = 1 − ζ)', () => {
+    expect(SPRINGS.teach.duration).toBeCloseTo((2 * Math.PI) / Math.sqrt(170), 6)
+    expect(SPRINGS.teach.bounce).toBeCloseTo(0.2, 6)
+    expect(SPRINGS.carry.duration).toBeCloseTo(0.599, 3)
+    expect(SPRINGS.tap).toBe(SPRINGS.press)
+    expect(SPRINGS.glide).toBe(SPRINGS.move)
+  })
+
+  it('never lets an entrance be quicker than the enter spring', () => {
+    const engine = new Engine()
+    const quick = element()
+    engine.set(quick, { opacity: 0 })
+    engine.to(quick, { opacity: 1 }, 'leave')
+    runFor(engine, 100)
+    // `leave` alone would be past 0.9 by now; the floor holds it to the enter curve.
+    expect(engine.value(quick, 'opacity')).toBeLessThan(0.9)
+  })
+
+  it('hands a bouncy preset to fade for effects, so opacity never overshoots', () => {
     const engine = new Engine()
     const el = element()
-    engine.to(el, { scale: 0.97 }, 'press')
-    runFor(engine, 400)
-    expect(engine.value(el, 'scale')).toBe(0.97)
+    engine.set(el, { opacity: 0.5 })
+    engine.to(el, { opacity: 1 }, 'shake')
+    let peak = 0
+    for (let t = 0; t < 600; t += 8) {
+      engine.advance(8)
+      peak = Math.max(peak, engine.value(el, 'opacity'))
+    }
+    expect(peak).toBeLessThanOrEqual(1)
   })
 })
 
@@ -236,10 +260,8 @@ describe('gestures', () => {
     expect(nearestStop(300, -1500, [0, 400, 800])).toBe(0)
   })
 
-  it('presses every element by the same physical depth', () => {
-    expect(pressScale(350)).toBeCloseTo(1 - 6 / 350)
-    expect(pressScale(44)).toBeGreaterThanOrEqual(0.86)
-    expect(pressScale(44)).toBe(0.92)
-    expect(pressScale(1000)).toBe(0.985)
+  it("presses every element to the old app's 0.96", () => {
+    expect(pressScale(44)).toBe(0.96)
+    expect(pressScale(1000)).toBe(0.96)
   })
 })

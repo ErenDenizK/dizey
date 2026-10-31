@@ -1,5 +1,5 @@
 import { physicsOf, type SpringPhysics, type SpringSpec, solve } from './spring'
-import { LEGACY_NAMES, type LegacyName, SPRINGS, type SpringName } from './tokens'
+import { ENTRANCE, SPRINGS, type SpringName } from './tokens'
 
 /**
  * One virtual clock for every animation in Dizey: springs, cue timers and free-physics tickers.
@@ -31,7 +31,7 @@ export interface Target {
 }
 
 /** A named token or an inline spec (inline specs are for the motion lab and tests only). */
-export type SpringRef = SpringName | LegacyName | SpringSpec
+export type SpringRef = SpringName | SpringSpec
 
 const TRANSFORM_KEYS = ['x', 'y', 'scale', 'scaleX', 'scaleY', 'rotate']
 /** Effect properties never overshoot and still animate under reduced motion. */
@@ -97,7 +97,7 @@ export interface ToOptions {
 
 function specOf(ref: SpringRef): SpringSpec {
   if (typeof ref !== 'string') return ref
-  return SPRINGS[ref in LEGACY_NAMES ? LEGACY_NAMES[ref as LegacyName] : (ref as SpringName)]
+  return SPRINGS[ref]
 }
 
 function epsilonOf(prop: string): number {
@@ -212,7 +212,13 @@ export class Engine {
         delete state.motions[prop]
         continue
       }
-      const physics = physicsOf(effect ? { duration: spec.duration, bounce: 0 } : spec, tempo)
+      // Effects never overshoot: a bouncy preset hands them to `fade` (the old engine's rule).
+      let physics = physicsOf(effect && spec.bounce > 0 ? SPRINGS.fade : spec, tempo)
+      // An entrance (invisible to readable) is never quicker than `enter`: nothing pops in.
+      if (prop === 'opacity' && current <= ENTRANCE.low && goal >= ENTRANCE.full) {
+        const floor = physicsOf(SPRINGS.enter)
+        if (physics.w0 > floor.w0) physics = floor
+      }
       const pushed = options.velocity?.[prop]
       let v0 = pushed !== undefined ? pushed : this.velocity(target, prop)
       // A launch turns the spring's slow start into an immediate one: at 1 the critically damped curve
