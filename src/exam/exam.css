@@ -636,27 +636,6 @@
   margin-top: var(--group-gap);
 }
 
-/* Matrix options sit two to a row, as in lessons. */
-.ex-opts[data-wide="true"] {
-  grid-template-columns: 1fr 1fr;
-}
-.ex-opts[data-wide="true"] .ex-opt {
-  position: relative;
-  justify-content: center;
-  padding: var(--space-3) var(--space-2) var(--space-3) 34px;
-}
-.ex-opts[data-wide="true"] .ex-opt__key {
-  position: absolute;
-  left: var(--space-2);
-  top: var(--space-2);
-  width: 22px;
-  height: 22px;
-  border-radius: 7px;
-  font-size: var(--type-caption);
-}
-.ex-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
-  grid-column: span 2;
-}
 .exr-opts .ex-opt[aria-pressed="true"] .ex-opt__key {
   background: var(--action);
   box-shadow: none;
