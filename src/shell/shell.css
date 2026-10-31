@@ -1017,7 +1017,7 @@ a.sh-node {
   width: 9px;
   height: 9px;
   border-radius: 3px;
-  background: var(--color-ok-ink);
+  background: var(--ink-3); /* neutral: green means "right" and nothing else */
 }
 .ls-score {
   margin: 0;
