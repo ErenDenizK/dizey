@@ -54,6 +54,13 @@ function read(): Snapshot {
 let snapshot = read()
 const listeners = new Set<() => void>()
 
+// Another tab saved: take its state, so this tab never writes a stale copy back.
+for (const key of [CURRENT, HISTORY, OUTCOMES])
+  appStorage.watch(key, () => {
+    snapshot = read()
+    for (const listener of listeners) listener()
+  })
+
 function commit(session: ExamSession | null, history = snapshot.history, outcomes = snapshot.outcomes) {
   if (session) appStorage.setItem(CURRENT, JSON.stringify(session))
   else appStorage.removeItem(CURRENT)
