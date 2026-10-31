@@ -12,7 +12,7 @@ const m = (label: string, rows: readonly (readonly string[])[]): MatrixBlock => 
 export const r3Rank: Lesson = {
   id: 'r3-rank',
   node: 'R3',
-  title: 'Rank (rang)',
+  title: 'Rank',
   matrices: {
     F: m('A =', [
       ['1', '2', '0', '3'],
@@ -35,8 +35,8 @@ export const r3Rank: Lesson = {
       id: 'definition',
       kind: 'explain',
       eyebrow: 'Tanım',
-      title: 'Rank: basamak formdaki sıfır olmayan satır sayısı',
-      body: 'Matrisi basamak forma getir, pivotları say. Burada 3. satır diğer ikisinden üretilebiliyor ($R_3 = R_2 - R_1$) ve sıfırlanıyor: {ok}rank 2{/ok}. Rank, matristeki birbirinden bağımsız bilgi sayısıdır.',
+      title: 'Rank: eşelon formdaki sıfır olmayan satır sayısı',
+      body: 'Matrisi eşelon forma getir, pivotları say. Burada 3. satır diğer ikisinden üretilebiliyor ($R_3 = R_2 - R_1$) ve sıfırlanıyor: {ok}rank 2{/ok}. Rank, matristeki birbirinden bağımsız bilgi sayısıdır.',
       scene: { items: ['F'] },
       beat: {
         kind: 'rowOps',
@@ -55,7 +55,7 @@ export const r3Rank: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Rank, satır ve sütun sayısını aşamaz',
-      body: 'm×n bir matriste $\\text{rank}(A) \\leq \\min(m, n)$. Satır rankı sütun rankına eşittir, bu yüzden $\\text{rank}(A^T) = \\text{rank}(A)$. Basamak formu tamamlamak yeter; indirgenmiş forma gitmek gerekmez.',
+      body: 'm×n bir matriste $\\text{rank}(A) \\leq \\min(m, n)$. Satır rankı sütun rankına eşittir, bu yüzden $\\text{rank}(A^T) = \\text{rank}(A)$. Eşelon formu tamamlamak yeter; indirgenmiş forma gitmek gerekmez.',
       scene: { items: ['F'] },
       claims: [{ kind: 'rank', matrix: 'F', equals: '2' }],
     },
@@ -90,7 +90,7 @@ export const r3Rank: Lesson = {
           key: 'c',
           content: [text('$3$')],
           errorType: 'counted-rows',
-          feedback: 'Satır sayısı değil, basamak formdaki sıfır olmayan satır sayısı: 2. satır sıfırlanır.',
+          feedback: 'Satır sayısı değil, eşelon formdaki sıfır olmayan satır sayısı: 2. satır sıfırlanır.',
         },
         {
           key: 'd',
@@ -109,7 +109,7 @@ export const r3Rank: Lesson = {
       eyebrow: 'Özet',
       title: 'Rank',
       points: [
-        'Rank = basamak formdaki pivot sayısı.',
+        'Rank = eşelon formdaki pivot sayısı.',
         '$\\text{rank}(A) \\leq \\min(m, n)$, $\\text{rank}(A^T) = \\text{rank}(A)$.',
         'n×n matris: rank $n$ ⇔ $|A| \\neq 0$ ⇔ tersinir.',
         'Sistemlerde: $r_A$ ve $r_B$ çözüm sayısını belirler.',
