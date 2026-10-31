@@ -923,16 +923,6 @@ a.sh-node {
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
 }
-.sh-date {
-  min-height: 36px;
-  padding: 4px 8px;
-  border: 0;
-  border-radius: var(--corner-chip);
-  background: var(--surface-sunk);
-  color: var(--ink-1);
-  font: inherit;
-}
-
 /* App frame: tab panes and full-screen routes. */
 .sh-pane {
   position: absolute;

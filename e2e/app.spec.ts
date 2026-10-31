@@ -19,7 +19,7 @@ test('Dersler offers the first lesson on the path', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByRole('heading', { name: 'Dersler', level: 1 })).toBeVisible()
   await expect(screen(page).getByTestId('continue-card')).toContainText('Başla')
-  await expect(screen(page).getByTestId('continue-card')).toContainText('M1')
+  await expect(screen(page).getByTestId('continue-card')).toContainText('1.1')
   await expect(screen(page).getByText('Vize 1 haftası 15 Kasım civarı')).toBeVisible()
 })
 
@@ -39,7 +39,9 @@ test('the old map address lands on the path', async ({ page }) => {
 
 test('a lesson opens from its tile card and hides the tab bar', async ({ page }) => {
   await openApp(page)
-  await screen(page).getByRole('button', { name: /^D1 / }).click()
+  await screen(page)
+    .getByRole('button', { name: /^3\.1 / })
+    .click()
   const sheet = page.getByRole('dialog')
   await expect(sheet).toContainText('14 adım')
   await sheet.getByRole('link', { name: /^Derse gir/ }).click()
@@ -69,7 +71,7 @@ test('a lesson plays, checks answers and resumes where it was left', async ({ pa
   )
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await expect(screen(page).getByTestId('continue-card')).toContainText('Devam et')
-  await expect(screen(page).getByTestId('continue-card')).toContainText('D1')
+  await expect(screen(page).getByTestId('continue-card')).toContainText('3.1')
 })
 
 test('a wrong first try lands in the mistake log and leaves it when fixed', async ({ page }) => {
