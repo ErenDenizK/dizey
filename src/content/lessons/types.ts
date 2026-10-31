@@ -44,7 +44,12 @@ export type Beat =
   /** 2×2 rule: main diagonal product, other diagonal product, difference into `result`. */
   | { readonly kind: 'det2'; readonly matrix: string }
   /** Sarrus: copy the first two columns, light the three plus and three minus diagonals, combine. */
-  | { readonly kind: 'sarrus'; readonly matrix: string }
+  | {
+      readonly kind: 'sarrus'
+      readonly matrix: string
+      /** Copy the columns and light the six straight diagonals only: the idea, without the arithmetic. */
+      readonly diagonalsOnly?: true
+    }
   /** Unit square (or cube) carried by the matrix; the area of the image is |det|. */
   | { readonly kind: 'area'; readonly matrix: string }
   /** Strike out row `row` and column `col` (0-based) and lift the remaining submatrix: the minor M_ij. */
@@ -66,17 +71,32 @@ export type Beat =
       readonly ops: readonly RowOp[]
       readonly result: string
     }
+  /**
+   * Row times column, entry by entry: for each cell of `into` (0-based), the row of `left` and the column
+   * of `right` light up, their numbers fly into one work line pair by pair, and the sum lands in that cell.
+   * `into` shows "?" where an entry is still unknown; the tests check every known entry is left · right.
+   * Without `into` (no product matrix on the stage) the sums are only written on the work line.
+   */
+  | {
+      readonly kind: 'product'
+      readonly left: string
+      readonly right: string
+      readonly into?: string
+      readonly cells: readonly (readonly [row: number, col: number])[]
+    }
   /** Highlight frames played in order. */
   | { readonly kind: 'frames'; readonly frames: readonly Frame[] }
   /** A chain of equalities written one line at a time. */
   | { readonly kind: 'equation'; readonly lines: readonly string[] }
   | { readonly kind: 'sequence'; readonly beats: readonly Beat[] }
 
-/** What is on the stage: matrix names from `Lesson.matrices`, `=`, and `result` (the answer slot). */
+/** What is on the stage: matrix names from `Lesson.matrices`, `=`, `·` (product), and `result` (the answer slot). */
 export interface Scene {
   readonly items: readonly string[]
   /** Text shown in the result slot before it is computed, e.g. "?" or "0". */
   readonly result?: string
+  /** Marks the scene shows while no beat marks anything, e.g. the entry a question asks for. */
+  readonly marks?: readonly Mark[]
 }
 
 export type Derived = 'cofactors' | 'adjugate' | 'inverse'

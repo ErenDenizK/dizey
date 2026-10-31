@@ -1,7 +1,7 @@
 import { createRouter, RouterProvider } from '@tanstack/react-router'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { startAppDriver } from './engine/driver'
+import { engine, review, startAppDriver } from './engine/driver'
 import { requestPersistentStorage } from './lib/storage/db'
 import { routeTree } from './routeTree.gen'
 import { installSound } from './sound/player'
@@ -16,6 +16,8 @@ declare module '@tanstack/react-router' {
 }
 
 startAppDriver()
+// Frame-by-frame review hook for scripts/lesson-review.mjs (pause and step the one clock).
+;(window as unknown as { __dzReview?: unknown }).__dzReview = { engine, review }
 installSound()
 void requestPersistentStorage()
 

@@ -98,6 +98,8 @@ has no momentum.
 | Switch | | | Knob widens 1.2× on press (`tap`), travels with `snap`, un-stretches with `release`; track colour as an effect (`fade`) |
 | Buttons, rows, cards | | | Press physics above |
 | Lesson step (lesson layer) | `teach`, at the lesson tempo | | A tap finishes the running step at once (channel finish) |
+| Lesson stage re-layout (step change, answer) | Stage height glides on `move`; persistent scene objects glide and scale from their old box; new ones rise 10 px from 0.35, 35 ms apart, after a 90 ms head | Leaving objects are removed | The beat's final layout (result room, area, Sarrus copy, minor) is reserved from its first action, so a beat never refits the scene |
+| Lesson narration and dock | Narration from 0.35 and 14 px toward the walking direction, 35 ms apart; new feedback rises 12 px; new dock rows rise 16 px per row; counter rolls 6 px; progress width glides on `move` | | Wrong option shakes (x velocity 320 on `shake`), right one swells (scale velocity 0.9 on `land`); İleri eases to soft on `fade` while a beat plays |
 
 ## Measured timings (frame-by-frame review, 390 px)
 

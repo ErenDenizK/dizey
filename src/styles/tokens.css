@@ -185,16 +185,18 @@
   --glass-blur: 30px;
   --glass-saturate: 1.4;
 
-  /* ---- Light theme: dimmed warm paper, dark ink, one navy action ----------
-   * Eren 2026-10-31: the brighter paper and pastel roles tired the eyes; grounds sit at L 0.89-0.94 and
-   * role colours are muted (chroma <= 0.09 except the verdict red). Row (blue 245) and column (plum 322) sit 77 degrees
+  /* ---- Light theme: soft stone ground, lifted cards, dark ink, one navy action ----------
+   * Eren 2026-10-31 13:55Z: the near-white paper and pastel roles tired the eyes; role colours are muted
+   * (chroma <= 0.09 except the verdict red). Eren 21:11Z: he lives in dark mode, so light is designed for
+   * people who choose it: a calm, low-chroma stone ground (L 0.925, never white) with cards lifted above it
+   * by tone (L 0.96) and soft two-layer shadows, so depth reads at a glance without glare. Row (blue 245) and column (plum 322) sit 77 degrees
    * apart so a Sarrus line in one never reads as the other (design review 2026-10-31, tested in tokens.test.ts).
    * Chrome stays ink-neutral; colour energy comes from the math roles (row blue, column purple) and the
    * verdicts (green, red), plus one yellow spark for celebration only. */
-  --bg: oklch(0.915 0.007 80);
-  --surface: oklch(0.94 0.006 85);
-  --surface-raised: oklch(0.94 0.006 85);
-  --surface-sunk: oklch(0.89 0.008 80);
+  --bg: oklch(0.925 0.006 75);
+  --surface: oklch(0.962 0.004 80);
+  --surface-raised: oklch(0.968 0.004 80);
+  --surface-sunk: oklch(0.898 0.007 75);
   --ink-1: oklch(0.25 0.008 80);
   --ink-2: oklch(0.43 0.01 80);
   --ink-3: oklch(0.5 0.01 80);
@@ -204,16 +206,18 @@
   --on-action: oklch(1 0 0);
   --press-overlay: oklch(0.25 0.008 80);
   --scrim: oklch(0.187 0.006 91.7);
-  --glass-fill: oklch(0.94 0.006 85 / 0.82);
+  --glass-fill: oklch(0.962 0.004 80 / 0.9);
   --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.9);
   --glass-edge: 0 0 0 0.5px oklch(0.25 0.008 80 / 0.08);
-  --lens-fill: oklch(0.94 0.006 85 / 0.95);
+  --lens-fill: oklch(0.962 0.004 80 / 0.95);
   --lens-shadow: 0 1px 2px oklch(0.25 0.008 80 / 0.14);
-  --shadow-color: oklch(0.25 0.008 80 / 0.14);
-  --shadow-1: 0 1px 2px oklch(0.25 0.008 80 / 0.14);
-  --shadow-2: 0 3px 10px oklch(0.25 0.008 80 / 0.14);
-  --shadow-3: 0 -6px 24px oklch(0.25 0.008 80 / 0.14);
-  --edge-light: inset 0 0 0 0 transparent;
+  --shadow-color: oklch(0.3 0.02 70 / 0.16);
+  /* Two layers: a tight contact shadow and a wide, warm ambient one, so cards float off the ground
+     instead of being separated from it by tone alone. */
+  --shadow-1: 0 1px 1.5px oklch(0.3 0.02 70 / 0.1), 0 2px 8px oklch(0.3 0.02 70 / 0.06);
+  --shadow-2: 0 1px 2px oklch(0.3 0.02 70 / 0.1), 0 6px 18px -4px oklch(0.3 0.02 70 / 0.14);
+  --shadow-3: 0 -6px 24px oklch(0.3 0.02 70 / 0.12);
+  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.7);
   --ok-ink: oklch(0.42 0.075 165);
   --ok-fill: oklch(0.58 0.09 165);
   --ok-tint: oklch(0.9 0.025 165);

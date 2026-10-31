@@ -217,7 +217,7 @@ export const d1Determinant: Lesson = {
       title: '3×3: ilk iki sütunu sağa yaz',
       body: '3×3’te bazı köşegenler sağ kenarda kesilir ve soldan devam eder. {ok}Sarrus kuralı{/ok}: ilk iki sütunu sağa bir kez daha yaz; her köşegen üç sayılık düz bir çizgi olur.',
       scene: { items: ['S'] },
-      beat: { kind: 'sarrus', matrix: 'S' },
+      beat: { kind: 'sarrus', matrix: 'S', diagonalsOnly: true },
     },
     {
       id: 'sarrus-rule',

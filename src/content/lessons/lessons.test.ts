@@ -185,6 +185,26 @@ function rowOp(op: RowOp): M.RowOperation {
 
 function checkBeat(lesson: Lesson, beat: Beat): void {
   if (beat.kind === 'sequence') for (const b of beat.beats) checkBeat(lesson, b)
+  if (beat.kind === 'product') {
+    // Every entry the stage shows (or the beat writes) is left · right; "?" marks one still unknown.
+    const product = M.multiply(numeric(matrixOf(lesson, beat.left)), numeric(matrixOf(lesson, beat.right)))
+    for (const [i, j] of beat.cells) {
+      expect(i, 'cell row').toBeLessThan(product.length)
+      expect(j, 'cell column').toBeLessThan(product[0]?.length ?? 0)
+    }
+    if (!beat.into) return
+    const into = matrixOf(lesson, beat.into)
+    expect(into.rows.length, `${beat.into} rows`).toBe(product.length)
+    into.rows.forEach((row, i) => {
+      expect(row.length, `${beat.into} columns`).toBe(product[0]?.length)
+      row.forEach((value, j) => {
+        if (value !== '?')
+          expect(Q.format(parse(value)), `${beat.into}[${i}][${j}]`).toBe(Q.format(M.at(product, i, j)))
+      })
+    })
+    for (const [i, j] of beat.cells) expect(into.rows[i]?.[j], `${beat.into} cell ${i},${j}`).toBe('?')
+    return
+  }
   if (beat.kind !== 'rowOps') return
   let a = numeric(matrixOf(lesson, beat.matrix))
   for (const op of beat.ops) a = M.applyRowOperation(a, rowOp(op))
@@ -371,6 +391,8 @@ function beatMatrices(beat: Beat): string[] {
       return beat.frames.flatMap((f) => (f.marks ?? []).map((mark) => mark.cell[0]))
     case 'equation':
       return []
+    case 'product':
+      return [beat.left, beat.right, ...(beat.into ? [beat.into] : [])]
     default:
       return [beat.matrix]
   }
@@ -409,7 +431,7 @@ describe('lessons', () => {
       it('refers only to its own matrices, with cells in range', () => {
         for (const step of lesson.steps) {
           for (const item of step.scene?.items ?? []) {
-            if (item !== '=' && item !== 'result') matrixOf(lesson, item)
+            if (item !== '=' && item !== '·' && item !== 'result') matrixOf(lesson, item)
           }
           const beats = [
             step.kind === 'explain' ? step.beat : undefined,

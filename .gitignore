@@ -24,3 +24,7 @@ Thumbs.db
 # Build output for Pages
 _site/
 dev-dist/
+
+# Frame-by-frame review output
+motion-review/
+lesson-review/

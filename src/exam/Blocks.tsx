@@ -1,22 +1,46 @@
 import 'katex/dist/katex.min.css'
+import type { ReactNode } from 'react'
 import type { Block } from '../content/questions'
 import { entryText, splitTex, splitTones, texToHtml } from './tex'
 
+/**
+ * Inline TeX and plain text. A suffix written straight after a formula ("$A$’nın", "$J^2$’de") stays on
+ * its line with it, so a line never starts with an apostrophe.
+ */
 function TexRun({ text }: { text: string }) {
-  return (
-    <>
-      {splitTex(text).map((part, index) =>
-        part.tex ? (
-          // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output of our own reviewed content
-          // biome-ignore lint/suspicious/noArrayIndexKey: parts never reorder
-          <span key={index} className="ex-tex" dangerouslySetInnerHTML={{ __html: texToHtml(part.value) }} />
+  const parts = splitTex(text)
+  const out: ReactNode[] = []
+  // Keys are text offsets: parts never reorder.
+  let at = 0
+  parts.forEach((part, index) => {
+    const key = at
+    at += part.value.length + 2
+    if (part.tex) {
+      const next = parts[index + 1]
+      const glue = next && !next.tex ? (/^[^\s]+/.exec(next.value)?.[0] ?? '') : ''
+      // KaTeX output of our own reviewed content.
+      const html = { __html: texToHtml(part.value) }
+      const tex = (
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output of our own reviewed content
+        <span key={`t${key}`} className="ex-tex" dangerouslySetInnerHTML={html} />
+      )
+      out.push(
+        glue ? (
+          <span key={`g${key}`} className="ex-tex-glue">
+            {tex}
+            {glue}
+          </span>
         ) : (
-          // biome-ignore lint/suspicious/noArrayIndexKey: parts never reorder
-          <span key={index}>{part.value}</span>
+          tex
         ),
-      )}
-    </>
-  )
+      )
+      return
+    }
+    const previous = parts[index - 1]
+    const value = previous?.tex ? part.value.replace(/^[^\s]+/, '') : part.value
+    if (value) out.push(<span key={`s${key}`}>{value}</span>)
+  })
+  return <>{out}</>
 }
 
 /** Turkish text with inline `$...$` TeX and lesson highlight markup ({row}, {col}, {ok}). */
@@ -57,19 +81,22 @@ export function Matrix({
   block,
   toneAt,
   hideLabel,
+  labelAbove,
 }: {
   block: Extract<Block, { kind: 'matrix' }>
   /** Highlight per cell (lesson beats). */
   toneAt?: (row: number, column: number) => string | undefined
   hideLabel?: boolean
+  /** Lesson stage: the name sits above the brackets, without its "=" (old stage labels). */
+  labelAbove?: boolean
 }) {
   const columns = block.rows[0]?.length ?? 1
   const label = block.delimiter === 'bars' ? 'determinant' : 'matris'
   return (
-    <span className="ex-mat-wrap">
+    <span className="ex-mat-wrap" data-label-above={labelAbove || undefined}>
       {block.label && !hideLabel ? (
         <span className="ex-mat-label">
-          <RichText text={block.label} />
+          <RichText text={labelAbove ? block.label.replace(/\s*=\s*(\$?)$/, '$1') : block.label} />
         </span>
       ) : null}
       <span
@@ -88,6 +115,7 @@ export function Matrix({
               data-cell={`${r}-${c}`}
               data-bar={block.augmentedAt !== undefined && c === block.augmentedAt ? 'before' : undefined}
               data-tone={toneAt?.(r, c)}
+              data-empty={entry === '?' || undefined}
             >
               <Entry value={entry} />
             </span>

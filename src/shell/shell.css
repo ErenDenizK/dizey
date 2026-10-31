@@ -258,6 +258,9 @@
 .ex-mat-label {
   flex: none;
 }
+.ex-tex-glue {
+  white-space: nowrap;
+}
 .ex-mat {
   position: relative;
   /* Satir Math carries a full-width minus; Onest's reads as a hyphen. */
@@ -670,6 +673,21 @@ a.sh-node {
 .ls-stage .ex-mat-label {
   font-weight: 600;
   color: var(--sh-muted);
+}
+/* Old stage labels: the matrix name sits small above its brackets, so "A = … B = …" never crowds the row. */
+.ls-stage .ex-mat-wrap[data-label-above] {
+  flex-direction: column;
+  gap: 0.12em;
+}
+.ls-stage .ex-mat-wrap[data-label-above] .ex-mat-label {
+  font-size: max(13px, 0.5em);
+  line-height: 1.2;
+}
+/* An entry still to be found: an empty slot with a quiet "?". */
+.ls-stage .ex-mat .ex-cell[data-empty] {
+  background: var(--sh-soft);
+  color: var(--sh-muted);
+  font-weight: 500;
 }
 .ls-stage .ex-mat {
   gap: 0.1em;
@@ -1202,6 +1220,14 @@ a.dz-button[data-kind="primary"] {
 .ls-stage .ex-mat .ex-cell[data-tone="col"] {
   box-shadow: inset 0 0 0 max(1.5px, 0.04em) var(--color-col-edge);
 }
+/* The entry being found: its slot takes the result colour and an edge, like the old target ring. */
+.ls-stage .ex-mat .ex-cell[data-tone="ok"] {
+  box-shadow: inset 0 0 0 max(1.5px, 0.04em) var(--color-ok-edge);
+}
+.ls-stage .ex-mat .ex-cell[data-empty][data-tone="ok"] {
+  background: var(--color-ok-wash);
+  color: var(--color-ok-ink);
+}
 /* Flights: a number lifted out of its cell on its way into the working line. */
 .ls-stage {
   position: relative;
@@ -1263,6 +1289,27 @@ a.dz-button[data-kind="primary"] {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+/* The result slot keeps the room of the beat's final value from the first frame, so the scene never refits
+   when the value lands. */
+.ls-result {
+  display: inline-grid;
+  justify-items: start;
+}
+.ls-result > * {
+  grid-area: 1 / 1;
+}
+.ls-result__room {
+  visibility: hidden;
+}
+/* İleri while a beat plays (old UC-2 soft İleri): same label, soft colours; a tap lands the beat. The
+   engine drives --soft (0 primary, 1 soft) on the fade spring and flips the label ink at the midpoint, so
+   no frame shows grey text on a grey fill. */
+.ls-dock .sh-btn--primary {
+  background: color-mix(in oklab, var(--sh-soft) calc(var(--soft, 0) * 100%), var(--sh-action));
+}
+.ls-dock .sh-btn--primary[data-ink="soft"] {
+  color: var(--sh-ink);
 }
 
 /* Text-only steps (see .ls-main[data-stage="false"] .ls-narr): larger reading type, points without a nested card. */
