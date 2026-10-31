@@ -59,3 +59,12 @@ Eren asked (2026-10-31) for a sound system that makes every interaction fun, ful
 - **iOS unlock:** a one-sample silent buffer plays inside the first tap, for older iOS versions.
 - **Sound lab** at `/lab/sounds` (Ben → Sesler → Sesleri dinle): every event, the place in the lesson that picks its chord, and a short lesson played as sound.
 - Levels were recalibrated with `calibrate()`; the nine existing events came out at exactly their previous trims.
+
+## Addendum (0.20.0): palettes, background music, the full sound lab
+
+Eren, 2026-10-31: improve the sound system, add background music, and make the sound area like the old app's sound lab.
+
+- **Palettes** (`PALETTES` in `synth.ts`): Rhodes (FM electric piano, default), Keçe piyano (stretched partials, soft hammer, a second string 1.6 cents sharp) and Cam (sine with a 5-cent twin and soft upper partials). They change timbre only; the notes and timing stay the same. `TRIM` is calibrated per palette and event, so switching palette does not change loudness.
+- **Rewards from the old lab:** `seal` (V13 held open, an arpeggio, then home) and `secret` (♭VI maj7♯11 → I maj7♯11). Neither has a trigger in the app yet; they will play once seals and hidden insights exist.
+- **Background music** (`music.ts`, scheduled in `player.ts`): generated live in sections of 8 beats at about 67 bpm. Each section is one chord of the same harmony: a pad swelling in, a soft bass on beats 1 and 5, and two to four melody notes that move by step through the chord's tones. Inside a lesson the chord is the step's chord; elsewhere it plays the old app's home loop I–vi–IV–V, two sections per chord, under a darker low-pass (1.5 kHz; the old bed used 900 Hz). It is on by default, can be turned off or softened (−7 dB), and is ducked by 8 dB under every non-touch event. It stops when the page is hidden and stays silent during the exam rehearsal. Because music and sounds always share the chord, they never clash.
+- **Sound lab** (`/lab/sounds`): rebuilt after the old lab. A sticky console names the event and chord and lights each note on a keyboard as it sounds (chord tone, colour tone, suspension, bass, single tone). Below it are a lesson that plays itself (A·B = C over the six-chord walk, with a wrong answer and then the right one), the chord walk, the palette picker, music settings, every event, interface sound and reward, the theory, and the etiquette rules.

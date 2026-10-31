@@ -15,7 +15,7 @@ import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
 import { readSettings, saveSettings, useSettings } from '../progress/settings'
 import { haptic } from '../sound/haptics'
-import { setSoundInSilent, setSoundOn } from '../sound/player'
+import { setMusicOn, setSoundInSilent, setSoundOn } from '../sound/player'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
@@ -277,6 +277,20 @@ function SoundSetting() {
             <ChevronRight />
           </span>
         </PressLink>
+      ) : null}
+      {on ? (
+        <div className="dz-row">
+          <Lead>
+            <path d="M8 14.5V4.5l8-1.5v10" />
+            <circle cx="6" cy="14.5" r="2" />
+            <circle cx="14" cy="13" r="2" />
+          </Lead>
+          <span className="dz-row-main">
+            {strings.me.music}
+            <small className="dz-footnote sh-row-sub">{strings.me.musicHint}</small>
+          </span>
+          <Switch checked={settings.music !== false} onChange={setMusicOn} label={strings.me.music} />
+        </div>
       ) : null}
       {on ? (
         <div className="dz-row">
