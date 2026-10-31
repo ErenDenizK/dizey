@@ -73,7 +73,7 @@
   color: var(--sh-on-action);
 }
 .sh-btn--soft {
-  background: var(--sh-soft);
+  background: var(--control-soft);
   color: var(--sh-ink);
 }
 .sh-link {
@@ -1263,10 +1263,6 @@ a.dz-button[data-kind="primary"] {
   display: inline-flex;
   margin-left: 0.15em;
 }
-.ls-copy .ex-mat::before,
-.ls-copy .ex-mat::after {
-  border-color: var(--sh-muted);
-}
 .ls-replay {
   position: absolute;
   right: 8px;
@@ -1434,6 +1430,10 @@ a.dz-button[data-kind="primary"] {
 .ls-seal__cell[data-result="miss"] {
   color: var(--sh-ink);
 }
+/* An empty slot is a well with an edge, not a black hole in the card. */
+.ls-seal__cell:not([data-result="right"]) {
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+}
 .ls-end__narr {
   display: grid;
   gap: 8px;
@@ -1465,4 +1465,19 @@ a.dz-button[data-kind="primary"] {
 .ls-end__next-title {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/*
+ * Sarrus: the two copied columns stand outside the determinant bars, as written on paper (|a b c| a b), with no
+ * delimiter of their own. Unlit copies are quieter than the matrix they repeat.
+ */
+.ls-stage .ls-copy .ex-mat::before,
+.ls-stage .ls-copy .ex-mat::after {
+  display: none;
+}
+.ls-stage .ls-copy .ex-mat {
+  padding-left: 0.1em;
+}
+.ls-stage .ls-copy .ex-cell:not([data-tone]) {
+  color: var(--sh-muted);
 }
