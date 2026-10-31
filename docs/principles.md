@@ -10,7 +10,7 @@ Source IDs refer to items in the prompt ledger (Claude Doc "Dizey Prompt Defteri
 
 | ID | Principle | Level | Why | Scope | Source | Review |
 | --- | --- | --- | --- | --- | --- | --- |
-| PR-01 | Nothing from the old project is a default; only raw course material may be consulted. Exception chosen by Eren: the in-lesson layer (presentation, animation, sounds) is kept. | firm | The old system produced reactive, unfounded rules; reusing them reimports its failures. Eren judged the in-lesson layer better than every new direction. | Everything | P2.2, P4.13, P4.17, P9.1, P9.2 | Never |
+| PR-01 | The old app's UI language is the base, rewritten on the current stack with an extracted token system; its badges, square character and logo come over as they are. Its code, rules, skills, analyses and process are not defaults. | firm | The old UI had a coherence ("nizam") the from-scratch shell lacked; the old process and code were what failed. | Everything | P2.2, P4.13, P4.17, P9.1, P9.2, 2026-10-31 10:54 | Never |
 | PR-02 | All technical artifacts are in English; UI text and lessons in Turkish; conversation with Eren in Turkish. | firm | Eren wants a professional, standard codebase; the product's users read Turkish. | Code, docs in repo, skills, git | P3.4, P4.1 | Never |
 | PR-03 | No statement becomes a rule before its root cause, counterexamples and scope are weighed. | firm | One complaint ("this tab bar is ugly") must not become a wrong ban ("no tab bars"). | All principles, including Claude's own | P5.4 | Never |
 | PR-04 | Plans are ordered steps with dependencies, not calendars; independent steps run in parallel. | firm | Date-based plans made earlier work run far below potential. | Planning | P7.4, P7.5 | Never |
