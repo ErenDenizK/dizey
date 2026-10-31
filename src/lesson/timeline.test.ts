@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { compile, rowOpLabel } from './timeline'
+import { compile, FLOOR, readingFloor, rowOpLabel, type StageState } from './timeline'
 
 const lesson: Lesson = {
   id: 'test',
@@ -45,49 +45,93 @@ const lesson: Lesson = {
   steps: [],
 }
 
+const textOf = (frame: StageState | undefined) =>
+  (frame?.lines ?? []).map((line) =>
+    line.tokens
+      .filter((t) => frame?.shown.includes(t.key))
+      .map((t) => t.text)
+      .join(' '),
+  )
+
 describe('det2', () => {
-  it('lights the main diagonal, then the other, then writes the difference', () => {
+  it('lays out one line, lights each diagonal, carries its numbers, writes the values, then collects', () => {
     const frames = compile(lesson, { kind: 'det2', matrix: 'A' })
-    expect(frames).toHaveLength(3)
-    expect(frames[0]?.marks.map((m) => m.tone)).toEqual(['row', 'row'])
-    expect(frames[1]?.notes).toEqual(['3 · 2 = 6', '1 · 4 = 4'])
-    expect(frames[2]?.result).toBe('2')
-    expect(frames[2]?.notes.at(-1)).toBe('6 − 4 = 2')
-    // Each product line flies its two factors out of their cells; the difference line flies nothing.
-    expect(frames[0]?.sources).toEqual([
+    expect(frames.map((f) => f.action)).toEqual([
+      'line',
+      'highlight',
+      'carry',
+      'highlight',
+      'carry',
+      'value',
+      'collect',
+    ])
+    // The whole line is laid out from the first action, hidden.
+    expect(frames[0]?.lines[0]?.tokens.map((t) => t.text).join(' ')).toBe('3 · 2 − 1 · 4 = 6 − 4 = 2')
+    expect(frames[0]?.shown).toEqual([])
+    expect(frames[1]?.marks.map((m) => m.tone)).toEqual(['row', 'row'])
+    expect(textOf(frames[2])).toEqual(['3 · 2'])
+    expect(frames[2]?.flights.map((f) => f.from)).toEqual([
       { matrix: 'A', row: 0, col: 0 },
       { matrix: 'A', row: 1, col: 1 },
     ])
-    expect(frames[2]?.sources).toEqual([])
+    // The values row comes only once every product is on the line.
+    expect(textOf(frames[4])).toEqual(['3 · 2 − 1 · 4'])
+    expect(textOf(frames[5])).toEqual(['3 · 2 − 1 · 4 = 6 − 4'])
+    expect(textOf(frames[6])).toEqual(['3 · 2 − 1 · 4 = 6 − 4 = 2'])
+    expect(frames[6]?.result).toBe('2')
   })
   it('keeps signs readable with negative entries', () => {
     const frames = compile(lesson, { kind: 'det2', matrix: 'C' })
-    expect(frames[1]?.notes[1]).toBe('(−3) · 1 = −3')
-    expect(frames[2]?.notes.at(-1)).toBe('8 − (−3) = 11')
-    expect(frames[2]?.result).toBe('11')
+    expect(textOf(frames.at(-1))).toEqual(['2 · 4 − (−3) · 1 = 8 − (−3) = 11'])
+    expect(frames.at(-1)?.result).toBe('11')
   })
   it('stays symbolic for letters', () => {
     const frames = compile(lesson, { kind: 'det2', matrix: 'G' })
     expect(frames.at(-1)?.result).toBe('ad − bc')
   })
+  it('confirms faster after a right answer', () => {
+    const teach = compile(lesson, { kind: 'det2', matrix: 'A' })
+    const reveal = compile(lesson, { kind: 'det2', matrix: 'A' }, 'reveal')
+    expect(reveal.reduce((t, f) => t + f.dwell, 0)).toBeLessThan(teach.reduce((t, f) => t + f.dwell, 0))
+  })
+})
+
+describe('reading floor', () => {
+  it('holds a finished line 1 s plus 200 ms per new word, a value in an open line 400 ms', () => {
+    const frames = compile(lesson, { kind: 'det2', matrix: 'A' })
+    // Carrying "3 · 2" into a line that is still being written: one value-sized wait.
+    expect(readingFloor(frames[1] as StageState, frames[2] as StageState)).toBe(FLOOR.value)
+    // The collect finishes the line and fills the result slot: two new words.
+    expect(readingFloor(frames[5] as StageState, frames[6] as StageState)).toBe(FLOOR.line + 2 * FLOOR.word)
+    expect(readingFloor(frames[0] as StageState, frames[1] as StageState)).toBe(0)
+  })
 })
 
 describe('sarrus', () => {
-  it('plays three plus and three minus diagonals and lands on the determinant', () => {
+  it('plays the plus line, the minus line and carries both sums into the determinant', () => {
     const frames = compile(lesson, { kind: 'sarrus', matrix: 'S' })
-    expect(frames).toHaveLength(8)
-    // First the copy of the first two columns appears, then each diagonal is a straight line.
     expect(frames[0]?.extended).toBe('S')
-    expect(frames[1]?.sources).toEqual([
-      { matrix: 'S', row: 0, col: 0 },
-      { matrix: 'S', row: 1, col: 1 },
-      { matrix: 'S', row: 2, col: 2 },
-    ])
-    expect(frames[3]?.sources.map((c) => c.copy ?? false)).toEqual([false, true, true])
-    expect(frames[4]?.notes.at(-1)).toBe('− 3 · 4 · 1 = 12')
     // 2·4·5 + 1·1·1 + 3·0·2 = 41; 3·4·1 + 2·1·2 + 1·0·5 = 16; 41 − 16 = 25
-    expect(frames.at(-1)?.notes).toEqual(['41 − 16 = 25'])
+    expect(textOf(frames.at(-1))).toEqual([
+      '2 · 4 · 5 + 1 · 1 · 1 + 3 · 0 · 2 = 40 + 1 + 0 = 41',
+      '3 · 4 · 1 + 2 · 1 · 2 + 1 · 0 · 5 = 12 + 4 + 0 = 16',
+      '41 − 16 = 25',
+    ])
     expect(frames.at(-1)?.result).toBe('25')
+    // The second plus diagonal starts in the matrix and continues into the copy.
+    const second = frames.filter((f) => f.action === 'carry')[1]
+    expect(second?.flights.map((f) => ('copy' in f.from ? f.from.copy : false) ?? false)).toEqual([
+      false,
+      false,
+      true,
+    ])
+    // The final line carries the two sums from their lines.
+    expect(
+      frames
+        .filter((f) => f.action === 'carry')
+        .at(-1)
+        ?.flights.map((f) => 'token' in f.from),
+    ).toEqual([true, true])
   })
 })
 

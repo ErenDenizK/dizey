@@ -109,7 +109,7 @@ The old app's teaching motion is never played at the raw table time; see 1.2.
 | --- | --- | --- | --- |
 | `TEACH_PACE` | 1.6: every teaching motion takes 1.6 × its spring-table time (Eren 2026-10-26: "slower teaching tempo"). Chrome motion never uses it | `TEACH_PACE` 1.6 on the lesson channel (0.13.0) | same |
 | `CUE_TEMPO` | 1.5: cue-timed beats (entry beat, answer reveal) also scale their cue times, so each line is readable about 1.2 s | `FRAME_MS` = teach duration × 1.25 per frame | differs |
-| Tempo classes (values in `TEMPO_CLASSES` since 0.13.0; inference comes with the runner) | `quick` {pace 1, cue 1}: marks, signs, labels, layout, nothing travels. `repeat` {pace 1.1, cue 1.65}: a move this lesson already showed. `teach` {pace 1.6, cue 2.4}: the new idea the first time. Class is inferred from the beat (`tempoClass`, old 12829), never set per lesson | one tempo for all beats | missing |
+| Tempo classes (values in `TEMPO_CLASSES` since 0.13.0; inferred per step by `tempoClassOf` since 0.14.0) | `quick` {pace 1, cue 1}: marks, signs, labels, layout, nothing travels. `repeat` {pace 1.1, cue 1.65}: a move this lesson already showed. `teach` {pace 1.6, cue 2.4}: the new idea the first time. Class is inferred from the beat (`tempoClass`, old 12829), never set per lesson | `src/lesson/tempo.ts`: calculating kinds new to the lesson (or after a wrong answer) teach, seen before repeat, the rest quick | same (inferred from the beat kind) |
 | Tempo maths | Tempo `t` scales stiffness by 1/t² and pushes (initial velocities) by 1/t; damping ratio stays | same (duration × tempo) | same |
 | `chromeDelay` | A wait scheduled on a teaching channel that belongs to the chrome timeline undoes the channel tempo | none | missing |
 | `whenIdle(name, fn)` | Runs `fn` once a channel has no cues, motion or runner left (polls every 50 ms) | none | missing |
@@ -340,7 +340,7 @@ Old adapter: `FEEL_CUE_EVENTS` (old.js:6494-6498) maps `answer.correct→correct
 | Old (what + values + lines) | Current | Status |
 | --- | --- | --- |
 | `teach.select`: the teaching runner lights a term's source cells (each term's highlight) (old.js:11607-11608) | `select` fires on **every keypad key** (`LP:283-287`); no sound on highlights | differs (different meaning) |
-| `teach.land`: every runner chip carry, on arrival (`carry` → onArrive, old.js:10855-10859) | `land` on every beat frame that does not bring a new result, fired at the frame cue, `index = frame number` (`LP:94-100`) | differs (timing: old on motion arrival, current at frame start, see decision 0005; voice: old global zigzag counter, current per-frame index) |
+| `teach.land`: every runner chip carry, on arrival (`carry` → onArrive, old.js:10855-10859) | since 0.14.0 the runner plays `land` when each chip arrives (Stage.tsx `useReveal`) | same |
 | `teach.merge`: a result written after "=" (`collectInto`, old.js:10966-10968) | `merge` on a frame whose `result` changes (`LP:97-99`) | same (meaning); timing differs as above |
 | Keypad keys: no sound (old.js:13529-13546) | `select` per key (`LP:286`) | differs |
 | `answer.correct` / `answer.wrong`: fired 140 ms (`CHOREO.mascotDelay`, old.js:8843) after the verdict sheet starts, together with the duo reaction, on the engine clock (old.js:7059-7067) | `cue('correct'/'wrong')` synchronously in `answer()` (`LP:115-127`) | differs (timing: no 140 ms delay, not tied to the mascot) |

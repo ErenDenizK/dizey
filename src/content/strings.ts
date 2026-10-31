@@ -130,6 +130,8 @@ export const strings = {
     next: 'İleri',
     finishBeat: 'Hareketi bitir',
     replay: 'Hareketi tekrar oynat',
+    pause: 'Duraklat',
+    resume: 'Devam ettir',
     finish: 'Dersi bitir',
     count: (index: number, total: number) => `${index}/${total}`,
     correct: 'Doğru.',
