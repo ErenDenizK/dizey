@@ -83,3 +83,29 @@ export function Check() {
     </svg>
   )
 }
+
+/** A flag on a pole: an exam item marked to come back to. Filled when set. */
+export function Flag({ active }: IconProps) {
+  return (
+    <svg viewBox="0 0 22 22" width="22" height="22" aria-hidden="true">
+      <path d="M5 19.5V3" {...stroke} strokeWidth={2} />
+      <path
+        d="M5 3.8c2.6-1.3 4.8-1.3 6.6 0s4 1.3 5.9 0v8.4c-1.9 1.3-4.1 1.3-5.9 0s-4-1.3-6.6 0"
+        {...stroke}
+        strokeWidth={1.9}
+        fill="currentColor"
+        fillOpacity={active ? 1 : 0}
+      />
+    </svg>
+  )
+}
+
+/** A clock face, for the hidden exam timer. */
+export function ClockIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+      <circle cx="10" cy="10" r="7.5" {...stroke} strokeWidth={1.8} />
+      <path d="M10 6v4.2l2.8 1.8" {...stroke} strokeWidth={1.8} />
+    </svg>
+  )
+}
