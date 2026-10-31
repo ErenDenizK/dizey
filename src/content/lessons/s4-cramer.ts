@@ -33,6 +33,11 @@ export const s4Cramer: Lesson = {
       ['2', '5'],
       ['1', '-1'],
     ]),
+    cA: m('', [
+      ['2', '1'],
+      ['1', '-3'],
+    ]),
+    cB: m('', [['5'], ['-1']]),
     tA: m('A =', [
       ['1', '1', '1'],
       ['2', '-1', '1'],
@@ -47,11 +52,19 @@ export const s4Cramer: Lesson = {
   },
   steps: [
     {
+      id: 'hook',
+      kind: 'explain',
+      eyebrow: 'Soru',
+      title: 'Yalnız $x$’i bulmak için bütün sistemi çözmek şart mı?',
+      body: '$2x + y = 5$, $x - 3y = -1$. İki determinant yeter.',
+      scene: { items: ['A'] },
+    },
+    {
       id: 'rule',
       kind: 'explain',
       eyebrow: 'Kural',
       title: '$x_i = \\frac{|A_i|}{|A|}$',
-      body: 'Kare bir sistemde $|A| \\neq 0$ ise tek çözüm vardır ve her bilinmeyen ayrı ayrı bulunabilir. $A_i$: $A$’nın {col}$i.$ sütunu yerine $b$ yazılmış hali{/col}. Bu formül $A^{-1} = \\frac{1}{|A|}\\text{Ek}(A)$’dan gelir.',
+      body: '$A_i$: $A$’nın {col}i. sütunu yerine b yazılmış hali{/col}. Koşul: $|A| \\neq 0$.',
       scene: { items: ['A', 'Ax'] },
       beat: {
         kind: 'frames',
@@ -65,13 +78,37 @@ export const s4Cramer: Lesson = {
       id: 'worked',
       kind: 'explain',
       eyebrow: 'Örnek',
-      title: '$2x + y = 5$, $x - 3y = -1$',
-      body: '$|A| = -6 - 1 = -7$. $|A_x| = -15 + 1 = -14$, $|A_y| = -2 - 5 = -7$. Bölünce {ok}$x = 2$, $y = 1$ olur{/ok}. Kontrol: $2 \\cdot 2 + 1 = 5$, $2 - 3 = -1$.',
-      scene: { items: ['A', 'Ax', 'Ay'] },
+      title: '$x = \\frac{|A_x|}{|A|}$',
+      body: 'İki determinant, bir bölme: {ok}x = 2{/ok}.',
+      scene: { items: ['A', 'Ax'] },
+      beat: {
+        kind: 'sequence',
+        beats: [
+          { kind: 'det2', matrix: 'A' },
+          { kind: 'det2', matrix: 'Ax' },
+        ],
+      },
       claims: [
         { kind: 'det', matrix: 'A', equals: '-7' },
         { kind: 'det', matrix: 'Ax', equals: '-14' },
+        { kind: 'exprEntry', expr: 'cA^{-1}cB', row: 1, col: 1, equals: '2' },
+      ],
+    },
+    {
+      id: 'try-y',
+      kind: 'keypad',
+      eyebrow: 'Senin sıran',
+      title: '$y$ kaç?',
+      body: '$|A| = -7$. 2. sütunun yerine $b$ yaz.',
+      skill: 'cramer-unknown',
+      scene: { items: ['Ay'] },
+      answer: '1',
+      feedbackWrong: '$|A_y| = 2 \\cdot (-1) - 5 \\cdot 1 = -7$, sonra $-7$’ye böl.',
+      reveal: { kind: 'det2', matrix: 'Ay' },
+      solution: '$y = \\frac{-7}{-7} = 1$. Kontrol: $2 \\cdot 2 + 1 = 5$.',
+      claims: [
         { kind: 'det', matrix: 'Ay', equals: '-7' },
+        { kind: 'exprEntry', expr: 'cA^{-1}cB', row: 2, col: 1, equals: '1', answer: true },
       ],
     },
     {
@@ -79,12 +116,19 @@ export const s4Cramer: Lesson = {
       kind: 'keypad',
       eyebrow: 'Senin sıran',
       title: '$Ax = b$ sisteminde $z$ kaç?',
-      body: '$|A| = 7$. $|A_z|$’yi hesapla: 3. sütunun yerine $b$.',
+      body: '$|A| = 7$. 3. sütunun yerine $b$ yaz.',
       skill: 'cramer-unknown',
       scene: { items: ['tA', 'tB'] },
       answer: '3',
       feedbackWrong:
         '$|A_z|$’nin satırları $(1, 1, 6)$, $(2, -1, 3)$, $(1, 2, 2)$; determinantı $21$. Sonra $|A|$’ya böl.',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '|A_z| = \\begin{vmatrix} 1 & 1 & 6 \\\\ 2 & -1 & 3 \\\\ 1 & 2 & 2 \\end{vmatrix} = 21',
+          'z = \\tfrac{21}{7} = 3',
+        ],
+      },
       solution: '$z = \\frac{21}{7} = 3$.',
       claims: [
         { kind: 'det', matrix: 'tA', equals: '7' },
@@ -96,7 +140,7 @@ export const s4Cramer: Lesson = {
       kind: 'explain',
       eyebrow: 'Sınır',
       title: '$|A| = 0$ ise Cramer çalışmaz',
-      body: 'Formül $|A|$’ya böler. $|A| = 0$ iken sistem ya çözümsüz ya sonsuz çözümlüdür; hangisi olduğuna {ok}ranklarla bakılır{/ok}, Cramer ile değil. Aynı şekilde $X = A^{-1}b$ yolu da yalnız $|A| \\neq 0$ iken kullanılır.',
+      body: 'Formül $|A|$’ya böler. $|A| = 0$ ise {ok}ranklara bak{/ok}: çözüm yok ya da sonsuz.',
     },
     {
       id: 'exam-y',
@@ -133,6 +177,7 @@ export const s4Cramer: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: { kind: 'equation', lines: ['|A_y| = 14', 'y = \\tfrac{14}{7} = 2'] },
       solution: '$|A_y| = 14$, $y = \\frac{14}{7} = 2$.',
       claims: [
         { kind: 'det', matrix: 'tAy', equals: '14' },

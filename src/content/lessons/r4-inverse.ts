@@ -36,6 +36,15 @@ export const r4Inverse: Lesson = {
       ],
       3,
     ),
+    S1: augmented(
+      '',
+      [
+        ['1', '2', '0', '1', '0', '0'],
+        ['0', '1', '1', '0', '1', '0'],
+        ['0', '-2', '2', '-1', '0', '1'],
+      ],
+      3,
+    ),
     Mid: augmented(
       '',
       [
@@ -95,9 +104,9 @@ export const r4Inverse: Lesson = {
     {
       id: 'hook',
       kind: 'explain',
-      eyebrow: 'Fikir',
-      title: 'Ters matris, yapılanı geri alır',
-      body: '$A^{-1}$, $AA^{-1} = A^{-1}A = I$ olan matristir. Ek matris formülü küçük matrislerde iyi; 3×3 ve üstünde daha düzenli yol satır işlemleri. D4’teki $A$’nın tersini şimdi bu yolla bulacağız.',
+      eyebrow: 'Soru',
+      title: '3×3 tersi formülsüz bulunur mu?',
+      body: 'Ek matris uzun sürer. Satır işlemleriyle daha düzenli bir yol var.',
       scene: { items: ['A'] },
       claims: [{ kind: 'det', matrix: 'A', equals: '4' }],
     },
@@ -105,14 +114,53 @@ export const r4Inverse: Lesson = {
       id: 'method',
       kind: 'explain',
       eyebrow: 'Yöntem',
-      title: '$[A \\mid I]$ yaz, solu $I$ olana kadar satır işlemi yap',
-      body: 'Her satır işlemi bir matrisle soldan çarpmaktır. Sol taraf $I$ olduğunda bu işlemlerin çarpımı $A^{-1}$ olur; aynı işlemler sağdaki $I$’yı da $A^{-1}$’e çevirir. Önce köşegenin altını sıfırla.',
+      title: '$[A \\mid I]$ yaz, solu $I$ yap',
+      body: 'Sol $I$ olunca sağda {ok}A⁻¹{/ok} kalır. Önce köşegenin altı.',
       scene: { items: ['Start'] },
       beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['Start', 1, 0], tone: 'col' },
+              { cell: ['Start', 2, 0], tone: 'col' },
+              { cell: ['Start', 2, 1], tone: 'col' },
+            ],
+            note: 'önce bunlar 0',
+          },
+        ],
+      },
+    },
+    {
+      id: 'try-first',
+      kind: 'keypad',
+      eyebrow: 'Senin sıran',
+      title: '$R_3 \\to R_3 - R_1$ sonrası 3. satırın 2. elemanı kaç?',
+      skill: 'row-operations',
+      scene: { items: ['Start'] },
+      answer: '-2',
+      feedbackWrong: '$0 - 2$.',
+      reveal: {
         kind: 'rowOps',
         matrix: 'Start',
+        ops: [{ kind: 'addMultiple', target: 2, source: 0, factor: '-1' }],
+        result: 'S1',
+      },
+      solution: '$0 - 2 = -2$.',
+      claims: [{ kind: 'exprEntry', expr: 'S1', row: 3, col: 2, equals: '-2', answer: true }],
+    },
+    {
+      id: 'method-down',
+      kind: 'explain',
+      eyebrow: 'Yöntem',
+      title: 'Altı bitir, pivotu 1 yap',
+      body: '$R_3 \\to R_3 + 2R_2$, sonra $\\frac{1}{4}$ ile çarp.',
+      scene: { items: ['S1'] },
+      beat: {
+        kind: 'rowOps',
+        matrix: 'S1',
         ops: [
-          { kind: 'addMultiple', target: 2, source: 0, factor: '-1' },
           { kind: 'addMultiple', target: 2, source: 1, factor: '2' },
           { kind: 'scale', row: 2, factor: '1/4' },
         ],
@@ -124,7 +172,7 @@ export const r4Inverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Yöntem',
       title: 'Sonra köşegenin üstünü sıfırla',
-      body: 'Alttan yukarı çalış: 3. satırdaki pivotla 2. satırı, 2. satırdaki pivotla 1. satırı temizle. Sağda kalan, D4’te $\\frac{1}{|A|}\\text{Ek}(A)$ ile bulduğumuz matrisin aynısı.',
+      body: 'Alttan yukarı temizle. Sağda kalan: {ok}A⁻¹{/ok}.',
       scene: { items: ['Mid'] },
       beat: {
         kind: 'rowOps',
@@ -153,7 +201,7 @@ export const r4Inverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Durum',
       title: 'Solda sıfır satır çıkarsa ters yok',
-      body: '$B$’nin 2. satırı 1. satırın iki katı. $R_2 \\to R_2 - 2R_1$ sol tarafta bir {ok}sıfır satır{/ok} bırakır: sol taraf asla $I$ olamaz. Bu, $|B| = 0$ demektir; $B$ singülerdir.',
+      body: 'Solda {ok}sıfır satır{/ok}: sol asla $I$ olamaz. $|B| = 0$, $B$ singüler.',
       scene: { items: ['T'] },
       beat: {
         kind: 'rowOps',
@@ -167,11 +215,15 @@ export const r4Inverse: Lesson = {
       kind: 'keypad',
       eyebrow: 'Senin sıran',
       title: '$C^{-1}$’in 2. satır 1. sütun elemanı kaç?',
-      body: '2×2 kısa yolunu ya da $[C \\mid I]$’yı kullan.',
+      body: '2×2 kısa yolu: köşegeni değiştir, diğerlerinin işaretini çevir.',
       skill: 'inverse-2x2',
       scene: { items: ['C'] },
       answer: '-5',
       feedbackWrong: '$|C| = 6 - 5 = 1$. Köşegeni değiştir, diğer ikisinin işaretini çevir.',
+      reveal: {
+        kind: 'equation',
+        lines: ['|C| = 6 - 5 = 1', 'C^{-1} = \\begin{bmatrix} 3 & -1 \\\\ -5 & 2 \\end{bmatrix}'],
+      },
       solution: '$C^{-1}$’in satırları $(3, -1)$ ve $(-5, 2)$.',
       claims: [{ kind: 'derivedEntry', of: 'inverse', matrix: 'C', row: 2, col: 1, equals: '-5' }],
     },
@@ -180,7 +232,11 @@ export const r4Inverse: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Tersin kuralları',
-      body: '$(AB)^{-1} = B^{-1}A^{-1}$: {ok}sıra ters döner{/ok}, tıpkı ayakkabıyı çorabı çıkarmadan önce çıkarmak gibi. Ayrıca $(A^T)^{-1} = (A^{-1})^T$, $(kA)^{-1} = \\frac{1}{k}A^{-1}$ ve $(A^{-1})^{-1} = A$ ($A$, $B$ tersinir, $k \\neq 0$ iken).',
+      body: 'Çarpımda {ok}sıra ters döner{/ok}: önce ayakkabı çıkar, sonra çorap.',
+      beat: {
+        kind: 'equation',
+        lines: ['(AB)^{-1} = B^{-1}A^{-1}', '(A^T)^{-1} = (A^{-1})^T', '(kA)^{-1} = \\tfrac{1}{k}A^{-1}'],
+      },
       claims: [
         {
           kind: 'expr',
@@ -212,11 +268,39 @@ export const r4Inverse: Lesson = {
       ],
     },
     {
+      id: 'try-rules',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$(ABC)^{-1}$ hangisi?',
+      skill: 'inverse-rules',
+      options: [
+        {
+          key: 'a',
+          content: [text('$A^{-1}B^{-1}C^{-1}$')],
+          errorType: 'order-kept',
+          feedback: 'Sıra ters döner: en son giyilen ilk çıkar.',
+        },
+        { key: 'b', content: [text('$C^{-1}B^{-1}A^{-1}$')] },
+        {
+          key: 'c',
+          content: [text('$C^{-1}A^{-1}B^{-1}$')],
+          errorType: 'order-partial',
+          feedback: 'Tamamen ters sırada: $C$, sonra $B$, sonra $A$.',
+        },
+      ],
+      answer: 'b',
+      reveal: {
+        kind: 'equation',
+        lines: ['(ABC)^{-1} = C^{-1}(AB)^{-1}', '= C^{-1}B^{-1}A^{-1}'],
+      },
+      solution: '$(ABC)^{-1} = C^{-1}B^{-1}A^{-1}$.',
+    },
+    {
       id: 'identity',
       kind: 'explain',
       eyebrow: 'Yöntem',
       title: 'Bir özdeşlikten ters: $A$’yı paranteze al',
-      body: '$A^2 - 4A + I = 0$ olsun. $I$’yı yalnız bırak: $A^2 - 4A = -I$. $A$’yı ortak çarpan yap: $A(A - 4I) = -I$, yani $A(4I - A) = I$. Hiç eleman hesaplamadan {ok}tersi bulduk: $A^{-1} = 4I - A$.{/ok}',
+      body: '$I$’lı terimi yalnız bırak, $A$’yı paranteze al. Eleman hesabı yok.',
       scene: { items: ['H'] },
       beat: {
         kind: 'equation',

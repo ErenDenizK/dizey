@@ -257,6 +257,7 @@ export const d3DeterminantProperties: Lesson = {
       scene: { items: ['B'] },
       answer: '-45',
       feedbackWrong: '$B$ 2×2: $|3B| = 3^2 |B| = 9 \\cdot (-5)$.',
+      reveal: { kind: 'equation', lines: ['|3B| = 3^2 \\cdot |B|', '= 9 \\cdot (-5) = -45'] },
       solution: '$|3B| = 3^2 \\cdot (-5) = -45$.',
       claims: [
         { kind: 'det', matrix: 'B', equals: '-5' },

@@ -14,7 +14,7 @@ type Node =
   | { kind: 'frac'; num: Node[]; den: Node[] }
   | { kind: 'sqrt'; body: Node[] }
   | { kind: 'bar'; body: Node[] }
-  | { kind: 'matrix'; rows: Node[][][] }
+  | { kind: 'matrix'; rows: Node[][][]; bars: boolean }
   | { kind: 'error'; text: string }
 
 const SYMBOLS: Record<string, { text: string; role: 'ord' | 'bin' | 'rel' | 'word' | 'open' | 'close' }> = {
@@ -237,15 +237,16 @@ class Parser {
       }
       case 'begin': {
         const env = this.rawGroup()
-        if (env !== 'bmatrix' && env !== 'pmatrix' && env !== 'matrix') return { kind: 'error', text: env }
-        return this.matrix()
+        if (env !== 'bmatrix' && env !== 'pmatrix' && env !== 'matrix' && env !== 'vmatrix')
+          return { kind: 'error', text: env }
+        return this.matrix(env === 'vmatrix')
       }
       default:
         return { kind: 'error', text: `\\${name}` }
     }
   }
 
-  private matrix(): Node {
+  private matrix(bars: boolean): Node {
     const rows: Node[][][] = [[]]
     for (;;) {
       const cell = this.list(() => false)
@@ -261,7 +262,7 @@ class Parser {
         break
       } else break
     }
-    return { kind: 'matrix', rows: rows.filter((row) => row.length > 0) }
+    return { kind: 'matrix', rows: rows.filter((row) => row.length > 0), bars }
   }
 }
 
@@ -324,7 +325,7 @@ function one(node: Node): string {
       const cells = node.rows
         .flatMap((row) => row.map((cell) => `<span class="ex-cell">${render(cell)}</span>`))
         .join('')
-      return `<span class="ex-mat dz-m-mat" data-delimiter="brackets" style="grid-template-columns: repeat(${columns}, auto)">${cells}</span>`
+      return `<span class="ex-mat dz-m-mat" data-delimiter="${node.bars ? 'bars' : 'brackets'}" style="grid-template-columns: repeat(${columns}, auto)">${cells}</span>`
     }
     case 'error':
       return `<span class="dz-m-error">${escapeHtml(node.text)}</span>`
