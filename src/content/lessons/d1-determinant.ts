@@ -161,7 +161,7 @@ export const d1Determinant: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: '$|A| = 0$ ise $A$ singülerdir',
-      body: 'Determinantı $0$ olan matris {ok}singüler{/ok}dir, tersi yoktur. Burada {col}2. sütun{/col}, {col}1. sütunun{/col} $2$ katı: kare düz bir çizgiye ezilir, alan $0$. Ezilen bilgi geri getirilemez.',
+      body: 'Determinantı $0$ olan matris {ok}singüler{/ok}dir, tersi yoktur. Burada {ok}2. sütun{/ok}, {col}1. sütunun{/col} $2$ katı: kare düz bir çizgiye ezilir, alan $0$. Ezilen bilgi geri getirilemez.',
       scene: { items: ['T', '=', 'result'], result: '?' },
       beat: {
         kind: 'sequence',
@@ -171,7 +171,7 @@ export const d1Determinant: Lesson = {
             kind: 'frames',
             frames: [
               { clear: true, marks: [{ cell: ['T', '*', 0], tone: 'col' }] },
-              { marks: [{ cell: ['T', '*', 1], tone: 'col' }], note: '2. sütun = 2 · (1. sütun)' },
+              { marks: [{ cell: ['T', '*', 1], tone: 'ok' }], note: '2. sütun = 2 · (1. sütun)' },
             ],
           },
           { kind: 'area', matrix: 'T' },

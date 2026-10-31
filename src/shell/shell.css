@@ -73,7 +73,7 @@
   color: var(--sh-on-action);
 }
 .sh-btn--soft {
-  background: var(--sh-soft);
+  background: var(--control-soft);
   color: var(--sh-ink);
 }
 .sh-link {
@@ -96,7 +96,12 @@
   background: linear-gradient(transparent, var(--sh-bg) 30%);
 }
 .sh-chev {
+  display: inline-grid;
   color: var(--sh-muted);
+}
+.sh-chev svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* mastery glyph */
@@ -1014,15 +1019,18 @@ a.sh-node {
   margin: -2px;
 }
 /* Matrix or system options sit two to a row, the math centred in its card. */
-.ls-opts[data-wide="true"] {
+.ls-opts[data-wide="true"],
+.ex-opts[data-wide="true"] {
   grid-template-columns: 1fr 1fr;
 }
-.ls-opts[data-wide="true"] .ex-opt {
+.ls-opts[data-wide="true"] .ex-opt,
+.ex-opts[data-wide="true"] .ex-opt {
   position: relative;
   justify-content: center;
   padding: 10px 8px 10px 34px;
 }
-.ls-opts[data-wide="true"] .ex-opt__key {
+.ls-opts[data-wide="true"] .ex-opt__key,
+.ex-opts[data-wide="true"] .ex-opt__key {
   position: absolute;
   left: 8px;
   top: 8px;
@@ -1031,7 +1039,8 @@ a.sh-node {
   border-radius: 7px;
   font-size: 0.78rem;
 }
-.ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
+.ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd),
+.ex-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
   grid-column: span 2;
 }
 .ls-keypad-wrap {
@@ -1200,7 +1209,7 @@ a.dz-button[data-kind="primary"] {
   color: var(--ink-2);
 }
 .sh-segment[aria-pressed="true"] {
-  background: var(--surface-raised);
+  background: var(--control-selected);
   color: var(--ink-1);
   font-weight: var(--weight-semibold);
   box-shadow: var(--shadow-1);
@@ -1270,10 +1279,6 @@ a.dz-button[data-kind="primary"] {
   display: inline-flex;
   margin-left: 0.15em;
 }
-.ls-copy .ex-mat::before,
-.ls-copy .ex-mat::after {
-  border-color: var(--sh-muted);
-}
 .ls-replay {
   position: absolute;
   right: 8px;
@@ -1313,7 +1318,7 @@ a.dz-button[data-kind="primary"] {
    engine drives --soft (0 primary, 1 soft) on the fade spring and flips the label ink at the midpoint, so
    no frame shows grey text on a grey fill. */
 .ls-dock .sh-btn--primary {
-  background: color-mix(in oklab, var(--sh-soft) calc(var(--soft, 0) * 100%), var(--sh-action));
+  background: color-mix(in oklab, var(--control-soft) calc(var(--soft, 0) * 100%), var(--sh-action));
 }
 .ls-dock .sh-btn--primary[data-ink="soft"] {
   color: var(--sh-ink);
@@ -1441,6 +1446,10 @@ a.dz-button[data-kind="primary"] {
 .ls-seal__cell[data-result="miss"] {
   color: var(--sh-ink);
 }
+/* An empty slot is a well with an edge, not a black hole in the card. */
+.ls-seal__cell:not([data-result="right"]) {
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
+}
 .ls-end__narr {
   display: grid;
   gap: 8px;
@@ -1472,4 +1481,19 @@ a.dz-button[data-kind="primary"] {
 .ls-end__next-title {
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/*
+ * Sarrus: the two copied columns stand outside the determinant bars, as written on paper (|a b c| a b), with no
+ * delimiter of their own. Unlit copies are quieter than the matrix they repeat.
+ */
+.ls-stage .ls-copy .ex-mat::before,
+.ls-stage .ls-copy .ex-mat::after {
+  display: none;
+}
+.ls-stage .ls-copy .ex-mat {
+  padding-left: 0.1em;
+}
+.ls-stage .ls-copy .ex-cell:not([data-tone]) {
+  color: var(--sh-muted);
 }
