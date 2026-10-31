@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import { CHORDS, intervalOf, PROGRESSION, seeded } from './harmony'
-import { composeSection, idleChord, SECTION } from './music'
+import { composeSection, IDLE, idleChord, SECTION } from './music'
 
 describe('background music', () => {
-  it('walks the lesson line slowly when no lesson picks the chord', () => {
-    const walk = Array.from({ length: 12 }, (_, n) => idleChord(n))
-    expect(walk.filter((_, n) => n % 2 === 0)).toEqual(PROGRESSION)
+  it('walks the home loop slowly when no lesson picks the chord', () => {
+    const walk = Array.from({ length: 8 }, (_, n) => idleChord(n))
+    expect(walk.filter((_, n) => n % 2 === 0)).toEqual([...IDLE])
     expect(walk[1]).toBe(walk[0])
   })
 

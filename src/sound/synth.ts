@@ -115,7 +115,8 @@ const DUCK_EARLY = 0.02
  * maximum before the master boost (measureMusic() in measure.ts), under the quietest tap.
  */
 const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -39.9, felt: -38.7, glass: -40.2 }
-const MUSIC_TONE = { cutoff: 2600, wet: 1.6 }
+// Darker than any event (the old app's bed sat under a 900 Hz low-pass), so it stays behind.
+const MUSIC_TONE = { cutoff: 1500, wet: 1.6 }
 /** Events turn the music down by this much while they ring. */
 const MUSIC_DUCK = dbToGain(-8)
 
