@@ -1,4 +1,4 @@
-import { CHORDS, type ChordId, mod, PROGRESSION } from './harmony'
+import { CHORDS, type ChordId, mod } from './harmony'
 import type { Note } from './score'
 
 /**
@@ -6,7 +6,7 @@ import type { Note } from './score'
  * section holds one chord of the same harmony the sounds use, so music and sounds always agree:
  * a slow pad, a soft bass, and a few unhurried notes on top that wander by step through the
  * chord's own tones. Inside a lesson the chord is the step's; elsewhere the music walks the
- * lesson's line slowly, home first.
+ * old app's home loop (I–vi–IV–V) slowly.
  */
 
 /** Seconds per beat (about 67 bpm) and beats per section. */
@@ -17,9 +17,11 @@ export const SECTION = BEAT * SECTION_BEATS
 /** Where melody notes may fall, in beats: off the downbeat, never busy. */
 const SLOTS = [1.5, 2, 3, 3.5, 4.5, 5, 6, 6.5]
 
-/** The chord of section `n` when no lesson picks one: the lesson line, two sections per chord. */
-export const idleChord = (n: number): ChordId =>
-  PROGRESSION[mod(Math.floor(n / 2), PROGRESSION.length)] as ChordId
+/** Outside a lesson: the old app's home loop, I–vi–IV–V, two sections per chord. */
+export const IDLE: readonly ChordId[] = ['I', 'vi', 'IV', 'V']
+
+/** The chord of section `n` when no lesson picks one. */
+export const idleChord = (n: number): ChordId => IDLE[mod(Math.floor(n / 2), IDLE.length)] as ChordId
 
 export type Section = { chord: ChordId; notes: Note[] }
 
