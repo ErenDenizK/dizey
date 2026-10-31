@@ -77,7 +77,11 @@ Purpose: progress, mistakes and settings. Rehearsals live in Sınav, not here.
 
 In Safari, before anything else, explain Add to Home Screen. Safari and the Home Screen app keep separate storage. "Şimdilik Safari'de dene" is allowed, with the warning that progress will not carry over.
 
+## Decided with Eren
+
+- Lessons have no "Anlamadım" button. "Bilmiyorum" is the only way to say "I don't know" (Eren, 2026-10-31). The lesson player on main does not have it; the legacy v21 files are reference only and must not bring it back.
+
 ## Open with Eren
 
-- Remove the "Anlamadım" button from lessons and keep "Bilmiyorum"?
 - Blue and orange for row and column. This is provisional in PR #23.
+- Eren finds the current build too white, plain and cheap (2026-10-31). The visual system owns the fix; any shell change must be checked against it on the device.
