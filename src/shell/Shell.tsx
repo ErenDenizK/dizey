@@ -5,29 +5,26 @@ import { engine } from '../engine/driver'
 import { CHOREO } from '../engine/tokens'
 import { ExamHome } from '../exam/ExamHome'
 import { useSettings } from '../progress/settings'
-import { ExamIcon, MapIcon, MeIcon, TodayIcon } from '../ui/icons'
+import { ExamIcon, MeIcon, PathIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
-import { MapView } from './MapView'
 import { MeView } from './MeView'
 import { Onboarding } from './Onboarding'
+import { PathView } from './PathView'
 import { installPressFeedback } from './press'
 import { morphFrom, overlayHostRef, returnTab, stageRef } from './stage'
-import { TodayView } from './TodayView'
 import '../ui/ui.css'
 import './shell.css'
 
-type TabPath = '/' | '/map' | '/exam' | '/me'
+type TabPath = '/' | '/exam' | '/me'
 
 const tabs = [
-  { id: '/', label: strings.tabs.today, Icon: TodayIcon },
-  { id: '/map', label: strings.tabs.map, Icon: MapIcon },
+  { id: '/', label: strings.tabs.path, Icon: PathIcon },
   { id: '/exam', label: strings.tabs.exam, Icon: ExamIcon },
   { id: '/me', label: strings.tabs.me, Icon: MeIcon },
 ] as const
 
 const views: Record<TabPath, () => React.ReactNode> = {
-  '/': TodayView,
-  '/map': MapView,
+  '/': PathView,
   '/exam': ExamHome,
   '/me': MeView,
 }
@@ -38,7 +35,7 @@ function tabOf(pathname: string): TabPath | null {
 }
 
 /**
- * The app frame: four tab panes kept mounted (so each keeps its scroll position), the floating tab
+ * The app frame: three tab panes kept mounted (so each keeps its scroll position), the floating tab
  * bar, and full-screen routes (a lesson, a rehearsal) on top. Tabs are peers: the incoming pane fades
  * in over the outgoing one, which hides only when the fade lands, so no frame is ever empty
  * (docs/design/motion-system.md).

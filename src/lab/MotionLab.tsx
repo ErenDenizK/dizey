@@ -1,7 +1,7 @@
 import { createRef, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { lab } from '../content/lab'
 import { engine, review } from '../engine/driver'
-import { ChevronRight, Close, ExamIcon, MapIcon, MeIcon, TodayIcon } from '../ui/icons'
+import { ChevronRight, Close, ExamIcon, MeIcon, PathIcon } from '../ui/icons'
 import { Morph } from '../ui/Morph'
 import { Pressable } from '../ui/Pressable'
 import { Push } from '../ui/Push'
@@ -17,8 +17,8 @@ import { TypeSpecimen } from './TypeSpecimen'
 type TabId = 'today' | 'map' | 'exam' | 'me'
 
 const TABS = [
-  { id: 'today', label: lab.tabs.today, Icon: TodayIcon },
-  { id: 'map', label: lab.tabs.map, Icon: MapIcon },
+  { id: 'today', label: lab.tabs.today, Icon: PathIcon },
+  { id: 'map', label: lab.tabs.map, Icon: PathIcon },
   { id: 'exam', label: lab.tabs.exam, Icon: ExamIcon },
   { id: 'me', label: lab.tabs.me, Icon: MeIcon },
 ] as const
