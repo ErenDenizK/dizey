@@ -1,6 +1,6 @@
 # 0001: Technical foundation (stack, hosting, PWA, math, motion, testing)
 
-- Status: accepted (Eren, 2026-10-30 14:22Z; Pages source changed to GitHub Actions at his request)
+- Status: accepted (Eren, 2026-10-30 14:22Z; Pages source changed to GitHub Actions at his request); inline math superseded by [0008](0008-own-math-typesetter.md)
 - Date: 2026-10-30
 - Ledger items: plan step 2 (tech foundation); Eren's decisions of 2026-10-30 (PWA on iPhone, stack chosen from scratch, overkill allowed, GitHub Pages, every build is a product)
 - Research: [`docs/research/tech-stack.md`](../research/tech-stack.md)

@@ -249,7 +249,7 @@
   font-size: 1.02rem;
   line-height: 1.5;
 }
-.ex-tex .katex {
+.ex-tex .dz-m {
   font-size: 1.05em;
 }
 .ex-mat-wrap {
@@ -304,6 +304,13 @@
   min-width: 1.6em;
   text-align: center;
   line-height: 1.8;
+}
+/* A sign and its stacked fraction stay on one line, also inside grid cells. */
+.ex-signed {
+  gap: 0.06em;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
 }
 .ex-frac {
   display: inline-grid;

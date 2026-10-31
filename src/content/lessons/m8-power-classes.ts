@@ -37,6 +37,11 @@ export const m8PowerClasses: Lesson = {
       ['5', '2', '6'],
       ['-2', '-1', '-3'],
     ]),
+    N2: m('N² =', [
+      ['0', '0', '0'],
+      ['3', '3', '?'],
+      ['-1', '-1', '-3'],
+    ]),
     V: m('B =', [
       ['4', '3', '3'],
       ['-1', '0', '-1'],
@@ -47,9 +52,9 @@ export const m8PowerClasses: Lesson = {
     {
       id: 'hook',
       kind: 'explain',
-      eyebrow: 'Gözlem',
-      title: 'Kuvvetler başa dönebilir',
-      body: '$R$ düzlemi $90°$ döndürür. Dört kez döndürünce başa dönersin: $R^4 = I$, sonra $R^5 = R$. Bu derste kuvvetlerine bakarak tanımlanan dört matris sınıfı var.',
+      eyebrow: 'Soru',
+      title: 'Bir matrisin kuvvetleri başa dönebilir mi?',
+      body: '$R$ düzlemi 90° döndürür. Dört kez döndür, izle.',
       scene: { items: ['R'] },
       beat: { kind: 'equation', lines: ['R^2 = -I', 'R^3 = -R', 'R^4 = I', 'R^5 = R'] },
       claims: [
@@ -84,7 +89,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Periyodik: $A^{k+1} = A$',
-      body: '$A^{k+1} = A$ olacak şekilde pozitif bir $k$ varsa $A$ periyodiktir; bunu sağlayan {ok}en küçük $k$ periyottur{/ok}. $R$ için $R^2, R^3, R^4$ hiçbiri $R$ değil, $R^5 = R$: periyot $4$.',
+      body: 'Bir kuvveti kendisine dönüyorsa periyodik. $R^5 = R$: {ok}periyot 4{/ok}.',
       scene: { items: ['R'] },
       claims: [{ kind: 'property', expr: 'R', is: 'periodic', index: 4 }],
     },
@@ -93,7 +98,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'İdempotent: $A^2 = A$',
-      body: 'Periyodu $1$ olan matris: {ok}$A^2 = A$ ise{/ok} idempotent. Geometrisi izdüşüm: $P$ her noktayı $x$ eksenine indirir, ikinci kez indirmek hiçbir şeyi değiştirmez. Sonuç: her $n \\geq 1$ için $A^n = A$.',
+      body: '{ok}A² = A{/ok}: karesi kendisi. İkinci kez uygulamak bir şey değiştirmez, yani her kuvvet $A$.',
       scene: { items: ['P', 'E'] },
       claims: [
         { kind: 'property', expr: 'P', is: 'idempotent' },
@@ -106,7 +111,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'choice',
       eyebrow: 'Senin sıran',
       title: 'Hangisi idempotenttir?',
-      body: 'Her birinin karesini al.',
+      body: 'Karesini al, kendisi mi?',
       skill: 'recognize-idempotent',
       options: [
         {
@@ -154,6 +159,12 @@ export const m8PowerClasses: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: {
+        kind: 'equation',
+        lines: [
+          '\\begin{bmatrix} 1 & 1 \\\\ 0 & 0 \\end{bmatrix}^2 = \\begin{bmatrix} 1 & 1 \\\\ 0 & 0 \\end{bmatrix}',
+        ],
+      },
       solution:
         '$\\begin{bmatrix} 1 & 1 \\\\ 0 & 0 \\end{bmatrix}^2$’nin 1. satırı $(1 \\cdot 1 + 1 \\cdot 0,\\ 1 \\cdot 1 + 1 \\cdot 0) = (1, 1)$, 2. satırı $(0, 0)$: matrisin kendisi.',
       claims: [{ kind: 'optionProperty', is: 'idempotent' }],
@@ -163,7 +174,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'explain',
       eyebrow: 'Tuzak',
       title: '$A^2 = A$, $A = I$ ya da $A = 0$ demek değil',
-      body: '$A^2 = A$’dan $A(A - I) = 0$ çıkar, ama matrislerde çarpım $0$ iken çarpanlar $0$ olmak zorunda değil. Yukarıdaki $A$ ne $0$ ne $I$. Doğru olan: $A$ tersinirse iki yanı $A^{-1}$ ile çarp, $A = I$. Ayrıca $I - A$ da idempotenttir.',
+      body: 'Bu $A$ ne $0$ ne $I$, yine de $A^2 = A$. Tersinirse ancak o zaman $A = I$. $I - A$ da idempotent.',
       scene: { items: ['E'] },
       claims: [
         { kind: 'det', matrix: 'E', equals: '0' },
@@ -175,8 +186,12 @@ export const m8PowerClasses: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Nilpotent: bir kuvveti sıfır',
-      body: '$A^p = 0$ olacak şekilde pozitif bir tam sayı $p$ varsa $A$ nilpotenttir; {ok}en küçük $p$ indekstir{/ok}. Köşegeni sıfır üst üçgen $U$’da her kuvvet sıfırları bir köşegen yukarı iter: $U^2$’de yalnız sağ üst köşe kalır, $U^3 = 0$. İndeks $3$. $N$ da öyle, ama bunu görmek için çarpmak gerekir.',
-      scene: { items: ['U', 'N'] },
+      body: 'Bir kuvveti 0 ise nilpotent; {ok}ilk sıfır olan kuvvet indekstir{/ok}. $U^2$’de yalnız köşe kalır, $U^3 = 0$: indeks 3.',
+      scene: { items: ['U'] },
+      beat: {
+        kind: 'equation',
+        lines: ['U^2 = \\begin{bmatrix} 0 & 0 & 3 \\\\ 0 & 0 & 0 \\\\ 0 & 0 & 0 \\end{bmatrix}', 'U^3 = 0'],
+      },
       claims: [
         {
           kind: 'expr',
@@ -204,10 +219,11 @@ export const m8PowerClasses: Lesson = {
       id: 'try-power',
       kind: 'keypad',
       eyebrow: 'Senin sıran',
-      title: '$N^2$’nin 2. satır 3. sütun elemanı kaç?',
-      body: '$N$’nin 2. satırı ile 3. sütununu çarp.',
+      title: '$N^2$’nin 2. satır 3. sütunu kaç?',
+      body: '$N$’nin 2. satırı ile 3. sütunu.',
       skill: 'matrix-power-entry',
-      scene: { items: ['N'] },
+      scene: { items: ['N', '·', 'N', '=', 'N2'], marks: [{ cell: ['N2', 1, 2], tone: 'ok' }] },
+      reveal: { kind: 'product', left: 'N', right: 'N', into: 'N2', cells: [[1, 2]] },
       answer: '9',
       feedbackWrong:
         '2. satır $(5, 2, 6)$, 3. sütun $(3, 6, -3)$: $5 \\cdot 3 + 2 \\cdot 6 + 6 \\cdot (-3)$.',
@@ -219,7 +235,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Involutive: $A^2 = I$, yani $A^{-1} = A$',
-      body: '{ok}$A^2 = I$ ise{/ok} $A$ involutive’dir: kendisinin tersidir. Geometrisi yansıma: iki kez yansıtınca başa dönersin. $B^2 = I$, bu yüzden $B^{-1}$ için hiç hesap gerekmez.',
+      body: '{ok}A² = I{/ok}: kendisinin tersi. İki kez yansıtınca başa dönersin; $B^{-1}$ için hesap gerekmez.',
       scene: { items: ['V'] },
       claims: [
         { kind: 'property', expr: 'V', is: 'involutory' },
@@ -233,6 +249,32 @@ export const m8PowerClasses: Lesson = {
           ],
         },
       ],
+    },
+    {
+      id: 'try-involutory',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$B^2 = I$ ise $B^{-1}$ nedir?',
+      skill: 'recognize-involutory',
+      scene: { items: ['V'] },
+      options: [
+        { key: 'a', content: [text('$B$')] },
+        {
+          key: 'b',
+          content: [text('$-B$')],
+          errorType: 'sign-slip',
+          feedback: '$B \\cdot B = I$; tersi $B$’nin kendisi, işaret değişmez.',
+        },
+        {
+          key: 'c',
+          content: [text('$I$')],
+          errorType: 'confused-with-identity',
+          feedback: '$B \\cdot I = B$, $I$ değil. $B$’yi $I$’ye götüren $B$’nin kendisi.',
+        },
+      ],
+      answer: 'a',
+      reveal: { kind: 'equation', lines: ['B \\cdot B = I', '\\Rightarrow B^{-1} = B'] },
+      solution: '$B \\cdot B = I$, yani $B^{-1} = B$.',
     },
     {
       id: 'exam-nilpotent',

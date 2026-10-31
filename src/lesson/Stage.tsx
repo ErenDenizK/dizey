@@ -462,16 +462,29 @@ function useReveal(
 }
 
 /**
- * A value written into a matrix cell (a product entry, a rewritten row) lands: it rises out of the cell
- * and settles with one bounce, so the eye sees where the result went.
+ * A value written into a matrix cell (a product entry, a rewritten row) lands. When the action names the
+ * work-line token it came from (`landFrom`, the sum of a product or combine line), a chip in the result
+ * colour carries it from the line into the cell on the carry springs, and the cell shows on arrival with
+ * the land sound (old "the result flies in"). Otherwise the value rises out of the cell and settles.
  */
-function useLanding(box: RefObject<HTMLDivElement | null>, working: StageState['working']) {
+function useLanding(
+  box: RefObject<HTMLDivElement | null>,
+  working: StageState['working'],
+  landFrom: StageState['landFrom'],
+) {
   const before = useRef<StageState['working']>(null)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per working change
   useLayoutEffect(() => {
     const was = before.current
     before.current = working
     const root = box.current
     if (!root || !working || was?.matrix !== working.matrix) return
+    const chips: HTMLElement[] = []
+    // Only one value can travel from the line; a jump (a tap that lands the beat) changes several at once.
+    const changed = working.rows.flatMap((row, r) =>
+      row.filter((entry, c) => was.rows[r]?.[c] !== entry),
+    ).length
+    const carried = changed === 1 ? landFrom : null
     working.rows.forEach((row, r) => {
       row.forEach((entry, c) => {
         if (was.rows[r]?.[c] === entry) return
@@ -479,12 +492,63 @@ function useLanding(box: RefObject<HTMLDivElement | null>, working: StageState['
           `[data-matrix="${working.matrix}"] [data-cell="${r}-${c}"]`,
         )
         if (!el) return
-        engine.set(el, { opacity: 0, y: SHIFT.scene, scale: 0.7 })
+        const from = carried ? root.querySelector<HTMLElement>(`[data-tok="${carried}"]`) : null
+        if (!from) {
+          engine.set(el, { opacity: 0, y: SHIFT.scene, scale: 0.7 })
+          engine.withChannel('lesson', () => {
+            engine.to(el, { opacity: 1, y: 0, scale: 1 }, 'land')
+          })
+          return
+        }
+        const stageRect = root.getBoundingClientRect()
+        const a = from.getBoundingClientRect()
+        const b = el.getBoundingClientRect()
+        const chip = document.createElement('span')
+        chip.className = 'ls-chip'
+        chip.dataset.role = 'ok'
+        chip.textContent = from.textContent
+        chip.setAttribute('aria-hidden', 'true')
+        chip.style.left = `${a.left - stageRect.left}px`
+        chip.style.top = `${a.top - stageRect.top}px`
+        chip.style.width = `${a.width}px`
+        chip.style.height = `${a.height}px`
+        chip.style.fontSize = getComputedStyle(from).fontSize
+        root.append(chip)
+        chips.push(chip)
+        engine.set(el, { opacity: 0 })
+        const dx = b.left + b.width / 2 - (a.left + a.width / 2)
+        const dy = b.top + b.height / 2 - (a.top + a.height / 2)
+        const ratio =
+          Number.parseFloat(getComputedStyle(el).fontSize) / Number.parseFloat(chip.style.fontSize)
         engine.withChannel('lesson', () => {
-          engine.to(el, { opacity: 1, y: 0, scale: 1 }, 'land')
+          const tempo = engine.tempoOf('lesson')
+          const w0 = (2 * Math.PI) / (SPRINGS.carry.duration * tempo)
+          const slow = Math.max(1, (0.37 * Math.hypot(dx, dy) * w0) / PURSUIT)
+          const spring = (spec: { duration: number; bounce: number }) => ({
+            ...spec,
+            duration: spec.duration * slow,
+          })
+          const land = () => {
+            if (!chip.isConnected) return
+            chip.remove()
+            engine.set(el, { opacity: 1, scale: 1.15 })
+            engine.to(el, { scale: 1 }, 'land')
+            playSound('land')
+          }
+          engine.to(chip, { x: dx, scale: ratio }, spring(SPRINGS.carry), { onArrive: land, epsilon: 0.75 })
+          engine.to(chip, { y: dy }, spring(SPRINGS.carryY))
         })
       })
     })
+    return () => {
+      for (const chip of chips) {
+        if (chip.isConnected) chip.remove()
+      }
+      if (!root) return
+      for (const el of root.querySelectorAll<HTMLElement>(`[data-matrix="${working.matrix}"] [data-cell]`)) {
+        engine.set(el, { opacity: 1 })
+      }
+    }
   }, [box, working])
 }
 
@@ -512,7 +576,7 @@ export function Stage({
   const workBox = useRef<HTMLDivElement>(null)
   useStageLayout(box, sceneBox, areaBox, workBox)
   useReveal(box, state.shown, state.flights, stagger)
-  useLanding(box, state.working)
+  useLanding(box, state.working, state.landFrom)
   const areaName = state.area ?? final.area
   // A beat that ends on a result shows "?" until it gets there, never the answer it is about to derive.
   const placeholder = final.result !== null ? '?' : (scene?.result ?? '?')
@@ -521,7 +585,7 @@ export function Stage({
       {scene ? (
         <div ref={sceneBox} className="ls-scene">
           {scene.items.map((item, index) => {
-            if (item === '=' || item === '·') {
+            if (item === '=' || item === '·' || item === '+') {
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
                 <span key={index} className="ls-op" data-obj={`op${index}`}>

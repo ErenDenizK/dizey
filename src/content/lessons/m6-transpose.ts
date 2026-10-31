@@ -23,6 +23,16 @@ export const m6Transpose: Lesson = {
       ['-1', '4'],
       ['3', '1'],
     ]),
+    T0: m('$A^T$ =', [
+      ['?', '?'],
+      ['?', '?'],
+      ['?', '?'],
+    ]),
+    T1: m('$A^T$ =', [
+      ['2', '?'],
+      ['-1', '?'],
+      ['3', '?'],
+    ]),
     xA: m('', [
       ['1', '2'],
       ['0', '-1'],
@@ -38,31 +48,21 @@ export const m6Transpose: Lesson = {
   },
   steps: [
     {
+      id: 'hook',
+      kind: 'explain',
+      eyebrow: 'Soru',
+      title: 'Satırları sütun yapsak ne olur?',
+      body: '$A$’nın satırlarını yatay değil dikey yaz. Ortaya çıkan matrisin adı transpoz: $A^T$.',
+      scene: { items: ['P', 'T0'] },
+    },
+    {
       id: 'definition',
       kind: 'explain',
-      eyebrow: 'Tanım',
+      eyebrow: 'Sezgi',
       title: 'Satırlar sütun olur',
-      body: '$A^T$’nin $i.$ sütunu $A$’nın $i.$ satırıdır; eleman olarak $(A^T)_{ij} = a_{ji}$. Boyut da döner: 2×3 bir matrisin transpozu 3×2’dir.',
-      scene: { items: ['P', 'tP'] },
-      beat: {
-        kind: 'frames',
-        frames: [
-          {
-            clear: true,
-            marks: [
-              { cell: ['P', 0, '*'], tone: 'row' },
-              { cell: ['tP', '*', 0], tone: 'row' },
-            ],
-          },
-          {
-            clear: true,
-            marks: [
-              { cell: ['P', 1, '*'], tone: 'col' },
-              { cell: ['tP', '*', 1], tone: 'col' },
-            ],
-          },
-        ],
-      },
+      body: '$A$’nın {row}1. satırı{/row}, $A^T$’nin {ok}1. sütunu{/ok} olur.',
+      scene: { items: ['P', 'T0'] },
+      beat: { kind: 'transpose', matrix: 'P', into: 'T0', rows: [0] },
       claims: [
         {
           kind: 'expr',
@@ -76,11 +76,145 @@ export const m6Transpose: Lesson = {
       ],
     },
     {
+      id: 'try-column',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$A^T$’nin 2. sütunu hangisi?',
+      skill: 'transpose-entry',
+      scene: {
+        items: ['P', 'T1'],
+        marks: [{ cell: ['T1', '*', 1], tone: 'ok' }],
+      },
+      options: [
+        {
+          key: 'a',
+          content: [text('$(-1, 4)$')],
+          errorType: 'kept-column',
+          feedback: 'Bu $A$’nın 2. sütunu. Transpozda satır sütuna döner: 2. satırı al.',
+        },
+        { key: 'b', content: [text('$(0, 4, 1)$')] },
+        {
+          key: 'c',
+          content: [text('$(2, 0)$')],
+          errorType: 'kept-column',
+          feedback: 'Bu $A$’nın 1. sütunu. $A^T$’nin 2. sütunu, $A$’nın 2. satırı.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'transpose', matrix: 'P', into: 'T1', rows: [1] },
+      solution: '$A$’nın 2. satırı $(0, 4, 1)$, dikey yazılır.',
+    },
+    {
+      id: 'size',
+      kind: 'explain',
+      eyebrow: 'Kural',
+      title: 'Boyut da döner',
+      body: '2×3 bir matrisin transpozu 3×2. Tek eleman için indisler yer değiştirir: $(A^T)_{ij} = a_{ji}$.',
+      scene: { items: ['P', 'tP'] },
+      beat: {
+        kind: 'frames',
+        frames: [
+          {
+            clear: true,
+            marks: [
+              { cell: ['P', 0, 1], tone: 'row' },
+              { cell: ['tP', 1, 0], tone: 'ok' },
+            ],
+            note: '(Aᵀ)₂₁ = a₁₂ = −1',
+          },
+        ],
+      },
+      claims: [{ kind: 'exprEntry', expr: 'P^T', row: 2, col: 1, equals: '-1' }],
+    },
+    {
+      id: 'try-entry',
+      kind: 'keypad',
+      eyebrow: 'Senin sıran',
+      title: '$A^T$’nin 3. satır 2. sütunu kaç?',
+      body: 'İndisleri çevir: $a_{23}$.',
+      skill: 'transpose-entry',
+      scene: { items: ['P'] },
+      answer: '1',
+      feedbackWrong: '$A$’nın 2. satırı $(0, 4, 1)$; 3. elemanı al.',
+      reveal: {
+        kind: 'frames',
+        frames: [
+          { clear: true, marks: [{ cell: ['P', 1, '*'], tone: 'row' }] },
+          { clear: true, marks: [{ cell: ['P', 1, 2], tone: 'ok' }], note: 'a₂₃ = 1' },
+        ],
+      },
+      solution: '$(A^T)_{32} = a_{23} = 1$.',
+      claims: [{ kind: 'exprEntry', expr: 'P^T', row: 3, col: 2, equals: '1' }],
+    },
+    {
+      id: 'try-size',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$B$ 4×2 ise $B^T$ kaça kaç?',
+      skill: 'matrix-size',
+      options: [
+        { key: 'a', content: [text('2×4')] },
+        {
+          key: 'b',
+          content: [text('4×2')],
+          errorType: 'kept-size',
+          feedback: 'Transpoz boyutu çevirir: satırlar sütun olur.',
+        },
+        {
+          key: 'c',
+          content: [text('8')],
+          errorType: 'counted-entries',
+          feedback: '8, eleman sayısı. Boyut iki sayı: 2×4.',
+        },
+      ],
+      answer: 'a',
+      reveal: { kind: 'equation', lines: ['4 \\times 2 \\;\\to\\; 2 \\times 4'] },
+      solution: '4 satır 4 sütun olur, 2 sütun 2 satır: 2×4.',
+    },
+    {
       id: 'rules',
       kind: 'explain',
       eyebrow: 'Kural',
-      title: 'Transpozun kuralları',
-      body: '$(A^T)^T = A$, $(A + B)^T = A^T + B^T$, $(kA)^T = kA^T$. Çarpımda {ok}sıra ters döner{/ok}: $(AB)^T = B^TA^T$. Neden: $(AB)^T$’nin $(i, j)$ elemanı, $A$’nın $j.$ satırı ile $B$’nin $i.$ sütununun çarpımıdır; bu da $B^T$’nin $i.$ satırı ile $A^T$’nin $j.$ sütunu.',
+      title: 'Toplama ve sabite dağılır',
+      body: '$(A + B)^T = A^T + B^T$ ve $(kA)^T = kA^T$. İki kez çevirince başa dönersin: $(A^T)^T = A$.',
+      beat: {
+        kind: 'equation',
+        lines: ['(A + B)^T = A^T + B^T', '(kA)^T = kA^T', '(A^T)^T = A'],
+      },
+    },
+    {
+      id: 'try-scalar',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$(2A)^T$ neye eşit?',
+      skill: 'transpose-rules',
+      options: [
+        {
+          key: 'a',
+          content: [text('$2A$')],
+          errorType: 'dropped-transpose',
+          feedback: 'Transpoz kaybolmaz; yalnız sabit dışarı çıkar.',
+        },
+        { key: 'b', content: [text('$2A^T$')] },
+        {
+          key: 'c',
+          content: [text('$A^T$')],
+          errorType: 'dropped-scalar',
+          feedback: 'Sabit dışarı çıkar ama kaybolmaz: $2A^T$.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'equation', lines: ['(2A)^T = 2A^T'] },
+      solution: 'Sabit dışarı çıkar: $(kA)^T = kA^T$.',
+      claims: [{ kind: 'optionExpr', expr: '(2A)^T', where: { A: 'xA' } }],
+    },
+    {
+      id: 'order',
+      kind: 'explain',
+      eyebrow: 'Tuzak',
+      title: 'Çarpımda sıra ters döner',
+      body: '$(AB)^T = B^TA^T$. $A^TB^T$ yazmak en sık yapılan hata; genelde eşit değiller.',
+      beat: { kind: 'equation', lines: ['(AB)^T = B^T A^T', '(AB)^T \\neq A^T B^T'] },
       claims: [
         {
           kind: 'expr',
@@ -103,23 +237,10 @@ export const m6Transpose: Lesson = {
       ],
     },
     {
-      id: 'try-entry',
-      kind: 'keypad',
-      eyebrow: 'Senin sıran',
-      title: '$A^T$’nin 3. satır 2. sütun elemanı kaç?',
-      body: '$(A^T)_{32} = a_{23}$.',
-      skill: 'transpose-entry',
-      scene: { items: ['P'] },
-      answer: '1',
-      feedbackWrong: '$A$’nın 2. satırı $(0, 4, 1)$; 3. elemanı al.',
-      solution: '$(A^T)_{32} = a_{23} = 1$.',
-      claims: [{ kind: 'exprEntry', expr: 'P^T', row: 3, col: 2, equals: '1' }],
-    },
-    {
       id: 'exam-order',
       kind: 'choice',
       eyebrow: 'Sınav tipi',
-      title: '$(ABC)^T$ hangisine eşittir?',
+      title: '$(ABC)^T$ neye eşit?',
       skill: 'transpose-product',
       options: [
         {
@@ -143,6 +264,7 @@ export const m6Transpose: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: { kind: 'equation', lines: ['(ABC)^T = C^T (AB)^T', '= C^T B^T A^T'] },
       solution: '$(ABC)^T = ((AB)C)^T = C^T(AB)^T = C^TB^TA^T$.',
       claims: [{ kind: 'optionExpr', expr: '(ABC)^T', where: { A: 'xA', B: 'xB', C: 'xC' } }],
     },

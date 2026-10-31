@@ -428,6 +428,7 @@ export const m5MatrixProduct: Lesson = {
         },
       ],
       answer: 'b',
+      reveal: { kind: 'equation', lines: ['J^2 \\to 2,\\; J^3 \\to 3,\\; \\dots', 'J^{10} \\to 10'] },
       solution: '$J^n$’in sağ üstü $n$: $J^{10}$’unki 10.',
       claims: [{ kind: 'exprEntry', expr: 'J^{10}', row: 1, col: 2, equals: '10' }],
     },
