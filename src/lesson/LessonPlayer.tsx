@@ -156,12 +156,49 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         ? step.feedbackWrong
         : undefined
 
+  const reserve = frames.reduce((most, frame) => Math.max(most, frame.notes.length), 0)
+  const hasStage = Boolean(step.scene || state.area || state.notes.length)
+
+  const options =
+    step.kind === 'choice' ? (
+      <fieldset className="ex-opts ls-opts" aria-label={step.title}>
+        {step.options.map((option) => {
+          const wrong = attempt.wrong.includes(option.key)
+          const right = attempt.revealed && option.key === step.answer
+          return (
+            <button
+              key={option.key}
+              type="button"
+              className="ex-opt sh-press"
+              data-state={right ? 'right' : wrong ? 'wrong' : undefined}
+              disabled={attempt.revealed || wrong}
+              onClick={() => answer(option.key, option.key === step.answer)}
+            >
+              <span className="ex-opt__key">{option.key}</span>
+              <span className="ex-opt__body">
+                <Blocks blocks={option.content} />
+              </span>
+            </button>
+          )
+        })}
+      </fieldset>
+    ) : null
+
   return (
     <div className="ls-run" data-testid="lesson-player">
       <div className="ls-top">
         <Link to={returnTab.current} className="ls-top__btn" aria-label={strings.lesson.close}>
           ✕
         </Link>
+        <button
+          type="button"
+          className="ls-top__btn sh-press"
+          aria-label={strings.lesson.back}
+          disabled={index === 0}
+          onClick={() => go(index - 1)}
+        >
+          ‹
+        </button>
         <div
           className="ls-progress"
           role="progressbar"
@@ -175,90 +212,62 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             style={{ width: `${((index + 1) / lesson.steps.length) * 100}%` }}
           />
         </div>
-        <button
-          type="button"
-          className="ls-top__btn sh-press"
-          aria-label={strings.lesson.back}
-          disabled={index === 0}
-          onClick={() => go(index - 1)}
-        >
-          ‹
-        </button>
+        <span className="ls-count" aria-hidden="true">
+          {lesson.node} · {strings.lesson.count(index + 1, lesson.steps.length)}
+        </span>
       </div>
 
-      <div ref={scroller} className="ls-scroll">
-        <p className="ls-eyebrow">{step.eyebrow}</p>
-        <h1 className="ls-title">
-          <RichText text={step.title} />
-        </h1>
-        {step.scene || state.area || state.notes.length ? (
-          <Stage lesson={lesson} scene={step.scene} state={state} />
-        ) : null}
-        {step.body ? (
-          <p className="ls-body">
-            <RichText text={step.body} />
-          </p>
-        ) : null}
+      <div className="ls-main" data-stage={hasStage}>
+        {hasStage ? <Stage lesson={lesson} scene={step.scene} state={state} reserve={reserve} /> : null}
 
-        {step.kind === 'choice' ? (
-          <fieldset className="ex-opts" aria-label={step.title}>
-            {step.options.map((option) => {
-              const wrong = attempt.wrong.includes(option.key)
-              const right = attempt.revealed && option.key === step.answer
-              return (
-                <button
-                  key={option.key}
-                  type="button"
-                  className="ex-opt sh-press"
-                  data-state={right ? 'right' : wrong ? 'wrong' : undefined}
-                  disabled={attempt.revealed || wrong}
-                  onClick={() => answer(option.key, option.key === step.answer)}
-                >
-                  <span className="ex-opt__key">{option.key}</span>
-                  <span className="ex-opt__body">
-                    <Blocks blocks={option.content} />
-                  </span>
-                </button>
-              )
-            })}
-          </fieldset>
-        ) : null}
+        <div ref={scroller} className="ls-narr">
+          <p className="ls-eyebrow">{step.eyebrow}</p>
+          <h1 className="ls-title">
+            <RichText text={step.title} />
+          </h1>
+          {step.body ? (
+            <p className="ls-body">
+              <RichText text={step.body} />
+            </p>
+          ) : null}
 
-        {step.kind === 'summary' ? (
-          <>
-            <ul className="ls-points">
-              {step.points.map((point) => (
-                <li key={point}>
-                  <RichText text={point} />
-                </li>
-              ))}
-            </ul>
-            <Score lesson={lesson} />
-          </>
-        ) : null}
+          {step.kind === 'summary' ? (
+            <>
+              <ul className="ls-points">
+                {step.points.map((point) => (
+                  <li key={point}>
+                    <RichText text={point} />
+                  </li>
+                ))}
+              </ul>
+              <Score lesson={lesson} />
+            </>
+          ) : null}
 
-        {isQuestion(step) && (wrongFeedback || attempt.revealed) ? (
-          <div
-            className="ls-feedback"
-            role="status"
-            data-tone={attempt.solved ? 'ok' : attempt.revealed ? undefined : 'wrong'}
-          >
-            {attempt.revealed ? (
-              <>
-                {attempt.solved ? <b>{strings.lesson.correct} </b> : null}
-                <RichText text={step.solution} />
-              </>
-            ) : (
-              <>
-                <b>{strings.lesson.wrong} </b>
-                {wrongFeedback ? <RichText text={wrongFeedback} /> : null}
-              </>
-            )}
-          </div>
-        ) : null}
+          {isQuestion(step) && (wrongFeedback || attempt.revealed) ? (
+            <div
+              className="ls-feedback"
+              role="status"
+              data-tone={attempt.solved ? 'ok' : attempt.revealed ? undefined : 'wrong'}
+            >
+              {attempt.revealed ? (
+                <>
+                  {attempt.solved ? <b>{strings.lesson.correct} </b> : null}
+                  <RichText text={step.solution} />
+                </>
+              ) : (
+                <>
+                  <b>{strings.lesson.wrong} </b>
+                  {wrongFeedback ? <RichText text={wrongFeedback} /> : null}
+                </>
+              )}
+            </div>
+          ) : null}
+        </div>
       </div>
 
       <div className="ls-dock">
+        {options}
         {step.kind === 'keypad' && !attempt.revealed ? (
           <Keypad
             value={typed}
