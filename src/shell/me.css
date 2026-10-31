@@ -1,11 +1,15 @@
 /* Profil (src/shell/MeView.tsx). Tokens only; no transitions or keyframes. */
+/*
+ * Hero: one primary number and two secondary ones, on one grid. Lessons done is the hero (display 30) beside the
+ * progress matrix; mistakes and best rehearsal sit below, each under the column above it, as title2 values.
+ */
 .me-hero {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-5);
   margin-top: calc(var(--space-2) * -1);
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-5) var(--card-pad);
   border-radius: var(--corner-card);
   background: var(--surface);
   box-shadow: var(--shadow-1), var(--edge-light);
@@ -48,25 +52,43 @@
   box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
 }
 .me-hero__stats {
-  display: grid;
-  gap: var(--space-3);
-  margin: 0;
+  display: contents;
 }
 .me-hero__stats div {
   display: flex;
   flex-direction: column-reverse;
+  gap: var(--gap-bound);
+  min-width: 0;
+}
+/* The two secondary stats start a new row, separated from the hero by a hairline across the card. */
+.me-hero__stats div:not(:first-child) {
+  align-self: start;
+  padding-top: var(--gap-block);
+  box-shadow: inset 0 0.5px 0 var(--hairline-strong);
 }
 .me-hero__stats dd {
   margin: 0;
   font-size: var(--type-title2);
   line-height: var(--leading-title2);
+  letter-spacing: var(--tracking-title);
   font-weight: var(--weight-bold);
+}
+.me-hero__stats div:first-child dd {
+  font-size: var(--type-large);
+  line-height: var(--leading-large);
+  letter-spacing: var(--tracking-large);
 }
 .me-hero__stats small {
   font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
   font-weight: var(--weight-medium);
   color: var(--ink-2);
-  line-height: var(--leading-subhead);
+}
+.me-hero__stats div:first-child small {
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .me-lead {
   display: grid;
