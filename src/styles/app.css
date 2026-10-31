@@ -70,7 +70,7 @@ html {
   font-optical-sizing: auto;
   font-size: var(--type-body);
   letter-spacing: var(--tracking-body);
-  line-height: var(--leading-body);
+  line-height: var(--leading-base);
   color: var(--ink-1);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
