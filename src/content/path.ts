@@ -69,3 +69,19 @@ export const chapters: readonly Chapter[] = buildChapters(lessons)
 export function chapterOf(lesson: Lesson, list: readonly Chapter[] = chapters): Chapter | undefined {
   return list.find((chapter) => chapter.lessons.includes(lesson))
 }
+
+/**
+ * A lesson's place on the path, world-style: chapter, then position ("1.4"). Shown instead of the content
+ * node codes, which follow topic order and would read out of order along the path (M1 M2 M4 M5 M3).
+ */
+export function pathCode(lesson: Lesson, list: readonly Chapter[] = chapters): string {
+  const number = list.findIndex((chapter) => chapter.lessons.includes(lesson))
+  if (number < 0) return lesson.node
+  return `${number + 1}.${(list[number]?.lessons.indexOf(lesson) ?? 0) + 1}`
+}
+
+/** The path code of the lesson that teaches a node (exam questions carry nodes, not lessons). */
+export function codeOfNode(node: string, list: readonly Chapter[] = chapters): string {
+  const lesson = list.flatMap((chapter) => chapter.lessons).find((candidate) => candidate.node === node)
+  return lesson ? pathCode(lesson, list) : node
+}

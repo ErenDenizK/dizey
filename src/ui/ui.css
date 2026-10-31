@@ -338,8 +338,8 @@
   gap: 2px;
   min-width: var(--target);
   color: var(--ink-2);
-  font-size: 11px;
-  line-height: 13px;
+  font-size: 12px;
+  line-height: 14px;
   font-weight: var(--weight-medium);
   letter-spacing: 0.01em;
   border-radius: var(--corner-pill);

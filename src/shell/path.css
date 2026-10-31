@@ -325,3 +325,21 @@
   font-weight: var(--weight-medium);
   opacity: 0.72;
 }
+
+/* ---- Lesson card --------------------------------------------------------------- */
+.pa-opens {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--corner-inner);
+  background: var(--surface-sunk);
+}
+.pa-opens__line {
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  font-weight: var(--weight-medium);
+}
+.pa-facts {
+  grid-template-columns: repeat(auto-fit, minmax(6.5em, 1fr));
+}

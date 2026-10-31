@@ -4,12 +4,13 @@ import { createPortal } from 'react-dom'
 import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { type Chapter, chapters, examItemTotal } from '../content/path'
+import { type Chapter, chapterOf, chapters, examItemTotal, pathCode } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
+import { RichText } from '../exam/Blocks'
 import { useExam } from '../exam/store'
-import { type LessonRecord, resumeIndex } from '../lesson/progress'
+import { isQuestion, type LessonRecord, resumeIndex } from '../lesson/progress'
 import { type LessonState, stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { openMistakes } from '../progress/mistakes'
@@ -276,10 +277,10 @@ function Tile({
         data-state={state}
         data-main={main || undefined}
         data-lesson={lesson.id}
-        aria-label={`${lesson.node} ${lesson.title}, ${strings.path.state[state]}`}
+        aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
         onClick={() => onPick(lesson)}
       >
-        <span className="pa-tile__code num">{lesson.node}</span>
+        <span className="pa-tile__code num">{pathCode(lesson)}</span>
         <span className="pa-tile__title">{lesson.title}</span>
         {state === 'done' ? <Check /> : null}
         {resuming ? (
@@ -334,13 +335,13 @@ function Continue({ main, records }: { main: Lesson | null; records: Records }) 
         }}
         aria-label={
           resuming
-            ? strings.path.continueAction(main.node, main.title)
-            : strings.path.startAction(main.node, main.title)
+            ? strings.path.continueAction(pathCode(main), main.title)
+            : strings.path.startAction(pathCode(main), main.title)
         }
       >
         <span className="pa-continue__verb">{resuming ? strings.path.resume : strings.path.start}</span>
         <span className="pa-continue__name">
-          {main.node} · {main.title}
+          {pathCode(main)} · {main.title}
         </span>
         <span className="pa-continue__meta num">
           {resuming
@@ -357,6 +358,10 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
   const record = records[lesson.id]
   const state = stateOf(record)
   const total = lesson.steps.length
+  const asks = lesson.steps.filter(isQuestion).length
+  const chapter = chapterOf(lesson)
+  const first = lesson.steps[0]
+  const opening = first && 'title' in first ? first.title : null
   const status =
     state === 'current' && record
       ? strings.sheet.resumeAt(resumeIndex(lesson, record) + 1, total)
@@ -369,17 +374,34 @@ function LessonCard({ lesson }: { lesson: Lesson }) {
         : strings.sheet.enter(lesson.title)
   return (
     <div className="sh-sheet-body">
-      <span className="dz-footnote sh-code">{lesson.node}</span>
+      <span className="dz-footnote sh-code">
+        {pathCode(lesson)}
+        {chapter ? ` · ${chapter.label}` : ''}
+      </span>
       <h2 className="dz-title2">{lesson.title}</h2>
-      <dl className="sh-facts">
+      {opening ? (
+        <p className="pa-opens">
+          <span className="dz-footnote">{strings.path.opensWith}</span>
+          <span className="pa-opens__line">
+            <RichText text={opening} />
+          </span>
+        </p>
+      ) : null}
+      <dl className="sh-facts pa-facts">
         <div>
           <dt className="dz-footnote">{strings.sheet.status}</dt>
           <dd>{status}</dd>
         </div>
         <div>
           <dt className="dz-footnote">{strings.sheet.length}</dt>
-          <dd>{strings.path.lessonSteps(total)}</dd>
+          <dd>{strings.path.lessonSize(total, asks)}</dd>
         </div>
+        {chapter?.examItems ? (
+          <div>
+            <dt className="dz-footnote">{strings.path.weight}</dt>
+            <dd>{strings.path.weightValue(chapter.examItems, examItemTotal)}</dd>
+          </div>
+        ) : null}
       </dl>
       <PressLink
         to="/lesson/$id"

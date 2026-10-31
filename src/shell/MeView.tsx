@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { dayLabel } from '../content/exam'
 import { lessons } from '../content/lessons'
-import { chapters } from '../content/path'
+import { chapters, codeOfNode } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { RichText } from '../exam/Blocks'
@@ -134,7 +134,7 @@ function MistakeLog() {
                     search={{ step: mistake.stepId }}
                     className="sh-mistake"
                   >
-                    <span className="sh-mistake__code">{mistake.node}</span>
+                    <span className="sh-mistake__code">{codeOfNode(mistake.node)}</span>
                     <span>
                       <b>
                         <RichText text={mistake.title} />
@@ -144,7 +144,7 @@ function MistakeLog() {
                   </PressLink>
                 ) : (
                   <div className="sh-mistake">
-                    <span className="sh-mistake__code">{mistake.node}</span>
+                    <span className="sh-mistake__code">{codeOfNode(mistake.node)}</span>
                     <span>
                       <b>{strings.me.mistakeExam}</b>
                       <RichText text={mistake.text} />
@@ -192,22 +192,29 @@ function ExamDateSetting() {
       <span className="dz-row-main">
         {strings.me.examDate}
         <small className="dz-footnote sh-row-sub">
-          {settings.examDate ? dayLabel(settings.examDate) : strings.me.examDateHint}
+          {settings.examDate ? strings.me.examDateSet : strings.me.examDateHint}
         </small>
       </span>
-      <input
-        type="date"
-        className="sh-date"
-        min="2026-11-01"
-        max="2026-12-31"
-        value={settings.examDate ?? ''}
-        aria-label={strings.me.examDate}
-        onChange={(event) => {
-          const value = event.currentTarget.value
-          const { examDate: _cleared, ...rest } = settings
-          saveSettings(value ? { ...rest, examDate: value } : rest)
-        }}
-      />
+      {/* The native picker opens from an invisible input laid over our own Turkish face, so no locale
+          placeholder (mm/dd/yyyy) ever shows. */}
+      <span className="me-date">
+        <span className="me-date__face" aria-hidden="true">
+          {settings.examDate ? dayLabel(settings.examDate) : strings.me.examDatePick}
+        </span>
+        <input
+          type="date"
+          className="me-date__input"
+          min="2026-11-01"
+          max="2026-12-31"
+          value={settings.examDate ?? ''}
+          aria-label={strings.me.examDate}
+          onChange={(event) => {
+            const value = event.currentTarget.value
+            const { examDate: _cleared, ...rest } = settings
+            saveSettings(value ? { ...rest, examDate: value } : rest)
+          }}
+        />
+      </span>
     </label>
   )
 }

@@ -118,3 +118,25 @@
 .dz-list > .dz-row {
   position: relative;
 }
+.me-date {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-height: 40px;
+  padding: 0 var(--space-4);
+  border-radius: var(--corner-inner);
+  background: var(--surface-sunk);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+  font-size: var(--type-subhead);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.me-date__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
