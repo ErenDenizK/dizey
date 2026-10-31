@@ -82,26 +82,120 @@ html {
 }
 
 /*
- * Math speaks the interface's language: KaTeX lays formulas out, but letters, digits and operators are
- * set in the math face (Onest with the Dizey Math operators and the serifed identity I), upright, tabular.
- * Stretchy delimiters and size variants keep KaTeX's own fonts, which only those glyphs use.
+ * Dizey's own math typesetter (src/exam/math.ts, decision 0008): letters, digits and operators in the math face
+ * (Onest with the Dizey Math operators and the serifed identity I), upright and tabular; fractions, exponents,
+ * bars and roots drawn with CSS so formulas look like the rest of the interface.
  */
-.dz .katex {
+.dz-m {
   font-family: var(--font-math);
-  font-size: 1em;
-  font-weight: inherit;
   font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 }
-.dz .katex .mathnormal,
-.dz .katex .mathit,
-.dz .katex .mathrm,
-.dz .katex .textrm,
-.dz .katex .boldsymbol {
-  font-family: var(--font-math);
-  font-style: normal;
+.dz-m-bin,
+.dz-m-rel {
+  padding-inline: 0.22em;
 }
-/* KaTeX's italic correction is written inline for its own italic face; upright letters need none. */
-.dz .katex .mathnormal {
-  /* biome-ignore lint/complexity/noImportantStyles: overrides KaTeX's inline italic-correction margin */
-  margin-right: 0 !important;
+.dz-m-rel {
+  padding-inline: 0.28em;
+}
+.dz-m-punct {
+  padding-right: 0.18em;
+}
+.dz-m-word {
+  padding-right: 0.16em;
+}
+.dz-m-word + .dz-m-word,
+.dz-m-text + .dz-m-word {
+  padding-left: 0.16em;
+}
+.dz-m-text {
+  font-family: var(--font-text);
+  white-space: pre;
+}
+.dz-m-space {
+  display: inline-block;
+  width: 0.17em;
+}
+.dz-m-space[data-size="med"] {
+  width: 0.22em;
+}
+.dz-m-space[data-size="thick"] {
+  width: 0.28em;
+}
+.dz-m-space[data-size="quad"] {
+  width: 1em;
+}
+.dz-m-space[data-size="neg"] {
+  width: 0;
+  margin-left: -0.17em;
+}
+.dz-m-sup,
+.dz-m-sub {
+  font-size: 0.7em;
+  line-height: 0;
+  padding-left: 0.04em;
+}
+.dz-m-scripts {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  line-height: 1;
+}
+.dz-m-scripts > sup,
+.dz-m-scripts > sub {
+  line-height: 1;
+  vertical-align: baseline;
+}
+.dz-m-frac {
+  display: inline-grid;
+  vertical-align: middle;
+  text-align: center;
+  font-size: 0.8em;
+  line-height: 1.15;
+  padding-inline: 0.1em;
+}
+.dz-m-frac > span + span {
+  border-top: max(1px, 0.07em) solid currentColor;
+}
+.dz-m-sqrt {
+  display: inline-flex;
+  align-items: stretch;
+}
+.dz-m-radical {
+  padding-right: 0.02em;
+}
+.dz-m-radicand,
+.dz-m-bar {
+  border-top: max(1px, 0.07em) solid currentColor;
+  padding-top: 0.04em;
+}
+.dz-m-bar {
+  display: inline-block;
+  line-height: 1.1;
+}
+.dz-m-error {
+  color: var(--color-danger, currentColor);
+  text-decoration: underline wavy;
+}
+/* A matrix inside a formula: the stage's bracket grid at text size, never the stage's tiles. */
+.dz-m .dz-m-mat {
+  vertical-align: middle;
+  gap: 0 0.5em;
+  padding: 0.05em 0.35em;
+  font-size: 0.92em;
+  line-height: 1.25;
+}
+.dz-m .dz-m-mat::before,
+.dz-m .dz-m-mat::after {
+  width: 0.22em;
+  border-width: max(1.25px, 0.06em);
+}
+.dz .dz-m .dz-m-mat .ex-cell {
+  display: block;
+  min-width: 0;
+  height: auto;
+  padding: 0;
+  line-height: 1.25;
+  border-radius: 0;
+  background: none;
 }

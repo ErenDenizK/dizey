@@ -1,4 +1,3 @@
-import 'katex/dist/katex.min.css'
 import type { ReactNode } from 'react'
 import type { Block } from '../content/questions'
 import { entryText, splitTex, splitTones, texToHtml } from './tex'
@@ -18,10 +17,10 @@ function TexRun({ text }: { text: string }) {
     if (part.tex) {
       const next = parts[index + 1]
       const glue = next && !next.tex ? (/^[^\s]+/.exec(next.value)?.[0] ?? '') : ''
-      // KaTeX output of our own reviewed content.
+      // typesetter output of our own reviewed content.
       const html = { __html: texToHtml(part.value) }
       const tex = (
-        // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output of our own reviewed content
+        // biome-ignore lint/security/noDangerouslySetInnerHtml: typesetter output of our own reviewed content
         <span key={`t${key}`} className="ex-tex" dangerouslySetInnerHTML={html} />
       )
       out.push(
@@ -146,7 +145,7 @@ export function Blocks({ blocks }: { blocks: readonly Block[] }) {
           // biome-ignore lint/suspicious/noArrayIndexKey: blocks never reorder
           <span key={index} className="ex-system">
             {block.equations.map((equation) => (
-              // biome-ignore lint/security/noDangerouslySetInnerHtml: KaTeX output of our own reviewed content
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: typesetter output of our own reviewed content
               <span key={equation} dangerouslySetInnerHTML={{ __html: texToHtml(equation) }} />
             ))}
           </span>
