@@ -207,7 +207,7 @@
   --ink-3: oklch(0.628 0.012 81.8);
   --hairline: oklch(0.9 0.007 80 / 0.1);
   --hairline-strong: oklch(0.9 0.007 80 / 0.18);
-  --action: oklch(0.8 0.1 70);
+  --action: oklch(0.8 0.08 76);
   --on-action: oklch(0.187 0.011 268.1);
   --press-overlay: oklch(0.9 0.007 80);
   --scrim: oklch(0 0 0);
