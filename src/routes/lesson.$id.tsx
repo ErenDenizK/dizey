@@ -13,7 +13,7 @@ function LessonRoute() {
   const { id } = Route.useParams()
   const { step } = Route.useSearch()
   const lesson = lessons.find((candidate) => candidate.id === id)
-  if (!lesson) return <Navigate to="/map" />
+  if (!lesson) return <Navigate to="/" />
   // A new key per lesson resets the player's state.
   return <LessonPlayer key={`${lesson.id}:${step ?? ''}`} lesson={lesson} startStep={step} />
 }

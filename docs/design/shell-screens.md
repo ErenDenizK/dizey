@@ -1,5 +1,8 @@
 # Shell screens
 
+> Bugün and Harita were merged into one Dersler path screen and Ben was renamed Profil: see decision 0007. The
+> sections below describe the earlier four-tab shell.
+
 What each shell screen is for, what it shows, its states, and what is still missing in the build. Visual tokens, components and motion come from `visual-system.md` and `motion-system.md` (PR #23) and `src/ui/`. This file only covers structure, flows, states and copy.
 
 Reference prototype (throwaway HTML, structure only): https://claude.ai/artifact/CUdGmJnBVggMksFt7pYF7t

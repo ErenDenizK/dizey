@@ -1,0 +1,327 @@
+/*
+ * Dersler: the path through the chapter matrices (src/shell/PathView.tsx). Tokens only; no transitions or
+ * keyframes (motion comes from the engine).
+ */
+.pa-root {
+  display: grid;
+}
+
+/* ---- Summary ---------------------------------------------------------------- */
+.pa-summary {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: calc(var(--space-2) * -1);
+}
+.pa-summary p {
+  margin: 0;
+}
+.pa-summary__count {
+  font-size: var(--type-subhead);
+  color: var(--ink-2);
+}
+.pa-summary__count b {
+  font-size: var(--type-title1);
+  line-height: 1;
+  letter-spacing: var(--tracking-title);
+  color: var(--ink-1);
+}
+.pa-meter {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+.pa-meter__group {
+  display: flex;
+  flex-basis: 0;
+  gap: 2px;
+}
+.pa-meter i {
+  flex: 1;
+  height: 6px;
+  border-radius: var(--corner-pill);
+  background: var(--surface-sunk);
+  box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
+}
+.pa-meter i[data-state="current"],
+.me-hero__row i[data-state="current"] {
+  background: var(--action);
+  box-shadow: none;
+}
+.pa-meter i[data-state="done"],
+.me-hero__row i[data-state="done"] {
+  background: var(--ok-fill);
+  box-shadow: none;
+}
+.pa-mistakes {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target);
+  margin-top: var(--space-2);
+  padding: 0 var(--space-4);
+  border-radius: var(--corner-inner);
+  background: var(--bad-tint);
+  color: var(--bad-ink);
+  font-size: var(--type-subhead);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+}
+.pa-mistakes__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: var(--corner-pill);
+  background: var(--bad-fill);
+}
+
+/* ---- Chapter ---------------------------------------------------------------- */
+.pa-chapter {
+  margin-top: var(--space-8);
+}
+.pa-chapter__head {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-1);
+}
+.pa-chapter__no {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--corner-chip);
+  background: var(--ink-1);
+  color: var(--bg);
+  font-weight: var(--weight-bold);
+  font-size: var(--type-callout);
+}
+.pa-chapter[data-complete] .pa-chapter__no {
+  background: var(--ok-fill);
+  color: var(--on-ok);
+}
+.pa-chapter__titles {
+  display: grid;
+  min-width: 0;
+}
+.pa-chapter__title {
+  margin: 0;
+  font-size: var(--type-title2);
+  line-height: var(--leading-title2);
+  letter-spacing: var(--tracking-title);
+  font-weight: var(--weight-bold);
+}
+.pa-chapter__count {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--corner-pill);
+  background: var(--surface-sunk);
+  color: var(--ink-2);
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-semibold);
+}
+.pa-chapter__count[data-complete] {
+  background: var(--ok-tint);
+  color: var(--ok-ink);
+}
+
+/* ---- Matrix: brackets, path and tiles -------------------------------------- */
+.pa-matrix {
+  position: relative;
+  margin-top: var(--space-4);
+  padding: var(--space-5) var(--space-5);
+}
+.pa-deco {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.pa-bracket,
+.pa-bracket-fill {
+  fill: none;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.pa-bracket {
+  stroke: var(--ink-1);
+  opacity: 0.28;
+}
+.pa-bracket-fill {
+  stroke: var(--ok-fill);
+}
+.pa-link {
+  stroke: var(--ink-1);
+  stroke-width: 6;
+  stroke-linecap: round;
+  opacity: 0.14;
+}
+.pa-link[data-walked] {
+  stroke: var(--ok-fill);
+  opacity: 1;
+}
+.pa-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-6) var(--space-6);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.pa-grid > li {
+  position: relative;
+  display: grid;
+}
+.pa-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: var(--space-1);
+  min-height: 96px;
+  aspect-ratio: 1 / 1.06;
+  padding: var(--space-2) var(--space-2) var(--space-3) var(--space-3);
+  border-radius: var(--corner-button);
+  background: var(--surface);
+  color: var(--ink-1);
+  text-align: start;
+  box-shadow:
+    var(--shadow-2),
+    var(--edge-light),
+    inset 0 0 0 0.5px var(--hairline);
+}
+.pa-tile__code {
+  font-size: var(--type-title2);
+  line-height: 1;
+  letter-spacing: var(--tracking-title);
+  font-weight: var(--weight-bold);
+  padding-top: var(--space-1);
+}
+.pa-tile__title {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  font-size: var(--type-caption);
+  line-height: 1.22;
+  font-weight: var(--weight-medium);
+  color: var(--ink-2);
+  overflow-wrap: break-word;
+  hyphens: auto;
+}
+.pa-tile[data-state="done"] {
+  background: var(--ok-tint);
+  box-shadow:
+    var(--shadow-1),
+    inset 0 0 0 1px var(--ok-edge);
+}
+.pa-tile[data-state="done"] .pa-tile__code {
+  color: var(--ok-ink);
+}
+.pa-tile__check {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  width: 20px;
+  height: 20px;
+}
+.pa-tile__check circle {
+  fill: var(--ok-fill);
+}
+.pa-tile__check path {
+  fill: none;
+  stroke: var(--on-ok);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* The lesson you are on: the one dark tile, ringed like a selected cell. */
+.pa-tile[data-main] {
+  background: var(--action);
+  color: var(--on-action);
+  --press-tone: var(--on-action);
+  --press-strength: 0.14;
+  box-shadow:
+    0 0 0 3px var(--bg),
+    0 0 0 5.5px var(--action),
+    0 12px 24px -10px var(--shadow-color);
+}
+.pa-tile[data-main] .pa-tile__title {
+  color: var(--on-action);
+  opacity: 0.82;
+}
+.pa-tile__bar {
+  position: absolute;
+  left: var(--space-3);
+  right: var(--space-3);
+  bottom: 7px;
+  height: 3px;
+  border-radius: var(--corner-pill);
+  background: color-mix(in oklch, var(--on-action) 25%, transparent);
+  overflow: hidden;
+}
+.pa-tile__bar i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--on-action);
+}
+.pa-here {
+  position: absolute;
+  z-index: 2;
+  top: -13px;
+  left: 0;
+  right: 0;
+  width: max-content;
+  margin-inline: auto;
+  padding: 2px var(--space-2);
+  border-radius: var(--corner-pill);
+  background: var(--ink-1);
+  color: var(--bg);
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-1);
+  pointer-events: none;
+}
+
+/* ---- The one action, docked above the tab bar -------------------------------- */
+.pa-dock {
+  position: sticky;
+  z-index: 3;
+  /* Sticky insets count from inside the scroller's padding, which already clears the tab bar
+     (--bar-clearance = bar + its gap + space-6): this lands the button space-3 above the bar. */
+  bottom: calc(var(--space-3) - var(--space-6));
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-8);
+}
+.pa-dock__note {
+  margin: 0 var(--space-1);
+}
+.dz-button.pa-continue {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  justify-content: stretch;
+  gap: var(--space-3);
+  padding: 0 var(--space-5);
+  text-align: start;
+  box-shadow:
+    0 0 0 1px var(--bg),
+    0 10px 28px -8px var(--shadow-color),
+    var(--shadow-2);
+}
+.pa-continue__verb {
+  font-weight: var(--weight-bold);
+}
+.pa-continue__name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-weight: var(--weight-medium);
+  opacity: 0.86;
+}
+.pa-continue__meta {
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-medium);
+  opacity: 0.72;
+}
