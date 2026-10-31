@@ -1,4 +1,4 @@
-import { matrix } from '../questions/blocks'
+import { matrix, text } from '../questions/blocks'
 import type { Lesson, MatrixBlock } from './types'
 
 const m = (label: string, rows: readonly (readonly string[])[]): MatrixBlock => ({
@@ -30,13 +30,37 @@ export const m11RegularSingular: Lesson = {
   },
   steps: [
     {
+      id: 'hook',
+      kind: 'explain',
+      eyebrow: 'Soru',
+      title: 'Her kare matrisin tersi var mı?',
+      body: 'İki matrise bak. Birinin tersi yok; hangisi?',
+      scene: { items: ['A', 'B'] },
+    },
+    {
       id: 'definition',
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Tersi varsa regüler, yoksa singüler',
-      body: 'Kare bir $A$ için $AX = XA = I$ olan bir $X$ varsa $A$ {ok}regüler{/ok} (tersinir) matristir ve $X = A^{-1}$. Yoksa singülerdir. $A$’nın tersi var; $B$’nin 2. sütunu 1. sütunun $3$ katı, tersi yok.',
-      scene: { items: ['A', 'B'] },
+      body: '$B$’nin 2. sütunu 1. sütunun 3 katı: $|B| = 0$, {ok}tersi yok{/ok}. $B$ singüler.',
+      scene: { items: ['B'] },
+      beat: { kind: 'det2', matrix: 'B' },
+      claims: [{ kind: 'det', matrix: 'B', equals: '0' }],
+    },
+    {
+      id: 'try-det',
+      kind: 'keypad',
+      eyebrow: 'Senin sıran',
+      title: '$|A|$ kaç?',
+      body: 'Sıfır değilse $A$ regüler.',
+      skill: 'det-2x2',
+      scene: { items: ['A'] },
+      answer: '2',
+      feedbackWrong: '$2 \\cdot 3 - 1 \\cdot 4$.',
+      reveal: { kind: 'det2', matrix: 'A' },
+      solution: '$6 - 4 = 2 \\neq 0$: $A$ regüler.',
       claims: [
+        { kind: 'det', matrix: 'A', equals: '2', answer: true },
         {
           kind: 'derived',
           of: 'inverse',
@@ -46,7 +70,6 @@ export const m11RegularSingular: Lesson = {
             ['-2', '1'],
           ],
         },
-        { kind: 'det', matrix: 'B', equals: '0' },
       ],
     },
     {
@@ -54,8 +77,17 @@ export const m11RegularSingular: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Aynı sorunun dört cevabı',
-      body: 'n×n bir $A$ için şunlar ya hep birlikte doğru ya hep birlikte yanlıştır: $A$ regüler; $|A| \\neq 0$; $\\text{rank}(A) = n$; $Ax = b$’nin her $b$ için tek çözümü var (özellikle $Ax = 0$’ın yalnız aşikâr çözümü). {ok}Hangisi kolaysa onu kontrol et{/ok}.',
+      body: 'Ya hepsi doğru ya hepsi yanlış. {ok}Hangisi kolaysa onu kontrol et{/ok}.',
       scene: { items: ['C'] },
+      beat: {
+        kind: 'equation',
+        lines: [
+          'A \\text{ regüler}',
+          '\\iff |A| \\neq 0',
+          '\\iff \\text{rank}(A) = n',
+          '\\iff Ax = 0 \\text{ yalnız } x = 0',
+        ],
+      },
       claims: [
         { kind: 'det', matrix: 'C', equals: '1' },
         { kind: 'rank', matrix: 'C', equals: '3' },
@@ -97,7 +129,7 @@ export const m11RegularSingular: Lesson = {
             ]),
           ],
           errorType: 'zero-diagonal',
-          feedback: 'Köşegende $0$ olması tersi engellemez: $|A| = -1$, üstelik $A^{-1} = A$.',
+          feedback: 'Köşegende $0$ olması tersi engellemez: $|A| = -1$.',
         },
         {
           key: 'd',
@@ -108,19 +140,71 @@ export const m11RegularSingular: Lesson = {
             ]),
           ],
           errorType: 'det-slip',
-          feedback: 'Köşegen matris, köşegende $0$ yok: $|A| = 15$, regüler.',
+          feedback: 'Köşegende $0$ yok: $|A| = 15$, regüler.',
         },
       ],
       answer: 'b',
+      reveal: { kind: 'equation', lines: ['2 \\cdot 2 - (-4) \\cdot (-1)', '= 4 - 4 = 0'] },
       solution: '2. satır 1. satırın $-\\frac{1}{2}$ katı: $|A| = 4 - 4 = 0$.',
       claims: [{ kind: 'optionProperty', is: 'singular' }],
+    },
+    {
+      id: 'try-rank',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '3×3 bir matrisin rankı 3. Hangisi kesin doğru?',
+      skill: 'recognize-singular',
+      options: [
+        { key: 'a', content: [text('$|A| \\neq 0$')] },
+        {
+          key: 'b',
+          content: [text('$|A| = 0$')],
+          errorType: 'rank-invertible',
+          feedback: 'Rank $n$ ise determinant sıfır olamaz.',
+        },
+        {
+          key: 'c',
+          content: [text('$Ax = 0$’ın sonsuz çözümü var')],
+          errorType: 'rank-invertible',
+          feedback: 'Rank $n$: yalnız $x = 0$ çözümü var.',
+        },
+      ],
+      answer: 'a',
+      reveal: { kind: 'equation', lines: ['\\text{rank} = 3 = n', '\\iff |A| \\neq 0'] },
+      solution: 'Rank $n$ ⇔ $|A| \\neq 0$ ⇔ regüler.',
     },
     {
       id: 'product-rule',
       kind: 'explain',
       eyebrow: 'Kural',
-      title: 'Çarpım regülerdir ⇔ her çarpan regülerdir',
-      body: '$|AB| = |A||B|$ olduğundan $AB$ regüler ancak $A$ ve $B$ ikisi de regülerse olur. Tek bir singüler çarpan bütün çarpımı singüler yapar. Toplam için böyle bir kural yok: $I + (-I) = 0$.',
+      title: 'Çarpım regüler ⇔ her çarpan regüler',
+      body: 'Tek bir singüler çarpan bütün çarpımı singüler yapar. Toplamda böyle bir kural yok.',
+      beat: { kind: 'equation', lines: ['|AB| = |A| \\cdot |B|'] },
+    },
+    {
+      id: 'try-product',
+      kind: 'choice',
+      eyebrow: 'Senin sıran',
+      title: '$A$ regüler, $B$ singüler. $AB$ nedir?',
+      skill: 'recognize-singular',
+      options: [
+        {
+          key: 'a',
+          content: [text('Regüler')],
+          errorType: 'product-rule',
+          feedback: '$|B| = 0$ olduğundan $|AB| = 0$.',
+        },
+        { key: 'b', content: [text('Singüler')] },
+        {
+          key: 'c',
+          content: [text('Belirlenemez')],
+          errorType: 'product-rule',
+          feedback: '$|AB| = |A| \\cdot 0 = 0$ her zaman.',
+        },
+      ],
+      answer: 'b',
+      reveal: { kind: 'equation', lines: ['|AB| = |A| \\cdot 0 = 0'] },
+      solution: '$|AB| = |A||B| = 0$: singüler.',
     },
     {
       id: 'summary',

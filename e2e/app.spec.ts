@@ -78,7 +78,7 @@ test('finishing a lesson shows its answers seal and offers the next lesson', asy
   await page.getByTestId('lesson-player').getByRole('button', { name: 'Dersi bitir' }).click()
   const end = page.getByTestId('lesson-end')
   await expect(end).toContainText('Ders tamam')
-  await expect(end.getByRole('img', { name: /1 sorunun cevapları/ })).toBeVisible()
+  await expect(end.getByRole('img', { name: /3 sorunun cevapları/ })).toBeVisible()
   await end.getByRole('button', { name: /Sıradaki · 2\.3/ }).click()
   await expect(page).toHaveURL(/lesson\/r3-rank/)
   await expect(page.getByTestId('lesson-player').getByRole('progressbar')).toHaveAttribute(
