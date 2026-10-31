@@ -19,10 +19,8 @@ describe('parseSettings', () => {
   })
 
   it('reads older saves and ignores junk', () => {
-    expect(parseSettings('{"theme":"dark","examDate":"2026-11-18"}')).toEqual({
-      theme: 'dark',
-      examDate: '2026-11-18',
-    })
+    // The theme switch is gone (dark only); an old saved theme is dropped, the rest survives.
+    expect(parseSettings('{"theme":"light","examDate":"2026-11-18"}')).toEqual({ examDate: '2026-11-18' })
     expect(parseSettings('not json')).toEqual({})
     expect(parseSettings('[1]')).toEqual({})
   })

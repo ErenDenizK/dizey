@@ -4,7 +4,7 @@
  * two small math faces, a 13-30 px type scale, a 4 px spacing rhythm, concentric radii and soft elevation.
  * Spec: docs/design/visual-system.md. Contrast pairs are tested in tokens.test.ts.
  *
- * Theme: follows the system unless <html data-theme="light|dark"> is set by the in-app switch.
+ * Theme: dark only (Eren 2026-10-31).
  * Root font size comes from iOS Dynamic Type (-apple-system-body, 17px by default), so every rem
  * below scales with the user's text size. Spacing stays in px: it is layout, not reading.
  */
@@ -109,7 +109,7 @@
 }
 
 :root {
-  color-scheme: light dark;
+  color-scheme: dark;
 
   /* ---- Type: 13 · 14 · 15 · 16 · 17 · 20 · 24 · 30 (px at the default text size) ---- */
   --font-text: "Dizey Math", "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -185,129 +185,21 @@
   --glass-blur: 30px;
   --glass-saturate: 1.4;
 
-  /* ---- Light theme: soft stone ground, lifted cards, dark ink, one navy action ----------
-   * Eren 2026-10-31 13:55Z: the near-white paper and pastel roles tired the eyes; role colours are muted
-   * (chroma <= 0.09 except the verdict red). Eren 21:11Z: he lives in dark mode, so light is designed for
-   * people who choose it: a calm, low-chroma stone ground (L 0.925, never white) with cards lifted above it
-   * by tone (L 0.96) and soft two-layer shadows, so depth reads at a glance without glare. Row (blue 245) and column (plum 322) sit 77 degrees
-   * apart so a Sarrus line in one never reads as the other (design review 2026-10-31, tested in tokens.test.ts).
-   * Chrome stays ink-neutral; colour energy comes from the math roles (row blue, column purple) and the
-   * verdicts (green, red), plus one yellow spark for celebration only. */
-  --bg: oklch(0.925 0.006 75);
-  --surface: oklch(0.962 0.004 80);
-  --surface-raised: oklch(0.968 0.004 80);
-  --surface-sunk: oklch(0.898 0.007 75);
-  /* Soft (secondary) controls: a quiet fill. In light it is the sunk tone; in dark a sunk fill reads as a hole, so it lifts. */
-  --control-soft: oklch(0.898 0.007 75);
-  /* The chosen segment of a segmented control, and switches: the knob is always the light element. */
-  --control-selected: var(--surface-raised);
-  --switch-on: var(--action);
-  --switch-knob: oklch(1 0 0);
-  --switch-off: oklch(0.8 0.008 75);
-  --ink-1: oklch(0.25 0.008 80);
-  --ink-2: oklch(0.43 0.01 80);
-  --ink-3: oklch(0.5 0.01 80);
-  --hairline: oklch(0.25 0.008 80 / 0.1);
-  --hairline-strong: oklch(0.25 0.008 80 / 0.18);
-  --action: oklch(0.32 0.03 255);
-  --on-action: oklch(1 0 0);
-  --press-overlay: oklch(0.25 0.008 80);
-  --scrim: oklch(0.187 0.006 91.7);
-  --glass-fill: oklch(0.962 0.004 80 / 0.9);
-  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.9);
-  --glass-edge: 0 0 0 0.5px oklch(0.25 0.008 80 / 0.08);
-  --lens-fill: oklch(0.962 0.004 80 / 0.95);
-  --lens-shadow: 0 1px 2px oklch(0.25 0.008 80 / 0.14);
-  --shadow-color: oklch(0.3 0.02 70 / 0.16);
-  /* Two layers: a tight contact shadow and a wide, warm ambient one, so cards float off the ground
-     instead of being separated from it by tone alone. */
-  --shadow-1: 0 1px 1.5px oklch(0.3 0.02 70 / 0.1), 0 2px 8px oklch(0.3 0.02 70 / 0.06);
-  --shadow-2: 0 1px 2px oklch(0.3 0.02 70 / 0.1), 0 6px 18px -4px oklch(0.3 0.02 70 / 0.14);
-  --shadow-3: 0 -6px 24px oklch(0.3 0.02 70 / 0.12);
-  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.7);
-  --ok-ink: oklch(0.42 0.075 165);
-  --ok-fill: oklch(0.58 0.09 165);
-  --ok-tint: oklch(0.9 0.025 165);
-  --ok-edge: oklch(0.72 0.05 165);
-  --bad-ink: oklch(0.45 0.12 28);
-  --bad-fill: oklch(0.52 0.14 28);
-  --bad-tint: oklch(0.91 0.022 28);
-  --bad-edge: oklch(0.72 0.08 28);
-  --row-ink: oklch(0.42 0.09 245);
-  --row-fill: oklch(0.5 0.09 245);
-  --row-tint: oklch(0.9 0.022 245);
-  --row-edge: oklch(0.72 0.05 245);
-  --col-ink: oklch(0.42 0.09 322);
-  --col-fill: oklch(0.72 0.06 322);
-  --col-tint: oklch(0.9 0.02 322);
-  --col-edge: oklch(0.72 0.045 322);
-  --on-row: oklch(1 0 0);
-  --on-col: oklch(0.183 0.009 268.6);
-  --on-ok: oklch(0.183 0.009 268.6);
-  --spark: oklch(0.86 0.09 95);
-  --backdrop: oklch(0 0 0);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: oklch(0.195 0.007 78.2);
-    --surface: oklch(0.245 0.008 84.6);
-    --surface-raised: oklch(0.27 0.008 84.6);
-    --surface-sunk: oklch(0.17 0.006 84.6);
-    --control-soft: oklch(0.3 0.008 84.6);
-    --control-selected: oklch(0.42 0.008 84.6);
-    --switch-on: oklch(0.6 0.085 255);
-    --switch-knob: oklch(0.97 0.004 80);
-    --switch-off: oklch(0.36 0.008 84.6);
-    --ink-1: oklch(0.9 0.007 80);
-    --ink-2: oklch(0.78 0.01 80);
-    --ink-3: oklch(0.628 0.012 81.8);
-    --hairline: oklch(0.9 0.007 80 / 0.1);
-    --hairline-strong: oklch(0.9 0.007 80 / 0.18);
-    --action: oklch(0.8 0.045 255);
-    --on-action: oklch(0.187 0.011 268.1);
-    --press-overlay: oklch(0.9 0.007 80);
-    --scrim: oklch(0 0 0);
-    --glass-fill: oklch(0.27 0.008 84.6 / 0.9);
-    --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.12);
-    --glass-edge: 0 0 0 0.5px oklch(0.9 0.007 80 / 0.08);
-    --lens-fill: oklch(0.313 0.009 88.8 / 0.95);
-    --lens-shadow: 0 1px 2px oklch(0 0 0 / 0.5);
-    --shadow-color: oklch(0 0 0 / 0.5);
-    --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5), 0 4px 14px -4px oklch(0 0 0 / 0.45);
-    --shadow-2: 0 2px 4px oklch(0 0 0 / 0.4), 0 8px 24px -6px oklch(0 0 0 / 0.6);
-    --shadow-3: 0 -6px 24px oklch(0 0 0 / 0.5);
-    --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
-    --ok-ink: oklch(0.78 0.08 165);
-    --ok-fill: oklch(0.62 0.09 165);
-    --ok-tint: oklch(0.27 0.025 165);
-    --ok-edge: oklch(0.45 0.06 165);
-    --bad-ink: oklch(0.78 0.08 25);
-    --bad-fill: oklch(0.57 0.14 25);
-    --bad-tint: oklch(0.25 0.022 25);
-    --bad-edge: oklch(0.45 0.09 25);
-    --row-ink: oklch(0.78 0.09 245);
-    --row-fill: oklch(0.57 0.1 248);
-    --row-tint: oklch(0.27 0.028 248);
-    --row-edge: oklch(0.45 0.07 248);
-    --col-ink: oklch(0.78 0.09 322);
-    --col-fill: oklch(0.7 0.07 322);
-    --col-tint: oklch(0.27 0.025 322);
-    --col-edge: oklch(0.45 0.06 322);
-    --spark: oklch(0.86 0.09 95);
-  }
-}
-
-/* The in-app switch: same values as the dark block above (kept in sync by tokens.test.ts). */
-:root[data-theme="dark"] {
-  color-scheme: dark;
+  /* ---- Colour: dark only ------------------------------------------------------------
+   * Eren 2026-10-31 23:02Z: the app is dark only; there is no light theme and no theme switch.
+   * A warm charcoal ground (never black), cards lifted by tone and two-layer shadows, light ink, and one
+   * warm honey action colour: it belongs to the warm ground, is the one thing on a screen that is not
+   * neutral or a role colour, and stays clear of the row blue (245), so "act here" is never read as a row.
+   * Row (blue 245) and column (plum 322) sit 77 degrees apart so a Sarrus line in one never reads as the
+   * other (tested in tokens.test.ts). Colour energy otherwise comes from the math roles and the verdicts
+   * (green, red), plus one yellow spark for celebration only. */
   --bg: oklch(0.195 0.007 78.2);
   --surface: oklch(0.245 0.008 84.6);
   --surface-raised: oklch(0.27 0.008 84.6);
   --surface-sunk: oklch(0.17 0.006 84.6);
   --control-soft: oklch(0.3 0.008 84.6);
   --control-selected: oklch(0.42 0.008 84.6);
-  --switch-on: oklch(0.6 0.085 255);
+  --switch-on: oklch(0.6 0.11 66);
   --switch-knob: oklch(0.97 0.004 80);
   --switch-off: oklch(0.36 0.008 84.6);
   --ink-1: oklch(0.9 0.007 80);
@@ -315,7 +207,7 @@
   --ink-3: oklch(0.628 0.012 81.8);
   --hairline: oklch(0.9 0.007 80 / 0.1);
   --hairline-strong: oklch(0.9 0.007 80 / 0.18);
-  --action: oklch(0.8 0.045 255);
+  --action: oklch(0.8 0.08 76);
   --on-action: oklch(0.187 0.011 268.1);
   --press-overlay: oklch(0.9 0.007 80);
   --scrim: oklch(0 0 0);
@@ -346,13 +238,13 @@
   --col-tint: oklch(0.27 0.025 322);
   --col-edge: oklch(0.45 0.06 322);
   --spark: oklch(0.86 0.09 95);
+  --on-row: oklch(1 0 0);
+  --on-col: oklch(0.183 0.009 268.6);
+  --on-ok: oklch(0.183 0.009 268.6);
+  --backdrop: oklch(0 0 0);
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
-}
-
-/* Increase Contrast: glass turns solid and secondary ink darkens. */
+/* Increase Contrast: glass turns solid and secondary ink matches primary. */
 @media (prefers-contrast: more) {
   :root {
     --glass-fill: var(--surface-raised);
