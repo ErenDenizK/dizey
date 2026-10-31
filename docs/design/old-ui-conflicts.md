@@ -25,3 +25,12 @@ ported in plan step 2, and any below 44 px is added here.
 5. Accepted: the primary button keeps its full colour during a beat. The current player already does this (it never
    disables or dims the button while a beat plays); keep it that way when the dock is rebuilt.
 6. Rejected: chips keep flying over the matrix entries, as in the old app.
+
+## Found in the full inventory (2026-10-31, open)
+
+| # | Old behaviour | Rule it breaks | Options | Recommendation |
+| --- | --- | --- | --- | --- |
+| 7 | The column mascot (Sütun) is light lilac `#dac6ff` with no outline: 1.5:1 against the paper | Meaningful graphics 3:1 | a) keep; b) bring back the thin outline the token layer once had; c) darken the lilac | b |
+| 8 | The answer card assumes one try ("Doğrusu: X." / "Senin: X", right option lights up after a wrong pick) | Our retry model (decision 0003: a wrong pick can be tried again) | a) old card, one try per question; b) old card look, but after a wrong pick it says "Tam değil" + hint and the learner tries again, the full card comes when solved or revealed | b |
+| 9 | Old rule: no day counts anywhere | Current Bugün shows "Vize 1'e N gün" | a) remove the countdown; b) keep it | Eren's call |
+| 10 | Old rule: Profil shows only what is done | Current Ben shows the error log and "başlanmadı" counts | a) Profil only what is done, error log moves elsewhere; b) keep | a, the error log moves to the exam section |
