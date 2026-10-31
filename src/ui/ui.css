@@ -15,6 +15,27 @@
   background: var(--backdrop);
 }
 
+/*
+ * Wider than a phone (a computer or a tablet window): the app stays a phone-width column in the middle
+ * instead of stretching cards across the screen. No device mock around it, just the app on the page's own
+ * background. The transform makes the column the containing block for the full-screen layers inside it
+ * (lesson, exam run, sheets), so they stay in the column too.
+ */
+@media (min-width: 600px) {
+  html,
+  body {
+    background: var(--bg);
+  }
+  .dz-app {
+    width: min(100%, 460px);
+    margin-inline: auto;
+    transform: translateZ(0);
+    box-shadow:
+      0 0 0 0.5px var(--hairline),
+      0 24px 80px -24px oklch(0 0 0 / 0.5);
+  }
+}
+
 /* Everything that recedes behind a sheet lives in the stage. */
 .dz-stage {
   position: absolute;
@@ -58,11 +79,6 @@
   letter-spacing: var(--tracking-large);
   font-weight: var(--weight-bold);
   margin: var(--space-6) 0 var(--space-5);
-  /* Screen morphs this title into the bar: it shrinks from its left edge and rides above the bar's glass. */
-  position: relative;
-  z-index: 6;
-  width: fit-content;
-  transform-origin: 0 50%;
 }
 .dz-title2 {
   font-size: var(--type-title2);
@@ -110,33 +126,26 @@
   max-width: 34em;
 }
 
-/* ---- Inline title bar (appears once the large title scrolls away) ---------- */
-.dz-navbar {
+/* ---- Top edge (no bar: the tab bar names the page) ------------------------- */
+/* Content dissolves under the status bar instead of meeting a hard band. Same recipe as the bottom edge. */
+.dz-edge-top {
   position: absolute;
   inset: 0 0 auto 0;
   z-index: 5;
-  height: calc(env(safe-area-inset-top) + var(--nav-height));
-  padding-top: env(safe-area-inset-top);
-  display: grid;
-  grid-template-columns: var(--target) 1fr var(--target);
-  align-items: center;
-  padding-inline: var(--space-2);
+  height: calc(env(safe-area-inset-top) + var(--space-6));
   pointer-events: none;
+  background: linear-gradient(to top, transparent, var(--bg) 70%);
 }
-.dz-navbar > * {
-  pointer-events: auto;
-}
-.dz-navbar-material {
+/* Pushed screens: the back button floats on its own surface and stays while the page scrolls. */
+.dz-float-back {
   position: absolute;
-  inset: 0;
-  z-index: -1;
-  /* Solid ground: content passing under the bar never reads through it (no ghost text under the title).
-     A soft shadow below, not a hard line, says that content continues underneath. */
-  background: var(--bg);
-  box-shadow:
-    inset 0 -0.5px 0 var(--hairline),
-    0 8px 16px -12px oklch(0 0 0 / 0.35);
-  opacity: 0;
+  z-index: 6;
+  top: calc(env(safe-area-inset-top) + var(--space-2));
+  left: var(--space-2);
+}
+.dz-icon-button--float {
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--edge-light);
 }
 
 /* ---- Pressables ------------------------------------------------------------- */
