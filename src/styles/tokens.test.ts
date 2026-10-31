@@ -6,7 +6,8 @@ const css = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8')
 function block(selector: string): string {
   const start = css.indexOf(selector)
   if (start < 0) throw new Error(`missing ${selector}`)
-  const open = css.indexOf('{', start + selector.length)
+  // The selector may end with its own brace (':root {'); searching after it would skip to the next block.
+  const open = css.indexOf('{', start + selector.length - 1)
   let depth = 0
   for (let i = open; i < css.length; i++) {
     if (css[i] === '{') depth++
@@ -43,9 +44,16 @@ function luminance(value: string): number {
   return 0.2126 * r + 0.7152 * g + 0.0722 * bl
 }
 
+/** A token's colour, following var(--other) aliases. */
+function resolve(theme: Record<string, string>, name: string): string {
+  const value = theme[name] as string
+  const alias = value.match(/^var\((--[\w-]+)\)$/)
+  return alias ? resolve(theme, alias[1] as string) : value
+}
+
 function contrast(theme: Record<string, string>, fg: string, bg: string): number {
-  const a = luminance(theme[fg] as string)
-  const b = luminance(theme[bg] as string)
+  const a = luminance(resolve(theme, fg))
+  const b = luminance(resolve(theme, bg))
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05)
 }
 
@@ -62,6 +70,18 @@ describe.each([
 
   it.each(['ok', 'bad', 'row', 'col'])('%s ink reads on its own tint', (role) => {
     expect(contrast(theme, `--${role}-ink`, `--${role}-tint`)).toBeGreaterThanOrEqual(4.5)
+  })
+
+  it('a switch knob stands out on its on track at 3:1', () => {
+    expect(contrast(theme, '--switch-knob', '--switch-on')).toBeGreaterThanOrEqual(3)
+  })
+
+  it('an off switch track still shows on a card', () => {
+    expect(contrast(theme, '--switch-off', '--surface')).toBeGreaterThanOrEqual(1.4)
+  })
+
+  it('a soft button label reads at 4.5:1', () => {
+    expect(contrast(theme, '--ink-1', '--control-soft')).toBeGreaterThanOrEqual(4.5)
   })
 
   it.each(grounds)('tertiary ink stays a 3:1 UI colour on %s', (bg) => {

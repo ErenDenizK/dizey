@@ -58,6 +58,11 @@
   letter-spacing: var(--tracking-large);
   font-weight: var(--weight-bold);
   margin: var(--space-6) 0 var(--space-5);
+  /* Screen morphs this title into the bar: it shrinks from its left edge and rides above the bar's glass. */
+  position: relative;
+  z-index: 6;
+  width: fit-content;
+  transform-origin: 0 50%;
 }
 .dz-title2 {
   font-size: var(--type-title2);
@@ -97,7 +102,8 @@
   line-height: var(--leading-footnote);
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
-  margin: var(--group-gap) var(--space-1) var(--space-2);
+  /* Aligned with the text inside the cards below it, not with the card edge. */
+  margin: var(--group-gap) var(--space-4) var(--space-2);
 }
 .dz-read {
   line-height: var(--leading-read);
@@ -124,17 +130,12 @@
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: var(--glass-fill);
-  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
-  box-shadow: inset 0 -0.5px 0 var(--hairline);
-  opacity: 0;
-}
-.dz-navbar-title {
-  grid-column: 2;
-  text-align: center;
-  font-weight: var(--weight-semibold);
-  font-size: var(--type-body);
+  /* Solid ground: content passing under the bar never reads through it (no ghost text under the title).
+     A soft shadow below, not a hard line, says that content continues underneath. */
+  background: var(--bg);
+  box-shadow:
+    inset 0 -0.5px 0 var(--hairline),
+    0 8px 16px -12px oklch(0 0 0 / 0.35);
   opacity: 0;
 }
 
@@ -229,7 +230,7 @@
   --press-strength: 0.14;
 }
 .dz-button[data-kind="secondary"] {
-  background: var(--surface-sunk);
+  background: var(--control-soft);
   color: var(--ink-1);
   box-shadow: inset 0 0 0 0.5px var(--hairline);
 }
@@ -261,8 +262,9 @@
   position: absolute;
   inset: 0;
   border-radius: var(--corner-pill);
-  background: color-mix(in oklch, var(--action) calc(var(--on) * 100%), var(--surface-sunk));
-  box-shadow: inset 0 0 0 1.5px color-mix(in oklch, var(--action) calc(var(--on) * 100%), var(--ink-3));
+  background: color-mix(in oklch, var(--switch-on) calc(var(--on) * 100%), var(--switch-off));
+  box-shadow: inset 0 0 0 1px
+    color-mix(in oklch, var(--switch-on) calc(var(--on) * 100%), var(--hairline-strong));
 }
 .dz-switch-knob {
   position: absolute;
@@ -271,7 +273,7 @@
   width: 26px;
   height: 26px;
   border-radius: var(--corner-pill);
-  background: color-mix(in oklch, var(--on-action) calc(var(--on) * 100%), var(--surface-raised));
+  background: var(--switch-knob);
   box-shadow:
     0 0 0 0.5px oklch(0 0 0 / 0.06),
     0 2px 5px oklch(0 0 0 / 0.18);
@@ -405,8 +407,7 @@
 }
 
 @media (prefers-reduced-transparency: reduce) {
-  .dz-tabbar-material,
-  .dz-navbar-material {
+  .dz-tabbar-material {
     background: var(--surface-raised);
     -webkit-backdrop-filter: none;
     backdrop-filter: none;

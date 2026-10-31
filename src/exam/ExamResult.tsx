@@ -1,6 +1,8 @@
-import { Link, Navigate } from '@tanstack/react-router'
+import { Link, Navigate, useNavigate } from '@tanstack/react-router'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
+import { ChevronRight } from '../ui/icons'
+import { Screen } from '../ui/Screen'
 import { Blocks, RichText } from './Blocks'
 import { score } from './session'
 import { useExam } from './store'
@@ -9,17 +11,19 @@ const byId = new Map(questions.map((question) => [question.id, question]))
 
 export function ExamResult() {
   const { session } = useExam()
+  const navigate = useNavigate()
   if (!session) return <Navigate to="/exam" />
   if (session.finishedAt === null) return <Navigate to="/exam/run" />
   const result = score(session, questions)
   const minutes = Math.max(1, Math.round((session.finishedAt - session.startedAt) / 60_000))
 
   return (
-    <div className="sh-view">
-      <header>
-        <p className="sh-sub">{strings.exam.setTitle[session.set]}</p>
-        <h1 className="sh-title">{strings.exam.resultTitle}</h1>
-      </header>
+    <Screen
+      title={strings.exam.resultTitle}
+      back={() => void navigate({ to: '/exam' })}
+      backLabel={strings.exam.title}
+    >
+      <p className="dz-subhead sh-lead">{strings.exam.setTitle[session.set]}</p>
       <section className="sh-card ex-score" data-testid="exam-score">
         <b>{strings.exam.resultScore(result.correct, result.total)}</b>
         <span>%{result.percent}</span>
@@ -42,7 +46,7 @@ export function ExamResult() {
                   <span className="ex-item__n">{index + 1}</span>
                   <span className="ex-item__st">{strings.exam.status[status]}</span>
                   <span className="sh-chev" aria-hidden="true">
-                    ›
+                    <ChevronRight />
                   </span>
                 </summary>
                 <div className="ex-item__body">
@@ -83,6 +87,6 @@ export function ExamResult() {
       <Link to="/exam" className="sh-btn sh-btn--primary sh-press ex-btn-link">
         {strings.exam.newAttempt}
       </Link>
-    </div>
+    </Screen>
   )
 }
