@@ -15,17 +15,17 @@
   --sh-on-action: var(--on-action);
   --sh-ok: var(--ok-ink);
   --sh-ok-fill: var(--ok-fill);
-  --sh-shadow: oklch(0 0 0 / 0.08);
+  --sh-shadow: var(--shadow-color);
   --sh-scrim: var(--scrim);
-  --font-ui: var(--font-text);
+  --font-ui: var(--font-math);
   --color-row-wash: var(--row-tint);
-  --color-row-edge: var(--row-fill);
+  --color-row-edge: var(--row-edge);
   --color-row-ink: var(--row-ink);
   --color-col-wash: var(--col-tint);
-  --color-col-edge: var(--col-fill);
+  --color-col-edge: var(--col-edge);
   --color-col-ink: var(--col-ink);
   --color-ok-wash: var(--ok-tint);
-  --color-ok-edge: var(--ok-fill);
+  --color-ok-edge: var(--ok-edge);
   --color-ok-ink: var(--ok-ink);
   --danger-11: var(--bad-ink);
 }
@@ -61,9 +61,9 @@
 }
 .sh-btn {
   width: 100%;
-  min-height: 52px;
+  min-height: var(--button-height);
   border: 0;
-  border-radius: var(--corner-pill);
+  border-radius: var(--corner-button);
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
@@ -645,7 +645,7 @@ a.sh-node {
   justify-content: center;
   gap: 12px;
   padding: 16px 12px;
-  border-radius: 24px;
+  border-radius: var(--corner-stage);
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
   overflow: hidden;

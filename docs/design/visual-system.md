@@ -1,5 +1,10 @@
 # Visual system
 
+> Superseded in part by decision 0006 (2026-10-31): the old app's UI language is the base. Token values now come
+> from it (`src/styles/tokens.css`: warm paper palette, Onest with the Dizey Math and Dizey Ident faces, 13-30 px
+> type, 16 px gutter, 56 px primary button, concentric radii). Rules below that conflict with the old system,
+> such as monochrome chrome with no navy action, no longer bind; this page is rewritten in plan step 2.
+
 How every Dizey screen outside the lesson stage looks: layout, density, colour, type, depth. Motion is in
 [`motion-system.md`](motion-system.md). Research and sources: [`docs/research/motion-and-visual-system.md`](../research/motion-and-visual-system.md).
 Values live in `src/styles/tokens.css` (the only place raw values exist); component styles in `src/ui/ui.css`;

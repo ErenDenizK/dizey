@@ -1,57 +1,150 @@
 /*
  * Dizey design tokens: the only place raw values live. Components use these names only.
- * Spec and reasons: docs/design/visual-system.md. Contrast pairs are tested in tokens.test.ts.
+ * The system is the old app's UI language (decision 0006), rebuilt as tokens: a warm paper palette, Onest with
+ * two small math faces, a 13-30 px type scale, a 4 px spacing rhythm, concentric radii and soft elevation.
+ * Spec: docs/design/visual-system.md. Contrast pairs are tested in tokens.test.ts.
  *
  * Theme: follows the system unless <html data-theme="light|dark"> is set by the in-app switch.
  * Root font size comes from iOS Dynamic Type (-apple-system-body, 17px by default), so every rem
  * below scales with the user's text size. Spacing stays in px: it is layout, not reading.
  */
 
+/* Onest (SIL OFL 1.1, fonts/Onest-LICENSE.txt), variable weight, self-hosted: Latin, Latin Extended (Turkish), math. */
 @font-face {
-  font-family: "Inter";
-  src: url("./fonts/InterVariable.woff2") format("woff2");
+  font-family: "Onest";
+  src: url("./fonts/onest-latin-wght-normal.woff2") format("woff2-variations");
   font-weight: 100 900;
   font-style: normal;
   font-display: swap;
+  unicode-range:
+    U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F,
+    U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+  font-family: "Onest";
+  src: url("./fonts/onest-latin-ext-wght-normal.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range:
+    U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F,
+    U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+  font-family: "Onest";
+  src: url("./fonts/onest-math-wght-normal.woff2") format("woff2-variations");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0391-03A1, U+03A3-03A9, U+03B1-03C9, U+2016-2017, U+2190-21FF, U+2200-22FF, U+27C0-27FF;
+}
+/*
+ * Dizey Math: + − ± = · drawn with one bar length at Onest's weight and math axis (Onest's own minus reads as a
+ * hyphen). Dizey Ident: a serifed I, so the identity matrix never reads as a bar. Both are tiny subsets derived from
+ * Onest (same licence); --font-text lists Dizey Math first, --font-math adds Dizey Ident for math only.
+ */
+@font-face {
+  font-family: "Dizey Math";
+  src: url("./fonts/dizey-math-100.woff2") format("woff2");
+  font-weight: 100 449;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212;
+}
+@font-face {
+  font-family: "Dizey Math";
+  src: url("./fonts/dizey-math-450.woff2") format("woff2");
+  font-weight: 450 549;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212;
+}
+@font-face {
+  font-family: "Dizey Math";
+  src: url("./fonts/dizey-math-550.woff2") format("woff2");
+  font-weight: 550 649;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212;
+}
+@font-face {
+  font-family: "Dizey Math";
+  src: url("./fonts/dizey-math-650.woff2") format("woff2");
+  font-weight: 650 900;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+002B, U+003D, U+00B1, U+00B7, U+2212;
+}
+@font-face {
+  font-family: "Dizey Ident";
+  src: url("./fonts/dizey-ident-100.woff2") format("woff2");
+  font-weight: 100 449;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+0049;
+}
+@font-face {
+  font-family: "Dizey Ident";
+  src: url("./fonts/dizey-ident-450.woff2") format("woff2");
+  font-weight: 450 549;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+0049;
+}
+@font-face {
+  font-family: "Dizey Ident";
+  src: url("./fonts/dizey-ident-550.woff2") format("woff2");
+  font-weight: 550 649;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+0049;
+}
+@font-face {
+  font-family: "Dizey Ident";
+  src: url("./fonts/dizey-ident-650.woff2") format("woff2");
+  font-weight: 650 900;
+  font-style: normal;
+  font-display: block;
+  unicode-range: U+0049;
 }
 
 :root {
   color-scheme: light dark;
 
-  /* ---- Type ---------------------------------------------------------- */
-  --font-text: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
-  /* l with a tail, I with serifs: never confuse l, 1 and I next to matrix indices. */
-  --font-features: "cv05" 1, "cv08" 1;
-  --type-large: 2rem; /* 34 */
-  --type-title1: 1.647rem; /* 28 */
-  --type-title2: 1.294rem; /* 22 */
-  --type-title3: 1.176rem; /* 20 */
+  /* ---- Type: 13 · 14 · 15 · 16 · 17 · 20 · 24 · 30 (px at the default text size) ---- */
+  --font-text: "Dizey Math", "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-math: "Dizey Ident", var(--font-text);
+  --font-features: normal;
+  --type-large: 1.765rem; /* 30: display */
+  --type-title1: 1.412rem; /* 24: title */
+  --type-title2: 1.176rem; /* 20: lead */
+  --type-title3: 1rem; /* 17: card and row titles */
   --type-body: 1rem; /* 17 */
   --type-callout: 0.941rem; /* 16 */
-  --type-subhead: 0.882rem; /* 15 */
-  --type-footnote: 0.765rem; /* 13 */
-  --type-caption: 0.706rem; /* 12 */
-  --leading-large: 1.206;
-  --leading-title1: 1.214;
-  --leading-title2: 1.273;
-  --leading-title3: 1.25;
-  --leading-body: 1.294; /* 22 / 17: one-line UI text */
-  --leading-read: 1.5; /* paragraphs of lesson text */
-  --leading-callout: 1.313;
-  --leading-subhead: 1.333;
-  --leading-footnote: 1.385;
-  --leading-caption: 1.333;
-  --tracking-large: -0.024em;
-  --tracking-title: -0.019em;
-  --tracking-body: -0.011em;
-  --tracking-small: -0.004em;
-  --tracking-caption: 0.01em;
+  --type-subhead: 0.882rem; /* 15: UI text */
+  --type-footnote: 0.824rem; /* 14: labels */
+  --type-caption: 0.765rem; /* 13: captions, never smaller */
+  --leading-large: 1.15;
+  --leading-title1: 1.2;
+  --leading-title2: 1.2;
+  --leading-title3: 1.3;
+  --leading-body: 1.47; /* 25 / 17 */
+  --leading-read: 1.5;
+  --leading-callout: 1.375;
+  --leading-subhead: 1.4;
+  --leading-footnote: 1.214;
+  --leading-caption: 1.35;
+  --tracking-large: -0.02em;
+  --tracking-title: -0.01em;
+  --tracking-body: 0em;
+  --tracking-small: 0em;
+  --tracking-caption: 0em;
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
 
-  /* ---- Space: 4 px grid ------------------------------------------------ */
+  /* ---- Space: 4 px rhythm, 2 px for hairline gaps ---------------------------------- */
   --space-0-5: 2px;
   --space-1: 4px;
   --space-2: 8px;
@@ -65,148 +158,167 @@
   --space-16: 64px;
 
   /* ---- Layout ---------------------------------------------------------- */
-  --page-gutter: 20px; /* screen edge to content */
+  --page-gutter: 16px; /* screen edge to content */
   --card-pad: 16px;
-  --group-gap: 32px; /* between unrelated groups */
+  --group-gap: 24px; /* between unrelated groups */
   --stack-gap: 12px; /* between items of one group */
-  --target: 44px; /* minimum touch target */
-  --row-height: 52px; /* list rows */
+  --target: 48px; /* minimum touch target */
+  --button-height: 56px; /* the primary action */
+  --row-height: 52px; /* list rows and lesson tiles */
   --bar-height: 62px; /* floating tab bar */
-  --bar-inset: 14px; /* tab bar distance from the screen sides */
+  --bar-inset: 16px; /* tab bar distance from the screen sides */
   --bar-bottom: max(14px, calc(env(safe-area-inset-bottom) - 10px));
   --bar-clearance: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
-  --nav-height: 44px; /* inline title bar */
+  --nav-height: 48px; /* top bar */
 
-  /* ---- Radius: concentric (inner = outer - inset) ---------------------- */
+  /* ---- Radius: concentric (outer = inner + padding) -------------------- */
   --corner-device: 55px; /* current iPhone screen corners, for full-bleed surfaces */
-  --corner-sheet: 38px;
-  --corner-card: 22px;
+  --corner-sheet: 28px; /* 16 + 12: concentric with the button inside its padding */
+  --corner-stage: 24px;
+  --corner-card: 20px;
+  --corner-button: 16px;
   --corner-inner: 12px; /* controls inside a card */
-  --corner-chip: 10px;
+  --corner-chip: 8px;
   --corner-pill: 999px;
 
   /* ---- Glass: the functional layer (tab bar, floating controls) -------- */
   --glass-blur: 22px;
-  --glass-saturate: 1.7;
+  --glass-saturate: 1.4;
 
-  /* ---- Light theme ------------------------------------------------------ */
-  --bg: oklch(0.968 0.005 262);
-  --surface: oklch(1 0 0);
-  --surface-raised: oklch(1 0 0);
-  --surface-sunk: oklch(0.945 0.006 262);
-  --ink-1: oklch(0.22 0.018 265);
-  --ink-2: oklch(0.45 0.016 265);
-  --ink-3: oklch(0.6 0.012 265);
-  --hairline: oklch(0.22 0.018 265 / 0.1);
-  --hairline-strong: oklch(0.22 0.018 265 / 0.18);
-  --action: oklch(0.22 0.018 265);
-  --on-action: oklch(0.99 0 0);
-  --press-overlay: oklch(0.22 0.018 265);
-  --scrim: oklch(0.12 0.01 265);
-  --backdrop: oklch(0 0 0);
-  --glass-fill: oklch(0.985 0.003 262 / 0.7);
-  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.95), inset 0 0 0 0.5px oklch(1 0 0 / 0.45);
-  --glass-edge: 0 0 0 0.5px oklch(0.22 0.02 265 / 0.09);
-  --lens-fill: oklch(1 0 0 / 0.92);
-  --lens-shadow: 0 0 0 0.5px oklch(0.22 0.02 265 / 0.06), 0 2px 8px -2px oklch(0.22 0.02 265 / 0.16);
-  --shadow-1:
-    0 0 0 0.5px oklch(0.22 0.02 265 / 0.06), 0 1px 2px oklch(0.22 0.02 265 / 0.04),
-    0 6px 16px -6px oklch(0.22 0.02 265 / 0.08);
-  --shadow-2: 0 2px 6px oklch(0.22 0.02 265 / 0.06), 0 14px 36px -10px oklch(0.22 0.02 265 / 0.22);
-  --shadow-3: 0 -1px 0 oklch(0.22 0.02 265 / 0.04), 0 -16px 48px -16px oklch(0.22 0.02 265 / 0.22);
+  /* ---- Light theme: warm paper, ink, one navy action ---------------------
+   * Chrome stays ink-neutral; colour energy comes from the math roles (row blue, column purple) and the
+   * verdicts (green, red), plus one yellow spark for celebration only. */
+  --bg: oklch(0.974 0.006 75.4);
+  --surface: oklch(0.991 0.005 95.1);
+  --surface-raised: oklch(0.991 0.005 95.1);
+  --surface-sunk: oklch(0.95 0.007 80.7);
+  --ink-1: oklch(0.302 0.009 88.8);
+  --ink-2: oklch(0.515 0.01 84.6);
+  --ink-3: oklch(0.56 0.012 81.8);
+  --hairline: oklch(0.302 0.009 88.8 / 0.1);
+  --hairline-strong: oklch(0.302 0.009 88.8 / 0.18);
+  --action: oklch(0.329 0.046 263.6);
+  --on-action: oklch(1 0 0);
+  --press-overlay: oklch(0.302 0.009 88.8);
+  --scrim: oklch(0.187 0.006 91.7);
+  --glass-fill: oklch(0.991 0.005 95.1 / 0.82);
+  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.9);
+  --glass-edge: 0 0 0 0.5px oklch(0.302 0.009 88.8 / 0.08);
+  --lens-fill: oklch(0.991 0.005 95.1 / 0.95);
+  --lens-shadow: 0 1px 2px oklch(0.302 0.009 88.8 / 0.14);
+  --shadow-color: oklch(0.302 0.009 88.8 / 0.14);
+  --shadow-1: 0 1px 2px oklch(0.302 0.009 88.8 / 0.14);
+  --shadow-2: 0 3px 10px oklch(0.302 0.009 88.8 / 0.14);
+  --shadow-3: 0 -6px 24px oklch(0.302 0.009 88.8 / 0.14);
   --edge-light: inset 0 0 0 0 transparent;
-
-  /* Meaning colours: never decoration (see visual-system.md, "Colour means something"). */
-  --ok-ink: oklch(0.5 0.11 165);
-  --ok-fill: oklch(0.6 0.13 165);
-  --ok-tint: oklch(0.955 0.03 165);
-  --bad-ink: oklch(0.52 0.18 22);
-  --bad-fill: oklch(0.6 0.2 22);
-  --bad-tint: oklch(0.955 0.025 22);
-  --row-ink: oklch(0.5 0.14 248);
-  --row-fill: oklch(0.6 0.15 248);
-  --row-tint: oklch(0.95 0.03 248);
-  --col-ink: oklch(0.54 0.13 62);
-  --col-fill: oklch(0.76 0.15 72);
-  --col-tint: oklch(0.96 0.04 75);
+  --ok-ink: oklch(0.515 0.104 168.2);
+  --ok-fill: oklch(0.761 0.15 168.1);
+  --ok-tint: oklch(0.924 0.035 169.5);
+  --ok-edge: oklch(0.76 0.101 168.2);
+  --bad-ink: oklch(0.514 0.164 25);
+  --bad-fill: oklch(0.521 0.2 25);
+  --bad-tint: oklch(0.951 0.024 26.9);
+  --bad-edge: oklch(0.761 0.136 25.1);
+  --row-ink: oklch(0.516 0.132 254.9);
+  --row-fill: oklch(0.499 0.16 255.1);
+  --row-tint: oklch(0.925 0.037 254.6);
+  --row-edge: oklch(0.76 0.109 254.9);
+  --col-ink: oklch(0.514 0.115 300.1);
+  --col-fill: oklch(0.779 0.132 299.9);
+  --col-tint: oklch(0.925 0.033 299.1);
+  --col-edge: oklch(0.761 0.094 299.7);
+  --spark: oklch(0.899 0.12 100.1);
+  --backdrop: oklch(0 0 0);
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: oklch(0.155 0.01 265);
-    --surface: oklch(0.205 0.012 265);
-    --surface-raised: oklch(0.24 0.013 265);
-    --surface-sunk: oklch(0.175 0.01 265);
-    --ink-1: oklch(0.96 0.004 265);
-    --ink-2: oklch(0.77 0.01 265);
-    --ink-3: oklch(0.62 0.01 265);
-    --hairline: oklch(1 0 0 / 0.09);
-    --hairline-strong: oklch(1 0 0 / 0.16);
-    --action: oklch(0.96 0.004 265);
-    --on-action: oklch(0.17 0.012 265);
-    --press-overlay: oklch(1 0 0);
+    --bg: oklch(0.21 0.007 78.2);
+    --surface: oklch(0.187 0.006 91.7);
+    --surface-raised: oklch(0.244 0.008 84.6);
+    --surface-sunk: oklch(0.244 0.008 84.6);
+    --ink-1: oklch(0.944 0.007 80.7);
+    --ink-2: oklch(0.8 0.011 81.8);
+    --ink-3: oklch(0.594 0.012 81.8);
+    --hairline: oklch(0.944 0.007 80.7 / 0.1);
+    --hairline-strong: oklch(0.944 0.007 80.7 / 0.18);
+    --action: oklch(0.9 0.045 261.9);
+    --on-action: oklch(0.187 0.011 268.1);
+    --press-overlay: oklch(0.944 0.007 80.7);
     --scrim: oklch(0 0 0);
-    --glass-fill: oklch(0.27 0.012 265 / 0.62);
-    --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.18), inset 0 0 0 0.5px oklch(1 0 0 / 0.07);
-    --glass-edge: 0 0 0 0.5px oklch(0 0 0 / 0.5);
-    --lens-fill: oklch(1 0 0 / 0.12);
-    --lens-shadow: inset 0 0.5px 0 oklch(1 0 0 / 0.14);
-    --shadow-1: 0 0 0 0.5px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3);
-    --shadow-2: 0 2px 6px oklch(0 0 0 / 0.3), 0 16px 40px -10px oklch(0 0 0 / 0.6);
-    --shadow-3: 0 -16px 48px -16px oklch(0 0 0 / 0.6);
-    --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
-    --ok-ink: oklch(0.79 0.12 165);
-    --ok-fill: oklch(0.68 0.13 165);
-    --ok-tint: oklch(0.27 0.04 165);
-    --bad-ink: oklch(0.75 0.14 22);
-    --bad-fill: oklch(0.66 0.18 22);
-    --bad-tint: oklch(0.27 0.05 22);
-    --row-ink: oklch(0.77 0.11 248);
-    --row-fill: oklch(0.66 0.14 248);
-    --row-tint: oklch(0.27 0.05 248);
-    --col-ink: oklch(0.83 0.13 72);
-    --col-fill: oklch(0.76 0.15 72);
-    --col-tint: oklch(0.28 0.05 72);
+    --glass-fill: oklch(0.244 0.008 84.6 / 0.82);
+    --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.12);
+    --glass-edge: 0 0 0 0.5px oklch(0.944 0.007 80.7 / 0.08);
+    --lens-fill: oklch(0.313 0.009 88.8 / 0.95);
+    --lens-shadow: 0 1px 2px oklch(0 0 0 / 0.5);
+    --shadow-color: oklch(0 0 0 / 0.5);
+    --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5);
+    --shadow-2: 0 3px 10px oklch(0 0 0 / 0.5);
+    --shadow-3: 0 -6px 24px oklch(0 0 0 / 0.5);
+    --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.06);
+    --ok-ink: oklch(0.8 0.123 168.3);
+    --ok-fill: oklch(0.761 0.15 168.1);
+    --ok-tint: oklch(0.278 0.036 168.3);
+    --ok-edge: oklch(0.481 0.098 167.8);
+    --bad-ink: oklch(0.8 0.115 25.1);
+    --bad-fill: oklch(0.521 0.2 25);
+    --bad-tint: oklch(0.245 0.029 26.4);
+    --bad-edge: oklch(0.48 0.137 24.9);
+    --row-ink: oklch(0.8 0.102 255.1);
+    --row-fill: oklch(0.499 0.16 255.1);
+    --row-tint: oklch(0.277 0.039 255.1);
+    --row-edge: oklch(0.479 0.109 255.3);
+    --col-ink: oklch(0.801 0.115 299.9);
+    --col-fill: oklch(0.779 0.132 299.9);
+    --col-tint: oklch(0.279 0.034 299.5);
+    --col-edge: oklch(0.48 0.095 300);
+    --spark: oklch(0.899 0.12 100.1);
   }
 }
 
 /* The in-app switch: same values as the dark block above (kept in sync by tokens.test.ts). */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: oklch(0.155 0.01 265);
-  --surface: oklch(0.205 0.012 265);
-  --surface-raised: oklch(0.24 0.013 265);
-  --surface-sunk: oklch(0.175 0.01 265);
-  --ink-1: oklch(0.96 0.004 265);
-  --ink-2: oklch(0.77 0.01 265);
-  --ink-3: oklch(0.62 0.01 265);
-  --hairline: oklch(1 0 0 / 0.09);
-  --hairline-strong: oklch(1 0 0 / 0.16);
-  --action: oklch(0.96 0.004 265);
-  --on-action: oklch(0.17 0.012 265);
-  --press-overlay: oklch(1 0 0);
+  --bg: oklch(0.21 0.007 78.2);
+  --surface: oklch(0.187 0.006 91.7);
+  --surface-raised: oklch(0.244 0.008 84.6);
+  --surface-sunk: oklch(0.244 0.008 84.6);
+  --ink-1: oklch(0.944 0.007 80.7);
+  --ink-2: oklch(0.8 0.011 81.8);
+  --ink-3: oklch(0.594 0.012 81.8);
+  --hairline: oklch(0.944 0.007 80.7 / 0.1);
+  --hairline-strong: oklch(0.944 0.007 80.7 / 0.18);
+  --action: oklch(0.9 0.045 261.9);
+  --on-action: oklch(0.187 0.011 268.1);
+  --press-overlay: oklch(0.944 0.007 80.7);
   --scrim: oklch(0 0 0);
-  --glass-fill: oklch(0.27 0.012 265 / 0.62);
-  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.18), inset 0 0 0 0.5px oklch(1 0 0 / 0.07);
-  --glass-edge: 0 0 0 0.5px oklch(0 0 0 / 0.5);
-  --lens-fill: oklch(1 0 0 / 0.12);
-  --lens-shadow: inset 0 0.5px 0 oklch(1 0 0 / 0.14);
-  --shadow-1: 0 0 0 0.5px oklch(1 0 0 / 0.06), 0 1px 2px oklch(0 0 0 / 0.3);
-  --shadow-2: 0 2px 6px oklch(0 0 0 / 0.3), 0 16px 40px -10px oklch(0 0 0 / 0.6);
-  --shadow-3: 0 -16px 48px -16px oklch(0 0 0 / 0.6);
-  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.08);
-  --ok-ink: oklch(0.79 0.12 165);
-  --ok-fill: oklch(0.68 0.13 165);
-  --ok-tint: oklch(0.27 0.04 165);
-  --bad-ink: oklch(0.75 0.14 22);
-  --bad-fill: oklch(0.66 0.18 22);
-  --bad-tint: oklch(0.27 0.05 22);
-  --row-ink: oklch(0.77 0.11 248);
-  --row-fill: oklch(0.66 0.14 248);
-  --row-tint: oklch(0.27 0.05 248);
-  --col-ink: oklch(0.83 0.13 72);
-  --col-fill: oklch(0.76 0.15 72);
-  --col-tint: oklch(0.28 0.05 72);
+  --glass-fill: oklch(0.244 0.008 84.6 / 0.82);
+  --glass-rim: inset 0 0.5px 0 oklch(1 0 0 / 0.12);
+  --glass-edge: 0 0 0 0.5px oklch(0.944 0.007 80.7 / 0.08);
+  --lens-fill: oklch(0.313 0.009 88.8 / 0.95);
+  --lens-shadow: 0 1px 2px oklch(0 0 0 / 0.5);
+  --shadow-color: oklch(0 0 0 / 0.5);
+  --shadow-1: 0 1px 2px oklch(0 0 0 / 0.5);
+  --shadow-2: 0 3px 10px oklch(0 0 0 / 0.5);
+  --shadow-3: 0 -6px 24px oklch(0 0 0 / 0.5);
+  --edge-light: inset 0 0.5px 0 oklch(1 0 0 / 0.06);
+  --ok-ink: oklch(0.8 0.123 168.3);
+  --ok-fill: oklch(0.761 0.15 168.1);
+  --ok-tint: oklch(0.278 0.036 168.3);
+  --ok-edge: oklch(0.481 0.098 167.8);
+  --bad-ink: oklch(0.8 0.115 25.1);
+  --bad-fill: oklch(0.521 0.2 25);
+  --bad-tint: oklch(0.245 0.029 26.4);
+  --bad-edge: oklch(0.48 0.137 24.9);
+  --row-ink: oklch(0.8 0.102 255.1);
+  --row-fill: oklch(0.499 0.16 255.1);
+  --row-tint: oklch(0.277 0.039 255.1);
+  --row-edge: oklch(0.479 0.109 255.3);
+  --col-ink: oklch(0.801 0.115 299.9);
+  --col-fill: oklch(0.779 0.132 299.9);
+  --col-tint: oklch(0.279 0.034 299.5);
+  --col-edge: oklch(0.48 0.095 300);
+  --spark: oklch(0.899 0.12 100.1);
 }
 
 :root[data-theme="light"] {
