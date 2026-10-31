@@ -60,7 +60,7 @@ Eren asked (2026-10-31) for a sound system that makes every interaction fun, ful
 - **Sound lab** at `/lab/sounds` (Ben → Sesler → Sesleri dinle): every event, the place in the lesson that picks its chord, and a short lesson played as sound.
 - Levels were recalibrated with `calibrate()`; the nine existing events came out at exactly their previous trims.
 
-## Addendum (0.19.0): palettes, background music, the full sound lab
+## Addendum (0.20.0): palettes, background music, the full sound lab
 
 Eren, 2026-10-31: improve the sound system, add background music, and make the sound area like the old app's sound lab.
 
