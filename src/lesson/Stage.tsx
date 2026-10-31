@@ -280,9 +280,12 @@ function useStageLayout(
           engine.set(object.el, { x: dx, y: dy, scale })
           engine.to(object.el, { x: 0, y: 0, scale: 1 }, 'move', velocity ? { velocity } : {})
         }
-        const head = glided ? CHOREO_MS.glideHead : 0
+        // A stage that is still growing would clip new objects laid out for its final height: they wait
+        // until most of the glide is done and enter from transparent.
+        const growing = next - visible > 8
+        const head = growing ? CHOREO_MS.leaveHead : glided ? CHOREO_MS.glideHead : 0
         // A replaced scene enters from the entrance floor, so the stage is never empty between two scenes.
-        for (const el of fresh) riseIn(el, head + order++ * CHOREO_MS.stagger, ENTER_FLOOR)
+        for (const el of fresh) riseIn(el, head + order++ * CHOREO_MS.stagger, growing ? 0 : ENTER_FLOOR)
       })
     }
     layout()

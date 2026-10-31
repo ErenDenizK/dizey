@@ -61,3 +61,14 @@ describe('splitTones', () => {
     ])
   })
 })
+
+describe('texToHtml', () => {
+  it('sets ≠ as one glyph, never as the \\not slash over "="', () => {
+    for (const tex of ['AB \\neq BA', 'A \\ne 0']) {
+      const html = texToHtml(tex)
+      expect(html).toContain('≠')
+      expect(html).not.toContain('katex-thinbox')
+      expect(html).not.toContain('')
+    }
+  })
+})

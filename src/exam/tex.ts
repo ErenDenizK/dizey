@@ -19,11 +19,22 @@ export function splitTex(text: string): TextPart[] {
 
 const cache = new Map<string, string>()
 
+/**
+ * KaTeX draws \neq as its private-use \not slash laid over "=". Set in the math face that slash has no glyph
+ * and "≠" read as "=I"; the math face has a real ≠, so the relation uses it.
+ */
+const macros = { '\\neq': '\\mathrel{\\char"2260}', '\\ne': '\\mathrel{\\char"2260}' }
+
 /** Inline TeX to HTML (KaTeX, decision 0001). Content is ours and checked by tests; errors render red, never throw. */
 export function texToHtml(tex: string): string {
   let html = cache.get(tex)
   if (html === undefined) {
-    html = katex.renderToString(tex, { throwOnError: false, output: 'html', strict: 'ignore' })
+    html = katex.renderToString(tex, {
+      throwOnError: false,
+      output: 'html',
+      strict: 'ignore',
+      macros: { ...macros },
+    })
     cache.set(tex, html)
   }
   return html
