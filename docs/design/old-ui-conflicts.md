@@ -1,7 +1,7 @@
 # Old UI vs our rules: open conflicts
 
 Eren (2026-10-31 11:00Z): port the old UI faithfully; where it has usability or visibility problems, list them for
-discussion instead of fixing them. Nothing below has been changed in the app. Contrast is WCAG 2 ratio, measured on the
+discussion instead of fixing them. Contrast is WCAG 2 ratio, measured on the
 ported values in `src/styles/tokens.css`.
 
 | # | Old behaviour | Rule it breaks | Options | Recommendation |
@@ -15,3 +15,13 @@ ported values in `src/styles/tokens.css`.
 
 Touch targets of the old components (top bar icons, keypad keys, option rows) are measured when each component is
 ported in plan step 2, and any below 44 px is added here.
+
+## Eren's decisions (2026-10-31 11:27Z)
+
+1. Done: muted ink darkened to 4.6:1 on every surface (light `oklch(0.528 …)`, dark `oklch(0.628 …)`).
+2. Done: light-mode success ink darkened to 4.6:1 on the success tint (`oklch(0.497 …)`).
+3. Accepted: keep blue and purple and add a second cue; designed with the tile component in plan step 2.
+4. Accepted: edges stay as they are.
+5. Accepted: the primary button keeps its full colour during a beat. The current player already does this (it never
+   disables or dims the button while a beat plays); keep it that way when the dock is rebuilt.
+6. Rejected: chips keep flying over the matrix entries, as in the old app.
