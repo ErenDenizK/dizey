@@ -1,7 +1,7 @@
 /*
  * Dizey design tokens: the only place raw values live. Components use these names only.
  * The system is the old app's UI language (decision 0006), rebuilt as tokens: a warm paper palette, Onest with
- * two small math faces, a 13-30 px type scale, a 4 px spacing rhythm, concentric radii and soft elevation.
+ * two small math faces, ten type roles (13-30 px), a 4 px grid with five proximity steps, concentric radii and soft elevation.
  * Spec: docs/design/visual-system.md. Contrast pairs are tested in tokens.test.ts.
  *
  * Theme: dark only (Eren 2026-10-31).
@@ -111,40 +111,65 @@
 :root {
   color-scheme: dark;
 
-  /* ---- Type: 13 · 14 · 15 · 16 · 17 · 20 · 24 · 30 (px at the default text size) ---- */
+  /* ---- Type: ten roles, each a fixed size, line height, tracking and weight -------------
+   * Px at the default text size (root 17 px; every value is rem, so the whole scale follows iOS Dynamic Type).
+   * Line heights are whole even pixels: tight (1.2) for display sizes, open (1.4+) for small text, so small
+   * text never feels cramped and titles never feel loose. Tracking tightens as size grows (the optical rule
+   * SF applies through its tracking table). Spec and rules: docs/design/type-and-space.md.
+   *
+   *   role      size/line   weight  tracking   use
+   *   display   30 / 36     700     -0.022em   screen titles, hero numerals
+   *   title1    24 / 30     700     -0.017em   lesson step titles
+   *   title2    20 / 26     700     -0.012em   chapter titles, verdicts, stat values
+   *   title3    17 / 22     600     -0.004em   card titles, buttons (headline)
+   *   body      17 / 24     400      0         rows, UI text
+   *   read      17 / 26     400      0         paragraphs, lesson narration
+   *   callout   16 / 22     400      0         dense body (options, sheet text)
+   *   subhead   15 / 20     400      0         secondary lines under a title
+   *   footnote  14 / 20     400/600  +0.004em  labels, metadata, section labels
+   *   caption   13 / 16     500/600  +0.01em   tab labels, badges, tile names: never smaller
+   */
   --font-text: "Dizey Math", "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-math: "Dizey Ident", var(--font-text);
   --font-features: normal;
-  --type-large: 1.765rem; /* 30: display */
-  --type-title1: 1.412rem; /* 24: title */
-  --type-title2: 1.176rem; /* 20: lead */
-  --type-title3: 1rem; /* 17: card and row titles */
+  --type-large: 1.765rem; /* 30 */
+  --type-title1: 1.412rem; /* 24 */
+  --type-title2: 1.176rem; /* 20 */
+  --type-title3: 1rem; /* 17 */
   --type-body: 1rem; /* 17 */
   --type-callout: 0.941rem; /* 16 */
-  --type-subhead: 0.882rem; /* 15: UI text */
-  --type-footnote: 0.824rem; /* 14: labels */
-  --type-caption: 0.765rem; /* 13: captions, never smaller */
-  --leading-large: 1.15;
-  --leading-title1: 1.2;
-  --leading-title2: 1.2;
-  --leading-title3: 1.3;
-  --leading-body: 1.47; /* 25 / 17 */
-  --leading-read: 1.5;
-  --leading-callout: 1.375;
-  --leading-subhead: 1.4;
-  --leading-footnote: 1.214;
-  --leading-caption: 1.35;
-  --tracking-large: -0.02em;
-  --tracking-title: -0.01em;
+  --type-subhead: 0.882rem; /* 15 */
+  --type-footnote: 0.824rem; /* 14 */
+  --type-caption: 0.765rem; /* 13 */
+  --leading-large: 2.118rem; /* 36 */
+  --leading-title1: 1.765rem; /* 30 */
+  --leading-title2: 1.529rem; /* 26 */
+  --leading-title3: 1.294rem; /* 22 */
+  --leading-body: 1.412rem; /* 24 */
+  --leading-read: 1.529rem; /* 26 */
+  --leading-callout: 1.294rem; /* 22 */
+  --leading-subhead: 1.176rem; /* 20 */
+  --leading-footnote: 1.176rem; /* 20 */
+  --leading-caption: 0.941rem; /* 16 */
+  --leading-none: 1; /* one-line glyph boxes only: numerals in chips and cells */
+  /* Unitless body leading for inheritance: an element that only changes its size keeps a proportional line. */
+  --leading-base: 1.412;
+  --tracking-large: -0.022em;
+  --tracking-title1: -0.017em;
+  --tracking-title: -0.012em; /* title2 */
+  --tracking-title3: -0.004em;
   --tracking-body: 0em;
-  --tracking-small: 0em;
-  --tracking-caption: 0em;
+  --tracking-small: 0.004em; /* footnote */
+  --tracking-caption: 0.01em;
+  --tracking-eyebrow: 0.06em; /* uppercase labels only */
+  /* Weights: 400 reads, 600 names (titles of cards, buttons, labels), 700 heads (titles, numerals).
+     500 is for math glyphs and small text that sits on a tinted fill. */
   --weight-regular: 400;
   --weight-medium: 500;
   --weight-semibold: 600;
   --weight-bold: 700;
 
-  /* ---- Space: 4 px rhythm, 2 px for hairline gaps ---------------------------------- */
+  /* ---- Space: 4 px grid; 2 px only for hairline gaps inside a control ------------- */
   --space-0-5: 2px;
   --space-1: 4px;
   --space-2: 8px;
@@ -156,12 +181,27 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  /*
+   * Proximity: five steps, each larger than the one inside it and a group at least twice a block, so what belongs together reads as one
+   * thing before a single word is read (Gestalt proximity). Use these names, not raw steps, between
+   * elements:
+   *   bound   4   a value and its unit, a label and the value it names, an icon and its text in a chip
+   *   related 8   a title and the line under it, lines of one block
+   *   item    12  siblings in a list or a stack of cards
+   *   block   16  blocks inside a card (text to its button), card padding, screen gutter
+   *   group   32  unrelated groups; a section label sits inside this gap, 8 above its card
+   */
+  --gap-bound: var(--space-1);
+  --gap-related: var(--space-2);
+  --gap-item: var(--space-3);
+  --gap-block: var(--space-4);
+  --gap-group: var(--space-8);
 
   /* ---- Layout ---------------------------------------------------------- */
   --page-gutter: 16px; /* screen edge to content */
   --card-pad: 16px;
-  --group-gap: 24px; /* between unrelated groups */
-  --stack-gap: 12px; /* between items of one group */
+  --group-gap: var(--gap-group);
+  --stack-gap: var(--gap-item);
   --target: 48px; /* minimum touch target */
   --button-height: 56px; /* the primary action */
   --row-height: 52px; /* list rows and lesson tiles */
