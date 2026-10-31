@@ -229,7 +229,7 @@
   --press-strength: 0.14;
 }
 .dz-button[data-kind="secondary"] {
-  background: var(--surface-sunk);
+  background: var(--control-soft);
   color: var(--ink-1);
   box-shadow: inset 0 0 0 0.5px var(--hairline);
 }

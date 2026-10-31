@@ -64,6 +64,10 @@ describe.each([
     expect(contrast(theme, `--${role}-ink`, `--${role}-tint`)).toBeGreaterThanOrEqual(4.5)
   })
 
+  it('a soft button label reads at 4.5:1', () => {
+    expect(contrast(theme, '--ink-1', '--control-soft')).toBeGreaterThanOrEqual(4.5)
+  })
+
   it.each(grounds)('tertiary ink stays a 3:1 UI colour on %s', (bg) => {
     expect(contrast(theme, '--ink-3', bg)).toBeGreaterThanOrEqual(3)
   })

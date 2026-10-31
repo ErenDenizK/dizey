@@ -1302,7 +1302,7 @@ a.dz-button[data-kind="primary"] {
    engine drives --soft (0 primary, 1 soft) on the fade spring and flips the label ink at the midpoint, so
    no frame shows grey text on a grey fill. */
 .ls-dock .sh-btn--primary {
-  background: color-mix(in oklab, var(--sh-soft) calc(var(--soft, 0) * 100%), var(--sh-action));
+  background: color-mix(in oklab, var(--control-soft) calc(var(--soft, 0) * 100%), var(--sh-action));
 }
 .ls-dock .sh-btn--primary[data-ink="soft"] {
   color: var(--sh-ink);
