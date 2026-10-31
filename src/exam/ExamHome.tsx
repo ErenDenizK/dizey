@@ -34,7 +34,7 @@ export function ExamHome() {
             </PressLink>
           </section>
         ) : null}
-        {examSets(questions).map((set) => (
+        {examSets(questions).map((set, at) => (
           <section key={set.id} className="dz-card ex-set">
             <b className="dz-title3">{strings.exam.setTitle[set.id]}</b>
             <span className="dz-subhead">{strings.exam.setBody[set.id]}</span>
@@ -43,7 +43,8 @@ export function ExamHome() {
             </span>
             <Pressable
               className="dz-button"
-              data-kind={running ? 'secondary' : 'primary'}
+              // One primary action per screen: the resumable attempt, else the first set (the real past exam).
+              data-kind={running || at > 0 ? 'secondary' : 'primary'}
               data-wide=""
               onClick={() => {
                 if (session) discardSession()

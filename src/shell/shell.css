@@ -545,6 +545,10 @@ a.sh-node {
 }
 .ls-top__btn:disabled {
   color: var(--sh-line);
+  cursor: default;
+}
+.ls-top__btn svg {
+  display: block;
 }
 .ls-progress {
   height: 6px;
@@ -589,10 +593,18 @@ a.sh-node {
   gap: 8px;
   overscroll-behavior: contain;
 }
+/*
+ * A step with no math (a trap, a summary) takes the stage's place as one card, its text centred in it, so the
+ * screen keeps the same footprint as the steps around it instead of leaving the lower half empty.
+ */
 .ls-main[data-stage="false"] .ls-narr {
   flex: 1;
   gap: 12px;
-  padding-top: 8px;
+  align-content: safe center;
+  padding: 24px 20px;
+  border-radius: var(--corner-stage);
+  background: var(--sh-surface);
+  box-shadow: 0 1px 2px var(--sh-shadow);
 }
 .ls-eyebrow {
   margin: 0;
@@ -814,27 +826,145 @@ a.sh-node {
   color: var(--color-ok-ink);
   font-weight: 600;
 }
+/*
+ * Verdict states never ride one channel: colour, an icon in the key chip and the verdict text each say it.
+ * A wrong option keeps its full contrast (it is information, not a disabled control).
+ */
 .ex-opt[data-state="right"] {
-  box-shadow: inset 0 0 0 2px var(--color-ok-ink);
+  background: var(--color-ok-wash);
+  box-shadow: inset 0 0 0 2px var(--color-ok-edge);
+  color: var(--sh-ink);
+}
+.ex-opt[data-state="right"] .ex-opt__key {
+  background: var(--ok-fill);
+  color: var(--on-ok);
 }
 .ex-opt[data-state="wrong"] {
-  opacity: 0.5;
+  background: var(--bad-tint);
+  box-shadow: inset 0 0 0 1.5px var(--bad-edge);
+  color: var(--bad-ink);
+  cursor: default;
+}
+.ex-opt[data-state="wrong"] .ex-opt__key {
+  background: var(--bad-fill);
+  color: oklch(1 0 0);
+}
+.ex-opt__key svg {
+  width: 13px;
+  height: 13px;
 }
 .ls-feedback {
-  padding: 14px 16px;
-  border-radius: 18px;
+  padding: 12px 14px;
+  border-radius: 16px;
   background: var(--sh-soft);
   line-height: 1.5;
 }
-.ls-feedback[data-tone="ok"] {
+.ls-feedback[data-tone="wrong"] {
+  background: var(--bad-tint);
+  box-shadow: inset 3px 0 0 var(--bad-fill);
+}
+.ls-feedback__lead {
+  color: var(--bad-ink);
+}
+/* The verdict takes the options' place in the dock; the question stays on screen above it. */
+.ls-verdict {
+  display: grid;
+  gap: 10px;
+  padding: 14px 14px 16px;
+  border-radius: var(--corner-card, 20px);
+  background: var(--sh-surface);
+  box-shadow: var(--shadow-1);
+}
+.ls-verdict[data-tone="ok"] {
   background: var(--color-ok-wash);
+}
+.ls-verdict__title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  margin: 0;
+  font-size: 1.2rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+.ls-verdict[data-tone="ok"] .ls-verdict__title {
+  color: var(--color-ok-ink);
+}
+.ls-verdict[data-tone="missed"] .ls-verdict__title {
+  color: var(--bad-ink);
+}
+.ls-verdict__mark:empty {
+  display: none;
+}
+.ls-verdict__mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--ok-fill);
+  color: var(--on-ok);
+}
+.ls-verdict__given {
+  flex-basis: 100%;
+  font-size: 0.94rem;
+  font-weight: 500;
+  color: var(--sh-muted);
+}
+/* Not struck through: a struck 0 reads as theta. The verdict colour says it was wrong. */
+.ls-verdict__given s {
+  text-decoration: none;
+  color: var(--bad-ink);
+  font-weight: 600;
+}
+.ls-verdict__answer {
+  min-height: 48px;
+  cursor: default;
+}
+.ls-verdict__answer[data-wide="true"] {
+  position: relative;
+  justify-content: center;
+}
+.ls-verdict__answer[data-wide="true"] .ex-opt__key {
+  position: absolute;
+  left: 10px;
+  top: 10px;
+}
+.ls-verdict[data-tone="ok"] .ls-verdict__answer {
+  background: var(--sh-surface);
+}
+.ls-verdict__solution {
+  margin: 0;
+  line-height: 1.5;
+  max-height: 9.2em;
+  overflow-y: auto;
 }
 .ls-points {
   display: grid;
   gap: 10px;
   margin: 0;
-  padding-left: 1.2em;
+  padding: 14px 16px;
+  border-radius: var(--corner-card, 20px);
+  background: var(--sh-surface);
+  box-shadow: var(--shadow-1);
+  list-style: none;
   line-height: 1.5;
+}
+.ls-points li {
+  position: relative;
+  padding-left: 22px;
+}
+/* A small filled cell, the app's mastery glyph, marks each point. */
+.ls-points li::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 0.5em;
+  width: 9px;
+  height: 9px;
+  border-radius: 3px;
+  background: var(--color-ok-ink);
 }
 .ls-score {
   margin: 0;
@@ -849,6 +979,35 @@ a.sh-node {
   min-height: 52px;
   font-size: 1.06rem;
   font-weight: 500;
+}
+/* Options never push the question off screen: long lists scroll inside the dock. */
+.ls-opts {
+  max-height: 50dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px;
+  margin: -2px;
+}
+/* Matrix or system options sit two to a row, the math centred in its card. */
+.ls-opts[data-wide="true"] {
+  grid-template-columns: 1fr 1fr;
+}
+.ls-opts[data-wide="true"] .ex-opt {
+  position: relative;
+  justify-content: center;
+  padding: 10px 8px 10px 34px;
+}
+.ls-opts[data-wide="true"] .ex-opt__key {
+  position: absolute;
+  left: 8px;
+  top: 8px;
+  width: 22px;
+  height: 22px;
+  border-radius: 7px;
+  font-size: 0.78rem;
+}
+.ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
+  grid-column: span 2;
 }
 .ls-keypad-wrap {
   display: grid;
@@ -1104,4 +1263,17 @@ a.dz-button[data-kind="primary"] {
   stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
+}
+
+/* Text-only steps (see .ls-main[data-stage="false"] .ls-narr): larger reading type, points without a nested card. */
+.ls-main[data-stage="false"] .ls-title {
+  font-size: 1.6rem;
+}
+.ls-main[data-stage="false"] .ls-body {
+  font-size: 1.06rem;
+}
+.ls-main[data-stage="false"] .ls-points {
+  padding: 4px 0;
+  background: none;
+  box-shadow: none;
 }
