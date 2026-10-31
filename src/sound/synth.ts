@@ -547,8 +547,10 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     // A quieter duck never lifts a deeper one that is still holding.
     if (db > ducked.db && at < ducked.until) return
     ducked = { db, until: at + length }
-    musicIn.gain.cancelScheduledValues(at - 0.03)
-    musicIn.gain.setTargetAtTime(dbToGain(db), at - 0.03, 0.03)
+    // WebKit rejects a negative time, which `at - 0.03` is right after the context starts.
+    const from = Math.max(0, at - 0.03)
+    musicIn.gain.cancelScheduledValues(from)
+    musicIn.gain.setTargetAtTime(dbToGain(db), from, 0.03)
     musicIn.gain.setTargetAtTime(1, at + length, 0.6)
   }
 
