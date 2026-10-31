@@ -126,7 +126,17 @@ Same metric script as 3.1. "Replays" counts questions whose answer plays its wor
 | M3 before → after | 6 → 11 | 33 % → 45 % | 0/2 → 5/5 | 29.8 / 44 → 13.5 / 22 | Tanım → Soru |
 | M4 before → after | 6 → 12 | 33 % → 42 % | 0/2 → 5/5 | 29.3 / 55 → 13 / 17 | Tanım → Soru |
 | M5 before → after | 8 → 18 | 38 % → 50 % | 0/3 → 9/9 | 29.7 / 50 → 12.8 / 19 | Kural → Soru |
+| M6 before → after | 5 → 11 | 40 % → 45 % | 0/2 → 5/5 | 15.5 / 31 → 9.4 / 17 | Tanım → Soru |
+| M7 before → after | 10 → 11 | 30 % → 36 % | 1/3 → 4/4 | 17.7 / 25 → 13.1 / 20 | Gözlem → Soru |
+| M8 before → after | 11 → 12 | 36 % → 42 % | 2/4 → 5/5 | 24.2 / 49 → 14.2 / 24 | Gözlem → Soru |
+| M9 before → after | 9 → 10 | 33 % → 40 % | 1/3 → 4/4 | 18.9 / 33 → 11 / 17 | Gözlem → Soru |
+| M10 before → after | 8 → 10 | 38 % → 40 % | 0/3 → 4/4 | 16.1 / 30 → 9.1 / 16 | Tanım → Soru |
 
 New beats for these lessons: `combine` (sums and scalar multiples entry by entry: the same cell of each term
 lights, its numbers fly into the line, the sum lands in its "?" slot) and `trace` (the diagonal lights and its
-entries fly into one sum).
+entries fly into one sum). M6 adds `transpose` (row r of the matrix lights, the same numbers fill column r of the
+transpose). Chapter 1 (M1 to M10) is now complete in this rhythm.
+
+Found while recording M9: a negative stacked fraction split its sign onto its own grid row inside stage cells.
+Fixed with a nowrap sign wrapper (`.ex-signed`). Open: question steps with no scene leave an empty stage; the
+original filled it with the object of the question. Candidate for the next pass.
