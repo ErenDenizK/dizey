@@ -1,7 +1,8 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import { useEffect, useRef, useState } from 'react'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
+import { pathCode } from '../content/path'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
@@ -12,6 +13,7 @@ import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
 import { Check, ChevronLeft, Close } from '../ui/icons'
 import { Keypad } from './Keypad'
+import { LessonEnd } from './LessonEnd'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { rewardFor } from './reward'
 import { Stage } from './Stage'
@@ -52,7 +54,7 @@ function beatOf(step: Step, attempt: Attempt) {
 }
 
 export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep: string | undefined }) {
-  const navigate = useNavigate()
+  const [ended, setEnded] = useState<SoundEvent | null>(null)
   const [index, setIndex] = useState(() => {
     const asked = lesson.steps.findIndex((candidate) => candidate.id === startStep)
     return asked >= 0 ? asked : resumeIndex(lesson, recordOf(lesson.id))
@@ -172,9 +174,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const finish = () => {
     const doneBefore = lessons.filter((other) => stateOf(recordOf(other.id)) === 'done')
     saveRecord(lesson.id, { ...recordOf(lesson.id), at: null, doneAt: Date.now() })
-    cue(rewardFor(lesson, doneBefore))
+    // The reward sounds when the end screen's seal closes, not at the tap.
+    setEnded(rewardFor(lesson, doneBefore))
     haptic(20)
-    void navigate({ to: returnTab.current })
   }
 
   const isLast = index === lesson.steps.length - 1
@@ -263,7 +265,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           className="ls-top__btn sh-press"
           aria-label={strings.lesson.back}
           data-sound="none"
-          disabled={index === 0}
+          disabled={index === 0 || ended !== null}
           onClick={() => go(index - 1)}
         >
           <ChevronLeft />
@@ -282,92 +284,98 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           />
         </div>
         <span className="ls-count" aria-hidden="true">
-          {lesson.node} · {strings.lesson.count(index + 1, lesson.steps.length)}
+          {pathCode(lesson)} · {strings.lesson.count(index + 1, lesson.steps.length)}
         </span>
       </div>
 
-      <div className="ls-main" data-stage={hasStage}>
-        {hasStage ? (
-          <Stage
-            lesson={lesson}
-            scene={step.scene}
-            state={state}
-            stagger={CARRY.stagger}
-            transport={transport}
-          />
-        ) : null}
+      {ended ? (
+        <LessonEnd lesson={lesson} onSealed={() => cue(ended)} />
+      ) : (
+        <>
+          <div className="ls-main" data-stage={hasStage}>
+            {hasStage ? (
+              <Stage
+                lesson={lesson}
+                scene={step.scene}
+                state={state}
+                stagger={CARRY.stagger}
+                transport={transport}
+              />
+            ) : null}
 
-        <div ref={scroller} className="ls-narr">
-          <p className="ls-eyebrow">{step.eyebrow}</p>
-          <h1 className="ls-title">
-            <RichText text={step.title} />
-          </h1>
-          {step.body ? (
-            <p className="ls-body">
-              <RichText text={step.body} />
-            </p>
-          ) : null}
+            <div ref={scroller} className="ls-narr">
+              <p className="ls-eyebrow">{step.eyebrow}</p>
+              <h1 className="ls-title">
+                <RichText text={step.title} />
+              </h1>
+              {step.body ? (
+                <p className="ls-body">
+                  <RichText text={step.body} />
+                </p>
+              ) : null}
 
-          {step.kind === 'summary' ? (
-            <>
-              <ul className="ls-points">
-                {step.points.map((point) => (
-                  <li key={point}>
-                    <RichText text={point} />
-                  </li>
-                ))}
-              </ul>
-              <Score lesson={lesson} />
-            </>
-          ) : null}
+              {step.kind === 'summary' ? (
+                <>
+                  <ul className="ls-points">
+                    {step.points.map((point) => (
+                      <li key={point}>
+                        <RichText text={point} />
+                      </li>
+                    ))}
+                  </ul>
+                  <Score lesson={lesson} />
+                </>
+              ) : null}
 
-          {isQuestion(step) && wrongFeedback && !attempt.revealed ? (
-            <div className="ls-feedback" role="status" data-tone="wrong">
-              <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
-              <RichText text={wrongFeedback} />
+              {isQuestion(step) && wrongFeedback && !attempt.revealed ? (
+                <div className="ls-feedback" role="status" data-tone="wrong">
+                  <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
+                  <RichText text={wrongFeedback} />
+                </div>
+              ) : null}
             </div>
-          ) : null}
-        </div>
-      </div>
+          </div>
 
-      <div className="ls-dock" data-verdict={isQuestion(step) && attempt.revealed}>
-        {isQuestion(step) && attempt.revealed ? <Verdict step={step} attempt={attempt} /> : null}
-        {attempt.revealed ? null : options}
-        {step.kind === 'keypad' && !attempt.revealed ? (
-          <Keypad
-            sound="none"
-            value={typed}
-            onChange={(value) => {
-              setTyped(value)
-              cue('select')
-            }}
-            onSubmit={() => {
-              answer(typed, checkKeypad(step.answer, typed))
-              setTyped('')
-            }}
-          />
-        ) : null}
-        {/* The give-up action holds the bottom slot from the start, so nothing above it moves when an answer lands. */}
-        {locked ? (
-          <button
-            type="button"
-            className="sh-btn sh-btn--soft sh-press"
-            onClick={() => setAttempt((a) => ({ ...a, revealed: true }))}
-          >
-            {strings.lesson.showAnswer}
-          </button>
-        ) : (
-          <button
-            type="button"
-            className="sh-btn sh-btn--primary sh-press"
-            // Skipping a beat taps; the next step and the lesson end play their own sounds.
-            data-sound={playing && frames.length ? undefined : 'none'}
-            onClick={primary}
-          >
-            {primaryLabel}
-          </button>
-        )}
-      </div>
+          <div className="ls-dock" data-verdict={isQuestion(step) && attempt.revealed}>
+            {isQuestion(step) && attempt.revealed ? <Verdict step={step} attempt={attempt} /> : null}
+            {attempt.revealed ? null : options}
+            {step.kind === 'keypad' && !attempt.revealed ? (
+              <Keypad
+                sound="none"
+                value={typed}
+                onChange={(value) => {
+                  setTyped(value)
+                  cue('select')
+                }}
+                onSubmit={() => {
+                  answer(typed, checkKeypad(step.answer, typed))
+                  setTyped('')
+                }}
+              />
+            ) : null}
+            {/* The give-up action holds the bottom slot from the start, so nothing above it moves when an answer lands. */}
+            {locked ? (
+              <button
+                type="button"
+                className="sh-btn sh-btn--soft sh-press"
+                onClick={() => setAttempt((a) => ({ ...a, revealed: true }))}
+              >
+                {strings.lesson.showAnswer}
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="sh-btn sh-btn--primary sh-press"
+                // Skipping a beat taps; the next step and the lesson end play their own sounds.
+                data-sound={playing && frames.length ? undefined : 'none'}
+                onClick={primary}
+              >
+                {primaryLabel}
+              </button>
+            )}
+          </div>
+        </>
+      )}
     </div>
   )
 }

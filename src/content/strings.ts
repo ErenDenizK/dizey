@@ -165,6 +165,19 @@ export const strings = {
     open: 'Derse gir',
   },
 
+  lessonEnd: {
+    eyebrow: (code: string) => `${code} · Ders tamam`,
+    title: 'Bu dersi bitirdin',
+    chapterTitle: (chapter: string) => `${chapter} bölümü bitti`,
+    chapterWeight: (items: number) => `Vizede ${items} / 34 soru bu bölümden.`,
+    score: (correct: number, total: number) => `Her kare bir soru: ilk denemede ${correct} / ${total} doğru.`,
+    noQuestions: 'Bu derste soru yoktu; sıradakine geçebilirsin.',
+    sealName: 'Cevapların',
+    sealLabel: (correct: number, total: number) => `${total} sorunun cevapları, ${correct} doğru`,
+    next: (code: string) => `Sıradaki · ${code}`,
+    back: 'Derslere dön',
+  },
+
   onboarding: {
     title: "Dizey'i ana ekrana ekle",
     body: "İlerlemen ana ekrandaki Dizey'de tutulur. iPhone, Safari'deki ve ana ekrandaki uygulamanın verisini ayrı saklar; Safari'de başlarsan ilerlemen oraya taşınmaz. Bu yüzden en başta ekle.",
