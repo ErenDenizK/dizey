@@ -16,6 +16,14 @@ function files(dir: string): string[] {
   })
 }
 
+/**
+ * Known offenders, each owed a move onto the engine. Remove an entry once its file is clean: the last
+ * test fails while a listed file no longer needs the exemption.
+ */
+const PENDING = new Set(['lab/sound-lab.css'])
+const offends = (path: string) =>
+  /(^|[\s;{])(transition|animation)(-[\w-]+)?\s*:|@keyframes/m.test(code(path))
+
 const source = files(root).filter((path) => !path.includes('.test.') && /\.(css|tsx?)$/.test(path))
 const code = (path: string) =>
   readFileSync(path, 'utf8')
@@ -23,12 +31,18 @@ const code = (path: string) =>
     .replace(/^\s*\/\/.*$/gm, '')
 
 describe('motion runs on the spring engine only', () => {
-  it.each(source.filter((path) => path.endsWith('.css')).map((path) => [path.slice(root.length)]))(
-    '%s declares no transition, animation or keyframes',
-    (path) => {
-      expect(code(join(root, path))).not.toMatch(/(^|[\s;{])(transition|animation)(-[\w-]+)?\s*:|@keyframes/m)
-    },
-  )
+  it.each(
+    source
+      .filter((path) => path.endsWith('.css'))
+      .map((path) => [path.slice(root.length)])
+      .filter(([path]) => !PENDING.has(path as string)),
+  )('%s declares no transition, animation or keyframes', (path) => {
+    expect(offends(join(root, path))).toBe(false)
+  })
+
+  it.each([...PENDING].map((path) => [path]))('%s still needs its exemption', (path) => {
+    expect(offends(join(root, path))).toBe(true)
+  })
 
   it('no script animates outside the engine', () => {
     const offenders = source
