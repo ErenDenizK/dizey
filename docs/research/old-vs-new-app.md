@@ -122,3 +122,13 @@ the old frame, plus the existing test suite green.
    Recommendation: yes.
 2. Bonus "Gizli an" question after each lesson (unscored, earns a seal)? Recommendation: yes, later, after steps 1-3.
 3. The two mascot faces in answer sheets and the lesson end? Recommendation: yes, small and only at those moments.
+
+### Eren's answers (2026-10-31 10:39Z)
+
+- The old in-lesson screen, its presentation and its sounds are close to perfect: stay very close to them, fix their
+  small bugs and screen sizing, and improve the animation system. The old app's real problems were its background and
+  instruction systems, its development process, and the shell (main menu, lesson access, profile) structure and motion.
+- Colour: two harmonious colours plus one striking accent that draws the eye; alternative palettes may be offered
+  in the app. This replaces question 1.
+- "Gizli an": yes, after the UI has settled. Seals ("mühürler") come back.
+- Mascots: not answered yet; recommendation stands.
