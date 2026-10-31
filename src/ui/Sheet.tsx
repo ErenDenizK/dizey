@@ -2,6 +2,7 @@ import { type ReactNode, type RefObject, useEffect, useLayoutEffect, useRef, use
 import { engine } from '../engine/driver'
 import { nearestStop, rubberClamp, VelocityTracker } from '../engine/gesture'
 import { CHOREO, PRESS } from '../engine/tokens'
+import { playSound } from '../sound/player'
 import { safeTop } from './safe-area'
 
 /**
@@ -64,6 +65,14 @@ export function Sheet({
       }
     }
   }, [mounted, stage])
+
+  // The sheet sounds as it rises and as it goes, however it was opened or dismissed.
+  const wasOpen = useRef(open)
+  useEffect(() => {
+    if (open === wasOpen.current) return
+    wasOpen.current = open
+    playSound(open ? 'open' : 'close')
+  }, [open])
 
   useEffect(() => {
     const el = sheet.current

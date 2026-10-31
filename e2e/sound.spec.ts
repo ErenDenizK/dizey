@@ -36,18 +36,18 @@ async function walkLesson(page: Page) {
   }
 }
 
-test('lesson sounds play by default and the Me switch turns them off', async ({ page }) => {
+test('sounds play by default and the Me switch turns them off', async ({ page }) => {
   await openApp(page, './lesson/d1-determinant')
   await walkLesson(page)
   await expect.poll(() => oscillators(page)).toBeGreaterThan(0)
 
   await page.goto('./me')
-  const toggle = page.getByRole('switch', { name: 'Ders sesleri' })
+  const toggle = page.getByRole('switch', { name: 'Sesler' })
   await expect(toggle).toBeChecked()
   await toggle.click()
   await expect(toggle).not.toBeChecked()
   await page.reload()
-  await expect(page.getByRole('switch', { name: 'Ders sesleri' })).not.toBeChecked()
+  await expect(page.getByRole('switch', { name: 'Sesler' })).not.toBeChecked()
 })
 
 test('no sound is made while lesson sounds are off', async ({ page }) => {
@@ -61,8 +61,48 @@ test('no sound is made while lesson sounds are off', async ({ page }) => {
 
 test('turning lesson sounds on plays a preview', async ({ page }) => {
   await openApp(page, './me', { sound: false })
-  const toggle = page.getByRole('switch', { name: 'Ders sesleri' })
+  const toggle = page.getByRole('switch', { name: 'Sesler' })
   await toggle.click()
   await expect(toggle).toBeChecked()
   await expect.poll(() => oscillators(page)).toBeGreaterThan(0)
+})
+
+test('the interface sounds: a tab switch and a switch both play', async ({ page }) => {
+  await openApp(page, './')
+  // The first tap unlocks audio; later taps sound.
+  await page.locator('.dz-tab').nth(1).click()
+  const before = await oscillators(page)
+  await page.locator('.dz-tab').last().click()
+  await expect.poll(() => oscillators(page)).toBeGreaterThan(before)
+  const afterTab = await oscillators(page)
+  await page.getByRole('switch', { name: 'Titreşim' }).click()
+  await expect.poll(() => oscillators(page)).toBeGreaterThan(afterTab)
+})
+
+test('the sound lab plays every sound without an error', async ({ page }) => {
+  const errors: string[] = []
+  page.on('pageerror', (error) => errors.push(error.message))
+  await openApp(page, './lab/sounds')
+  const rows = page.locator('[data-testid^="sound-"]')
+  const count = await rows.count()
+  expect(count).toBeGreaterThanOrEqual(17)
+  for (let i = 0; i < count; i++) {
+    const before = await oscillators(page)
+    await rows.nth(i).click()
+    await expect.poll(() => oscillators(page)).toBeGreaterThan(before)
+  }
+  expect(errors).toEqual([])
+})
+
+test('the exam rehearsal stays silent', async ({ page }) => {
+  await openApp(page, './exam')
+  await page.getByRole('button', { name: 'Başlat' }).first().click()
+  await page.locator('.ex-run').waitFor()
+  const options = page.locator('.ex-run .ex-opt')
+  // The first tap unlocks audio; neither it nor the next answer may sound.
+  await options.nth(0).click()
+  const before = await oscillators(page)
+  await options.nth(1).click()
+  await page.waitForTimeout(300)
+  expect(await oscillators(page)).toBe(before)
 })

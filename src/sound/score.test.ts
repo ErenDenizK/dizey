@@ -62,7 +62,7 @@ describe('score', () => {
   })
 
   it('ranks loudness and length by how often a sound happens', () => {
-    const rank = { frequent: 0, question: 1, lesson: 2, reward: 3 }
+    const rank = { touch: -1, frequent: 0, question: 1, lesson: 2, reward: 3 }
     const events = Object.keys(EVENTS) as SoundEvent[]
     for (const a of events)
       for (const b of events)
@@ -81,5 +81,36 @@ describe('score', () => {
           expect(note.ring).toBeGreaterThan(0)
           expect(note.velocity).toBeGreaterThan(0)
         }
+  })
+
+  it('lets interface sounds ring under the lesson instead of cutting it off', () => {
+    for (const event of ['tap', 'tab', 'toggleOn', 'toggleOff', 'open', 'close'] as const) {
+      expect(EVENTS[event].tier).toBe('touch')
+      expect(plan(event).harmony).toBe('-')
+    }
+    // A new step is a change of chord: it lifts the pedal like any other chord change.
+    expect(plan('step', 2, 6).harmony).toBe('iii')
+  })
+
+  it('raises a switch that turns on and lowers one that turns off', () => {
+    const line = (event: SoundEvent) =>
+      plan(event)
+        .notes.filter((n) => n.kind === 'main')
+        .map((n) => n.pitch)
+    const on = line('toggleOn')
+    const off = line('toggleOff')
+    expect(on[1]).toBeGreaterThan(on[0] as number)
+    expect(off[1]).toBeLessThan(off[0] as number)
+  })
+
+  it('gives every tab its own note of the home chord', () => {
+    const notes = [0, 1, 2, 3].map((index) => createScore(seeded(1)).plan('tab', { index }).notes[0]?.pitch)
+    expect(new Set(notes).size).toBe(4)
+    for (const pitch of notes) expect(CHORDS.I.voicing).toContain(pitch)
+  })
+
+  it('follows the step chord for a tap inside a lesson', () => {
+    const tap = createScore(seeded(1)).plan('tap', { step: 4, steps: 6 })
+    expect(tap.chords).toEqual(['ii'])
   })
 })

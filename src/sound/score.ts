@@ -26,16 +26,39 @@ export type SoundEvent =
   | 'lessonEnd'
   | 'halfway'
   | 'milestone'
+  | 'tap'
+  | 'tab'
+  | 'toggleOn'
+  | 'toggleOff'
+  | 'open'
+  | 'close'
+  | 'step'
+  | 'lessonOpen'
 
-export type Tier = 'frequent' | 'question' | 'lesson' | 'reward'
+/**
+ * touch: the interface itself (buttons, tabs, switches, sheets), the quietest and shortest of all;
+ * frequent: the lesson's own beats; question: an answer; lesson: a lesson's start and end; reward: rare.
+ */
+export type Tier = 'touch' | 'frequent' | 'question' | 'lesson' | 'reward'
 
 type Part = {
   /** 'step' follows the lesson's chord at the current step. */
   chord: ChordId | 'step'
   /** one: a single voice; guide: the 3rd and 7th; all: the whole voicing. */
   part?: 'one' | 'guide' | 'all'
-  /** one-voice choice: wander between the top voices, or zigzag through the voicing per cell. */
-  pick?: 'wander' | 'cell'
+  /**
+   * one-voice choice: wander between the top voices, zigzag through the voicing per cell, or take
+   * the voice the context's index names (a tab always sounds its own note).
+   */
+  pick?: 'wander' | 'cell' | 'index'
+  /**
+   * A short figure instead of a chord: voices of the voicing in order (4 and up are an octave
+   * higher), `roll` s apart. Used by the interface sounds: a switch rises when it turns on and falls
+   * when it turns off.
+   */
+  line?: number[]
+  /** piano: the electric piano; glass: the soft bright voice of the reward arpeggios. */
+  voice?: 'piano' | 'glass'
   /** resolve: the 4th falls to the 3rd after RESOLVE s; hold: the chord stays open. */
   sus?: 'resolve' | 'hold'
   velocity?: number
@@ -65,6 +88,11 @@ export type EventSpec = {
   wet: number
   /** Seconds before the next chord of a multi-chord event. */
   gap?: number
+  /**
+   * false: this sound never lifts the pedal on what is still ringing. Interface sounds are short and
+   * quiet, and a tap must not cut off the lesson end that is still sounding.
+   */
+  pedal?: false
   parts: Part[]
 }
 
@@ -83,6 +111,8 @@ const ARPEGGIO_STEP = 0.14
 const ARPEGGIO_SLOWING = 1.07
 /** Voices for consecutive cells: a zigzag, never a ladder. */
 const CELL_ORDER = [3, 1, 2, 0]
+/** Interface sounds: a short, soft touch of the chord on screen. */
+const TOUCH = { bass: 0, roll: 0.055, velocity: 0.42 } as const
 
 export const EVENTS: Record<SoundEvent, EventSpec> = {
   select: {
@@ -170,6 +200,69 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
       { chord: 'I', ring: 5, bloom: 1, halo: 0.8 },
     ],
   },
+  tap: {
+    tier: 'touch',
+    loudness: -50,
+    cutoff: 2600,
+    wet: 0.45,
+    pedal: false,
+    parts: [{ ...TOUCH, chord: 'step', part: 'one', pick: 'wander', ring: 0.45, thump: 0.25, velocity: 0.4 }],
+  },
+  tab: {
+    tier: 'touch',
+    loudness: -47,
+    cutoff: 5200,
+    wet: 0.7,
+    pedal: false,
+    parts: [{ ...TOUCH, chord: 'I', part: 'one', pick: 'index', voice: 'glass', ring: 1 }],
+  },
+  toggleOn: {
+    tier: 'touch',
+    loudness: -47,
+    cutoff: 4200,
+    wet: 0.6,
+    pedal: false,
+    parts: [{ ...TOUCH, chord: 'step', line: [1, 3], ring: 0.8 }],
+  },
+  toggleOff: {
+    tier: 'touch',
+    loudness: -48,
+    cutoff: 2400,
+    wet: 0.5,
+    pedal: false,
+    parts: [{ ...TOUCH, chord: 'step', line: [3, 1], ring: 0.6 }],
+  },
+  open: {
+    tier: 'touch',
+    loudness: -46,
+    cutoff: 4400,
+    wet: 0.8,
+    pedal: false,
+    parts: [{ ...TOUCH, chord: 'step', line: [0, 1, 2, 3], roll: 0.035, ring: 1, bloom: 0.25 }],
+  },
+  close: {
+    tier: 'touch',
+    loudness: -49,
+    cutoff: 2600,
+    wet: 0.6,
+    pedal: false,
+    parts: [{ ...TOUCH, chord: 'step', line: [3, 1], roll: 0.045, ring: 0.6 }],
+  },
+  step: {
+    tier: 'touch',
+    loudness: -47,
+    cutoff: 3000,
+    wet: 0.8,
+    parts: [{ chord: 'step', part: 'guide', bass: 0.5, roll: 0.03, ring: 1.2, velocity: 0.4 }],
+  },
+  // Opening a lesson is one deliberate moment: as loud as an answer, well under the lesson's end.
+  lessonOpen: {
+    tier: 'question',
+    loudness: -36,
+    cutoff: 5000,
+    wet: 1,
+    parts: [{ chord: 'I', roll: 0.05, ring: 2.4, bloom: 0.4, arpeggio: { count: 3, from: 1, at: 0.22 } }],
+  },
 }
 
 /**
@@ -241,9 +334,11 @@ export function createScore(random: () => number) {
       const id = part.chord === 'step' ? chordAt(context.step, context.steps) : part.chord
       const chord = CHORDS[id]
       const voicing: number[] = previous ? nearest(chord.voicing, previous) : [...chord.voicing]
+      const voiceKind: NoteKind = part.voice === 'glass' ? 'shine' : 'main'
       const brightFor = (pitch: number) =>
         [0, 3, 4, 7, 10, 11].includes(intervalOf(chord, pitch)) ? 0.3 : 0.26
       if (spec.parts.length === 1) harmony = id + (part.sus === 'hold' ? ':sus' : '')
+      if (spec.pedal === false) harmony = '-'
       if (part.bass)
         add({
           kind: 'main',
@@ -268,17 +363,32 @@ export function createScore(random: () => number) {
           }
           lastWander = voice
           voice += 1
+        } else if (part.pick === 'index') {
+          voice = mod(context.index ?? 0, voicing.length)
         } else {
           const cell = context.index ?? nextCell++
           voice = CELL_ORDER[mod(cell, CELL_ORDER.length)] as number
         }
         add({
-          kind: 'main',
+          kind: voiceKind,
           pitch: voicing[voice] as number,
           at,
           ring: part.ring,
           velocity: part.velocity,
           bright: 0.3,
+        })
+        chords.push(id)
+      } else if (part.line) {
+        part.line.forEach((voice, i) => {
+          add({
+            kind: voiceKind,
+            pitch: (voicing[mod(voice, voicing.length)] as number) + 12 * Math.floor(voice / voicing.length),
+            at: at + i * part.roll,
+            ring: part.ring,
+            // Each later note a little softer: a gesture, not a scale.
+            velocity: part.velocity * 0.92 ** i,
+            bright: 0.28,
+          })
         })
         chords.push(id)
       } else if (part.part === 'guide') {
