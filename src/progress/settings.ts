@@ -39,6 +39,12 @@ export const readSettings = () => {
 }
 const listeners = new Set<() => void>()
 
+// Another tab changed a setting: read it again.
+appStorage.watch(KEY, () => {
+  settings = parseSettings(appStorage.getItem(KEY))
+  for (const listener of listeners) listener()
+})
+
 export function useSettings(): Settings {
   return useSyncExternalStore((listener) => {
     listeners.add(listener)
