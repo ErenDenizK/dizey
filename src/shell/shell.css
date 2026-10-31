@@ -96,7 +96,12 @@
   background: linear-gradient(transparent, var(--sh-bg) 30%);
 }
 .sh-chev {
+  display: inline-grid;
   color: var(--sh-muted);
+}
+.sh-chev svg {
+  width: 16px;
+  height: 16px;
 }
 
 /* mastery glyph */
@@ -1007,15 +1012,18 @@ a.sh-node {
   margin: -2px;
 }
 /* Matrix or system options sit two to a row, the math centred in its card. */
-.ls-opts[data-wide="true"] {
+.ls-opts[data-wide="true"],
+.ex-opts[data-wide="true"] {
   grid-template-columns: 1fr 1fr;
 }
-.ls-opts[data-wide="true"] .ex-opt {
+.ls-opts[data-wide="true"] .ex-opt,
+.ex-opts[data-wide="true"] .ex-opt {
   position: relative;
   justify-content: center;
   padding: 10px 8px 10px 34px;
 }
-.ls-opts[data-wide="true"] .ex-opt__key {
+.ls-opts[data-wide="true"] .ex-opt__key,
+.ex-opts[data-wide="true"] .ex-opt__key {
   position: absolute;
   left: 8px;
   top: 8px;
@@ -1024,7 +1032,8 @@ a.sh-node {
   border-radius: 7px;
   font-size: 0.78rem;
 }
-.ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
+.ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd),
+.ex-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
   grid-column: span 2;
 }
 .ls-keypad-wrap {

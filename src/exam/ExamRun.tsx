@@ -88,7 +88,11 @@ export function ExamRun() {
         <div className="sh-card ex-stem">
           <Blocks blocks={question.stem} />
         </div>
-        <fieldset className="ex-opts" aria-label={strings.exam.counter(session.current + 1, total)}>
+        <fieldset
+          className="ex-opts"
+          aria-label={strings.exam.counter(session.current + 1, total)}
+          data-wide={question.options.some((option) => option.content.some((block) => block.kind !== 'text'))}
+        >
           {question.options.map((option) => (
             <button
               key={option.key}
