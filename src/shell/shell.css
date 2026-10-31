@@ -56,7 +56,7 @@
 /* surfaces and buttons */
 .sh-card {
   background: var(--sh-surface);
-  border-radius: 24px;
+  border-radius: var(--corner-stage);
   box-shadow: 0 1px 2px var(--sh-shadow);
 }
 .sh-btn {
@@ -151,7 +151,7 @@
   place-items: center;
   width: 36px;
   height: 36px;
-  border-radius: 50%;
+  border-radius: var(--corner-pill);
   background: var(--sh-soft);
   font-weight: 600;
 }
@@ -354,7 +354,7 @@
   min-height: 56px;
   padding: 8px 14px;
   border: 1.5px solid transparent;
-  border-radius: 16px;
+  border-radius: var(--corner-button);
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
   color: inherit;
@@ -371,8 +371,8 @@
   flex: none;
   width: 28px;
   height: 28px;
-  border-radius: 8px;
-  background: var(--sh-soft);
+  border-radius: var(--corner-chip);
+  background: var(--control-soft);
   font-size: 0.85rem;
   font-weight: 600;
 }
@@ -400,8 +400,8 @@
   position: relative;
   height: 30px;
   border: 0;
-  border-radius: 8px;
-  background: var(--sh-soft);
+  border-radius: var(--corner-chip);
+  background: var(--control-soft);
   color: var(--sh-muted);
   font: inherit;
   font-size: 0.75rem;
@@ -424,7 +424,7 @@
   right: 3px;
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: var(--corner-pill);
   background: var(--danger-11);
 }
 .ex-bar {
@@ -508,7 +508,7 @@
   display: grid;
   gap: 6px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--corner-inner);
   background: var(--sh-soft);
 }
 .ex-answer .sh-label,
@@ -550,7 +550,7 @@ a.sh-node {
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--corner-button);
   background: none;
   color: var(--sh-ink);
   font-size: 1.3rem;
@@ -822,7 +822,7 @@ a.sh-node {
   stroke-linejoin: round;
 }
 .ex-cell[data-tone] {
-  border-radius: 8px;
+  border-radius: var(--corner-chip);
 }
 .ex-cell[data-tone="row"] {
   background: var(--color-row-wash);
@@ -885,13 +885,36 @@ a.sh-node {
 }
 .ls-feedback {
   padding: 12px 14px;
-  border-radius: 16px;
-  background: var(--sh-soft);
+  border-radius: var(--corner-button);
+  background: var(--control-soft);
   line-height: 1.5;
 }
 .ls-feedback[data-tone="wrong"] {
-  background: var(--bad-tint);
-  box-shadow: inset 3px 0 0 var(--bad-fill);
+  /* A wrong try: a red mark beside the hint on a plain card, never a tinted box with a stripe. */
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: var(--space-2);
+  align-items: start;
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.ls-feedback__mark {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  margin-top: 1px;
+  border-radius: var(--corner-pill);
+  background: var(--bad-fill);
+  color: oklch(1 0 0);
+}
+.ls-feedback__mark svg {
+  width: 12px;
+  height: 12px;
+}
+.ls-feedback__text {
+  margin: 0;
+  color: var(--ink-2);
 }
 .ls-feedback__lead {
   color: var(--bad-ink);
@@ -932,7 +955,7 @@ a.sh-node {
   place-items: center;
   width: 24px;
   height: 24px;
-  border-radius: 50%;
+  border-radius: var(--corner-pill);
   background: var(--ok-fill);
   color: var(--on-ok);
 }
@@ -994,7 +1017,7 @@ a.sh-node {
   width: 9px;
   height: 9px;
   border-radius: 3px;
-  background: var(--color-ok-ink);
+  background: var(--ink-3); /* neutral: green means "right" and nothing else */
 }
 .ls-score {
   margin: 0;
@@ -1036,7 +1059,7 @@ a.sh-node {
   top: 8px;
   width: 22px;
   height: 22px;
-  border-radius: 7px;
+  border-radius: var(--corner-chip);
   font-size: 0.78rem;
 }
 .ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd),
@@ -1051,7 +1074,7 @@ a.sh-node {
   display: block;
   min-height: 52px;
   padding: 12px 16px;
-  border-radius: 16px;
+  border-radius: var(--corner-button);
   background: var(--sh-surface);
   box-shadow: inset 0 0 0 1.5px var(--sh-line);
   font-family: var(--font-ui);
@@ -1067,8 +1090,9 @@ a.sh-node {
 .ls-key {
   min-height: 48px;
   border: 0;
-  border-radius: 14px;
-  background: var(--sh-surface);
+  border-radius: var(--corner-button);
+  /* Digit keys are the lighter control; function keys sit a step darker, as on a phone keyboard. */
+  background: var(--control-soft);
   box-shadow: 0 1px 2px var(--sh-shadow);
   color: var(--sh-ink);
   font-family: var(--font-ui);
@@ -1076,7 +1100,7 @@ a.sh-node {
   cursor: pointer;
 }
 .ls-key[data-fn="true"] {
-  background: var(--sh-soft);
+  background: var(--surface);
 }
 .ls-key--go {
   grid-column: span 3;
@@ -1288,7 +1312,7 @@ a.dz-button[data-kind="primary"] {
   width: 44px;
   height: 44px;
   border: 0;
-  border-radius: 14px;
+  border-radius: var(--corner-button);
   background: none;
   color: var(--sh-muted);
   cursor: pointer;
@@ -1429,7 +1453,7 @@ a.dz-button[data-kind="primary"] {
   place-items: center;
   width: var(--seal-cell);
   height: var(--seal-cell);
-  border-radius: 12px;
+  border-radius: var(--corner-inner);
   background: var(--sh-soft);
   color: var(--sh-muted);
   font-size: 1.2rem;

@@ -514,7 +514,14 @@ function expand(lesson: Lesson, name: string, along: 'row' | 'col', index: numbe
   for (let k = 0; k < size; k++) {
     const [r, c] = along === 'row' ? [index, k] : [k, index]
     const sign = (r + c) % 2 === 0 ? '+' : '−'
-    const line = textLine(`e${b.frames.length}`, `${sign} ${factor(at(m, r, c))} · M${r + 1}${c + 1}`)
+    const plain = textLine(`e${b.frames.length}`, `${sign} ${factor(at(m, r, c))} · M`)
+    // The minor's name is typeset (M with a subscript); the other words stay tokens that land one by one.
+    const line: WorkLine = {
+      ...plain,
+      tokens: plain.tokens.map((t, i, all) =>
+        i === all.length - 1 ? { ...t, text: `$M_{${r + 1}${c + 1}}$`, tex: true as const } : t,
+      ),
+    }
     writeLine(b, line, (s) => withMarks(s, [{ cell: [name, r, c], tone: 'ok' }]))
   }
   const value = detOf(m)
