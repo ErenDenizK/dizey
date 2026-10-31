@@ -4,7 +4,7 @@ import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { SPRINGS, TEMPO_CLASSES } from '../engine/tokens'
+import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
 import { playSound } from '../sound/player'
@@ -15,16 +15,18 @@ import { rewardFor } from './reward'
 import { Stage } from './Stage'
 import { stateOf } from './state'
 import { recordOf, saveRecord } from './store'
-import { compile, emptyStage } from './timeline'
+import { tempoClassOf } from './tempo'
+import { CARRY, compile, emptyStage, type Family, readingFloor } from './timeline'
 
 /**
- * One beat frame per `teach` spring plus a short hold to read it; the channel's tempo
- * (engine.setTempo) scales it. İleri finishes a running beat before it moves on.
+ * The lesson runner (old Runner, inventory 6b.2): the beat's actions play one at a time on the lesson
+ * channel. After an action's motion has landed, the runner waits its dwell, never shorter than the reading
+ * floor of what it made readable. Dwells are on-screen time; springs, staggers and leads scale with the
+ * beat's tempo class. Waits run on their own channel, so finishing the lesson channel never skips one.
  */
 const LESSON_CHANNEL = 'lesson'
-const FRAME_MS = Math.round(SPRINGS.teach.duration * 1000 * 1.25)
-// Teaching motion plays at the old app's teaching pace until beats infer their own tempo class.
-engine.setTempo(LESSON_CHANNEL, TEMPO_CLASSES.teach.pace)
+const RUNNER_CHANNEL = 'runner'
+const POLL_MS = 16
 
 /** First-try answers in a row that turn the correct chord into a streak. */
 const STREAK = 3
@@ -56,11 +58,16 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const [attempt, setAttempt] = useState<Attempt>(freshAttempt)
   const [typed, setTyped] = useState('')
   const step = lesson.steps[index] as Step
-  const frames = compile(lesson, beatOf(step, attempt))
+  // A right answer's reveal confirms (shorter dwells); a wrong one teaches again at full dwell.
+  const family: Family = isQuestion(step) && attempt.solved && attempt.wrong.length === 0 ? 'reveal' : 'teach'
+  const beat = beatOf(step, attempt)
+  const frames = compile(lesson, beat, family)
+  const tempo = TEMPO_CLASSES[tempoClassOf(lesson, index, beat, attempt.wrong.length > 0)].pace
   // Playback position, tied to the beat it belongs to so a new beat never renders a stale count.
   const [replays, setReplays] = useState(0)
+  const [held, setHeld] = useState(false)
   const beatKey = `${step.id}:${attempt.revealed}:${replays}`
-  const startAt = reducedMotion() ? frames.length : Math.min(frames.length, 1)
+  const startAt = reducedMotion() ? frames.length : 0
   const [play, setPlay] = useState({ key: beatKey, shown: startAt })
   const shown = play.key === beatKey ? play.shown : startAt
   const setShown = (value: number) => setPlay({ key: beatKey, shown: value })
@@ -87,29 +94,47 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     scroller.current?.scrollTo(0, 0)
   }, [index])
 
-  // Beat playback on the engine's lesson channel: one cue per frame at the lesson tempo, so a tap
-  // can finish the whole beat at once (finishChannel) and review tools can step it frame by frame.
-  // biome-ignore lint/correctness/useExhaustiveDependencies: schedules once per beat
+  // The runner: show the next action once the current one's motion has landed and its dwell has passed.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: one schedule per action, beat and hold
   useEffect(() => {
-    if (shown >= frames.length) return
-    engine.withChannel(LESSON_CHANNEL, () => {
-      for (let next = shown + 1; next <= frames.length; next++) {
-        engine.after((next - shown) * FRAME_MS, () => {
-          setPlay({ key: beatKey, shown: next })
-          // A frame that brings a result merges; any other frame lands a value.
-          const result = frames[next - 1]?.result
-          if (result != null && result !== frames[next - 2]?.result) cue('merge')
-          else cue('land', next)
-        })
+    engine.setTempo(LESSON_CHANNEL, tempo)
+    if (shown >= frames.length || held) return
+    const current = shown > 0 ? frames[shown - 1] : undefined
+    const before = shown > 1 ? frames[shown - 2] : undefined
+    const advance = () => {
+      const next = frames[shown]
+      setPlay({ key: beatKey, shown: shown + 1 })
+      if (next?.action === 'highlight' && next.marks.length) cue('select')
+      else if (next?.action === 'collect') cue('merge')
+    }
+    engine.withChannel(RUNNER_CHANNEL, () => {
+      if (!current) {
+        // The step enters first; the beat starts after it (chrome time).
+        engine.after(CHOREO_MS.beatDelay, advance)
+        return
       }
+      const settle = () => {
+        if (engine.isActive(LESSON_CHANNEL)) {
+          engine.after(POLL_MS, settle)
+          return
+        }
+        const floor = readingFloor(before ?? { ...emptyStage, lines: current.lines }, current)
+        // A highlight's floor is its whole dwell; anything else waits at least its reading floor.
+        const dwell = current.action === 'highlight' ? current.dwell : Math.max(floor, current.dwell)
+        engine.after(dwell, advance)
+      }
+      settle()
     })
-    return () => engine.cancelCues(LESSON_CHANNEL)
-  }, [beatKey])
+    return () => engine.cancelCues(RUNNER_CHANNEL)
+  }, [beatKey, shown, held])
 
-  const state = shown > 0 ? (frames[shown - 1] ?? emptyStage) : emptyStage
+  // Before the first action the beat's lines are already laid out (hidden), so nothing moves later.
+  const state =
+    shown > 0 ? (frames[shown - 1] ?? emptyStage) : { ...emptyStage, lines: frames[0]?.lines ?? [] }
 
   const go = (next: number) => {
     setReplays(0)
+    setHeld(false)
     setAttempt(freshAttempt)
     setTyped('')
     setIndex(next)
@@ -140,7 +165,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const locked = isQuestion(step) && !attempt.revealed
   const primary = () => {
     if (playing && frames.length) {
+      engine.cancelCues(RUNNER_CHANNEL)
       engine.finishChannel(LESSON_CHANNEL)
+      setHeld(false)
       setShown(frames.length)
     } else if (isLast) finish()
     else go(index + 1)
@@ -160,8 +187,19 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         ? step.feedbackWrong
         : undefined
 
-  const reserve = frames.reduce((most, frame) => Math.max(most, frame.notes.length), 0)
-  const hasStage = Boolean(step.scene || state.area || state.notes.length)
+  const hasStage = Boolean(step.scene || state.area || state.lines.length)
+  const transport =
+    frames.length > 0
+      ? {
+          mode: playing ? (held ? ('play' as const) : ('pause' as const)) : ('replay' as const),
+          onPress: () => {
+            if (!playing) {
+              setHeld(false)
+              setReplays((n) => n + 1)
+            } else setHeld((h) => !h)
+          },
+        }
+      : undefined
 
   const options =
     step.kind === 'choice' ? (
@@ -227,8 +265,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             lesson={lesson}
             scene={step.scene}
             state={state}
-            reserve={reserve}
-            onReplay={!playing && frames.length > 1 ? () => setReplays((n) => n + 1) : undefined}
+            stagger={CARRY.stagger}
+            transport={transport}
           />
         ) : null}
 

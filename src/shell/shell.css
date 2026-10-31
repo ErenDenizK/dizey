@@ -649,6 +649,7 @@ a.sh-node {
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
   overflow: hidden;
+  container-type: inline-size;
 }
 /* Everything in the scene is sized from --cell, so the scene fits as one piece. */
 .ls-scene {
@@ -731,20 +732,51 @@ a.sh-node {
   color: var(--color-ok-ink);
 }
 /* Working lines: never larger than the cells they explain. */
-.ls-notes {
+/* Work lines (old .st-work): laid out for the whole beat, one shared left edge, numbers in their role
+   colour, the result bold in the success ink. Hidden tokens keep their place. */
+.ls-work {
   display: grid;
-  justify-items: center;
-  gap: 4px;
+  justify-content: center;
+  justify-items: start;
+  row-gap: 4px;
   max-width: 100%;
-  font-family: var(--font-ui);
-  font-size: clamp(17px, calc(var(--cell) * 0.48), 22px);
+  padding: 7px 0;
+  font-family: var(--font-math);
+  font-size: clamp(17px, 6cqw, 24px);
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1;
   font-variant-numeric: tabular-nums;
-  text-align: center;
 }
-.ls-note {
-  display: block;
+.ls-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 0.34em;
+  row-gap: 4px;
+  min-height: 34px;
+  max-width: 100%;
+}
+.ls-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3em;
+  white-space: nowrap;
+}
+.ls-tok {
+  display: inline-block;
+}
+.ls-tok[data-shown="false"] {
+  opacity: 0;
+}
+.ls-tok[data-role="row"] {
+  color: var(--color-row-ink);
+}
+.ls-tok[data-role="col"] {
+  color: var(--color-col-ink);
+}
+.ls-tok[data-role="ok"] {
+  color: var(--color-ok-ink);
+  font-weight: 700;
 }
 .ls-area {
   width: min(240px, 70vw);
@@ -1108,27 +1140,27 @@ a.dz-button[data-kind="primary"] {
   z-index: 2;
   display: grid;
   place-items: center;
-  border-radius: 0.5em;
-  background: var(--sh-surface);
-  box-shadow:
-    0 6px 18px -6px var(--sh-shadow),
-    0 0 0 1px var(--sh-line);
-  font-family: var(--font-ui);
+  border-radius: var(--corner-chip);
+  box-shadow: var(--shadow-2);
+  font-family: var(--font-math);
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   line-height: 1;
+  transform-origin: 50% 50%;
   pointer-events: none;
 }
-.ls-chip[data-tone="row"] {
-  background: var(--color-row-wash);
-  color: var(--color-row-ink);
+/* Chips are filled role colours (old .st-chip--row / --col / --result). */
+.ls-chip[data-role="row"] {
+  background: var(--row-fill);
+  color: var(--on-row);
 }
-.ls-chip[data-tone="col"] {
-  background: var(--color-col-wash);
-  color: var(--color-col-ink);
+.ls-chip[data-role="col"] {
+  background: var(--col-fill);
+  color: var(--on-col);
 }
-.ls-tok {
-  display: inline-block;
+.ls-chip[data-role="ok"] {
+  background: var(--ok-fill);
+  color: var(--on-ok);
 }
 .ls-copy {
   display: inline-flex;

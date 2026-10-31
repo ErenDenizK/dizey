@@ -227,6 +227,9 @@
   --col-fill: oklch(0.779 0.132 299.9);
   --col-tint: oklch(0.925 0.033 299.1);
   --col-edge: oklch(0.761 0.094 299.7);
+  --on-row: oklch(1 0 0);
+  --on-col: oklch(0.183 0.009 268.6);
+  --on-ok: oklch(0.183 0.009 268.6);
   --spark: oklch(0.899 0.12 100.1);
   --backdrop: oklch(0 0 0);
 }

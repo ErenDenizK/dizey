@@ -2,10 +2,11 @@ import { type ReactNode, type RefObject, useLayoutEffect, useRef } from 'react'
 import type { Lesson, Scene } from '../content/lessons/types'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { CHOREO, SPRINGS } from '../engine/tokens'
+import { SHIFT, SPRINGS } from '../engine/tokens'
 import { Matrix, RichText } from '../exam/Blocks'
 import { parse } from '../lib/math/rational'
-import { copyName, minorBlock, type SourceCell, type StageState } from './timeline'
+import { playSound } from '../sound/player'
+import { copyName, type Flight, minorBlock, type Source, type StageState, type WorkLine } from './timeline'
 
 /** A new line of working rises into place on the lesson channel (finished at once by a tap). */
 function Rise({ children, className }: { children: ReactNode; className?: string }) {
@@ -13,7 +14,7 @@ function Rise({ children, className }: { children: ReactNode; className?: string
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    engine.set(el, { opacity: 0, y: CHOREO.rise })
+    engine.set(el, { opacity: 0, y: SHIFT.scene })
     engine.withChannel('lesson', () => engine.to(el, { opacity: 1, y: 0 }, 'teach'))
   }, [])
   return (
@@ -92,8 +93,7 @@ function Area({
  * so cells never resize while a beat plays.
  */
 export const CELL = { probe: 64, min: 30, max: 88 } as const
-/** Height of one working line (font cap × line height) and the gap above the lines, in px. */
-const NOTE_LINE = 31
+/** Gap between the scene and the work lines, in px. */
 const NOTE_GAP = 12
 
 export function fitCell(
@@ -110,7 +110,7 @@ function useSceneFit(
   stage: RefObject<HTMLDivElement | null>,
   scene: RefObject<HTMLDivElement | null>,
   area: RefObject<SVGSVGElement | null>,
-  reserve: number,
+  work: RefObject<HTMLDivElement | null>,
   layoutKey: string,
 ) {
   // biome-ignore lint/correctness/useExhaustiveDependencies: layoutKey refits when the scene's shape changes
@@ -125,7 +125,8 @@ function useSceneFit(
       const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
       const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
       const areaHeight = area.current ? area.current.getBoundingClientRect().height + NOTE_GAP : 0
-      const notes = reserve ? reserve * NOTE_LINE + NOTE_GAP : 0
+      // The beat's work lines are laid out from its first action, so their height is known now.
+      const notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
       const cell = fitCell(
         { width: box.clientWidth - padX, height: box.clientHeight - padY - notes - areaHeight },
         { width: content.offsetWidth, height: content.offsetHeight },
@@ -136,67 +137,110 @@ function useSceneFit(
     const observer = new ResizeObserver(refit)
     observer.observe(box)
     return () => observer.disconnect()
-  }, [stage, scene, area, reserve, layoutKey])
+  }, [stage, scene, area, work, layoutKey])
 }
 
+const sourceSelector = (source: Source) =>
+  'token' in source
+    ? `[data-tok="${source.token}"]`
+    : `[data-matrix="${source.copy ? copyName(source.matrix) : source.matrix}"] [data-cell="${source.row}-${source.col}"]`
+
+/** The eye's smooth-pursuit limit at phone distance: a long carry slows down to stay under it (px/s). */
+const PURSUIT = 900
+
 /**
- * A working line written without TeX is set token by token, so the numbers it takes from the matrix
- * can be targeted: `data-num` counts the tokens that hold a digit, in reading order.
+ * The work lines of the beat, laid out from its first action: every token has its place, hidden until an
+ * action shows it, so nothing on a line ever moves. Lines share one left edge, like working on paper.
  */
-function NoteTokens({ text }: { text: string }) {
-  if (/[$\\{]/.test(text)) return <RichText text={text} />
-  let numbers = 0
+function Work({ lines, shown }: { lines: readonly WorkLine[]; shown: readonly string[] }) {
+  const visible = new Set(shown)
   return (
-    <>
-      {text.split(' ').map((token, index) => (
-        // biome-ignore lint/suspicious/noArrayIndexKey: tokens of one line never reorder
-        <span key={index}>
-          {index ? ' ' : null}
-          <span className="ls-tok" data-num={/\d/.test(token) ? numbers++ : undefined}>
-            {token}
-          </span>
-        </span>
-      ))}
-    </>
+    <div className="ls-work" aria-live="polite">
+      {lines.map((line) => {
+        const groups: WorkLine['tokens'][number][][] = []
+        for (const token of line.tokens) {
+          const last = groups.at(-1)
+          if (last && last[0]?.group === token.group) last.push(token)
+          else groups.push([token])
+        }
+        return (
+          <div key={line.key} className="ls-line">
+            {groups.map((group) => (
+              <span key={group[0]?.key} className="ls-group">
+                {group.map((token) => (
+                  <span
+                    key={token.key}
+                    className="ls-tok"
+                    data-tok={token.key}
+                    data-role={token.role}
+                    data-op={token.op ? '' : undefined}
+                    data-shown={visible.has(token.key)}
+                    aria-hidden={visible.has(token.key) ? undefined : true}
+                  >
+                    {token.tex ? <RichText text={token.text} /> : token.text}
+                  </span>
+                ))}
+              </span>
+            ))}
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
-const cellSelector = (source: SourceCell) =>
-  `[data-matrix="${source.copy ? copyName(source.matrix) : source.matrix}"] [data-cell="${source.row}-${source.col}"]`
-
 /**
- * Flights: each number the newest working line takes from the matrix lifts out of its cell as a chip and
- * travels into its place in the line, one after another; the line's own number appears as the chip lands,
- * and what follows the last one (= result) fades in after it. Runs on the lesson channel, so a tap that
- * finishes the beat lands every chip at once.
+ * Tokens an action shows: those with a flight lift out of their source as a filled chip in the source's
+ * role colour and travel on a curved path (x on `carry`, y on the stiffer `carryY`), one `stagger` apart;
+ * the chip is removed and the token shown in the same frame. The rest draw in place on `draw`. Runs on
+ * the lesson channel, so a tap that finishes the beat lands everything at once.
  */
-function useFlights(stage: RefObject<HTMLDivElement | null>, sources: readonly SourceCell[], key: string) {
-  // biome-ignore lint/correctness/useExhaustiveDependencies: one flight per new working line (key)
+function useReveal(
+  stage: RefObject<HTMLDivElement | null>,
+  shown: readonly string[],
+  flights: readonly Flight[],
+  stagger: number,
+) {
+  const before = useRef<readonly string[]>([])
+  // biome-ignore lint/correctness/useExhaustiveDependencies: runs once per action (shown changes)
   useLayoutEffect(() => {
     const box = stage.current
-    if (!box || !sources.length) return
-    const line = box.querySelector<HTMLElement>('.ls-note:last-child')
-    if (!line) return
-    const tokens = [...line.querySelectorAll<HTMLElement>('[data-num]')]
-    const all = [...line.querySelectorAll<HTMLElement>('.ls-tok')]
-    const lastTarget = tokens[sources.length - 1]
-    const tail = lastTarget ? all.slice(all.indexOf(lastTarget) + 1) : []
-    const stageRect = box.getBoundingClientRect()
-    // The line is still rising into place: aim at where it will rest.
-    const lineLift = engine.value(line, 'y')
+    const was = new Set(before.current)
+    before.current = shown
+    if (!box) return
+    const fresh = shown.filter((key) => !was.has(key))
+    if (!fresh.length) return
+    const tokenOf = (key: string) => box.querySelector<HTMLElement>(`[data-tok="${key}"]`)
+    const flown = new Map(flights.map((flight) => [flight.token, flight]))
     const chips: HTMLElement[] = []
-    for (const el of [...tokens.slice(0, sources.length), ...tail]) engine.set(el, { opacity: 0 })
-    engine.withChannel(FLIGHT_CHANNEL, () => {
-      sources.forEach((source, index) => {
-        const from = box.querySelector<HTMLElement>(cellSelector(source))
-        const to = tokens[index]
-        if (!from || !to) return
+    const stageRect = box.getBoundingClientRect()
+    const landed = new Set<string>()
+    engine.withChannel('lesson', () => {
+      for (const key of fresh) {
+        const el = tokenOf(key)
+        if (!el) continue
+        engine.set(el, { opacity: 0 })
+        if (!flown.has(key)) engine.to(el, { opacity: 1 }, 'draw', { effect: true })
+      }
+      flights.forEach((flight, index) => {
+        const to = tokenOf(flight.token)
+        const from = box.querySelector<HTMLElement>(sourceSelector(flight.from))
+        if (!to) return
+        const show = () => {
+          if (landed.has(flight.token)) return
+          landed.add(flight.token)
+          engine.set(to, { opacity: 1 })
+        }
+        if (!from) {
+          show()
+          return
+        }
         const a = from.getBoundingClientRect()
         const b = to.getBoundingClientRect()
         const chip = document.createElement('span')
         chip.className = 'ls-chip'
-        chip.dataset.tone = from.dataset.tone ?? ''
-        chip.textContent = from.textContent
+        chip.dataset.role = flight.role
+        chip.textContent = to.textContent
         chip.setAttribute('aria-hidden', 'true')
         chip.style.left = `${a.left - stageRect.left}px`
         chip.style.top = `${a.top - stageRect.top}px`
@@ -206,61 +250,56 @@ function useFlights(stage: RefObject<HTMLDivElement | null>, sources: readonly S
         box.append(chip)
         chips.push(chip)
         engine.set(chip, { opacity: 0 })
+        const dx = b.left + b.width / 2 - (a.left + a.width / 2)
+        const dy = b.top + b.height / 2 - (a.top + a.height / 2)
         const ratio =
           Number.parseFloat(getComputedStyle(to).fontSize) / Number.parseFloat(chip.style.fontSize)
+        // A critically damped carry peaks near 0.37 × distance × w0; slow the spring until that stays under
+        // the pursuit limit (the old engine's kScale).
+        const tempo = engine.tempoOf('lesson')
+        const w0 = (2 * Math.PI) / (SPRINGS.carry.duration * tempo)
+        const slow = Math.max(1, (0.37 * Math.hypot(dx, dy) * w0) / PURSUIT)
+        const spring = (spec: { duration: number; bounce: number }) => ({
+          ...spec,
+          duration: spec.duration * slow,
+        })
         const land = () => {
           if (!chip.isConnected) return
           chip.remove()
-          engine.to(to, { opacity: 1 }, 'fade', { effect: true })
-          if (index === sources.length - 1) {
-            for (const el of tail) engine.to(el, { opacity: 1 }, 'fade', { effect: true })
-          }
+          show()
+          playSound('land')
         }
-        engine.after(index * FLIGHT_STAGGER_MS, () => {
+        engine.after(index * stagger, () => {
           engine.to(chip, { opacity: 1 }, 'fade', { effect: true })
-          engine.to(
-            chip,
-            {
-              x: b.left + b.width / 2 - (a.left + a.width / 2),
-              y: b.top + b.height / 2 - lineLift - (a.top + a.height / 2),
-              scale: ratio,
-            },
-            'teach',
-            // The spring's last hundredths of a pixel are invisible: the number lands when it looks landed.
-            { onArrive: land, epsilon: 0.5 },
-          )
-          engine.after(FLIGHT_LAND_MS, land)
+          engine.to(chip, { x: dx, scale: ratio }, spring(SPRINGS.carry), { onArrive: land, epsilon: 0.75 })
+          engine.to(chip, { y: dy }, spring(SPRINGS.carryY))
         })
       })
     })
     return () => {
       for (const chip of chips) chip.remove()
-      for (const el of [...tokens, ...tail]) engine.set(el, { opacity: 1 })
+      for (const key of fresh) {
+        const el = tokenOf(key)
+        if (el) engine.set(el, { opacity: 1 })
+      }
     }
-  }, [key])
+  }, [shown])
 }
-
-/** Flights share the lesson channel: İleri finishes them with the beat. */
-const FLIGHT_CHANNEL = 'lesson'
-/** One chip leaves a beat after the one before it, so the eye can follow each to its place. */
-const FLIGHT_STAGGER_MS = 110
-/** A chip has visibly arrived by the teach spring's perceptual duration. */
-const FLIGHT_LAND_MS = SPRINGS.teach.duration * 1000
 
 export function Stage({
   lesson,
   scene,
   state,
-  reserve = 0,
-  onReplay,
+  stagger,
+  transport,
 }: {
   lesson: Lesson
   scene: Scene | undefined
   state: StageState
-  /** Working lines the current beat will show at most. */
-  reserve?: number
-  /** Plays the step's beat again; shown once the beat has finished. */
-  onReplay?: (() => void) | undefined
+  /** Chip stagger on the lesson channel (choreography ms, scaled by its tempo). */
+  stagger: number
+  /** Pause, play or replay, in the stage corner. */
+  transport?: { mode: 'pause' | 'play' | 'replay'; onPress: () => void } | undefined
 }) {
   const box = useRef<HTMLDivElement>(null)
   const sceneBox = useRef<HTMLDivElement>(null)
@@ -274,8 +313,9 @@ export function Stage({
     state.area,
     state.extended,
   ])
-  useSceneFit(box, sceneBox, areaBox, reserve, layoutKey)
-  useFlights(box, state.sources, `${layoutKey}:${state.notes.length}:${JSON.stringify(state.sources)}`)
+  const workBox = useRef<HTMLDivElement>(null)
+  useSceneFit(box, sceneBox, areaBox, workBox, `${layoutKey}:${state.lines.map((l) => l.key).join()}`)
+  useReveal(box, state.shown, state.flights, stagger)
   return (
     <div ref={box} className="ls-stage" data-testid="lesson-stage">
       {scene ? (
@@ -332,34 +372,46 @@ export function Stage({
           })}
         </div>
       ) : null}
-      {onReplay ? (
-        <button
-          type="button"
-          className="ls-replay sh-press"
-          aria-label={strings.lesson.replay}
-          onClick={onReplay}
-        >
-          <svg viewBox="0 0 24 24" aria-hidden="true">
-            <path d="M5 12a7 7 0 1 0 2.1-5M5 4v4h4" />
-          </svg>
-        </button>
-      ) : null}
+      {transport ? <Transport {...transport} /> : null}
       {state.area ? <Area ref={areaBox} lesson={lesson} name={state.area} /> : null}
-      {state.notes.length || reserve ? (
-        <div
-          className="ls-notes"
-          aria-live="polite"
-          // The beat's lines have their room from the first frame, so nothing above them moves.
-          style={{ minHeight: `${reserve * NOTE_LINE}px` }}
-        >
-          {state.notes.map((note, index) => (
-            // biome-ignore lint/suspicious/noArrayIndexKey: notes only append
-            <Rise key={`${index}:${note}`} className="ls-note">
-              <NoteTokens text={note} />
-            </Rise>
-          ))}
+      {state.lines.length ? (
+        <div ref={workBox}>
+          <Work lines={state.lines} shown={state.shown} />
         </div>
       ) : null}
     </div>
+  )
+}
+
+const TRANSPORT = {
+  pause: { path: 'M9 6.5v11M15 6.5v11', label: strings.lesson.pause },
+  play: { path: 'M8.5 6v12l9.5-6z', label: strings.lesson.resume },
+  replay: { path: 'M5 12a7 7 0 1 0 2.1-5M5 4v4h4', label: strings.lesson.replay },
+} as const
+
+/** One button, three states (old transport): pause while a beat plays, play while held, replay when done. */
+function Transport({ mode, onPress }: { mode: 'pause' | 'play' | 'replay'; onPress: () => void }) {
+  const icon = useRef<SVGSVGElement>(null)
+  const press = () => {
+    const el = icon.current
+    if (el) {
+      engine.withChannel('chrome', () => {
+        if (mode === 'replay') {
+          engine.set(el, { rotate: 0 })
+          engine.to(el, { rotate: -360 }, 'move', { onArrive: () => engine.set(el, { rotate: 0 }) })
+        } else {
+          engine.set(el, { scale: 0.8 })
+          engine.to(el, { scale: 1 }, 'land')
+        }
+      })
+    }
+    onPress()
+  }
+  return (
+    <button type="button" className="ls-replay sh-press" aria-label={TRANSPORT[mode].label} onClick={press}>
+      <svg ref={icon} viewBox="0 0 24 24" aria-hidden="true">
+        <path d={TRANSPORT[mode].path} />
+      </svg>
+    </button>
   )
 }
