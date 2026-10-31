@@ -9,6 +9,7 @@ import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
 import { playSound } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
+import { Check, ChevronLeft, Close } from '../ui/icons'
 import { Keypad } from './Keypad'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { rewardFor } from './reward'
@@ -203,7 +204,11 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
 
   const options =
     step.kind === 'choice' ? (
-      <fieldset className="ex-opts ls-opts" aria-label={step.title}>
+      <fieldset
+        className="ex-opts ls-opts"
+        data-wide={step.options.some((option) => option.content.some((block) => block.kind !== 'text'))}
+        aria-label={step.title}
+      >
         {step.options.map((option) => {
           const wrong = attempt.wrong.includes(option.key)
           const right = attempt.revealed && option.key === step.answer
@@ -216,7 +221,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
               disabled={attempt.revealed || wrong}
               onClick={() => answer(option.key, option.key === step.answer)}
             >
-              <span className="ex-opt__key">{option.key}</span>
+              <span className="ex-opt__key">{wrong ? <Close /> : option.key}</span>
               <span className="ex-opt__body">
                 <Blocks blocks={option.content} />
               </span>
@@ -230,7 +235,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     <div className="ls-run" data-testid="lesson-player">
       <div className="ls-top">
         <Link to={returnTab.current} className="ls-top__btn" aria-label={strings.lesson.close}>
-          ✕
+          <Close />
         </Link>
         <button
           type="button"
@@ -239,7 +244,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           disabled={index === 0}
           onClick={() => go(index - 1)}
         >
-          ‹
+          <ChevronLeft />
         </button>
         <div
           className="ls-progress"
@@ -294,30 +299,18 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             </>
           ) : null}
 
-          {isQuestion(step) && (wrongFeedback || attempt.revealed) ? (
-            <div
-              className="ls-feedback"
-              role="status"
-              data-tone={attempt.solved ? 'ok' : attempt.revealed ? undefined : 'wrong'}
-            >
-              {attempt.revealed ? (
-                <>
-                  {attempt.solved ? <b>{strings.lesson.correct} </b> : null}
-                  <RichText text={step.solution} />
-                </>
-              ) : (
-                <>
-                  <b>{strings.lesson.wrong} </b>
-                  {wrongFeedback ? <RichText text={wrongFeedback} /> : null}
-                </>
-              )}
+          {isQuestion(step) && wrongFeedback && !attempt.revealed ? (
+            <div className="ls-feedback" role="status" data-tone="wrong">
+              <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
+              <RichText text={wrongFeedback} />
             </div>
           ) : null}
         </div>
       </div>
 
-      <div className="ls-dock">
-        {options}
+      <div className="ls-dock" data-verdict={isQuestion(step) && attempt.revealed}>
+        {isQuestion(step) && attempt.revealed ? <Verdict step={step} attempt={attempt} /> : null}
+        {attempt.revealed ? null : options}
         {step.kind === 'keypad' && !attempt.revealed ? (
           <Keypad
             value={typed}
@@ -331,7 +324,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             }}
           />
         ) : null}
-        {locked && attempt.wrong.length ? (
+        {/* The give-up action holds the bottom slot from the start, so nothing above it moves when an answer lands. */}
+        {locked ? (
           <button
             type="button"
             className="sh-btn sh-btn--soft sh-press"
@@ -339,8 +333,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           >
             {strings.lesson.showAnswer}
           </button>
-        ) : null}
-        {locked ? null : (
+        ) : (
           <button type="button" className="sh-btn sh-btn--primary sh-press" onClick={primary}>
             {primaryLabel}
           </button>
@@ -354,4 +347,71 @@ function Score({ lesson }: { lesson: Lesson }) {
   const { correct, total } = firstTryScore(lesson, recordOf(lesson.id) ?? emptyRecord)
   if (!total) return null
   return <p className="ls-score">{strings.lesson.score(correct, total)}</p>
+}
+
+type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
+
+/**
+ * The answer, once it is out: one verdict in the dock where the options were (old feedback sheet). It names
+ * what the learner gave and the right answer, then the worked solution; the question stays above it.
+ */
+function Verdict({ step, attempt }: { step: Question; attempt: Attempt }) {
+  const tone = attempt.solved ? 'ok' : attempt.wrong.length ? 'missed' : 'shown'
+  const title = attempt.solved
+    ? strings.lesson.verdictRight
+    : attempt.wrong.length
+      ? strings.lesson.verdictMissed
+      : strings.lesson.verdictShown
+  // What the learner tried: the option's text when it is short text, its letter when it is a matrix.
+  const given = attempt.wrong.map((value) => {
+    if (step.kind !== 'choice') return value.replace(/-/g, '−')
+    const option = step.options.find((candidate) => candidate.key === value)
+    const text = option?.content.every((block) => block.kind === 'text')
+      ? option.content.map((block) => (block.kind === 'text' ? block.text : '')).join(' ')
+      : ''
+    return text || strings.lesson.optionLetter(value)
+  })
+  const right = step.kind === 'choice' ? step.options.find((option) => option.key === step.answer) : undefined
+  return (
+    <section className="ls-verdict" role="status" data-tone={tone} aria-label={title}>
+      <p className="ls-verdict__title">
+        <span className="ls-verdict__mark" aria-hidden="true">
+          {attempt.solved ? <Check /> : null}
+        </span>
+        {title}
+        {given.length ? (
+          <span className="ls-verdict__given">
+            {given.length > 1 ? strings.lesson.yourAnswers : strings.lesson.yourAnswer}:{' '}
+            {given.map((value, at) => (
+              <s key={value}>
+                <RichText text={value} />
+                {at < given.length - 1 ? ', ' : null}
+              </s>
+            ))}
+          </span>
+        ) : null}
+      </p>
+      {right ? (
+        <div
+          className="ex-opt ls-verdict__answer"
+          data-state="right"
+          data-wide={right.content.some((block) => block.kind !== 'text')}
+        >
+          <span className="ex-opt__key">{right.key}</span>
+          <span className="ex-opt__body">
+            <Blocks blocks={right.content} />
+          </span>
+        </div>
+      ) : step.kind === 'keypad' ? (
+        <div className="ex-opt ls-verdict__answer" data-state="right">
+          <span className="ex-opt__body">
+            {strings.lesson.rightAnswer}: <b className="num">{step.answer.replace(/-/g, '−')}</b>
+          </span>
+        </div>
+      ) : null}
+      <p className="ls-verdict__solution">
+        <RichText text={step.solution} />
+      </p>
+    </section>
+  )
 }

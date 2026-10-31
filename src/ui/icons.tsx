@@ -85,3 +85,11 @@ export function Close() {
     </svg>
   )
 }
+
+export function Check() {
+  return (
+    <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true">
+      <path d="M3 8.5l3.2 3.2L13 4.8" {...stroke} strokeWidth={2.2} />
+    </svg>
+  )
+}

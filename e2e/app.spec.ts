@@ -54,7 +54,7 @@ test('a lesson plays, checks answers and resumes where it was left', async ({ pa
   await options.filter({ hasText: '26' }).click()
   await expect(player.getByRole('status')).toContainText('Tekrar dene.')
   await options.filter({ hasText: /^b/ }).click()
-  await expect(player.getByRole('status')).toContainText('Doğru.')
+  await expect(player.getByRole('status')).toContainText('Doğru')
   await next.click()
   const step = await player.getByRole('progressbar').getAttribute('aria-valuenow')
   await page.reload()
