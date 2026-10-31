@@ -32,6 +32,30 @@ const lesson: Lesson = {
         ['c', 'd'],
       ],
     },
+    L: {
+      kind: 'matrix',
+      delimiter: 'brackets',
+      rows: [
+        ['2', '1'],
+        ['3', '-1'],
+      ],
+    },
+    R: {
+      kind: 'matrix',
+      delimiter: 'brackets',
+      rows: [
+        ['1', '4'],
+        ['2', '0'],
+      ],
+    },
+    P: {
+      kind: 'matrix',
+      delimiter: 'brackets',
+      rows: [
+        ['?', '?'],
+        ['?', '?'],
+      ],
+    },
     S: {
       kind: 'matrix',
       delimiter: 'bars',
@@ -52,6 +76,51 @@ const textOf = (frame: StageState | undefined) =>
       .map((t) => t.text)
       .join(' '),
   )
+
+describe('product', () => {
+  it('lights a row and a column, carries each pair, then lands the sum in its cell', () => {
+    const frames = compile(lesson, { kind: 'product', left: 'L', right: 'R', into: 'P', cells: [[1, 0]] })
+    expect(frames.map((f) => f.action)).toEqual(['line', 'line', 'highlight', 'carry', 'carry', 'collect'])
+    expect(frames[0]?.lines[0]?.tokens.map((t) => t.text).join(' ')).toBe('3 · 1 + (−1) · 2 = 1')
+    expect(frames[0]?.working?.rows).toEqual([
+      ['?', '?'],
+      ['?', '?'],
+    ])
+    expect(frames[2]?.marks).toEqual([
+      { cell: ['L', 1, '*'], tone: 'row' },
+      { cell: ['R', '*', 0], tone: 'col' },
+      { cell: ['P', 1, 0], tone: 'ok' },
+    ])
+    expect(textOf(frames[3])).toEqual(['3 · 1'])
+    expect(frames[4]?.flights.map((f) => f.from)).toEqual([
+      { matrix: 'L', row: 1, col: 1 },
+      { matrix: 'R', row: 1, col: 0 },
+    ])
+    expect(textOf(frames[5])).toEqual(['3 · 1 + (−1) · 2 = 1'])
+    expect(frames[5]?.working?.rows).toEqual([
+      ['?', '?'],
+      ['1', '?'],
+    ])
+  })
+
+  it('fills every listed cell in turn and keeps the earlier ones', () => {
+    const frames = compile(lesson, {
+      kind: 'product',
+      left: 'L',
+      right: 'R',
+      into: 'P',
+      cells: [
+        [0, 0],
+        [0, 1],
+      ],
+    })
+    expect(frames.at(-1)?.working?.rows).toEqual([
+      ['4', '8'],
+      ['?', '?'],
+    ])
+    expect(frames.at(-1)?.lines).toHaveLength(2)
+  })
+})
 
 describe('det2', () => {
   it('lays out one line, lights each diagonal, carries its numbers, writes the values, then collects', () => {

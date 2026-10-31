@@ -514,8 +514,95 @@ function expand(lesson: Lesson, name: string, along: 'row' | 'col', index: numbe
   if (value) b.push('collect', (s) => ({ ...s, result: show(value) }))
 }
 
+/**
+ * Row times column, the old "multiply" recipe: per entry, one line "a·b + c·d = r" laid out hidden; the
+ * row of `left` (row colour), the column of `right` (column colour) and the target cell light; each pair
+ * of numbers flies into the line, term by term; with three or more terms the values row is written; then
+ * the sum is written and lands in the target cell of `into`. Later entries play at half dwell.
+ */
+function product(lesson: Lesson, beat: Extract<Beat, { kind: 'product' }>, b: Builder) {
+  const left = lookup(lesson, beat.left)
+  const right = lookup(lesson, beat.right)
+  const name = beat.into
+  const into = name ? lookup(lesson, name) : null
+  const a = numeric(left)
+  const c = numeric(right)
+  const width = left.rows[0]?.length ?? 0
+  const rows = into ? into.rows.map((row) => [...row]) : []
+  const table = DWELLS[b.family]
+  const working = () => (name ? { working: { matrix: name, rows: rows.map((r) => [...r]) } } : {})
+  b.push('line', (s) => ({ ...s, ...working() }), 0)
+  beat.cells.forEach(([i, j], index) => {
+    const scale = index ? REPEAT_DWELL : 1
+    const l = lineOf(`x${b.frames.length}`)
+    const terms = Array.from({ length: width }, (_, k) => {
+      if (k) l.group()
+      const plus = k ? l.op('+') : null
+      const x = l.num(factor(at(left, i, k)), 'row')
+      const dot = l.op('·')
+      const y = l.num(factor(at(right, k, j)), 'col')
+      const value = a && c ? mul(cell(a, i, k), cell(c, k, j)) : null
+      return { k, plus, x, dot, y, value }
+    })
+    const valueKeys: string[] = []
+    const resultKeys: string[] = []
+    let result: string | null = null
+    let stored = '?'
+    if (terms.every((t) => t.value)) {
+      if (width >= 3) {
+        l.group()
+        terms.forEach((t, k) => {
+          valueKeys.push(l.op(k ? '+' : '='), l.num(factor(format(t.value as Rational))))
+        })
+      }
+      l.group()
+      const total = terms.reduce<Rational>((acc, t) => add(acc, t.value as Rational), { num: 0n, den: 1n })
+      result = show(total)
+      stored = format(total)
+      resultKeys.push(l.op('='), l.num(result, 'ok'))
+    }
+    const line = l.line()
+    b.push('line', (s) => ({ ...s, lines: [...s.lines, line] }), table.line * scale)
+    const target: Mark[] = name ? [{ cell: [name, i, j], tone: 'ok' }] : []
+    const marks: Mark[] = [
+      { cell: [beat.left, i, '*'], tone: 'row' },
+      { cell: [beat.right, '*', j], tone: 'col' },
+      ...target,
+    ]
+    b.push('highlight', (s) => withMarks(s, marks, true), table.highlight * scale)
+    for (const t of terms) {
+      const keys = [t.plus, t.x, t.dot, t.y].filter((key): key is string => key !== null)
+      b.push(
+        'carry',
+        (s) => ({
+          ...reveal(s, keys),
+          flights: [
+            { token: t.x, from: { matrix: beat.left, row: i, col: t.k }, role: 'row' },
+            { token: t.y, from: { matrix: beat.right, row: t.k, col: j }, role: 'col' },
+          ],
+        }),
+        table.carry * (index || t.k ? REPEAT_DWELL : 1),
+      )
+    }
+    if (valueKeys.length) b.push('value', (s) => reveal(s, valueKeys), table.value * scale)
+    if (result) {
+      const row = rows[i]
+      if (row) row[j] = stored
+      const filled = working()
+      b.push(
+        'collect',
+        (s) => ({ ...reveal(withMarks(s, name ? target : marks, true), resultKeys), ...filled }),
+        table.collect * scale,
+      )
+    }
+  })
+}
+
 function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
   switch (beat.kind) {
+    case 'product':
+      product(lesson, beat, b)
+      return
     case 'det2':
       det2(lesson, beat.matrix, b)
       return

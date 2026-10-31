@@ -1,5 +1,5 @@
 import { type ReactNode, type RefObject, useLayoutEffect, useRef } from 'react'
-import type { Lesson, Scene } from '../content/lessons/types'
+import type { Lesson, Mark, Scene } from '../content/lessons/types'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import type { Target } from '../engine/engine'
@@ -25,10 +25,11 @@ function Rise({ children, className }: { children: ReactNode; className?: string
   )
 }
 
-function toneFor(state: StageState, name: string) {
+function toneFor(state: StageState, name: string, still: readonly Mark[] = []) {
+  const marks = state.marks.length ? state.marks : still
   return (row: number, column: number) => {
     let tone: string | undefined
-    for (const mark of state.marks) {
+    for (const mark of marks) {
       const [matrix, r, c] = mark.cell
       if (matrix !== name) continue
       if ((r === '*' || r === row) && (c === '*' || c === column)) tone = mark.tone
@@ -452,6 +453,33 @@ function useReveal(
   }, [shown])
 }
 
+/**
+ * A value written into a matrix cell (a product entry, a rewritten row) lands: it rises out of the cell
+ * and settles with one bounce, so the eye sees where the result went.
+ */
+function useLanding(box: RefObject<HTMLDivElement | null>, working: StageState['working']) {
+  const before = useRef<StageState['working']>(null)
+  useLayoutEffect(() => {
+    const was = before.current
+    before.current = working
+    const root = box.current
+    if (!root || !working || was?.matrix !== working.matrix) return
+    working.rows.forEach((row, r) => {
+      row.forEach((entry, c) => {
+        if (was.rows[r]?.[c] === entry) return
+        const el = root.querySelector<HTMLElement>(
+          `[data-matrix="${working.matrix}"] [data-cell="${r}-${c}"]`,
+        )
+        if (!el) return
+        engine.set(el, { opacity: 0, y: SHIFT.scene, scale: 0.7 })
+        engine.withChannel('lesson', () => {
+          engine.to(el, { opacity: 1, y: 0, scale: 1 }, 'land')
+        })
+      })
+    })
+  }, [box, working])
+}
+
 export function Stage({
   lesson,
   scene,
@@ -476,6 +504,7 @@ export function Stage({
   const workBox = useRef<HTMLDivElement>(null)
   useStageLayout(box, sceneBox, areaBox, workBox)
   useReveal(box, state.shown, state.flights, stagger)
+  useLanding(box, state.working)
   const areaName = state.area ?? final.area
   // A beat that ends on a result shows "?" until it gets there, never the answer it is about to derive.
   const placeholder = final.result !== null ? '?' : (scene?.result ?? '?')
@@ -484,11 +513,11 @@ export function Stage({
       {scene ? (
         <div ref={sceneBox} className="ls-scene">
           {scene.items.map((item, index) => {
-            if (item === '=') {
+            if (item === '=' || item === '·') {
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
                 <span key={index} className="ls-op" data-obj={`op${index}`}>
-                  =
+                  {item}
                 </span>
               )
             }
@@ -516,7 +545,7 @@ export function Stage({
               // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
               <span key={index} className="ls-item" data-obj={`m:${item}`}>
                 <span className="ls-mat" data-matrix={item}>
-                  <Matrix block={block} toneAt={toneFor(state, item)} />
+                  <Matrix block={block} toneAt={toneFor(state, item, scene.marks)} labelAbove />
                 </span>
                 {extended ? (
                   <Appear shown={state.extended === item} className="ls-mat ls-copy">
