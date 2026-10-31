@@ -357,7 +357,7 @@ function det2(lesson: Lesson, name: string, b: Builder) {
  * and the last line carries both sums into the determinant. Later terms of a line, and the whole minus line
  * (same shape as plus), play at half dwell.
  */
-function sarrus(lesson: Lesson, name: string, b: Builder) {
+function sarrus(lesson: Lesson, name: string, b: Builder, diagonalsOnly = false) {
   const m = lookup(lesson, name)
   const values = numeric(m)
   const copy = copyName(name)
@@ -432,6 +432,20 @@ function sarrus(lesson: Lesson, name: string, b: Builder) {
   }
 
   b.push('line', (s) => ({ ...s, marks: [], extended: name }), table.highlight)
+  if (diagonalsOnly) {
+    // The idea alone: each diagonal lights as one straight line of three, then each family together.
+    for (const [starts, step, tone] of [
+      [[0, 1, 2], 1, 'row'],
+      [[2, 3, 4], -1, 'col'],
+    ] as const) {
+      const lines = starts.map((start) => diagonal(start, step).map((d) => markOf(placed(d), tone)))
+      lines.forEach((marks, index) => {
+        b.push('highlight', (s) => withMarks(s, marks, true), table.highlight * (index ? REPEAT_DWELL : 1))
+      })
+      b.push('highlight', (s) => withMarks(s, lines.flat(), true), table.collect)
+    }
+    return
+  }
   const plus = side(`p${b.frames.length}`, [0, 1, 2], 1, 'row', false)
   play(plus)
   const minus = side(`m${b.frames.length}`, [2, 3, 4], -1, 'col', true)
@@ -506,7 +520,7 @@ function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
       det2(lesson, beat.matrix, b)
       return
     case 'sarrus':
-      sarrus(lesson, beat.matrix, b)
+      sarrus(lesson, beat.matrix, b, beat.diagonalsOnly === true)
       return
     case 'expand':
       expand(lesson, beat.matrix, beat.along, beat.index, b)

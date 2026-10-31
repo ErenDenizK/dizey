@@ -44,7 +44,12 @@ export type Beat =
   /** 2×2 rule: main diagonal product, other diagonal product, difference into `result`. */
   | { readonly kind: 'det2'; readonly matrix: string }
   /** Sarrus: copy the first two columns, light the three plus and three minus diagonals, combine. */
-  | { readonly kind: 'sarrus'; readonly matrix: string }
+  | {
+      readonly kind: 'sarrus'
+      readonly matrix: string
+      /** Copy the columns and light the six straight diagonals only: the idea, without the arithmetic. */
+      readonly diagonalsOnly?: true
+    }
   /** Unit square (or cube) carried by the matrix; the area of the image is |det|. */
   | { readonly kind: 'area'; readonly matrix: string }
   /** Strike out row `row` and column `col` (0-based) and lift the remaining submatrix: the minor M_ij. */
