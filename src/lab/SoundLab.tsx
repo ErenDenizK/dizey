@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { lab } from '../content/lab'
+import { engine } from '../engine/driver'
 import { useSettings } from '../progress/settings'
 import {
   CHORDS,
@@ -282,6 +283,22 @@ export function SoundLab() {
   const [scene, setScene] = useState<Scene>(emptyScene)
   const [playing, setPlaying] = useState(false)
   const timers = useRef<ReturnType<typeof setTimeout>[]>([])
+  const progress = useRef<HTMLSpanElement>(null)
+  const stage = useRef<HTMLDivElement>(null)
+
+  // Motion on the engine's springs: the progress bar glides; a value landing in C pops and settles.
+  const filled = playing || scene.done ? (scene.step + 1) / STEPS : 0
+  useLayoutEffect(() => {
+    const bar = progress.current
+    if (bar) engine.withChannel('chrome', () => engine.to(bar, { scaleX: filled }, 'glide'))
+  }, [filled])
+  const freshKey = scene.fresh ? scene.fresh.join('') : ''
+  useLayoutEffect(() => {
+    const cell = stage.current?.querySelector<HTMLElement>('.sl-cell[data-fresh]')
+    if (!cell || !freshKey) return
+    engine.set(cell, { scale: 0.7 })
+    engine.withChannel('chrome', () => engine.to(cell, { scale: 1 }, 'snap'))
+  }, [freshKey])
 
   // The keyboard and readout follow every sound the app schedules, on the moment it sounds.
   useEffect(() => {
@@ -446,7 +463,7 @@ export function SoundLab() {
                 {playing ? text.lesson.stop : text.lesson.play}
               </Pressable>
             </div>
-            <div className="sl-stage">
+            <div className="sl-stage" ref={stage}>
               <div className="sl-mats">
                 <Matrix name="A" values={A} row={scene.row} />
                 <span className="sl-op">·</span>
@@ -465,7 +482,7 @@ export function SoundLab() {
                 {scene.caption}
               </div>
               <div className="sl-progress">
-                <span style={{ width: `${playing || scene.done ? ((scene.step + 1) / STEPS) * 100 : 0}%` }} />
+                <span ref={progress} />
               </div>
             </div>
             <fieldset className="sl-walk" aria-label={text.lesson.walk}>

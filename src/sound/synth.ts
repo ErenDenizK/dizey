@@ -1,5 +1,13 @@
 import { clamp, dbToGain, midiToHz, seeded, TONIC_MIDI } from './harmony'
-import { createScore, EVENTS, type Note, type Plan, type SoundContext, type SoundEvent } from './score'
+import {
+  createScore,
+  EVENTS,
+  type Note,
+  type Plan,
+  type SoundContext,
+  type SoundEvent,
+  type Tier,
+} from './score'
 
 /**
  * The instrument: plans from score.ts rendered with Web Audio, no audio files. Works on any
@@ -117,8 +125,12 @@ const DUCK_EARLY = 0.02
 const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -39.9, felt: -38.7, glass: -40.2 }
 // Darker than any event (the old app's bed sat under a 900 Hz low-pass), so it stays behind.
 const MUSIC_TONE = { cutoff: 1500, wet: 1.6 }
-/** Events turn the music down by this much while they ring. */
-const MUSIC_DUCK = dbToGain(-8)
+/**
+ * Events turn the music down while they ring, more the more they matter: a tap barely, a lesson beat
+ * clearly, an answer deeply (its suspended 4th must not meet the music's 3rd). Lesson ends and
+ * rewards change chord, so the player stops the music for them instead (see player.ts).
+ */
+const MUSIC_DUCK: Record<Tier, number> = { touch: -3, frequent: -6, question: -16, lesson: -24, reward: -24 }
 
 /** Sounds that come in quick runs: each new one ducks the others still ringing. */
 const quick = (event: SoundEvent | 'music') =>
@@ -499,7 +511,8 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     for (let i = 0; i <= ringing.length - MAX_LIVE; i++) release(ringing[i] as Bus, start, 0.15)
     const spec = EVENTS[event]
     live.push(render(plan.notes, spec, options.levelDb ?? TRIM[palette.id][event], event, plan.harmony))
-    if (EVENTS[event].tier !== 'touch') duckMusic(start, Math.min(3, plan.end - start))
+    const tier = EVENTS[event].tier
+    duckMusic(start, tier === 'touch' ? 0.35 : Math.min(3, plan.end - start), MUSIC_DUCK[tier])
     for (const listener of listeners) listener(plan)
     return plan
   }
@@ -512,6 +525,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
   musicSend.gain.value = 0.3 * MUSIC_TONE.wet
   const music: Bus[] = []
   let musicOffset = 0
+  let ducked = { db: 0, until: 0 }
 
   /** Plays background-music notes (already in context time) at the music level. */
   function playMusic(notes: Note[]) {
@@ -529,9 +543,14 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
   }
 
   /** Turns the music down for a moment so an event sounds clear over it. */
-  function duckMusic(at: number, length: number) {
-    musicIn.gain.cancelScheduledValues(at)
-    musicIn.gain.setTargetAtTime(MUSIC_DUCK, at, 0.05)
+  function duckMusic(at: number, length: number, db: number) {
+    // A quieter duck never lifts a deeper one that is still holding.
+    if (db > ducked.db && at < ducked.until) return
+    ducked = { db, until: at + length }
+    // WebKit rejects a negative time, which `at - 0.03` is right after the context starts.
+    const from = Math.max(0, at - 0.03)
+    musicIn.gain.cancelScheduledValues(from)
+    musicIn.gain.setTargetAtTime(dbToGain(db), from, 0.03)
     musicIn.gain.setTargetAtTime(1, at + length, 0.6)
   }
 

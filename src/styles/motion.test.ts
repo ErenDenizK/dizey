@@ -20,7 +20,7 @@ function files(dir: string): string[] {
  * Known offenders, each owed a move onto the engine. Remove an entry once its file is clean: the last
  * test fails while a listed file no longer needs the exemption.
  */
-const PENDING = new Set(['lab/sound-lab.css'])
+const PENDING = new Set<string>()
 const offends = (path: string) =>
   /(^|[\s;{])(transition|animation)(-[\w-]+)?\s*:|@keyframes/m.test(code(path))
 

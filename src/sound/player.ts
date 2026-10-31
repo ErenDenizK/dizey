@@ -1,5 +1,5 @@
 import { readSettings, saveSettings } from '../progress/settings'
-import { chordAt, seeded } from './harmony'
+import { type ChordId, chordAt, seeded } from './harmony'
 import { composeSection, idleChord, SECTION } from './music'
 import { EVENTS, type Plan, type SoundContext, type SoundEvent } from './score'
 import { createSynth, PALETTES, type PaletteId, type Synth } from './synth'
@@ -45,7 +45,16 @@ function applySession() {
  */
 let ambientContext: SoundContext = {}
 export function setSoundContext(context: SoundContext) {
+  const before = wantedChord()
+  // A new lesson opens over a lesson end still ringing: its opening fades that cadence (the pedal in
+  // synth.ts), so the music may come back with the new lesson's first chord.
+  if (context.steps && !ambientContext.steps) quietUntil = 0
   ambientContext = context
+  // A new chord on screen: the music moves with it at once (a quick crossfade), never a beat late.
+  if (musicTimer && wantedChord() !== before) {
+    stopMusic(0.35)
+    syncMusic()
+  }
 }
 
 function armIdle() {
@@ -119,10 +128,19 @@ export function installSound() {
 /** Plays a cue on the frame its motion lands. Silent when sound is off or audio is not yet unlocked. */
 export function playSound(event: SoundEvent, given?: SoundContext) {
   if (!soundOn() || !ctx || !synth) return
-  const context = { ...(EVENTS[event].tier === 'touch' ? ambientContext : {}), ...given }
+  const tier = EVENTS[event].tier
+  const context: SoundContext = { ...(tier === 'touch' ? ambientContext : {}), ...given }
+  // Outside a lesson a 'step' sound takes the chord the music is holding, so the two always agree.
+  const holding = musicChordAt(ctx.currentTime)
+  if (!context.steps && holding) context.chord = holding
   if (ctx.state === 'running') {
     armIdle()
-    synth.play(event, context)
+    const plan = synth.play(event, context)
+    // A lesson end or a reward walks its own chords: the music steps aside and comes back after it.
+    if (tier === 'lesson' || tier === 'reward') {
+      stopMusic(0.25)
+      quietUntil = plan.end - 0.8
+    }
     return
   }
   const asked = performance.now()
@@ -164,6 +182,23 @@ const TICK_MS = 400
 const LOOKAHEAD = 1.2
 
 let musicTimer = false
+/** Context time before which the music stays out (a cadence or reward is ringing). */
+let quietUntil = 0
+/** Sections written, by start time: what chord the music holds at any moment. */
+let sections: { at: number; chord: ChordId }[] = []
+
+function musicChordAt(time: number): ChordId | undefined {
+  if (!musicTimer) return undefined
+  let chord: ChordId | undefined
+  for (const written of sections) if (written.at <= time + 0.05) chord = written.chord
+  return chord
+}
+
+/** The chord the music should hold now: the lesson step's, or the home loop's. */
+const wantedChord = (): ChordId => {
+  const { step, steps } = ambientContext
+  return steps ? chordAt(step, steps) : idleChord(section)
+}
 let held = false
 let nextAt = 0
 let section = 0
@@ -175,6 +210,7 @@ const musicWanted = () => soundOn() && readSettings().music !== false && !held &
 function stopMusic(tau = 0.8) {
   if (!musicTimer) return
   musicTimer = false
+  sections = []
   synth?.stopMusic(tau)
 }
 
@@ -184,17 +220,19 @@ function syncMusic() {
     if (!musicWanted()) stopMusic()
     return
   }
+  if (ctx.currentTime < quietUntil) return
   if (!musicTimer) {
     musicTimer = true
-    nextAt = ctx.currentTime + 0.3
+    nextAt = ctx.currentTime + 0.05
   }
   if (nextAt - ctx.currentTime > LOOKAHEAD) return
   if (nextAt < ctx.currentTime) nextAt = ctx.currentTime + 0.05
-  const { step, steps } = ambientContext
-  const chord = steps ? chordAt(step, steps) : idleChord(section)
+  const chord = wantedChord()
   const written = composeSection(chord, nextAt, musicRandom, lastNote)
   lastNote = written.last
   synth.playMusic(written.notes)
+  const now = ctx.currentTime
+  sections = [...sections.filter((written) => written.at > now - SECTION * 2), { at: nextAt, chord }]
   section++
   nextAt += SECTION
 }
