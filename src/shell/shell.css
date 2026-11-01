@@ -1344,12 +1344,10 @@ a.dz-button[data-kind="primary"] {
   opacity: var(--glow, 0);
   transform: scale(calc(0.8 + var(--glow, 0) * 0.35));
 }
+/* The lesson end's anchor for the duo: an empty box; the companion layer draws the duo (and its glow) over it. */
 .ls-duo {
   display: block;
   width: clamp(96px, 26vh, 150px);
-  height: auto;
-  overflow: visible;
-  filter: drop-shadow(0 0 calc(var(--glow, 0) * 16px) var(--glow-spark));
 }
 .ls-seal {
   display: grid;
@@ -1483,8 +1481,12 @@ a.dz-button[data-kind="primary"] {
  * in the primary ink.
  */
 .ls-top {
-  grid-template-columns: 44px 44px 1fr auto;
+  grid-template-columns: 44px 44px 1fr 28px auto;
   min-height: 48px;
+}
+/* The duo's place in the top bar, between the progress and the count (an anchor of the companion layer). */
+.ls-top__duo {
+  width: 28px;
 }
 .ls-top__btn {
   width: 40px;
@@ -1548,7 +1550,7 @@ a.dz-button[data-kind="primary"] {
   text-decoration-thickness: 1px;
 }
 .ls-top[data-moment="true"] {
-  grid-template-columns: auto 44px 1fr auto;
+  grid-template-columns: auto 44px 1fr 28px auto;
 }
 .ls-top__skip {
   width: auto;

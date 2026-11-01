@@ -104,6 +104,8 @@
 /* ---- Companion slot ---------------------------------------------------------- */
 .companion-slot {
   flex: none;
+  /* An empty box in the duo's shape: the companion layer draws the one duo over it. */
+  aspect-ratio: 86 / 80;
 }
 .companion-slot svg {
   display: block;
