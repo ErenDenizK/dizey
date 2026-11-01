@@ -7,6 +7,7 @@ import { ExamHome } from '../exam/ExamHome'
 import { ExamIcon, MeIcon, PathIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
 import { MeView } from './MeView'
+import { clipWith, faceOf, insets } from './morph'
 import { Onboarding } from './Onboarding'
 import { PathView } from './PathView'
 import { installPressFeedback } from './press'
@@ -158,54 +159,6 @@ function visibleCard() {
   if (!card?.isConnected) return null
   const rect = card.getBoundingClientRect()
   return rect.width > 0 && rect.bottom > 0 && rect.top < window.innerHeight ? card : null
-}
-
-function insets(surface: HTMLElement, card: HTMLElement) {
-  const outer = surface.getBoundingClientRect()
-  const inner = card.getBoundingClientRect()
-  return {
-    t: inner.top - outer.top,
-    l: inner.left - outer.left,
-    r: outer.right - inner.right,
-    b: outer.bottom - inner.bottom,
-    rad: Number.parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0,
-  }
-}
-
-const px = (n: number | undefined) => `${(n ?? 0).toFixed(2)}px`
-
-function clipWith(el: HTMLElement) {
-  engine.bind(el, (v) => {
-    el.style.clipPath = `inset(${px(v.t)} ${px(v.r)} ${px(v.b)} ${px(v.l)} round ${px(v.rad)})`
-  })
-}
-
-/**
- * A copy of the card, drawn where the card is, so the growth starts from what was tapped: it fades
- * as the surface opens while the route fades in after it, so there is never an empty frame and
- * never two layers of text at full strength (the same choreography as src/ui Morph).
- */
-function faceOf(surface: HTMLElement, card: HTMLElement) {
-  const face = card.cloneNode(true) as HTMLElement
-  const outer = surface.getBoundingClientRect()
-  const inner = card.getBoundingClientRect()
-  face.removeAttribute('href')
-  face.removeAttribute('data-testid')
-  face.setAttribute('aria-hidden', 'true')
-  Object.assign(face.style, {
-    position: 'absolute',
-    margin: '0',
-    top: `${inner.top - outer.top}px`,
-    left: `${inner.left - outer.left}px`,
-    width: `${inner.width}px`,
-    height: `${inner.height}px`,
-    zIndex: '1',
-    pointerEvents: 'none',
-    visibility: 'visible',
-    transform: '',
-  })
-  surface.append(face)
-  return face
 }
 
 function growFrom(el: HTMLElement, card: HTMLElement) {
