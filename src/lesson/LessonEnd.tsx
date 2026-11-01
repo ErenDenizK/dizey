@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Duo, type DuoHandle } from '../character/Duo'
+import type { DuoHandle } from '../character/Duo'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
 import { chapterOf, chapters } from '../content/path'
@@ -10,6 +10,8 @@ import { useExam } from '../exam/store'
 import { BadgeReveal, landReveal } from '../rewards/BadgeReveal'
 import { type Badge, earnedBadges } from '../rewards/badges'
 import { markShown, unshown } from '../rewards/store'
+import { CompanionSlot } from '../shell/CompanionSlot'
+import { glowTarget } from '../shell/companion'
 import { PressLink } from '../shell/PressLink'
 import { returnTab } from '../shell/stage'
 import type { SoundEvent } from '../sound/score'
@@ -145,7 +147,7 @@ export function LessonEnd({
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: as above */}
       <div className="ls-end__stage" data-badge={badge ? '' : undefined} onClick={land}>
         <i className="ls-end__halo" aria-hidden="true" />
-        <Duo ref={duo} mood="neutral" className="ls-duo" />
+        <CompanionSlot name="end" size="hero" mood="neutral" className="ls-duo" duo={duo} />
         {badge ? (
           <BadgeReveal key={badge.id} badge={badge} onClosed={() => duo.current?.react('wow')} />
         ) : null}
@@ -280,7 +282,8 @@ function celebrate(root: HTMLElement, reward: SoundEvent, perfect: boolean) {
     }
     engine.after(home, () => {
       glow(halo, light.peak, perfect ? Math.max(light.rest, 0.14) : light.rest)
-      if (duo && kind !== 'lessonEnd') glow(duo, 1)
+      const wearer = glowTarget() ?? duo
+      if (wearer && kind !== 'lessonEnd') glow(wearer, 1)
       for (const [at, cell] of rights.entries()) {
         engine.after(at * GLINT_STAGGER, () => {
           glow(cell, 1)

@@ -7,6 +7,8 @@ import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
+import { CompanionSlot } from '../shell/CompanionSlot'
+import { reactCompanion } from '../shell/companion'
 import { returnTab } from '../shell/stage'
 import { hashOf, planLesson } from '../sound/form'
 import { haptic } from '../sound/haptics'
@@ -201,10 +203,13 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       run.current = attempt.wrong.length === 0 ? run.current + 1 : 0
       cue(run.current >= STREAK ? 'streak' : 'correct')
       haptic(14)
+      // The companion cheers a right first try only; a right answer after a slip is quiet.
+      if (attempt.wrong.length === 0) reactCompanion('happy')
       setAttempt((a) => ({ ...a, solved: true, revealed: true }))
     } else {
       run.current = 0
       cue('wrong')
+      reactCompanion('console')
       haptic([10, 60, 10])
       setAttempt((a) => ({ ...a, wrong: [...a.wrong, given] }))
     }
@@ -222,6 +227,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       setHeld(false)
       setAttempt(freshAttempt)
       setMomentView({ reward, misses: [], first: momentState(readMoments(), lesson.id) === 'open' })
+      reactCompanion('curious')
     } else setEnded(reward)
   }
 
@@ -432,6 +438,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         >
           <span className="ls-progress__fill" />
         </div>
+        {/* The companion's place in the lesson: it only reacts to answers from here. */}
+        <CompanionSlot name="lesson" size="lesson" mood="keep" className="ls-top__duo" />
         {/* Only the step number rolls; the code and the total stay still. */}
         <span className="ls-count" aria-hidden="true">
           {pathCode(lesson)} · <RollNumber value={index + 1} />/{lesson.steps.length}

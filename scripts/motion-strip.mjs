@@ -5,7 +5,7 @@
 //
 // Usage: pnpm build && pnpm preview --port 4173 &
 //        node scripts/motion-strip.mjs <scenario> <outDir>
-// Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
+// Scenarios: companion-tabs and companion-hello (the duo travelling between screens, the cold start), count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
 // chapter-test-open / chapter-test-close (alias test-close) (Harita's chapter cell and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
@@ -122,6 +122,26 @@ const scenarios = {
       await frames(40)
       await tap(tabN(0))
       await frames(40)
+    },
+  },
+  // The companion: Bugün to Sen and back (the duo travels between its anchors).
+  'companion-tabs': {
+    region: 'body',
+    scale: 2,
+    run: async ({ tap, frames }) => {
+      await tap(tabN(2))
+      await frames(60)
+      await tap(tabN(0))
+      await frames(60)
+    },
+  },
+  // The cold start hello, filmed from the first frame (no settling first).
+  'companion-hello': {
+    region: 'body',
+    scale: 2,
+    cold: true,
+    run: async ({ frames }) => {
+      await frames(75)
     },
   },
   sheet: {
@@ -320,8 +340,10 @@ async function tap(target) {
 
 await page.goto(plan.lesson ? `${base}lesson/${plan.lesson}` : base)
 await page.waitForSelector(plan.lesson ? '[data-testid="lesson-player"]' : '.dz-tab')
-await page.evaluate(() => document.fonts.ready)
-await settle()
+if (!plan.cold) {
+  await page.evaluate(() => document.fonts.ready)
+  await settle()
+}
 for (let i = 0; i < (plan.before ?? 0); i++) {
   await page.locator('.ls-dock .sh-btn--primary').click()
   await settle()

@@ -6,6 +6,7 @@ import { CHOREO, CHOREO_MS } from '../engine/tokens'
 import { readSettings } from '../progress/settings'
 import { MeIcon, PathIcon, TodayIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
+import { CompanionLayer } from './CompanionLayer'
 import { MeView } from './MeView'
 import {
   aftermath,
@@ -222,6 +223,7 @@ export function Shell() {
           </div>
         </>
       ) : null}
+      <CompanionLayer ctx={{ tab, overlay, present }} />
       <div ref={overlayHostRef} className="sh-sheet-host" />
       <Onboarding />
     </div>

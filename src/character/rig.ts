@@ -7,7 +7,7 @@
  */
 
 export type Who = 'row' | 'col'
-export type Mood = 'neutral' | 'happy' | 'proud' | 'console' | 'curious' | 'wow'
+export type Mood = 'neutral' | 'happy' | 'proud' | 'console' | 'curious' | 'wow' | 'asleep'
 
 const FACE = ['openL', 'openR', 'happy', 'mc', 'mo', 'brow', 'tilt', 'hy', 'blush', 'lx', 'ly'] as const
 const BODY = ['y', 'rot', 'sx', 'sy'] as const
@@ -43,6 +43,8 @@ export const MOODS: Record<Mood, Partial<Record<FaceChannel, number>>> = {
   console: { happy: 0.45, mc: 0.6, brow: 1, tilt: 12, hy: 2 },
   curious: { openL: 1.12, openR: 1.12, mc: 0.25, mo: 0.3, brow: 1, tilt: 3, ly: -1.2, lx: 0.8 },
   wow: { openL: 1.2, openR: 1.2, mc: 0.35, mo: 1.15, blush: 0.45 },
+  /** Eyes shut, a small calm mouth: the duo before the hello wakes it. */
+  asleep: { openL: 0.04, openR: 0.04, mc: 0.45, blush: 0.4 },
 }
 
 /** Per face channel: stiffness and start delay (eyes, brows, mouth, tilt), all critically damped. */
@@ -175,6 +177,39 @@ export class Rig {
         this.go(head, 'sx', 1, 520, 0.5, HOP.thin * strength)
         this.go(head, 'rot', 0, 240, 0.55, (who === 'row' ? 1 : -1) * HOP.lean * strength)
       })
+    })
+  }
+
+  /** The wind-up of a leap that the caller carries out (a companion about to travel): the heads sink. */
+  crouch(who: Who, delay = 0) {
+    if (this.reduced) return
+    const head = this.heads[who]
+    this.after(delay, () => {
+      this.go(head, 'y', 0.8, 900)
+      this.go(head, 'sy', 0.94, 900)
+      this.go(head, 'sx', 1.035, 900)
+    })
+  }
+
+  /** In the air: the head is a little taller and thinner, springing back to rest if nothing lands it. */
+  stretch(who: Who, delay = 0) {
+    if (this.reduced) return
+    const head = this.heads[who]
+    this.after(delay, () => {
+      this.go(head, 'y', 0, 420, 0.7)
+      this.go(head, 'sy', 1.07, 420, 0.7)
+      this.go(head, 'sx', 0.965, 420, 0.7)
+    })
+  }
+
+  /** The end of a carried leap: a squash that settles (the hop's own landing, played on cue). */
+  land(who: Who, delay = 0) {
+    if (this.reduced) return
+    const head = this.heads[who]
+    this.after(delay, () => {
+      this.go(head, 'sy', 1, 520, 0.45, -(180 * 0.05) / 2.6)
+      this.go(head, 'sx', 1, 520, 0.45, (180 * 0.05) / 4)
+      this.go(head, 'y', 0, 520, 0.6)
     })
   }
 

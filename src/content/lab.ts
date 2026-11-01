@@ -57,6 +57,7 @@ export const lab = {
       curious: 'Merak',
       console: 'Teselli',
       neutral: 'Sakin',
+      asleep: 'Uyku',
     },
     badgesLead: 'Hepsi burada görünür; Profil’de yalnızca kazandıkların durur.',
     tapBadge: 'Kazanma anını görmek için bir rozete dokun.',
