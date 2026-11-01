@@ -28,7 +28,7 @@ async function seedAndOpen(page: Page, path: string) {
       localStorage.setItem(`${p}dizey.onboarding.safari`, '1')
       localStorage.setItem(`${p}dizey.lessons`, lessons as string)
       localStorage.setItem(`${p}dizey.settings`, JSON.stringify({ examDate: key(exam) }))
-      localStorage.setItem(`${p}dizey.activity`, JSON.stringify([key(today)]))
+      localStorage.setItem(`${p}dizey.activity`, JSON.stringify({ v: 1, days: [key(today)] }))
       localStorage.setItem(
         `${p}dizey.daily`,
         JSON.stringify({ v: 1, day: key(today), questionId: 'v1-pb-04', given: 'a', correct: true }),
@@ -50,16 +50,10 @@ async function seedAndOpen(page: Page, path: string) {
 /** Each screen: how to reach it from a seeded app, resting. */
 const screens: readonly (readonly [string, (page: Page) => Promise<void>])[] = [
   [
-    'Bugün',
+    'Yol',
     async (page) => {
       await seedAndOpen(page, './')
       await expect(page.locator('.sh-pane:not([inert])').getByTestId('today-exam')).toBeVisible()
-    },
-  ],
-  [
-    'Harita',
-    async (page) => {
-      await seedAndOpen(page, './map')
       await expect(page.locator('.sh-pane:not([inert])').getByTestId('continue-card')).toBeVisible()
     },
   ],
@@ -103,7 +97,7 @@ const screens: readonly (readonly [string, (page: Page) => Promise<void>])[] = [
   [
     'Bölüm testi',
     async (page) => {
-      await seedAndOpen(page, './map')
+      await seedAndOpen(page, './')
       await page.getByTestId('chapter-test-matrices').click()
       await expect(page.getByTestId('exam-run').getByText('Soru 1 / 6')).toBeVisible()
     },
@@ -111,7 +105,7 @@ const screens: readonly (readonly [string, (page: Page) => Promise<void>])[] = [
   [
     'Test sonucu',
     async (page) => {
-      await seedAndOpen(page, './map')
+      await seedAndOpen(page, './')
       await page.getByTestId('chapter-test-matrices').click()
       const run = page.getByTestId('exam-run')
       await expect(run.getByText('Soru 1 / 6')).toBeVisible()

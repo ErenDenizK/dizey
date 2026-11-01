@@ -143,9 +143,13 @@ export function PathHome() {
   )
 }
 
+/** How far below the sticky header (px) a chapter's heading counts as reached: the header names the chapter you are in. */
+const HEADING_LEAD = 160
+
 /**
- * The chapter whose heading has scrolled under the sticky header (the first one before any has): what the
- * header names. Only a change of chapter renders.
+ * The chapter whose heading has reached the top of the screen (scrolled under the sticky header, or within
+ * `HEADING_LEAD` below it; the first chapter before any has): what the header names. Only a change of
+ * chapter renders.
  */
 function useChapterInView(
   root: React.RefObject<HTMLElement | null>,
@@ -159,7 +163,7 @@ function useChapterInView(
     if (!scroller || !bar) return
     const headings = [...(root.current?.querySelectorAll<HTMLElement>('.ph-chapter') ?? [])]
     const measure = () => {
-      const line = bar.getBoundingClientRect().bottom
+      const line = bar.getBoundingClientRect().bottom + HEADING_LEAD
       let found = 0
       headings.forEach((heading, i) => {
         const box = heading.getBoundingClientRect()
@@ -192,8 +196,7 @@ function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string
     const center = box.top - frame.top + scroller.scrollTop + box.height / 2
     // The free band of the screen: under the header and above the dock, which rests at the bottom.
     const top = bar.getBoundingClientRect().bottom - frame.top
-    const bottom =
-      scroller.clientHeight - dock.offsetHeight - parseFloat(getComputedStyle(dock).bottom || '0')
+    const bottom = dock.getBoundingClientRect().top - frame.top
     const goal = Math.max(
       0,
       Math.min(center - (top + bottom) / 2, scroller.scrollHeight - scroller.clientHeight),

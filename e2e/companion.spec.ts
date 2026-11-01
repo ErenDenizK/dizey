@@ -73,7 +73,7 @@ test('one duo walks Bugün, Sen, a lesson and its end, and never covers the less
   expect(me).not.toBeNull()
   await only()
 
-  await bar.getByRole('button', { name: 'Bugün' }).click()
+  await bar.getByRole('button', { name: 'Yol' }).click()
   await onAnchor(page, 'today')
   await settled(page)
   expect(Math.abs(((await duoBox(page))?.x ?? 0) - (home?.x ?? 0))).toBeLessThan(40)

@@ -6,7 +6,8 @@
 /* ---- Header: the chapter you are in, sticky under the status bar ---------------- */
 .ph-head {
   position: sticky;
-  top: 0;
+  /* Sticky offsets are measured inside the screen's padding, so this is the very top of the screen. */
+  top: calc((env(safe-area-inset-top) + var(--space-3)) * -1);
   z-index: 4;
   display: grid;
   gap: var(--space-0-5);
@@ -214,33 +215,30 @@
 
 /* The chapter's test: a bracketed node [ ] that ends its chapter, never locked. */
 .pa-test {
-  background: none;
+  background: var(--surface-sunk);
   --press-tone: var(--ink-1);
 }
-.pa-test::before,
-.pa-test::after {
-  content: "";
+.pa-test__bracket {
   position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 14px;
+  top: var(--space-2);
+  bottom: var(--space-2);
+  width: 12px;
   border: 3px solid var(--ink-3);
-  border-radius: 4px;
+  border-radius: 3px;
+  pointer-events: none;
 }
-.pa-test::before {
-  left: 0;
+.pa-test__bracket[data-side="start"] {
+  left: var(--space-2);
   border-right: 0;
 }
-.pa-test::after {
-  right: 0;
+.pa-test__bracket[data-side="end"] {
+  right: var(--space-2);
   border-left: 0;
 }
-.pa-test[data-state="done"]::before,
-.pa-test[data-state="done"]::after {
+.pa-test[data-state="done"] .pa-test__bracket {
   border-color: var(--ok-fill);
 }
-.pa-test[data-state="preparing"]::before,
-.pa-test[data-state="preparing"]::after {
+.pa-test[data-state="preparing"] .pa-test__bracket {
   border-color: var(--hairline-strong);
 }
 .pa-test__score {
@@ -311,13 +309,14 @@
 /* ---- Dock: satellites over the next lesson, sticky above the tab bar ------------------ */
 .ph-dock {
   position: sticky;
-  bottom: calc(var(--bar-height) + var(--bar-bottom) + var(--space-3));
+  /* Measured inside the screen's bottom padding (which clears the tab bar): the dock's own foot ends at the bar. */
+  bottom: calc(var(--space-6) * -1);
   z-index: 4;
   display: grid;
   gap: var(--space-2);
   /* The path dissolves into the dock instead of meeting its edge. */
   margin-top: calc(var(--space-6) * -1);
-  padding-top: var(--space-6);
+  padding: var(--space-6) 0 var(--space-3);
   background: linear-gradient(to bottom, transparent, var(--bg) var(--space-6));
 }
 .ph-chips {
@@ -328,12 +327,12 @@
   display: none;
 }
 .ph-chip {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   min-width: 0;
   display: grid;
   align-content: center;
   min-height: 48px;
-  padding: var(--space-1) var(--space-3);
+  padding: var(--space-1) var(--space-2);
   border-radius: var(--corner-inner);
   background: var(--surface);
   box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
@@ -374,6 +373,8 @@
   min-width: 0;
 }
 .ph-next__where {
+  min-width: 0;
+  overflow: hidden;
   display: flex;
   gap: var(--space-2);
   font-size: var(--type-footnote);
@@ -383,7 +384,11 @@
   color: var(--ink-2);
   white-space: nowrap;
 }
+.ph-next__where > span {
+  flex: none;
+}
 .ph-next__where > span:nth-child(2) {
+  flex: 0 1 auto;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

@@ -16,34 +16,36 @@ const screen = (page: Page) => page.locator('.sh-pane:not([inert])')
 const pushed = (page: Page) => page.locator('.sh-overlay')
 const tab = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name })
 
-test('Harita offers the first lesson on the path', async ({ page }) => {
-  await openApp(page, './map')
-  await expect(screen(page).getByRole('heading', { name: 'Harita', level: 1 })).toBeVisible()
+test('Yol offers the first lesson on the path', async ({ page }) => {
+  await openApp(page)
+  await expect(screen(page).getByRole('heading', { name: 'Yol', level: 1 })).toBeVisible()
   await expect(screen(page).getByTestId('continue-card')).toHaveAttribute('aria-label', /^Başla: 1\.1 /)
-  await expect(screen(page).getByText('Vize 1 · 15 Kasım civarı')).toBeVisible()
 })
 
 test('the path groups lessons into chapters and Sen shows version and commit', async ({ page }) => {
-  await openApp(page, './map')
+  await openApp(page)
   await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
-  // A chapter is one row: its name and one readiness square per lesson, grouped under the chapter's progress.
-  const squares = screen(page).getByRole('list', { name: 'Matrisler, 0 / 10 ders tamam' })
-  await expect(squares.getByTestId('map-cell')).toHaveCount(10)
-  await expect(screen(page).getByRole('list', { name: 'Determinant, 0 / 4 ders tamam' })).toBeVisible()
+  // Every chapter has its heading in the path; the nodes are its lessons (10 + 3 + 4 + 2 + 4) and one test each.
+  await expect(screen(page).getByRole('heading', { level: 2 })).toHaveCount(5)
+  const nodes = screen(page).getByRole('list', { name: 'Dersler' })
+  await expect(nodes.locator('.pa-tile')).toHaveCount(23)
+  await expect(nodes.locator('.pa-test')).toHaveCount(5)
   await tab(page, 'Sen').click()
   await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
   if (channel !== 'production') await expect(page.getByTestId('app-version')).toContainText(channel)
 })
 
-test('the tab bar is Bugün, Harita, Sen and a fresh start leads into the first lesson and back', async ({
+test('the tab bar is Yol and Sen and a fresh start leads into the first lesson and back', async ({
   page,
 }) => {
   await openApp(page)
   const buttons = page.getByRole('navigation', { name: 'Bölümler' }).getByRole('button')
-  await expect(buttons).toHaveText(['Bugün', 'Harita', 'Sen'])
-  await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText('Bugün')
-  await expect(screen(page).getByTestId('today-state')).toHaveText('İlk derse başlayalım.')
+  await expect(buttons).toHaveText(['Yol', 'Sen'])
+  await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText('Yol')
+  // The header names the chapter you are in.
+  await expect(screen(page).getByTestId('path-head')).toContainText('Matrisler')
+  await expect(screen(page).getByTestId('path-head')).toContainText('1. bölüm')
   await expect(screen(page).getByText('Vize tarihi belli değil')).toHaveCount(0)
   await expect(page.locator('.dz-icon-button--float')).toHaveCount(0)
   const next = screen(page).getByTestId('today-next')
@@ -58,10 +60,10 @@ test('the tab bar is Bugün, Harita, Sen and a fresh start leads into the first 
   await expect(screen(page).getByTestId('today-next')).toBeVisible()
 })
 
-test('a tile opens its card, a tap outside folds it back, and the lesson grows out of the card and returns', async ({
+test('a node opens its card, a tap outside folds it back, and the lesson grows out of the card and returns', async ({
   page,
 }) => {
-  await openApp(page, './map')
+  await openApp(page)
   // By data attribute: a tile hidden while its card is open leaves the accessibility tree, and it becomes the continue card once its lesson is opened.
   const tile = screen(page).locator('.pa-tile[data-lesson="m3-trace"]')
   const card = page.getByTestId('lesson-peek')
@@ -93,9 +95,8 @@ test('a tile opens its card, a tap outside folds it back, and the lesson grows o
   await expect(card).toHaveCount(0)
 })
 
-test('a lesson opens from its tile card and hides the tab bar', async ({ page }) => {
-  await openApp(page, './map')
-  await screen(page).getByTestId('chapter-toggle-determinants').click()
+test('a lesson opens from its node card and hides the tab bar', async ({ page }) => {
+  await openApp(page)
   await screen(page)
     .getByRole('button', { name: /^3\.1 / })
     .click()
@@ -177,7 +178,7 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   await tab(page, 'Sen').click()
   await expect(screen(page).locator('[data-testid="week-strip"] [data-active="true"]')).toHaveCount(1)
   await expect(screen(page).getByTestId('week-summary')).toHaveText('Bu hafta 1 gün çalıştın')
-  await tab(page, 'Bugün').click()
+  await tab(page, 'Yol').click()
   await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
 })
 
@@ -197,7 +198,7 @@ test('after checking, every option of the daily question still shows its letter'
   }
 })
 
-test('Bugün has one primary action and the question row opens its sheet from anywhere on the row', async ({
+test('Yol has one primary action and the question chip opens its sheet from anywhere on the chip', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -205,13 +206,13 @@ test('Bugün has one primary action and the question row opens its sheet from an
   await expect(screen(page).locator('[data-kind="primary"]')).toHaveCount(1)
   const row = screen(page).getByTestId('today-daily')
   const box = await row.boundingBox()
-  if (!box) throw new Error('no daily row')
-  // The right end of the row, over the chevron and past the label.
+  if (!box) throw new Error('no daily chip')
+  // The right end of the chip, past its label.
   await row.click({ position: { x: box.width - 24, y: box.height / 2 } })
   await expect(page.getByTestId('question-sheet')).toBeVisible()
 })
 
-test('the week strip lives on Sen, not on Bugün', async ({ page }) => {
+test('the week strip lives on Sen, not on Yol', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByTestId('today-next')).toBeVisible()
   await expect(screen(page).getByTestId('week-strip')).toHaveCount(0)
@@ -302,7 +303,7 @@ test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments 
   await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
   await expect(sen.getByRole('heading', { name: /Rozetler/ })).toBeVisible()
   await expect(sen.getByTestId('moments-album')).toBeVisible()
-  // The readiness squares live on Harita now, not here, and the shelf shows every badge: none lit, all ten dim and inert.
+  // The path nodes on Yol show readiness now, not here, and the shelf shows every badge: none lit, all ten dim and inert.
   await expect(sen.getByTestId('map-cell')).toHaveCount(0)
   await expect(sen.getByText(/Hazırlık haritası/)).toHaveCount(0)
   await expect(sen.getByText(/Çalıştıkça gelir/)).toHaveCount(0)
@@ -318,9 +319,9 @@ test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments 
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
   await expect(sen.getByTestId('mistake-row')).toContainText('1 açık hata')
-  // The wrong try colours the lesson's square on Harita, and the square opens its lesson.
-  await tab(page, 'Harita').click()
-  const cell = screen(page).locator('.pa-cell[data-lesson="d1-determinant"]')
+  // The wrong try marks the lesson's node on Yol; it is the lesson you are on now, so the node opens it.
+  await tab(page, 'Yol').click()
+  const cell = screen(page).locator('.pa-tile[data-lesson="d1-determinant"]')
   await expect(cell).toHaveAttribute('data-level', 'bad')
   await cell.click()
   await expect(page.getByTestId('lesson-player')).toBeVisible()
@@ -333,106 +334,75 @@ test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments 
 
 test('the exam line counts down once a date is set', async ({ page }) => {
   await openApp(page, './settings')
-  await page.getByLabel('Vize 1 tarihi').fill('2026-11-19')
+  const soon = new Date(Date.now() + 3 * 86_400_000)
+  const day = `${soon.getFullYear()}-${String(soon.getMonth() + 1).padStart(2, '0')}-${String(soon.getDate()).padStart(2, '0')}`
+  await page.getByLabel('Vize 1 tarihi').fill(day)
   // Reaching the field scrolled the page; the header row with Bitti scrolls with it, so go back to the top.
   await pushed(page)
     .locator('.dz-screen')
     .evaluate((s) => s.scrollTo(0, 0))
   await page.getByRole('button', { name: 'Bitti', exact: true }).click()
-  await tab(page, 'Harita').click()
-  await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
+  await tab(page, 'Yol').click()
+  await expect(screen(page).getByTestId('today-exam')).toContainText('3 gün kaldı')
 })
 
-test('every open lesson row is one line, and its aria-label carries the whole title', async ({ page }) => {
-  await openApp(page, './map')
-  for (const id of ['matrices', 'row-operations', 'determinants', 'inverse', 'systems']) {
-    const toggle = screen(page).getByTestId(`chapter-toggle-${id}`)
-    if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
-    const body = screen(page).locator(`#chapter-body-${id}`)
-    await expect(body).toBeVisible()
-    await page.waitForTimeout(700)
-    const rows = await body.locator('.pa-tile, .pa-test').evaluateAll((els) =>
-      els.map((el) => {
-        const title = el.querySelector<HTMLElement>('.pa-tile__title, .pa-test__title')
-        return {
-          height: (el as HTMLElement).offsetHeight,
-          wraps: title ? title.scrollHeight > title.clientHeight + 1 : false,
-          label: el.getAttribute('aria-label') ?? '',
-        }
-      }),
+test('every node is a tap target of at least 44 px and its aria-label carries the whole title', async ({
+  page,
+}) => {
+  await openApp(page)
+  const nodes = await screen(page)
+    .locator('.pa-tile, .pa-test')
+    .evaluateAll((els) =>
+      els.map((el) => ({
+        width: (el as HTMLElement).offsetWidth,
+        height: (el as HTMLElement).offsetHeight,
+        label: el.getAttribute('aria-label') ?? '',
+      })),
     )
-    expect(rows.length).toBeGreaterThan(1)
-    for (const row of rows) {
-      expect(row.wraps).toBe(false)
-      expect(row.height).toBeGreaterThanOrEqual(44)
-      expect(row.height).toBeLessThanOrEqual(56)
-      expect(row.label.length).toBeGreaterThan(8)
-    }
+  expect(nodes).toHaveLength(28)
+  for (const node of nodes) {
+    expect(node.width).toBeGreaterThanOrEqual(56)
+    expect(node.height).toBeGreaterThanOrEqual(56)
+    expect(node.label.length).toBeGreaterThan(8)
   }
 })
 
-test('Harita opens exactly one chapter, the one with the next lesson, and a tap swaps it', async ({
-  page,
-}) => {
-  await openApp(page, './map')
+test('the sticky header names the chapter that has scrolled under it', async ({ page }) => {
+  await openApp(page)
   const pane = screen(page)
-  const toggles = pane.locator('.pa-chapter__toggle')
-  await expect(toggles).toHaveCount(5)
-  await expect(pane.locator('.pa-chapter__toggle[aria-expanded="true"]')).toHaveCount(1)
-  await expect(pane.getByTestId('chapter-toggle-matrices')).toHaveAttribute('aria-expanded', 'true')
-  await pane.getByTestId('chapter-toggle-determinants').click()
-  await expect(pane.getByTestId('chapter-toggle-determinants')).toHaveAttribute('aria-expanded', 'true')
-  await expect(pane.getByTestId('chapter-toggle-matrices')).toHaveAttribute('aria-expanded', 'false')
-  await expect(pane.locator('#chapter-body-matrices')).toHaveCount(0)
-  await expect(pane.locator('#chapter-body-determinants .pa-tile')).toHaveCount(4)
-  // The whole row is the target: tall enough, and it closes the chapter again.
-  const box = await pane.getByTestId('chapter-toggle-determinants').boundingBox()
-  expect(box?.height).toBeGreaterThanOrEqual(44)
-  await pane.getByTestId('chapter-toggle-determinants').click()
-  await expect(pane.locator('.pa-chapter__toggle[aria-expanded="true"]')).toHaveCount(0)
+  await expect(pane.getByTestId('path-head')).toContainText('Matrisler')
+  await pane
+    .locator('.dz-screen')
+    .evaluate((s) =>
+      s.scrollTo(
+        0,
+        s.scrollTop +
+          (document.querySelector('[data-testid="chapter-determinants"]')?.getBoundingClientRect().top ?? 0),
+      ),
+    )
+  await expect(pane.getByTestId('path-head')).toContainText('Determinant')
+  await expect(pane.getByTestId('path-head')).toContainText('3. bölüm')
+  await expect(pane.getByTestId('path-head')).toContainText('0 / 4')
 })
 
-test('Harita edges: even progress strip, a clear resume marker, one tile language', async ({ page }) => {
+test('Yol edges: one amber lesson node, equal nodes, one language of corners, nothing spills sideways', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 375, height: 667 })
-  await openApp(page, './map')
+  await openApp(page)
   await page.waitForTimeout(1200)
   const pane = screen(page)
-  // (a) No chapter segment of the progress strip is a sliver.
-  const widths = await pane
-    .locator('.pa-meter__track')
-    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width))
-  expect(widths.length).toBeGreaterThan(0)
-  for (const w of widths) expect(w).toBeGreaterThanOrEqual(12)
-  // (b) The pill sits inside its row and overlaps none of the row's text or marks.
-  const clash = await pane.locator('.pa-tile[data-next]').evaluate((tile) => {
-    const pill = tile.querySelector<HTMLElement>('.pa-tile__go')
-    if (!pill) return ['no pill']
-    const mark = pill.getBoundingClientRect()
-    const box = tile.getBoundingClientRect()
-    const problems: string[] = []
-    if (mark.left < box.left || mark.right > box.right || mark.top < box.top || mark.bottom > box.bottom)
-      problems.push('pill leaves the row')
-    const hits = (r: DOMRect) =>
-      mark.left < r.right && mark.right > r.left && mark.top < r.bottom && mark.bottom > r.top
-    for (const el of tile.querySelectorAll<HTMLElement>('.pa-tile__code, .pa-tile__check')) {
-      if (hits(el.getBoundingClientRect())) problems.push(el.className.toString())
-    }
-    const title = tile.querySelector<HTMLElement>('.pa-tile__title')
-    if (title) {
-      const range = document.createRange()
-      range.selectNodeContents(title)
-      if (hits(range.getBoundingClientRect())) problems.push('title')
-    }
-    return problems
-  })
-  expect(clash).toEqual([])
-  // (c) Lesson rows are equally tall, and exactly one pill (the screen's one amber element) is on show.
+  // (a) Exactly one node is the lesson you are on, and it is larger than the rest, which are equal.
+  await expect(pane.locator('.pa-tile[data-next]')).toHaveCount(1)
   const heights = await pane
-    .locator('.pa-tile')
+    .locator('.pa-tile:not([data-next])')
     .evaluateAll((tiles) => [...new Set(tiles.map((tile) => (tile as HTMLElement).offsetHeight))])
   expect(heights).toHaveLength(1)
-  await expect(pane.locator('.pa-tile__go')).toHaveCount(1)
-  // (d) The chapter test row and the gate speak the row's language: the same corner radius.
+  const main = await pane
+    .locator('.pa-tile[data-next]')
+    .evaluate((tile) => (tile as HTMLElement).offsetHeight)
+  expect(main).toBeGreaterThan(heights[0] ?? 0)
+  // (b) The chapter test and the gate speak the node's language: the same corner radius.
   const radius = (sel: string) =>
     pane
       .locator(sel)
@@ -445,15 +415,15 @@ test('Harita edges: even progress strip, a clear resume marker, one tile languag
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
-test('scrolling Harita moves the path as one flat page', async ({ page }) => {
-  await openApp(page, './map')
+test('scrolling Yol moves the path as one flat page', async ({ page }) => {
+  await openApp(page)
   const scroller = screen(page).locator('.dz-screen')
   await page.waitForTimeout(1500)
   const moved = await scroller.evaluate(async (s) => {
     s.scrollTop = 520
     s.dispatchEvent(new Event('scroll'))
     await new Promise((done) => setTimeout(done, 200))
-    const pieces = [...s.querySelectorAll<HTMLElement>('.pa-summary, .pa-chapter__head, .pa-lessons > li')]
+    const pieces = [...s.querySelectorAll<HTMLElement>('.ph-root, .ph-wires, .ph-chapter, .ph-slot')]
     return pieces.filter(
       (el) => getComputedStyle(el).transform !== 'none' || getComputedStyle(el).opacity !== '1',
     ).length
@@ -607,10 +577,10 @@ test('an exam rehearsal runs, survives a reload and shows its result', async ({ 
   await expect(page.getByTestId('exam-score')).toBeVisible()
 })
 
-test('a chapter test runs six questions untimed and returns to Harita with its score', async ({ page }) => {
-  await openApp(page, './map')
+test('a chapter test runs six questions untimed and returns to Yol with its score', async ({ page }) => {
+  await openApp(page)
   const cell = screen(page).getByTestId('chapter-test-matrices')
-  await expect(cell).toContainText('6 soru')
+  await expect(cell).toHaveAttribute('aria-label', /6 soru/)
   await cell.click()
   const run = page.getByTestId('exam-run')
   await expect(run.getByText('Soru 1 / 6')).toBeVisible()
@@ -624,20 +594,19 @@ test('a chapter test runs six questions untimed and returns to Harita with its s
   await run.getByRole('button', { name: 'Bitir' }).click()
   await page.getByTestId('exam-finish').click()
   await expect(page.getByTestId('exam-score')).toContainText(/\d+ \/ 6 doğru/)
-  await page.getByRole('button', { name: 'Haritaya dön' }).click()
-  await expect(screen(page).getByRole('heading', { name: 'Harita', level: 1 })).toBeVisible()
+  await page.getByRole('button', { name: 'Yola dön' }).click()
+  await expect(screen(page).getByRole('heading', { name: 'Yol', level: 1 })).toBeVisible()
   await expect(pushed(page)).toHaveCount(0)
-  await expect(cell).toContainText(/\d\/6$/)
+  await expect(cell).toHaveAttribute('aria-label', /son sonuç 6 sorudan \d+ doğru/)
   // A chapter test is not a rehearsal: the exam hub keeps no history for it.
   await page.goto('./exam')
   await expect(pushed(page).getByRole('heading', { name: 'Geçmiş' })).toHaveCount(0)
 })
 
 test('a chapter whose questions are still being written explains itself', async ({ page }) => {
-  await openApp(page, './map')
-  await screen(page).getByTestId('chapter-toggle-row-operations').click()
+  await openApp(page)
   const cell = screen(page).getByTestId('chapter-test-row-operations')
-  await expect(cell).toContainText('hazırlanıyor')
+  await expect(cell).toHaveAttribute('aria-label', /hazırlanıyor/)
   await cell.click()
   const note = page.getByTestId('chapter-test-note')
   await expect(note.getByRole('heading', { name: 'Sorular hazırlanıyor' })).toBeVisible()
@@ -647,7 +616,7 @@ test('a chapter whose questions are still being written explains itself', async 
 })
 
 test('the Vize provası gate at the end of the map opens the exam hub', async ({ page }) => {
-  await openApp(page, './map')
+  await openApp(page, './')
   await screen(page).getByTestId('vize-gate').click()
   await expect(pushed(page).getByRole('heading', { name: 'Sınav', level: 1 })).toBeVisible()
   await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
@@ -761,8 +730,7 @@ for (const colorScheme of ['dark'] as const) {
   test(`phone screenshots, ${colorScheme}`, async ({ page }, testInfo) => {
     await page.emulateMedia({ colorScheme })
     for (const [name, path] of [
-      ['today', './'],
-      ['path', './map'],
+      ['path', './'],
       ['exam', './exam'],
       ['me', './me'],
       ['settings', './settings'],
@@ -901,7 +869,7 @@ test.describe('small phone (375 x 667) reach', () => {
     await expect(sheet).toHaveCount(0)
   })
 
-  test('with every Bugün block present the last row scrolls clear of the tab bar', async ({ page }) => {
+  test('with every chip present the dock sits clear of the tab bar', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
     const day = new Date()
     const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
@@ -922,7 +890,7 @@ test.describe('small phone (375 x 667) reach', () => {
   })
 
   test('the last option of a chapter test question scrolls fully above the action bar', async ({ page }) => {
-    await openApp(page, './map')
+    await openApp(page, './')
     await screen(page).getByTestId('chapter-test-matrices').click()
     const run = page.getByTestId('exam-run')
     await expect(run.getByText('Soru 1 / 6')).toBeVisible()
@@ -988,8 +956,7 @@ test.describe('small phone (375 x 667) reach', () => {
   })
 
   for (const [name, path] of [
-    ['Bugün', './'],
-    ['Harita', './map'],
+    ['Yol', './'],
     ['Sen', './me'],
   ] as const) {
     test(`${name} scrolls its last element clear of the tab bar`, async ({ page }) => {
@@ -1027,8 +994,7 @@ test.describe('standard phone (390 x 844) reach', () => {
   test.use({ viewport: { width: 390, height: 844 } })
 
   for (const [name, path] of [
-    ['Bugün', './'],
-    ['Harita', './map'],
+    ['Yol', './'],
     ['Sen', './me'],
   ] as const) {
     test(`${name} scrolls its last element clear of the tab bar`, async ({ page }) => {
@@ -1056,7 +1022,7 @@ test('Settings opens as a plain push page, not a sheet', async ({ page }) => {
 })
 
 test('Sınav opens as a sheet over the dimmed tab and a drag down closes it', async ({ page }) => {
-  await openApp(page, './map')
+  await openApp(page, './')
   await screen(page).getByTestId('vize-gate').click()
   const sheet = pushed(page)
   await expect(sheet).toHaveAttribute('data-present', 'sheet')
@@ -1080,7 +1046,7 @@ test('Sınav opens as a sheet over the dimmed tab and a drag down closes it', as
 
 test('a sheet keeps its title row and Bitti in view while its list scrolls', async ({ page }) => {
   await page.setViewportSize({ width: 375, height: 667 })
-  await openApp(page, './map')
+  await openApp(page, './')
   await screen(page).getByTestId('vize-gate').click()
   const sheet = pushed(page)
   // An expanded paper makes the sheet taller than the screen.
@@ -1100,7 +1066,7 @@ test('a sheet keeps its title row and Bitti in view while its list scrolls', asy
 })
 
 test('a tap on the dimmed tab above a sheet closes it', async ({ page }) => {
-  await openApp(page, './map')
+  await openApp(page, './')
   await screen(page).getByTestId('vize-gate').click()
   await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
   await page.mouse.click(195, 8)
@@ -1150,7 +1116,7 @@ test.describe('exam run and result layout', () => {
   })
 
   test('the result has no stat trio and a paper mark opens that question', async ({ page }) => {
-    await openApp(page, './map')
+    await openApp(page, './')
     await page.getByTestId('chapter-test-matrices').click()
     const run = page.getByTestId('exam-run')
     await expect(run.getByText('Soru 1 / 6')).toBeVisible()
@@ -1164,5 +1130,146 @@ test.describe('exam run and result layout', () => {
     await result.getByRole('button', { name: /^Soru 2,/ }).click()
     await expect(result.locator('.exs-item').nth(1).locator('.exs-item__body')).toBeVisible()
     await expect(result.locator('.exs-item__body')).toHaveCount(1)
+  })
+})
+
+test.describe('Yol, the path home', () => {
+  /** The first `count` lessons of the path, in order, are done. */
+  const seedDone = async (page: Page, count: number) => {
+    const ids = [
+      'm1-reading-a-matrix',
+      'm2-matrix-types',
+      'm4-matrix-arithmetic',
+      'm5-matrix-product',
+      'm3-trace',
+      'm6-transpose',
+      'm7-symmetric-antisymmetric',
+      'm8-power-classes',
+      'm9-orthogonal',
+      'm10-conjugate-hermitian',
+      'r1-row-operations',
+      'r2-echelon-forms',
+      'r3-rank',
+      'd1-determinant',
+      'd2-cofactor-expansion',
+      'd3-determinant-properties',
+      'd4-adjugate-inverse',
+    ].slice(0, count)
+    const records = Object.fromEntries(
+      ids.map((id, n) => [id, { at: null, doneAt: 1700000000000 + n, answers: {} }]),
+    )
+    await page.addInitScript(
+      ([key, value]) => localStorage.setItem(key as string, value as string),
+      [`${prefix}dizey.lessons`, JSON.stringify(records)],
+    )
+  }
+
+  test('the path renders every lesson in order, a test closing each chapter', async ({ page }) => {
+    await openApp(page)
+    const codes = await screen(page)
+      .locator('.ph-slot')
+      .evaluateAll((slots) =>
+        slots.map((slot) => {
+          const node = slot.querySelector('.pa-tile, .pa-test') as HTMLElement
+          return node.classList.contains('pa-test')
+            ? 'test'
+            : (node.getAttribute('aria-label') ?? '').match(/\d+\.\d+/)?.[0]
+        }),
+      )
+    const sizes = [10, 3, 4, 2, 4]
+    const expected = sizes.flatMap((size, chapter) => [
+      ...Array.from({ length: size }, (_, i) => `${chapter + 1}.${i + 1}`),
+      'test',
+    ])
+    expect(codes).toEqual(expected)
+    // Top to bottom, and the nodes walk two columns.
+    const ys = await screen(page)
+      .locator('.ph-slot')
+      .evaluateAll((slots) => slots.map((slot) => slot.getBoundingClientRect().top + window.scrollY))
+    expect([...ys].sort((a, b) => a - b)).toEqual(ys)
+    await expect(screen(page).getByTestId('vize-gate')).toBeVisible()
+  })
+
+  test('the lesson you are on is scrolled into view when the app opens', async ({ page }) => {
+    await seedDone(page, 15)
+    await openApp(page)
+    const node = screen(page).locator('.pa-tile[data-next]')
+    await expect(node).toHaveAttribute('data-lesson', 'd3-determinant-properties')
+    // The glide rides the spring engine; wait for it to land between the header and the dock.
+    await expect
+      .poll(async () => {
+        const box = await node.boundingBox()
+        const head = await screen(page).getByTestId('path-head').boundingBox()
+        const dock = await screen(page).getByTestId('path-dock').boundingBox()
+        return Boolean(box && head && dock && box.y >= head.y + head.height && box.y + box.height <= dock.y)
+      })
+      .toBe(true)
+    await expect(screen(page).getByTestId('path-head')).toContainText('Determinant')
+  })
+
+  test('rows and columns of the walk use different tokens, and what is ahead is faint', async ({ page }) => {
+    await seedDone(page, 3)
+    await openApp(page)
+    const wires = await screen(page)
+      .locator('.ph-wire')
+      .evaluateAll((lines) =>
+        lines.map((line) => ({
+          axis: line.getAttribute('data-axis'),
+          stroke: getComputedStyle(line).stroke,
+          opacity: getComputedStyle(line).opacity,
+          faint: line.hasAttribute('data-faint'),
+        })),
+      )
+    const rows = new Set(wires.filter((w) => w.axis === 'row').map((w) => w.stroke))
+    const cols = new Set(wires.filter((w) => w.axis === 'col').map((w) => w.stroke))
+    expect(rows.size).toBe(1)
+    expect(cols.size).toBe(1)
+    expect([...rows][0]).not.toBe([...cols][0])
+    const walked = wires.filter((w) => !w.faint)
+    const ahead = wires.filter((w) => w.faint)
+    expect(walked.length).toBeGreaterThan(0)
+    expect(ahead.length).toBeGreaterThan(walked.length)
+    expect(new Set(walked.map((w) => w.opacity))).toEqual(new Set(['1']))
+    for (const w of ahead) expect(Number(w.opacity)).toBeLessThan(0.4)
+  })
+
+  test("the dock card's Başla opens the lesson you are on", async ({ page }) => {
+    await seedDone(page, 2)
+    await openApp(page)
+    const next = screen(page).getByTestId('today-next')
+    await expect(next).toContainText('Başla')
+    await expect(next).toContainText('1.3')
+    await next.click()
+    await expect(page).toHaveURL(/lesson\/m4-matrix-arithmetic/)
+    await expect(page.getByTestId('lesson-player')).toBeVisible()
+  })
+
+  test('/map redirects to Yol and keeps working as a link', async ({ page }) => {
+    await page.addInitScript((key) => localStorage.setItem(key, '1'), `${prefix}dizey.onboarding.safari`)
+    await page.goto('./map')
+    await expect(page).not.toHaveURL(/\/map/)
+    await expect(screen(page).getByRole('heading', { name: 'Yol', level: 1 })).toBeVisible()
+    await expect(tab(page, 'Yol')).toBeVisible()
+  })
+
+  test('the Ayarlar button on Sen is a solid 44 px round button with its name', async ({ page }) => {
+    await openApp(page, './me')
+    const button = page.getByRole('link', { name: 'Ayarlar' })
+    await expect(button).toHaveAttribute('data-testid', 'open-settings')
+    await expect
+      .poll(async () => {
+        const box = await button.boundingBox()
+        return Boolean(box && box.width >= 44 && box.height >= 44 && Math.abs(box.width - box.height) < 1)
+      })
+      .toBe(true)
+    const look = await button.evaluate((el) => {
+      const style = getComputedStyle(el)
+      return { background: style.backgroundColor, radius: Number.parseFloat(style.borderTopLeftRadius) }
+    })
+    expect(look.background).not.toBe('rgba(0, 0, 0, 0)')
+    expect(look.radius).toBeGreaterThanOrEqual(22)
+    await button.click()
+    await expect(page.getByTestId('app-version')).toBeVisible()
+    await expect(pushed(page)).toHaveAttribute('data-present', 'push')
   })
 })

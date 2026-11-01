@@ -110,8 +110,12 @@ export function LessonNode({
   onPick: (lesson: Lesson, tile: HTMLElement) => void
 }) {
   const state: LessonState = stateOf(record)
-  const level = state === 'done' ? readinessOf(lesson, record) : 'none'
-  useStateChange(lesson.id, `${state}${main ? '+next' : ''}${level === 'bad' ? '+weak' : ''}`)
+  // The weak-tries mark is drawn on finished lessons only; a lesson still open shows it through its card.
+  const level = readinessOf(lesson, record)
+  useStateChange(
+    lesson.id,
+    `${state}${main ? '+next' : ''}${state === 'done' && level === 'bad' ? '+weak' : ''}`,
+  )
   const resuming = main && state === 'current' && record
   const face = (
     <>{state === 'done' ? <Tick /> : <span className="pa-tile__code num">{pathCode(lesson)}</span>}</>
@@ -213,6 +217,8 @@ export function ChapterTestNode({ chapter, onNote }: { chapter: Chapter; onNote:
         ready ? start(event.currentTarget) : onNote({ kind: 'preparing', chapter, available })
       }
     >
+      <i className="pa-test__bracket" data-side="start" aria-hidden="true" />
+      <i className="pa-test__bracket" data-side="end" aria-hidden="true" />
       {last && ready ? (
         <span className="pa-test__score num">{strings.path.chapterTest.score(last.correct, last.total)}</span>
       ) : null}
