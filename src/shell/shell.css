@@ -1501,3 +1501,34 @@ a.dz-button[data-kind="primary"] {
     width: 88px;
   }
 }
+
+/*
+ * Gizli an (hidden moment). A wrong pick is a try, not a mistake: the option goes quiet and struck through,
+ * with no red, no mark and no shadow. The skip text takes the place of the close control.
+ */
+.ex-opt[data-state="miss"] {
+  background: var(--sh-surface);
+  box-shadow: none;
+  color: var(--sh-muted);
+  cursor: default;
+}
+.ex-opt[data-state="miss"] .ex-opt__body {
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+}
+.ls-top[data-moment="true"] {
+  grid-template-columns: auto 44px 1fr auto;
+}
+.ls-top__skip {
+  width: auto;
+  min-width: 40px;
+  padding-inline: var(--space-3);
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-none);
+  letter-spacing: var(--tracking-body);
+  color: var(--sh-ink);
+}
+.ls-ghost {
+  visibility: hidden;
+}

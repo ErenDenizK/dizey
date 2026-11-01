@@ -14,6 +14,7 @@ import type { SoundEvent } from '../sound/score'
 import { Check, ChevronLeft, Close } from '../ui/icons'
 import { Keypad } from './Keypad'
 import { LessonEnd } from './LessonEnd'
+import { momentState, readMoments, setMoment } from './moments'
 import { useAnswerMotion, useLessonMotion } from './motion'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { rewardFor } from './reward'
@@ -32,11 +33,17 @@ import { CARRY, compile, emptyStage, type Family, readingFloor } from './timelin
 const LESSON_CHANNEL = 'lesson'
 const RUNNER_CHANNEL = 'runner'
 const POLL_MS = 16
+/** The secret chord waits this long after the right pick, so it never lands on the correct chord (ms). */
+const SECRET_GAP = 520
+const MOMENT_CHANNEL = 'moment'
 
 /** First-try answers in a row that turn the correct chord into a streak. */
 const STREAK = 3
 
 const reducedMotion = () => globalThis.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+
+/** The gizli an on screen: the reward waiting behind it, the wrong picks so far, and whether it is the first time. */
+type MomentView = { reward: SoundEvent; misses: string[]; first: boolean }
 
 type Attempt = {
   /** Keys or values tried and found wrong, in order. */
@@ -65,7 +72,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   })
   const [attempt, setAttempt] = useState<Attempt>(freshAttempt)
   const [typed, setTyped] = useState('')
-  const step = lesson.steps[index] as Step
+  // The gizli an is shown in place of a step, but it is not one: index, progress and records stay as they were.
+  const [moment, setMomentView] = useState<MomentView | null>(null)
+  const [insight, setInsight] = useState(false)
+  const step: Step = (moment ? lesson.moment : undefined) ?? (lesson.steps[index] as Step)
   // A right answer's reveal confirms (shorter dwells); a wrong one teaches again at full dwell.
   const family: Family = isQuestion(step) && attempt.solved && attempt.wrong.length === 0 ? 'reveal' : 'teach'
   const beat = beatOf(step, attempt)
@@ -101,11 +111,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   }, [index])
   useEffect(() => () => setSoundContext({}), [])
 
-  // Resume point: the step on screen.
+  // Resume point: the step on screen (the gizli an is not a step).
   useEffect(() => {
+    if (moment) return
     const record = recordOf(lesson.id)
     if (record.at !== step.id) saveRecord(lesson.id, { ...record, at: step.id })
-  }, [lesson.id, step.id])
+  }, [lesson.id, step.id, moment])
 
   const root = useRef<HTMLDivElement>(null)
   useLessonMotion(root, index, lesson.steps.length)
@@ -183,9 +194,44 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     const doneBefore = lessons.filter((other) => stateOf(recordOf(other.id)) === 'done')
     saveRecord(lesson.id, { ...recordOf(lesson.id), at: null, doneAt: Date.now() })
     // The reward sounds when the end screen's seal closes, not at the tap.
-    setEnded(rewardFor(lesson, doneBefore))
+    const reward = rewardFor(lesson, doneBefore)
     haptic(20)
+    if (lesson.moment && momentState(readMoments(), lesson.id) !== 'solved') {
+      // The secret question comes first; the reward waits behind it.
+      setReplays(0)
+      setHeld(false)
+      setAttempt(freshAttempt)
+      setMomentView({ reward, misses: [], first: momentState(readMoments(), lesson.id) === 'open' })
+    } else setEnded(reward)
   }
+
+  /** A pick in the gizli an: a try, never a mistake. Nothing reaches the lesson record. */
+  const pickMoment = (given: string, correct: boolean) => {
+    if (!moment) return
+    if (correct) {
+      setMoment(lesson.id, 'solved')
+      cue('correct')
+      haptic(14)
+      setInsight(true)
+      setAttempt((a) => ({ ...a, solved: true, revealed: true }))
+    } else setMomentView({ ...moment, misses: [...moment.misses, given] })
+  }
+  const leaveMoment = (skip: boolean) => {
+    if (!moment) return
+    if (skip) setMoment(lesson.id, 'skipped')
+    setEnded(moment.reward)
+    setMomentView(null)
+  }
+
+  // After the right pick has played out, the secret chord sounds once.
+  const secretSounded = useRef(false)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once, when the solved moment's reveal has played
+  useEffect(() => {
+    if (!moment || !attempt.solved || playing || secretSounded.current) return
+    secretSounded.current = true
+    engine.withChannel(MOMENT_CHANNEL, () => engine.after(SECRET_GAP, () => cue('secret')))
+  }, [moment, attempt.solved, playing])
+  useEffect(() => () => engine.cancelCues(MOMENT_CHANNEL), [])
 
   const isLast = index === lesson.steps.length - 1
   const locked = isQuestion(step) && !attempt.revealed
@@ -195,14 +241,26 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       engine.finishChannel(LESSON_CHANNEL)
       setHeld(false)
       setShown(frames.length)
-    } else if (isLast) finish()
+    } else if (moment) leaveMoment(false)
+    else if (isLast) finish()
     else go(index + 1)
   }
   // While a beat plays the button keeps its label and turns soft (old UC-2): a tap lands the beat.
   const skipping = playing && frames.length > 0
-  const primaryLabel = isLast ? strings.lesson.finish : strings.lesson.next
+  const primaryLabel = moment
+    ? strings.lesson.moment.next
+    : isLast
+      ? strings.lesson.finish
+      : strings.lesson.next
 
   const lastWrong = attempt.wrong.at(-1)
+  // A gizli an's wrong pick speaks in the narration, in place of the body.
+  const lastMiss = moment?.misses.at(-1)
+  const missFeedback =
+    step.kind === 'choice' && lastMiss && !attempt.revealed
+      ? step.options.find((option) => option.key === lastMiss)?.feedback
+      : undefined
+  const bodyText = missFeedback ?? step.body
   const wrongFeedback =
     step.kind === 'choice' && lastWrong
       ? step.options.find((option) => option.key === lastWrong)?.feedback
@@ -279,15 +337,20 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       <fieldset className="ex-opts ls-opts" data-wide={optionsWide} aria-label={step.title} data-sound="none">
         {step.options.map((option) => {
           const wrong = attempt.wrong.includes(option.key)
+          const missed = moment?.misses.includes(option.key) ?? false
           const right = attempt.revealed && option.key === step.answer
           return (
             <button
               key={option.key}
               type="button"
               className="ex-opt sh-press"
-              data-state={right ? 'right' : wrong ? 'wrong' : undefined}
-              disabled={attempt.revealed || wrong}
-              onClick={() => answer(option.key, option.key === step.answer)}
+              data-state={right ? 'right' : wrong ? 'wrong' : missed ? 'miss' : undefined}
+              disabled={attempt.revealed || wrong || missed}
+              onClick={() =>
+                moment
+                  ? pickMoment(option.key, option.key === step.answer)
+                  : answer(option.key, option.key === step.answer)
+              }
             >
               <span className="ex-opt__key">{wrong ? <Close /> : option.key}</span>
               <span className="ex-opt__body">
@@ -306,21 +369,34 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       data-testid="lesson-player"
       data-options-stage={optionsAreStage || undefined}
     >
-      <div className="ls-top">
-        <Link
-          to={returnTab.current}
-          className="ls-top__btn"
-          aria-label={strings.lesson.close}
-          data-sound="close"
-        >
-          <Close />
-        </Link>
+      <div className="ls-top" data-moment={moment ? 'true' : undefined}>
+        {moment ? (
+          <button
+            type="button"
+            className="ls-top__btn ls-top__skip sh-press"
+            aria-label={strings.lesson.moment.skipLabel}
+            data-sound="none"
+            disabled={attempt.revealed}
+            onClick={() => leaveMoment(true)}
+          >
+            {strings.lesson.moment.skip}
+          </button>
+        ) : (
+          <Link
+            to={returnTab.current}
+            className="ls-top__btn"
+            aria-label={strings.lesson.close}
+            data-sound="close"
+          >
+            <Close />
+          </Link>
+        )}
         <button
           type="button"
           className="ls-top__btn sh-press"
           aria-label={strings.lesson.back}
           data-sound="none"
-          disabled={index === 0 || ended !== null}
+          disabled={index === 0 || ended !== null || moment !== null}
           onClick={() => go(index - 1)}
         >
           <ChevronLeft />
@@ -341,7 +417,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       </div>
 
       {ended ? (
-        <LessonEnd lesson={lesson} reward={ended} onSealed={() => cue(ended)} />
+        <LessonEnd lesson={lesson} reward={ended} insight={insight} onSealed={() => cue(ended)} />
       ) : (
         <>
           <div className="ls-main" data-stage={hasStage}>
@@ -358,13 +434,19 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             ) : null}
 
             <div ref={scroller} className="ls-narr">
-              <p className="ls-eyebrow">{step.eyebrow}</p>
+              <p className="ls-eyebrow">
+                {moment
+                  ? moment.first
+                    ? strings.lesson.moment.eyebrowFirst
+                    : strings.lesson.moment.eyebrowAgain
+                  : step.eyebrow}
+              </p>
               <h1 className="ls-title">
                 <RichText text={step.title} />
               </h1>
-              {step.body ? (
+              {bodyText ? (
                 <p className="ls-body">
-                  <RichText text={step.body} />
+                  <RichText text={bodyText} />
                 </p>
               ) : null}
 
@@ -409,7 +491,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             {locked ? (
               <button
                 type="button"
-                className="sh-btn sh-btn--soft sh-press"
+                className={`sh-btn sh-btn--soft sh-press${moment ? ' ls-ghost' : ''}`}
+                disabled={moment !== null}
+                aria-hidden={moment ? true : undefined}
+                tabIndex={moment ? -1 : undefined}
                 onClick={() => setAttempt((a) => ({ ...a, revealed: true }))}
               >
                 {strings.lesson.showAnswer}
