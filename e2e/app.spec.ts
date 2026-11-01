@@ -36,6 +36,32 @@ test('the old map address lands on the path', async ({ page }) => {
   await expect(screen(page).getByRole('heading', { name: 'Dersler', level: 1 })).toBeVisible()
 })
 
+test('a tile opens its card, a tap outside folds it back, and the lesson grows out of the card and returns', async ({
+  page,
+}) => {
+  await openApp(page)
+  // By data attribute: a tile hidden while its card is open leaves the accessibility tree, and it becomes the continue card once its lesson is opened.
+  const tile = screen(page).locator('.pa-tile[data-lesson="m3-trace"]')
+  const card = page.getByTestId('lesson-peek')
+  await tile.click()
+  await expect(card).toBeVisible()
+  await expect(card.getByRole('link', { name: /^Derse gir/ })).toBeVisible()
+  await expect(tile).toHaveCSS('visibility', 'hidden')
+  // Tap outside (the scrim above the card): the card folds into its tile.
+  await page.mouse.click(195, 60)
+  await expect(card).toHaveCount(0)
+  await expect(tile).toBeVisible()
+  await tile.click()
+  await card.getByRole('link', { name: /^Derse gir/ }).click()
+  await expect(page).toHaveURL(/\/lesson\//)
+  await expect(page.getByTestId('lesson-player')).toBeVisible()
+  await page.getByTestId('lesson-player').getByRole('link', { name: 'Dersten çık' }).click()
+  await expect(page.getByTestId('lesson-player')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/\/lesson\//)
+  await expect(tile).toBeVisible()
+  await expect(card).toHaveCount(0)
+})
+
 test('a lesson opens from its tile card and hides the tab bar', async ({ page }) => {
   await openApp(page)
   await screen(page)
