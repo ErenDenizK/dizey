@@ -35,7 +35,7 @@ export function Screen({
         </h1>
         {children}
       </div>
-      <div className="dz-edge-top" aria-hidden="true" />
+      <div className="dz-edge-top" data-floating={back || action ? '' : undefined} aria-hidden="true" />
       {back ? (
         <div className="dz-float-back">
           <Pressable className="dz-icon-button dz-icon-button--float" onClick={back} aria-label={backLabel}>

@@ -159,6 +159,10 @@
   pointer-events: none;
   background: linear-gradient(to top, transparent, var(--bg) 70%);
 }
+/* With a floating control the fade runs past the control, so content dissolves before it reaches the button. */
+.dz-edge-top[data-floating] {
+  height: calc(env(safe-area-inset-top) + var(--space-2) + var(--target) + var(--space-4));
+}
 /* Pushed screens: the back button floats on its own surface and stays while the page scrolls. */
 .dz-float-back {
   position: absolute;
