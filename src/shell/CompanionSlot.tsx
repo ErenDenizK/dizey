@@ -13,7 +13,7 @@ export function CompanionSlot({
   duo,
 }: {
   name: string
-  size: 'small' | 'large'
+  size: 'small' | 'medium' | 'large'
   mood?: 'neutral' | 'happy' | 'proud'
   alive?: boolean
   duo?: Ref<DuoHandle>

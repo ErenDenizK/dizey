@@ -7,20 +7,33 @@
   gap: var(--gap-block);
 }
 .td-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
   gap: var(--gap-item);
-  margin-top: calc(var(--space-3) * -1);
+  margin-top: var(--space-6);
+}
+/* The screen's own h1 stays for assistive tech; the greeting is drawn here, beside the duo. */
+.dz-screen:has(> .td-root) > .dz-large-title {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.td-head__greeting {
+  margin: 0;
 }
 .td-head__exam {
-  margin: 0;
+  margin: var(--space-1) 0 0;
   font-size: var(--type-subhead);
   line-height: var(--leading-subhead);
   color: var(--ink-2);
 }
 
-.dz-card.td-next {
+.td-next {
   display: grid;
   gap: var(--gap-item);
   padding: var(--space-6) var(--space-5);
@@ -93,6 +106,9 @@
 }
 .companion-slot--small {
   width: 40px;
+}
+.companion-slot--medium {
+  width: 76px;
 }
 .companion-slot--large {
   width: 108px;
