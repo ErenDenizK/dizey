@@ -33,4 +33,12 @@ describe('parseSettings', () => {
     })
     expect(parseSettings('{"colours":"neon"}')).toEqual({})
   })
+
+  it('keeps the cell reveal off unless it was turned on, and loads saves without it', () => {
+    expect(parseSettings(null).cellReveal).toBeUndefined()
+    expect(parseSettings('{"sound":false}')).toEqual({ sound: false })
+    expect(parseSettings('{"cellReveal":true}')).toEqual({ cellReveal: true })
+    expect(parseSettings('{"cellReveal":"yes"}')).toEqual({})
+    expect(parseSettings('{"cellReveal":false}')).toEqual({})
+  })
 })

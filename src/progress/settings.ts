@@ -21,6 +21,8 @@ export type Settings = {
   musicSoft?: true
   /** Colour palette (src/styles/palettes.ts); absent means Kehribar, the base. */
   colours?: 'tahta' | 'murekkep' | 'patlican'
+  /** Matrix-cell reveal: a lesson opens and closes as a field of cells spreading from its tile; absent means off. */
+  cellReveal?: true
 }
 
 const KEY = 'dizey.settings'
@@ -29,8 +31,18 @@ export function parseSettings(raw: string | null): Settings {
   try {
     const value: unknown = JSON.parse(raw ?? '{}')
     if (!value || typeof value !== 'object' || Array.isArray(value)) return {}
-    const { examDate, hideExamClock, sound, soundInSilent, haptics, palette, music, musicSoft, colours } =
-      value as Record<string, unknown>
+    const {
+      examDate,
+      hideExamClock,
+      sound,
+      soundInSilent,
+      haptics,
+      palette,
+      music,
+      musicSoft,
+      colours,
+      cellReveal,
+    } = value as Record<string, unknown>
     const settings: Settings = {}
     if (typeof examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(examDate)) settings.examDate = examDate
     if (hideExamClock === true) settings.hideExamClock = true
@@ -41,6 +53,7 @@ export function parseSettings(raw: string | null): Settings {
     if (music === false) settings.music = false
     if (musicSoft === true) settings.musicSoft = true
     if (colours === 'tahta' || colours === 'murekkep' || colours === 'patlican') settings.colours = colours
+    if (cellReveal === true) settings.cellReveal = true
     return settings
   } catch {
     return {}
