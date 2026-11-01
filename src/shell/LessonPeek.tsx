@@ -18,7 +18,7 @@ import { morphFrom } from './stage'
 export type Peek = { lesson: Lesson; tile: HTMLElement }
 
 /** How far a downward drag (px) or how fast a flick (px/s) closes the card. */
-const DISMISS = { distance: 90, speed: 600 } as const
+export const DISMISS = { distance: 90, speed: 600 } as const
 
 /**
  * A lesson's card. The tapped tile lifts out of the path and opens into a larger card in the thumb's

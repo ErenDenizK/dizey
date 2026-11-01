@@ -23,6 +23,8 @@ const width = Number(process.env.W ?? 390)
 const FRAME = 1000 / 60
 
 const PEEK_ENTER = '[data-testid="lesson-peek"] .dz-button[data-kind="primary"]'
+// Settings' own way out: the floating back button, or the sheet header's "Bitti".
+const SHEET_CLOSE = '.sh-overlay [aria-label="Sen’e dön"], .sh-overlay button:has-text("Bitti")'
 const LESSON_CLOSE = '[data-testid="lesson-player"] [aria-label="Dersten çık"]'
 /** The app opens on Today; the path tiles live on Harita. */
 async function toHarita({ page, settle }) {
@@ -216,6 +218,56 @@ const scenarios = {
     run: async ({ page, frames, tap }) => {
       await tap(page.locator('.sh-overlay .dz-icon-button--float').first())
       await frames(60)
+    },
+  },
+  // Under direction C, Settings is a sheet over the dimmed tab: it grows from the gear into the sheet
+  // rectangle, and closes with its own back/close control or a drag down.
+  'settings-sheet-open': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+    },
+    run: async ({ tap, frames }) => {
+      await tap('[data-testid="open-settings"]')
+      await frames(60)
+    },
+  },
+  'settings-sheet-close': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+      await page.locator('[data-testid="open-settings"]').click()
+      await settle()
+    },
+    run: async ({ page, frames, tap }) => {
+      await tap(page.locator(SHEET_CLOSE).first())
+      await frames(60)
+    },
+  },
+  'settings-sheet-close-drag': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+      await page.locator('[data-testid="open-settings"]').click()
+      await settle()
+    },
+    run: async ({ page, frames }) => {
+      // A finger pulls the sheet down 10 px a frame, lets go past the threshold, and it folds into the gear.
+      await page.mouse.move(195, 400)
+      await page.mouse.down()
+      let used = 0
+      for (let y = 400; y <= 560; y += 10, used++) {
+        await page.mouse.move(195, y)
+        await frames(1)
+      }
+      await page.mouse.up()
+      await frames(60 - used)
     },
   },
   // The same two with the matrix-cell reveal switched on (settings are read from storage before load).

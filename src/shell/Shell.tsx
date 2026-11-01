@@ -24,7 +24,9 @@ import {
 } from './morph'
 import { Onboarding } from './Onboarding'
 import { PathView } from './PathView'
+import { presentationOf } from './presentation'
 import { installPressFeedback } from './press'
+import { dragToDismiss } from './sheetDrag'
 import { morphFrom, overlayHostRef, returnTab, stageRef } from './stage'
 import { TodayView } from './TodayView'
 import '../ui/ui.css'
@@ -57,9 +59,15 @@ function tabOf(pathname: string): TabPath | null {
  */
 export function Shell() {
   const navigate = useNavigate()
+  const navigateRef = useRef(navigate)
+  navigateRef.current = navigate
   const pathname = useRouterState({ select: (state) => state.location.pathname })
   const routeTab = tabOf(pathname)
   const overlay = routeTab === null
+  // Decided from the target path before the route mounts: a sheet over the dimmed tab or a full push.
+  const present = overlay ? presentationOf(pathname) : 'push'
+  const presentRef = useRef(present)
+  presentRef.current = present
   // Under a full-screen route the tab it came from stays where it was. Opened straight onto one (a
   // reload, the home-screen app coming back), the route's own section is home: a rehearsal is the map's.
   const [tab, setTab] = useState<TabPath>(routeTab ?? (pathname.startsWith('/exam') ? '/map' : '/'))
@@ -113,9 +121,34 @@ export function Shell() {
     if (!overlay || !el) return
     // A route opened again before the last exit finished replaces its ghost at once.
     finishExit?.()
+    const sheet = presentRef.current === 'sheet'
     const card = visibleCard()
+    const closeSheet = () => void navigateRef.current({ to: returnTab.current })
+    const stopDrag = sheet
+      ? dragToDismiss(el, {
+          onClose: closeSheet,
+          follow: (y) => {
+            // The tab behind comes forward as the sheet is pulled down, and goes back if it is let go.
+            const back = stageRef.current
+            if (!back) return
+            const p = Math.min(1, y / (window.innerHeight / 2))
+            engine.set(back, {
+              scale: CHOREO.sheetRecede + (1 - CHOREO.sheetRecede) * p,
+              opacity: 1 - CHOREO.sheetScrim * (1 - p),
+            })
+            if (y === 0) recede()
+          },
+        })
+      : null
     if (card) growFrom(el, card)
-    else {
+    else if (sheet) {
+      // No source: the sheet rises from below on `page` while the tab recedes and dims.
+      engine.set(el, { y: window.innerHeight })
+      engine.withChannel('chrome', () => {
+        recede()
+        engine.to(el, { y: 0 }, 'page', { launch: CHOREO.launch })
+      })
+    } else {
       engine.set(el, { opacity: 0, y: CHOREO.rise * 3 })
       engine.withChannel('chrome', () => {
         engine.to(el, { opacity: 1 }, 'fade')
@@ -128,6 +161,7 @@ export function Shell() {
     }
     // The route's DOM outlives its unmount as a ghost that plays the exit.
     return () => {
+      stopDrag?.()
       // The shell comes back under the leaving route (a no-op when it never went out).
       engine.withChannel('chrome', () => {
         for (const under of shellLayers(frame.current))
@@ -138,7 +172,7 @@ export function Shell() {
       const host = frame.current
       // React has already detached the route when it really unmounts. A route still attached is a
       // development StrictMode re-run: moving it would leave React a node it can no longer remove.
-      if (host && !el.isConnected) leave(el, host, visibleCard())
+      if (host && !el.isConnected) leave(el, host, visibleCard(), sheet)
       morphFrom.current = null
     }
   }, [overlay])
@@ -172,11 +206,21 @@ export function Shell() {
         onSelect={(id) => void navigate({ to: id })}
       />
       {overlay ? (
-        <div ref={layer} className="sh-overlay">
-          <div className="sh-overlay__content">
-            <Outlet />
+        <>
+          {present === 'sheet' ? (
+            // The dimmed tab above the sheet: a tap on it closes the sheet.
+            <div
+              className="sh-sheet-dismiss"
+              aria-hidden="true"
+              onClick={() => void navigate({ to: returnTab.current })}
+            />
+          ) : null}
+          <div ref={layer} className="sh-overlay" data-present={present}>
+            <div className="sh-overlay__content">
+              <Outlet />
+            </div>
           </div>
-        </div>
+        </>
       ) : null}
       <div ref={overlayHostRef} className="sh-sheet-host" />
       <Onboarding />
@@ -291,6 +335,8 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
   const content = contentOf(el)
   const start = insets(el, card)
   const { rad, ...sides } = start
+  // The radius it comes to rest with: a sheet keeps its rounded top corners, a full-screen route has none.
+  const restRad = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0
   const source = card.getBoundingClientRect()
   // Everything the route holds waits behind its container until the surface is open.
   if (content) engine.set(content, { opacity: 0 })
@@ -323,7 +369,7 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
     let arrived = false
     engine.set(el, sides)
     clipWith(el, {
-      rad: (v) => rad * (1 - lastThird(from === 0 ? 1 : 1 - reach(v) / from)),
+      rad: (v) => restRad + (rad - restRad) * (1 - lastThird(from === 0 ? 1 : 1 - reach(v) / from)),
       watch: (v) => {
         if (!current()) return
         const open = from === 0 ? 1 : 1 - reach(v) / from
@@ -416,12 +462,14 @@ function spreadCells(
 }
 
 /** Plays the exit on the route's detached DOM: back into its tile, or down and out. */
-function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
+function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null, sheet = false) {
   // Out of the accessibility tree and out of reach: only the motion is left.
   el.inert = true
   el.setAttribute('aria-hidden', 'true')
   el.style.pointerEvents = 'none'
   host.append(el)
+  // A sheet let go mid-drag is already lower than its place; the fold starts from there.
+  const lift = sheet ? engine.value(el, 'y') : 0
   finishExit?.()
   const mine = ++turn
   let finished = false
@@ -442,6 +490,11 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
   finishExit = done
   engine.withChannel('chrome', () => {
     if (!card) {
+      if (sheet) {
+        // A sheet drops the way it rose: out the bottom, opaque all the way.
+        engine.to(el, { y: window.innerHeight }, 'page', { onArrive: done })
+        return
+      }
       engine.to(el, { opacity: 0 }, 'fade', { onArrive: done })
       engine.to(el, { y: CHOREO.rise * 3 }, 'page')
       return
@@ -450,9 +503,14 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     for (const old of el.querySelectorAll(':scope > [data-face], :scope > .sh-cells')) old.remove()
     // The tile is measured where it will rest: the covered screen is still on its way back from its recess.
     const target = atRest(() => insets(el, card))
+    // The clip lives in the sheet's own (lifted) frame.
+    target.t += lift
+    target.b -= lift
     const { rad, ...sides } = target
+    const restRad = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0
     const rect = atRest(() => card.getBoundingClientRect())
     const face = atRest(() => faceOf(el, card))
+    if (lift) face.style.top = `${Number.parseFloat(face.style.top) + lift}px`
     // The ring is drawn by the aftermath; the landing face must not already wear it.
     face.setAttribute('data-trace', '')
     engine.set(face, { opacity: 0 })
@@ -461,7 +519,8 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     // The lesson's own ink goes first and fast.
     if (content) engine.to(content, { opacity: 0 }, 'leave')
     if (isRound(card)) {
-      const { cx, cy, r0, far } = circleOf(el, card)
+      const { cx, cy: cy0, r0, far } = circleOf(el, card)
+      const cy = cy0 + lift
       const span = Math.max(1, far - r0)
       let faceIn = false
       engine.set(el, { cr: far })
@@ -473,7 +532,7 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
         }
         if ((v.cr ?? far) - r0 < 0.5) done()
       })
-      engine.to(el, { cr: r0 }, 'page', { onArrive: done })
+      engine.to(el, { cr: r0, y: 0 }, 'page', { onArrive: done })
       return
     }
     if (readSettings().cellReveal === true) {
@@ -483,7 +542,7 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     const to = reach(sides)
     let faceIn = false
     clipWith(el, {
-      rad: (v) => rad * lastThird(to === 0 ? 1 : reach(v) / to),
+      rad: (v) => restRad + (rad - restRad) * lastThird(to === 0 ? 1 : reach(v) / to),
       watch: (v) => {
         const closed = to === 0 ? 1 : reach(v) / to
         if (!faceIn && closed >= 2 / 3) {
@@ -494,7 +553,7 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
         if (to - reach(v) < 0.5) done()
       },
     })
-    engine.to(el, sides, 'page', { onArrive: done })
+    engine.to(el, { ...sides, y: 0 }, 'page', { onArrive: done })
   })
 }
 

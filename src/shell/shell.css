@@ -1608,3 +1608,22 @@ a.dz-button[data-kind="primary"] {
     width: clamp(88px, 20vh, 150px);
   }
 }
+
+/* Second-level routes presented as a sheet (src/shell/presentation.ts): its top sits below the safe area
+   and a gap (enough for the receded tab to show above it), with rounded top corners. The overlay reaches one radius past the screen bottom so the
+   bottom corners stay out of sight, and the content ends where the screen does. */
+.sh-overlay[data-present="sheet"] {
+  top: calc(env(safe-area-inset-top) + var(--space-8));
+  bottom: calc(-1 * var(--corner-sheet));
+  border-radius: var(--corner-sheet);
+}
+.sh-overlay[data-present="sheet"] .sh-overlay__content {
+  bottom: var(--corner-sheet);
+  border-radius: var(--corner-sheet) var(--corner-sheet) 0 0;
+}
+/* The dimmed tab above a sheet: tapping it closes the sheet. */
+.sh-sheet-dismiss {
+  position: absolute;
+  inset: 0;
+  z-index: 29;
+}
