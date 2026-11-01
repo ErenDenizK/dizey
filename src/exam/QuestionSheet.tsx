@@ -52,81 +52,85 @@ export function QuestionSheet({
   return createPortal(
     <Sheet open={open} onClose={onClose} stage={stage} label={eyebrow} detent="large">
       <div className="sh-sheet-body td-q" data-testid="question-sheet">
-        <span className="dz-footnote sh-code">{eyebrow}</span>
-        <div className="dz-card td-q__stem">
-          <Blocks blocks={question.stem} />
-        </div>
-        <fieldset
-          className={`ex-opts ${checked ? 'exs-opts' : 'exr-opts'}`}
-          data-wide={wide}
-          aria-label={strings.question.options}
-        >
-          {question.options.map((candidate) => {
-            const state = !checked
-              ? undefined
-              : candidate.key === question.answer
-                ? 'right'
-                : candidate.key === chosen
-                  ? 'wrong'
-                  : undefined
-            return (
-              <button
-                key={candidate.key}
-                type="button"
-                className="ex-opt sh-press"
-                data-testid={`question-option-${candidate.key}`}
-                data-state={state}
-                aria-pressed={checked ? undefined : chosen === candidate.key}
-                aria-disabled={checked}
-                onClick={() => {
-                  if (!checked) setPicked(candidate.key)
-                }}
-              >
-                <span className="ex-opt__key">
-                  {state === 'right' ? <Check /> : state === 'wrong' ? <Close /> : candidate.key}
-                </span>
-                <span className="ex-opt__body">
-                  <Blocks blocks={candidate.content} />
-                </span>
-              </button>
-            )
-          })}
-        </fieldset>
-        {checked ? (
-          <div className="td-q__result" data-testid="question-result" data-correct={correct}>
-            <p className="td-q__verdict">
-              <b>{correct ? strings.question.right : strings.question.wrong}</b>
-              {correct ? null : ` · ${strings.question.rightAnswer(question.answer)}`}
-            </p>
-            {!correct && option?.feedback ? (
-              <p className="exs-why">
-                <b>{strings.question.yourAnswer(option.key)}.</b> <RichText text={option.feedback} />
-              </p>
-            ) : null}
-            <div className="exs-solution">
-              <h3 className="exs-solution__label">{strings.question.solution}</h3>
-              <p>
-                <RichText text={question.explanation} />
-              </p>
-            </div>
+        <div className="td-q__scroll">
+          <span className="dz-footnote sh-code">{eyebrow}</span>
+          <div className="dz-card td-q__stem">
+            <Blocks blocks={question.stem} />
           </div>
-        ) : null}
-        {checked ? (
-          <Pressable className="dz-button" data-kind="primary" data-wide="" onClick={onClose}>
-            {strings.question.done}
-          </Pressable>
-        ) : (
-          <Pressable
-            className="dz-button"
-            data-kind="primary"
-            data-wide=""
-            data-testid="question-check"
-            disabled={!picked}
-            onClick={check}
+          <fieldset
+            className={`ex-opts ${checked ? 'exs-opts' : 'exr-opts'}`}
+            data-wide={wide}
+            aria-label={strings.question.options}
           >
-            {strings.question.check}
-          </Pressable>
-        )}
+            {question.options.map((candidate) => {
+              const state = !checked
+                ? undefined
+                : candidate.key === question.answer
+                  ? 'right'
+                  : candidate.key === chosen
+                    ? 'wrong'
+                    : undefined
+              return (
+                <button
+                  key={candidate.key}
+                  type="button"
+                  className="ex-opt sh-press"
+                  data-testid={`question-option-${candidate.key}`}
+                  data-state={state}
+                  aria-pressed={checked ? undefined : chosen === candidate.key}
+                  aria-disabled={checked}
+                  onClick={() => {
+                    if (!checked) setPicked(candidate.key)
+                  }}
+                >
+                  <span className="ex-opt__key">
+                    {state === 'right' ? <Check /> : state === 'wrong' ? <Close /> : candidate.key}
+                  </span>
+                  <span className="ex-opt__body">
+                    <Blocks blocks={candidate.content} />
+                  </span>
+                </button>
+              )
+            })}
+          </fieldset>
+          {checked ? (
+            <div className="td-q__result" data-testid="question-result" data-correct={correct}>
+              <p className="td-q__verdict">
+                <b>{correct ? strings.question.right : strings.question.wrong}</b>
+                {correct ? null : ` · ${strings.question.rightAnswer(question.answer)}`}
+              </p>
+              {!correct && option?.feedback ? (
+                <p className="exs-why">
+                  <b>{strings.question.yourAnswer(option.key)}.</b> <RichText text={option.feedback} />
+                </p>
+              ) : null}
+              <div className="exs-solution">
+                <h3 className="exs-solution__label">{strings.question.solution}</h3>
+                <p>
+                  <RichText text={question.explanation} />
+                </p>
+              </div>
+            </div>
+          ) : null}
+        </div>
+        <div className="td-q__foot">
+          {checked ? (
+            <Pressable className="dz-button" data-kind="primary" data-wide="" onClick={onClose}>
+              {strings.question.done}
+            </Pressable>
+          ) : (
+            <Pressable
+              className="dz-button"
+              data-kind="primary"
+              data-wide=""
+              data-testid="question-check"
+              disabled={!picked}
+              onClick={check}
+            >
+              {strings.question.check}
+            </Pressable>
+          )}
+        </div>
       </div>
     </Sheet>,
     host,

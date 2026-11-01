@@ -1595,3 +1595,16 @@ a.dz-button[data-kind="primary"] {
   min-width: 0;
   gap: var(--gap-bound);
 }
+/* A short phone (iPhone SE class): the exam row gives up its second line and the duo shrinks a little, so
+   the hero keeps room for the whole duo and the seal or the badge instead of clipping the heads. */
+@media (max-height: 700px) {
+  .dz-card.ls-asked {
+    min-height: var(--target);
+  }
+  .ls-asked .sh-row-sub {
+    display: none;
+  }
+  .ls-duo {
+    width: clamp(88px, 20vh, 150px);
+  }
+}
