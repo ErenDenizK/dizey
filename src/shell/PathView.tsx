@@ -20,6 +20,7 @@ import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Sheet } from '../ui/Sheet'
 import { burst, glow, ring } from '../ui/shine'
+import { drum } from './lens'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import './path.css'
@@ -212,6 +213,9 @@ function ChapterMatrix({
   )
 }
 
+/** Bracket arm length and stroke inset, in px. */
+const BRACKET = { arm: 12, inset: 1.5 } as const
+
 /** Brackets and path, behind the tiles. */
 function Decoration({
   geometry,
@@ -223,8 +227,12 @@ function Decoration({
   progress: number
 }) {
   const { width, height, centers } = geometry
-  const arm = 12
-  const inset = 1.5
+  const { arm, inset } = BRACKET
+  const svg = useRef<SVGSVGElement>(null)
+  // React draws in layout coordinates; ask the focus lens to bend this drawing onto its drum again.
+  useLayoutEffect(() => {
+    svg.current?.dispatchEvent(new Event('pa-relens', { bubbles: true }))
+  })
   const left = `M${inset + arm} ${inset} H${inset} V${height - inset} H${inset + arm}`
   const right = `M${width - inset - arm} ${inset} H${width - inset} V${height - inset} H${width - inset - arm}`
   const segments = centers.slice(1).map((to, index) => {
@@ -232,7 +240,7 @@ function Decoration({
     return { from, to, walked: states[index] === 'done' }
   })
   return (
-    <svg className="pa-deco" width={width} height={height} aria-hidden="true">
+    <svg ref={svg} className="pa-deco" width={width} height={height} aria-hidden="true">
       {segments.map(({ from, to, walked }, index) => (
         <line
           // biome-ignore lint/suspicious/noArrayIndexKey: segments follow the fixed lesson order
@@ -246,12 +254,24 @@ function Decoration({
           y2={to.y}
         />
       ))}
-      <path className="pa-bracket" d={left} />
-      <path className="pa-bracket" d={right} />
+      <path className="pa-bracket" data-side="left" d={left} />
+      <path className="pa-bracket" data-side="right" d={right} />
       {progress > 0 ? (
         <>
-          <path className="pa-bracket-fill" d={left} pathLength={1} strokeDasharray={`${progress} 1`} />
-          <path className="pa-bracket-fill" d={right} pathLength={1} strokeDasharray={`${progress} 1`} />
+          <path
+            className="pa-bracket-fill"
+            data-side="left"
+            d={left}
+            pathLength={1}
+            strokeDasharray={`${progress} 1`}
+          />
+          <path
+            className="pa-bracket-fill"
+            data-side="right"
+            d={right}
+            pathLength={1}
+            strokeDasharray={`${progress} 1`}
+          />
         </>
       ) : null}
     </svg>
@@ -429,47 +449,118 @@ function offsetWithin(el: HTMLElement, ancestor: HTMLElement): { left: number; t
   return { left, top }
 }
 
-/** How far from the focus line the lens starts to act, and where it is fully on, in half-screens. */
-const LENS = { calm: 0.22, full: 1.05, scale: 0.16, fade: 0.5 } as const
+/** Where the focus line sits, as a share of the screen height, and how far headings fade at the drum's rim. */
+const LENS = { focus: 0.46, fade: 0.5 } as const
+
+/** Points per bracket side: enough for the bracket to bend smoothly with the drum. */
+const BRACKET_SAMPLES = 10
+
+type LensItem = { el: HTMLElement; x: number; y: number; fade: boolean; last: string }
+type LensMatrix = {
+  x: number
+  y: number
+  width: number
+  height: number
+  centers: { x: number; y: number }[]
+  links: SVGLineElement[]
+  brackets: SVGPathElement[]
+}
 
 /**
- * The focus lens: whatever sits at the middle of the screen is full size; toward the top and bottom edges
- * the path recedes (smaller, quieter), so the screen reads like a wheel turning past you and the scroll
- * position is felt without a scrollbar. Tiles only shrink (the path runs behind them, so a see-through
- * tile would show it); headings also fade. Tied 1:1 to the scroll (no spring of its own), set through the
- * engine so it never fights a running motion on the tiles inside.
+ * The focus lens: the whole path sits on one drum (src/shell/lens.ts). Whatever is at the focus line is
+ * flat and full size; toward the top and bottom edges the surface turns away, so headings, tiles, the
+ * gaps between them, the path and the matrix brackets all recede together, narrowing toward the
+ * screen's centre line and flattening vertically, like a wheel turning past you. Tiles never fade (the
+ * path runs behind them); headings fade a little with depth. Tied 1:1 to the scroll (no spring of its
+ * own), set through the engine so it never fights a running motion on the tiles inside.
  */
 function useFocusLens(root: React.RefObject<HTMLDivElement | null>) {
   useEffect(() => {
     const host = root.current
     const scroller = host?.closest<HTMLElement>('.dz-screen')
     if (!host || !scroller) return
-    let items: { el: HTMLElement; center: number; fade: boolean; last: number }[] = []
+    let items: LensItem[] = []
+    let matrices: LensMatrix[] = []
+    let rimDepth = 1
     const measure = () => {
-      items = [...host.querySelectorAll<HTMLElement>('[data-focus]')].map((el) => ({
-        el,
-        center: offsetWithin(el, scroller).top + el.offsetHeight / 2,
-        fade: el.dataset.focus === 'fade',
-        last: -1,
-      }))
+      items = [...host.querySelectorAll<HTMLElement>('[data-focus]')].map((el) => {
+        const at = offsetWithin(el, scroller)
+        return {
+          el,
+          x: at.left + el.offsetWidth / 2,
+          y: at.top + el.offsetHeight / 2,
+          fade: el.dataset.focus === 'fade',
+          last: '',
+        }
+      })
+      matrices = [...host.querySelectorAll<HTMLElement>('.pa-matrix')].map((el) => {
+        const at = offsetWithin(el, scroller)
+        return {
+          x: at.left,
+          y: at.top,
+          width: el.offsetWidth,
+          height: el.offsetHeight,
+          centers: [...el.querySelectorAll<HTMLElement>('.pa-tile')].map((tile) => {
+            const t = offsetWithin(tile, el)
+            return { x: t.left + tile.offsetWidth / 2, y: t.top + tile.offsetHeight / 2 }
+          }),
+          links: [...el.querySelectorAll<SVGLineElement>('.pa-link')],
+          brackets: [...el.querySelectorAll<SVGPathElement>('[data-side]')],
+        }
+      })
+      const half = scroller.clientHeight / 2
+      rimDepth = drum((1 - LENS.focus) * 2 * half, half).depth
+      for (const item of items) item.last = ''
       apply()
     }
     // Scroll events already arrive once per frame, so the lens is applied straight from them.
     const apply = () => {
       const height = scroller.clientHeight
       if (!height) return
+      const flat = engine.reducedMotion
       const half = height / 2
-      const focus = scroller.scrollTop + height * 0.46
+      const axis = scroller.clientWidth / 2
+      const focus = scroller.scrollTop + height * LENS.focus
+      // One mapping for every point on the screen: layout position in, drawn position and scale out.
+      const project = (x: number, y: number) => {
+        if (flat) return { x, y, depth: 1, squash: 1 }
+        const p = drum(y - focus, half)
+        return { x: axis + (x - axis) * p.depth, y: focus + p.offset, depth: p.depth, squash: p.squash }
+      }
       for (const item of items) {
-        const d = Math.abs(item.center - focus) / half
-        const t = Math.min(1, Math.max(0, (d - LENS.calm) / (LENS.full - LENS.calm)))
-        const e = t * t * (3 - 2 * t)
-        if (Math.abs(e - item.last) < 0.002) continue
-        item.last = e
+        const p = project(item.x, item.y)
+        const dim = rimDepth < 1 ? Math.min(1, (1 - p.depth) / (1 - rimDepth)) : 0
+        const key = `${p.x.toFixed(1)} ${p.y.toFixed(1)} ${p.depth.toFixed(4)} ${p.squash.toFixed(4)}`
+        if (key === item.last) continue
+        item.last = key
         engine.set(item.el, {
-          scale: engine.reducedMotion ? 1 : 1 - LENS.scale * e,
-          opacity: item.fade ? 1 - LENS.fade * e : 1,
+          x: p.x - item.x,
+          y: p.y - item.y,
+          scaleX: p.depth,
+          scaleY: p.squash,
+          opacity: item.fade && !flat ? 1 - LENS.fade * dim : 1,
         })
+      }
+      for (const m of matrices) {
+        // Off-screen matrices keep their last drawing.
+        if (m.y > focus + height || m.y + m.height < focus - height) continue
+        const local = (x: number, y: number) => {
+          const p = project(m.x + x, m.y + y)
+          return { x: p.x - m.x, y: p.y - m.y, depth: p.depth }
+        }
+        const centers = m.centers.map((c) => local(c.x, c.y))
+        m.links.forEach((link, index) => {
+          const from = centers[index]
+          const to = centers[index + 1]
+          if (!from || !to) return
+          link.setAttribute('x1', from.x.toFixed(1))
+          link.setAttribute('y1', from.y.toFixed(1))
+          link.setAttribute('x2', to.x.toFixed(1))
+          link.setAttribute('y2', to.y.toFixed(1))
+          link.style.strokeWidth = ((6 * (from.depth + to.depth)) / 2).toFixed(2)
+        })
+        for (const bracket of m.brackets)
+          bracket.setAttribute('d', bracketPath(m, bracket.dataset.side, local))
       }
     }
     measure()
@@ -477,11 +568,31 @@ function useFocusLens(root: React.RefObject<HTMLDivElement | null>) {
     observer.observe(host)
     observer.observe(scroller)
     scroller.addEventListener('scroll', apply, { passive: true })
+    // The path redraws itself (new geometry, new progress) in layout coordinates; put it back on the drum.
+    host.addEventListener('pa-relens', measure)
     return () => {
       observer.disconnect()
       scroller.removeEventListener('scroll', apply)
+      host.removeEventListener('pa-relens', measure)
     }
   }, [root])
+}
+
+/** A matrix bracket as it lies on the drum: its vertical stroke bends with the surface. */
+function bracketPath(
+  m: { width: number; height: number },
+  side: string | undefined,
+  local: (x: number, y: number) => { x: number; y: number },
+): string {
+  const { arm, inset } = BRACKET
+  const edge = side === 'right' ? m.width - inset : inset
+  const tip = side === 'right' ? edge - arm : edge + arm
+  const points = [local(tip, inset)]
+  for (let i = 0; i <= BRACKET_SAMPLES; i++) {
+    points.push(local(edge, inset + ((m.height - 2 * inset) * i) / BRACKET_SAMPLES))
+  }
+  points.push(local(tip, m.height - inset))
+  return points.map((p, i) => `${i ? 'L' : 'M'}${p.x.toFixed(1)} ${p.y.toFixed(1)}`).join(' ')
 }
 
 /**
