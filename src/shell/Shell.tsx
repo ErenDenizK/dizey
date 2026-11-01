@@ -180,8 +180,13 @@ let finishExit: (() => void) | null = null
 
 /** The card the route came from, while it is on screen. */
 function visibleCard() {
-  const card = morphFrom.current
+  let card = morphFrom.current
+  // A tile that became the continue card was replaced by a new element: find its successor by lesson.
+  const lesson = card?.dataset.lesson
+  if (card && !card.isConnected && lesson)
+    card = document.querySelector<HTMLElement>(`.pa-tile[data-lesson="${lesson}"]`)
   if (!card?.isConnected) return null
+  morphFrom.current = card
   const rect = card.getBoundingClientRect()
   return rect.width > 0 && rect.bottom > 0 && rect.top < window.innerHeight ? card : null
 }
@@ -213,8 +218,15 @@ function partsOf(el: HTMLElement) {
   return root.children.length > 1 ? ([...root.children] as HTMLElement[]) : [root]
 }
 
-/** The route's parts rise in, top to bottom, `CHOREO.stagger` apart (docs/design/motion-phases.md, phase 4). */
-function arrive(parts: HTMLElement[], current: () => boolean) {
+/**
+ * The route's parts rise in, top to bottom, `CHOREO.stagger` apart (docs/design/motion-phases.md, phase 4).
+ * They are read now, not at the start of the open: a lazy route may only have mounted its parts by then.
+ */
+function arrive(el: HTMLElement, current: () => boolean) {
+  const content = contentOf(el)
+  const parts = partsOf(el).filter((part) => part !== content)
+  for (const part of parts) engine.set(part, { opacity: 0, y: CHOREO.rise })
+  if (content) engine.set(content, { opacity: 1 })
   parts.forEach((part, i) => {
     engine.after(i * CHOREO_MS.stagger, () => {
       if (current()) engine.to(part, { opacity: 1, y: 0 }, 'glide')
@@ -232,28 +244,30 @@ function recede() {
 
 /** Opens at about this share of the surface being open, the next phase starts. */
 const ARRIVAL_AT = 0.7
-/** The card's face starts to give way a little before the content arrives. */
+/** In the cell reveal the card's face gives way once this share of the cells (halved) has landed. */
 const FACE_OUT_AT = 0.55
 
 function growFrom(el: HTMLElement, card: HTMLElement) {
   const mine = ++turn
   const current = () => turn === mine
-  const parts = partsOf(el)
+  const content = contentOf(el)
   const start = insets(el, card)
   const { rad, ...sides } = start
   const source = card.getBoundingClientRect()
-  for (const part of parts) engine.set(part, { opacity: 0, y: CHOREO.rise })
+  // Everything the route holds waits behind its container until the surface is open.
+  if (content) engine.set(content, { opacity: 0 })
   card.style.visibility = 'hidden'
   const face = faceOf(el, card)
   engine.set(face, { opacity: 1 })
   engine.withChannel('chrome', () => {
     recede()
     if (readSettings().cellReveal === true) {
-      spreadCells(el, source, face, parts, card, current)
+      spreadCells(el, source, face, card, current)
       return
     }
     const from = reach(sides)
-    let faceOut = false
+    // The card's own content leaves at once; what is left is one opaque surface that grows.
+    engine.to(face, { opacity: 0 }, 'leave', { onArrive: () => face.remove() })
     let arrived = false
     engine.set(el, sides)
     clipWith(el, {
@@ -261,13 +275,9 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
       watch: (v) => {
         if (!current()) return
         const open = from === 0 ? 1 : 1 - reach(v) / from
-        if (!faceOut && open >= FACE_OUT_AT) {
-          faceOut = true
-          engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
-        }
         if (!arrived && open >= ARRIVAL_AT) {
           arrived = true
-          arrive(parts, current)
+          arrive(el, current)
         }
       },
     })
@@ -286,7 +296,6 @@ function spreadCells(
   el: HTMLElement,
   source: DOMRect,
   face: HTMLElement,
-  parts: HTMLElement[],
   card: HTMLElement,
   current: () => boolean,
 ) {
@@ -308,7 +317,7 @@ function spreadCells(
           }
           if (!arrived && landed / total >= ARRIVAL_AT && current()) {
             arrived = true
-            arrive(parts, current)
+            arrive(el, current)
           }
           if (landed === total) {
             el.style.background = ''
