@@ -77,7 +77,7 @@ export function TodayView() {
   const stateLine = !main
     ? hero.done
     : stateOf(records[main.id]) === 'current'
-      ? hero.resume(main.title)
+      ? hero.resume
       : doneCount === 0
         ? hero.fresh
         : hero.next

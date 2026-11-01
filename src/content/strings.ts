@@ -13,7 +13,7 @@ export const strings = {
 
   today: {
     hero: {
-      resume: (title: string) => `Kaldığımız yer: ${title}`,
+      resume: 'Kaldığın yerden devam edelim.',
       fresh: 'İlk derse başlayalım.',
       next: 'Sıradaki ders hazır.',
       done: 'Bütün dersler bitti. Prova zamanı.',
