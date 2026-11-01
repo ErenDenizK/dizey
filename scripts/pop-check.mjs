@@ -98,7 +98,7 @@ for (let t = HOLD; t + HOLD <= count - 1; t++) {
 // A moving edge (a clip folding, a stroke being drawn) crosses a cell in one frame too, but its neighbours
 // step in the frames next to it. A pop has no such company: drop candidates with another full step within `NEAR` cells in the
 // 1..WAVE frames before or after.
-const NEAR = 3
+const NEAR = 10
 const WAVE = 2
 const reach = (a, b) =>
   Math.max(Math.abs((a.c % cols) - (b.c % cols)), Math.abs(Math.floor(a.c / cols) - Math.floor(b.c / cols)))

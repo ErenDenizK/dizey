@@ -39,12 +39,18 @@ Every row names: the element, the spring token, what the neighbours do, and the 
    in a single frame). It scales the frames to 1x, splits them into 16 px cells and flags a cell that is steady
    for 3 frames, jumps by more than 14 gray levels in one frame and is steady for 3 frames after (a step
    function). Fades and springs pass through in-between values and are never flagged; a moving edge (a clip
-   folding, a stroke being drawn) is dropped when neighbouring cells step in the 2 frames either side. It prints
+   folding, a stroke being drawn) is dropped when another cell within 10 cells steps in the 2 frames either side,
+   and a lone cell that only just clears the step (under 1.25 times it) is a grazed edge corner, not a pop. It prints
    the flagged frames and cells and exits 1 if there are any. Tune with `--cell --step --hold --still`.
 2. A Haiku (or Sonnet) reader gets the phase table and the frame numbers of each phase's poster, and answers
    the table's questions per frame with yes/no and the frame file.
 3. Opus looks only at frames the reader flagged and makes the call. No Opus loops on its own work.
 4. The scenario stays in `motion-strip.mjs` as the guard for that animation (PR-12).
+
+A small or round source (an icon button under 64 px, or a radius of half its side) grows as a circle: a
+`circle()` clip from the source's centre out to the farthest corner on `page`, content held until 70% open, and
+folds back into the circle with the source's face fading in over the last third (`growCircle` in
+`src/shell/Shell.tsx`). There is no outline aftermath for anything but a tile.
 
 ## Lesson open and close (first application)
 
