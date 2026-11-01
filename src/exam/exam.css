@@ -38,9 +38,6 @@
   gap: var(--space-1);
   min-width: 0;
 }
-.exh-set__body {
-  color: var(--ink-2);
-}
 .exh-set__meta {
   display: flex;
   flex-wrap: wrap;
