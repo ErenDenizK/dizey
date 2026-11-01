@@ -490,6 +490,16 @@ a.sh-node {
   justify-content: center;
   gap: 0.4em;
 }
+/* Two matrices side by side never touch: a real gap, so their brackets cannot read as "][". */
+.ls-scene > .ls-item + .ls-item {
+  margin-left: 0.8em;
+}
+.ls-scene[data-stack] {
+  flex-direction: column;
+}
+.ls-scene[data-stack] > .ls-item + .ls-item {
+  margin-left: 0;
+}
 .ls-stage .ex-mat-wrap {
   gap: 0.3em;
   overflow: visible;

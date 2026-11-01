@@ -161,6 +161,17 @@ export function fitCell(
   return Math.round(Math.min(CELL.max, Math.max(CELL.min, probe * scale)))
 }
 
+/** Stack a pair only when that makes its cells at least this much larger. */
+const STACK_GAIN = 1.2
+
+/** Two matrices with no operator between them, or only "∼". */
+function isPair(scene: HTMLElement): boolean {
+  const items = Array.from(scene.children)
+  const matrices = items.filter((el) => el.classList.contains('ls-item')).length
+  const ops = items.filter((el) => el.classList.contains('ls-op'))
+  return matrices === 2 && items.length <= 3 && ops.every((el) => el.textContent === '∼')
+}
+
 type Rest = { cx: number; cy: number; w: number; h: number; el: HTMLElement | SVGElement }
 
 /** Parts of the stage that keep their identity across commits (and steps): matrices by name, the result, ops. */
@@ -218,10 +229,17 @@ function useStageLayout(
         const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
         const areaHeight = area.current ? area.current.getBoundingClientRect().height + NOTE_GAP : 0
         const notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
-        const cell = fitCell(
-          { width: box.clientWidth - padX, height: next - padY - notes - areaHeight },
-          { width: content.offsetWidth, height: content.offsetHeight },
-        )
+        const free = { width: box.clientWidth - padX, height: next - padY - notes - areaHeight }
+        // A pair of matrices with nothing or only "∼" between them stacks when that shows them larger
+        // (a tall stage), and sits side by side otherwise.
+        content.removeAttribute('data-stack')
+        let cell = fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
+        if (isPair(content)) {
+          content.setAttribute('data-stack', '')
+          const stacked = fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
+          if (stacked >= cell * STACK_GAIN) cell = stacked
+          else content.removeAttribute('data-stack')
+        }
         box.style.setProperty('--cell', `${cell}px`)
         // Height the fitted scene leaves unused (a wide, short scene) goes to the option rows, minus room
         // for the tallest wrong-try hint, so the stage never re-fits smaller during the step.
@@ -632,11 +650,11 @@ export function Stage({
       {scene ? (
         <div ref={sceneBox} className="ls-scene">
           {scene.items.map((item, index) => {
-            if (item === '=' || item === '·' || item === '+') {
+            if (item === '=' || item === '·' || item === '+' || item === '~') {
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
                 <span key={index} className="ls-op" data-obj={`op${index}`}>
-                  {item}
+                  {item === '~' ? '∼' : item}
                 </span>
               )
             }

@@ -247,6 +247,19 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     step.kind === 'choice' &&
     step.options.some((option) => option.content.some((block) => block.kind !== 'text'))
 
+  // A wrong try's hint.
+  const hint =
+    isQuestion(step) && wrongFeedback && !attempt.revealed ? (
+      <div className="ls-feedback" role="status" data-tone="wrong">
+        <span className="ls-feedback__mark" aria-hidden="true">
+          <Close />
+        </span>
+        <p className="ls-feedback__text">
+          <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
+          <RichText text={wrongFeedback} />
+        </p>
+      </div>
+    ) : null
   const optionsAreStage = !hasStage && optionsWide
 
   // With a stage, Stage.tsx sizes the option rows once per step. Without one, a text-only question's card
@@ -368,18 +381,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
                 </>
               ) : null}
 
-              {isQuestion(step) && wrongFeedback && !attempt.revealed ? (
-                <div className="ls-feedback" role="status" data-tone="wrong">
-                  <span className="ls-feedback__mark" aria-hidden="true">
-                    <Close />
-                  </span>
-                  <p className="ls-feedback__text">
-                    <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
-                    <RichText text={wrongFeedback} />
-                  </p>
-                </div>
-              ) : null}
+              {hasStage ? hint : null}
             </div>
+            {/* Without a stage the question card holds only the question; the hint sits under it, as under the title elsewhere. */}
+            {hasStage ? null : hint}
           </div>
 
           <div className="ls-dock" data-verdict={isQuestion(step) && attempt.revealed}>
