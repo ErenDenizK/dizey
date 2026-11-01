@@ -22,6 +22,34 @@ export const strings = {
     exam: 'Vize provası',
     examSub: '15 soru · gerçek sınav gibi',
     companion: 'Satır ve Sütun',
+    daily: {
+      eyebrow: 'Günün sorusu',
+      solve: 'Çöz',
+      correct: 'Bugünkü soru: doğru',
+      wrong: 'Bugünkü soru: yanlış',
+      wrongSub: 'Çözümüne bak, Tekrar’a eklendi',
+      correctSub: 'Yarın yeni soru gelir',
+    },
+    week: {
+      label: 'Bu hafta',
+      initials: ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'],
+      names: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
+      studied: 'çalıştın',
+      rest: 'çalışılmadı',
+      today: 'bugün',
+      summary: (count: number) => `Bu hafta ${count} gün çalıştın`,
+    },
+  },
+
+  question: {
+    check: 'Kontrol et',
+    done: 'Tamam',
+    right: 'Doğru',
+    wrong: 'Yanlış',
+    rightAnswer: (key: string) => `Doğru cevap ${key}`,
+    yourAnswer: (key: string) => `Senin cevabın (${key})`,
+    solution: 'Çözüm',
+    options: 'Şıklar',
   },
 
   path: {
@@ -274,6 +302,9 @@ export const strings = {
     sealLabel: (correct: number, total: number) => `${total} sorunun cevapları, ${correct} doğru`,
     next: (code: string) => `Sıradaki · ${code}`,
     back: 'Derslere dön',
+    examAsked: 'Sınavda böyle sorulur',
+    examAskedSub: 'Bu konudan bir vize sorusu',
+    examTry: 'Dene',
   },
 
   badges: {

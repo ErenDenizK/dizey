@@ -113,3 +113,141 @@
 .companion-slot--large {
   width: 108px;
 }
+
+/* ---- Week strip ------------------------------------------------------------------ */
+.td-top {
+  display: grid;
+  gap: var(--gap-item);
+  margin-top: var(--space-6);
+}
+.td-top .td-head {
+  margin-top: 0;
+}
+.td-week {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.td-week__day {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+}
+.td-week__initial {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+.td-week__dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--corner-pill);
+  box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
+}
+.td-week__day[data-active="true"] .td-week__dot {
+  background: var(--action);
+  box-shadow: none;
+}
+.td-week__day[data-future="true"] {
+  opacity: 0.5;
+}
+.td-week__day[data-today="true"] .td-week__initial {
+  color: var(--ink-1);
+}
+.td-week__day[data-today="true"] .td-week__dot {
+  outline: 1.5px solid var(--ink-2);
+  outline-offset: 2px;
+}
+.td-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- Question of the day ------------------------------------------------------------ */
+.dz-card.td-daily {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  border: 0;
+}
+.td-daily__eyebrow {
+  color: var(--ink-2);
+  font-weight: var(--weight-semibold);
+}
+.td-daily__stem {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  color: var(--ink-1);
+}
+.td-daily__cta {
+  flex: none;
+  display: grid;
+  place-items: center;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 var(--space-4);
+  border-radius: var(--corner-pill);
+  background: var(--action);
+  color: var(--on-action);
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  font-weight: var(--weight-semibold);
+}
+.td-daily__tile {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--corner-chip);
+  background: var(--bad-fill);
+  color: var(--on-bad);
+}
+.td-daily__tile[data-correct="true"] {
+  background: var(--ok-fill);
+  color: var(--on-ok);
+}
+.td-daily__tile svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* ---- Question sheet --------------------------------------------------------------- */
+.td-q {
+  max-height: calc(100dvh - 128px - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: none;
+}
+.td-q::-webkit-scrollbar {
+  display: none;
+}
+.td-q__stem {
+  padding: var(--card-pad);
+}
+.td-q__verdict {
+  margin: 0 0 var(--space-2);
+  color: var(--ink-1);
+}
+.td-q__result[data-correct="true"] .td-q__verdict b {
+  color: var(--ok-ink);
+}
+.td-q__result[data-correct="false"] .td-q__verdict b {
+  color: var(--bad-ink);
+}

@@ -1,21 +1,29 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { DuoHandle } from '../character/Duo'
 import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
-import { chapterOf, pathCode } from '../content/path'
-import { questions } from '../content/questions'
+import { chapterOf, chapters, pathCode } from '../content/path'
+import { type Question, questions } from '../content/questions'
 import { strings } from '../content/strings'
-import { useExam } from '../exam/store'
+import { RichText } from '../exam/Blocks'
+import { QuestionSheet } from '../exam/QuestionSheet'
+import { recordOutcome, useExam } from '../exam/store'
 import { resumeIndex } from '../lesson/progress'
 import { stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
+import { activityDays, type StripDay, weekStrip } from '../progress/activity'
+import { useActivityDays } from '../progress/activity-store'
+import { answeredOn, dayKey, pickDaily } from '../progress/daily'
+import { saveDailyAnswer, useDailyAnswer } from '../progress/daily-store'
 import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
-import { ChevronRight } from '../ui/icons'
+import { Check, ChevronRight, Close } from '../ui/icons'
+import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { CompanionSlot } from './CompanionSlot'
 import { PressLink } from './PressLink'
-import { morphFrom } from './stage'
+import { morphFrom, overlayHostRef, stageRef } from './stage'
+import { type TodayBlock, todayBlocks } from './today-blocks'
 import './today.css'
 
 /** Days before the exam from which the rehearsal gets its own card. */
@@ -35,7 +43,8 @@ function greetingOf(hour: number): string {
  */
 export function TodayView() {
   const records = useLessonRecords()
-  const { outcomes } = useExam()
+  const { outcomes, history, chapters: chapterResults } = useExam()
+  const recorded = useActivityDays()
   const { examDate } = useSettings()
   const { main } = upNext(lessons, records, 0)
   const open = openMistakes(lessons, records, questions, outcomes)
@@ -46,6 +55,24 @@ export function TodayView() {
     : strings.path.examWeekLine(examWeek.label)
   const examSoon = daysUntil(examDate ?? examWeek.iso, now) <= EXAM_SOON_DAYS
 
+  const stored = useDailyAnswer()
+  const answered = answeredOn(stored, now)
+  const doneNodes = new Set(lessons.filter((l) => records[l.id]?.doneAt != null).map((l) => l.node))
+  const firstNodes = new Set<string>(chapters[0]?.lessons.map((l) => l.node) ?? [])
+  const daily =
+    (answered ? questions.find((q) => q.id === answered.questionId) : undefined) ??
+    pickDaily(questions, doneNodes, firstNodes, now)
+  const blocks = todayBlocks({
+    review: open.length > 0,
+    daily: daily !== null,
+    exam: Boolean(main && examSoon),
+  })
+  const show = (block: TodayBlock) => blocks.includes(block)
+  const days = weekStrip(
+    now,
+    activityDays({ recorded, records, history, outcomes, chapters: chapterResults }),
+  )
+
   const greeting = greetingOf(now.getHours())
   const duo = useRef<DuoHandle>(null)
   useEffect(() => {
@@ -55,17 +82,20 @@ export function TodayView() {
   return (
     <Screen title={greeting}>
       <div className="td-root">
-        <header className="td-head">
-          <div className="td-head__text">
-            <p className="td-head__greeting dz-large-title" aria-hidden="true">
-              {greeting}
-            </p>
-            <p className="td-head__exam">{examLine}</p>
+        <header className="td-top">
+          <div className="td-head">
+            <div className="td-head__text">
+              <p className="td-head__greeting dz-large-title" aria-hidden="true">
+                {greeting}
+              </p>
+              <p className="td-head__exam">{examLine}</p>
+            </div>
+            <CompanionSlot name="today" size="medium" mood="happy" alive duo={duo} />
           </div>
-          <CompanionSlot name="today" size="medium" mood="happy" alive duo={duo} />
+          {days.some((day) => day.active) ? <WeekStrip days={days} /> : null}
         </header>
         {main ? <NextLesson lessonId={main.id} /> : <AllDone />}
-        {open.length ? (
+        {show('review') ? (
           firstLesson ? (
             <PressLink
               to="/lesson/$id"
@@ -82,7 +112,8 @@ export function TodayView() {
             </PressLink>
           )
         ) : null}
-        {main && examSoon ? (
+        {show('daily') && daily ? <DailyCard question={daily} answered={answered} /> : null}
+        {show('exam') ? (
           <PressLink to="/exam" className="dz-card td-row" data-testid="today-exam">
             <RowFace title={strings.today.exam} sub={strings.today.examSub} />
           </PressLink>
@@ -152,6 +183,99 @@ function RowFace({ title, sub }: { title: string; sub: string }) {
         <small className="dz-footnote sh-row-sub">{sub}</small>
       </span>
       <ChevronRight />
+    </>
+  )
+}
+
+/** Monday to Sunday of this week: a dot per day that had study. No counts, nothing to lose. */
+function WeekStrip({ days }: { days: StripDay[] }) {
+  const text = strings.today.week
+  const studied = days.filter((day) => day.active).length
+  return (
+    <ol className="td-week" data-testid="today-week" aria-label={`${text.label}: ${text.summary(studied)}`}>
+      {days.map((day) => (
+        <li
+          key={day.key}
+          className="td-week__day"
+          data-active={day.active}
+          data-today={day.today}
+          data-future={day.future}
+        >
+          <span className="td-week__initial" aria-hidden="true">
+            {text.initials[day.weekday]}
+          </span>
+          <i className="td-week__dot" aria-hidden="true" />
+          <span className="td-sr">
+            {text.names[day.weekday]}
+            {day.today ? ` (${text.today})` : ''}: {day.active ? text.studied : text.rest}
+          </span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** The question of the day: a preview and "Çöz"; once answered, the result stays until tomorrow. */
+function DailyCard({
+  question,
+  answered,
+}: {
+  question: Question
+  answered: { given: string; correct: boolean } | null
+}) {
+  const text = strings.today.daily
+  const [open, setOpen] = useState(false)
+  const stem = question.stem.find((block) => block.kind === 'text')
+  const host = overlayHostRef.current
+  return (
+    <>
+      <Pressable
+        className="dz-card td-row td-daily"
+        data-testid="today-daily"
+        data-state={answered ? (answered.correct ? 'right' : 'wrong') : 'open'}
+        onClick={() => setOpen(true)}
+      >
+        {answered ? (
+          <>
+            <span className="td-daily__tile" data-correct={answered.correct} aria-hidden="true">
+              {answered.correct ? <Check /> : <Close />}
+            </span>
+            <span className="td-row__main">
+              <span className="dz-row-main">{answered.correct ? text.correct : text.wrong}</span>
+              <small className="dz-footnote sh-row-sub">
+                {answered.correct ? text.correctSub : text.wrongSub}
+              </small>
+            </span>
+            <ChevronRight />
+          </>
+        ) : (
+          <>
+            <span className="td-row__main">
+              <small className="dz-footnote td-daily__eyebrow">{text.eyebrow}</small>
+              <span className="td-daily__stem">
+                {stem?.kind === 'text' ? <RichText text={stem.text} /> : null}
+              </span>
+            </span>
+            <span className="td-daily__cta">{text.solve}</span>
+          </>
+        )}
+      </Pressable>
+      {host ? (
+        <QuestionSheet
+          question={question}
+          open={open}
+          onClose={() => setOpen(false)}
+          host={host}
+          stage={stageRef}
+          eyebrow={text.eyebrow}
+          given={answered?.given ?? null}
+          onAnswer={(key, correct) => {
+            const at = new Date()
+            recordOutcome(question.id, key, correct, at.getTime())
+            saveDailyAnswer({ day: dayKey(at), questionId: question.id, given: key, correct })
+          }}
+        />
+      ) : null}
     </>
   )
 }

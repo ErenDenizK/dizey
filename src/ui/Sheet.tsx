@@ -23,6 +23,7 @@ export function Sheet({
   onClose,
   stage,
   label,
+  detent = 'medium',
   children,
 }: {
   open: boolean
@@ -30,6 +31,8 @@ export function Sheet({
   /** The screen behind, which recedes as the sheet rises to the large detent. */
   stage: RefObject<HTMLElement | null>
   label: string
+  /** Where it rises to: tall content opens at the large detent. */
+  detent?: 'medium' | 'large'
   children: ReactNode
 }) {
   const sheet = useRef<HTMLDivElement>(null)
@@ -80,13 +83,13 @@ export function Sheet({
     const g = geometry(sheet.current)
     engine.withChannel('chrome', () => {
       if (open) {
-        engine.to(el, { y: g.medium }, 'page', { launch: CHOREO.launch })
+        engine.to(el, { y: detent === 'large' ? g.large : g.medium }, 'page', { launch: CHOREO.launch })
         el.focus({ preventScroll: true })
       } else {
         engine.to(el, { y: g.closed }, 'page', { onArrive: () => setMounted(false) })
       }
     })
-  }, [open, mounted])
+  }, [open, mounted, detent])
 
   // Drag.
   useEffect(() => {
