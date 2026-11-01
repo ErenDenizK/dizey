@@ -151,13 +151,31 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   const right = (await result.getAttribute('data-correct')) === 'true'
   await sheet.getByRole('button', { name: 'Tamam' }).click()
   await expect(sheet).toHaveCount(0)
-  const verdict = right ? 'Bugünkü soru: doğru' : 'Bugünkü soru: yanlış'
-  await expect(card).toContainText(verdict)
+  await expect(card).toContainText('Yarın yeni soru')
+  await expect(card).toHaveAttribute('data-state', right ? 'right' : 'wrong')
   // Answered stays answered across a reload, and the day shows on the week strip.
   await page.reload()
-  await expect(screen(page).getByTestId('today-daily')).toContainText(verdict)
+  await expect(screen(page).getByTestId('today-daily')).toContainText('Yarın yeni soru')
+  await expect(screen(page).getByTestId('today-daily')).toHaveAttribute(
+    'data-state',
+    right ? 'right' : 'wrong',
+  )
   await expect(screen(page).getByTestId('today-week')).toBeVisible()
   await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
+})
+
+test('Bugün has one primary action and the question row opens its sheet from anywhere on the row', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page)
+  await expect(screen(page).locator('[data-kind="primary"]')).toHaveCount(1)
+  const row = screen(page).getByTestId('today-daily')
+  const box = await row.boundingBox()
+  if (!box) throw new Error('no daily row')
+  // The right end of the row, over the chevron and past the label.
+  await row.click({ position: { x: box.width - 24, y: box.height / 2 } })
+  await expect(page.getByTestId('question-sheet')).toBeVisible()
 })
 
 test('Bugün shows no week strip before any study', async ({ page }) => {
@@ -673,6 +691,26 @@ test.describe('small phone (375 x 667) reach', () => {
     expect(await done.boundingBox().then((box) => box !== null && box.y + box.height <= 667)).toBe(true)
     await done.click()
     await expect(sheet).toHaveCount(0)
+  })
+
+  test('with every Bugün block present the last row scrolls clear of the tab bar', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const day = new Date()
+    const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+    await page.addInitScript(
+      ([p, today]) => {
+        localStorage.setItem(`${p}dizey.settings`, JSON.stringify({ examDate: today }))
+        localStorage.setItem(`${p}dizey.activity`, JSON.stringify([today]))
+      },
+      [prefix, key],
+    )
+    await openApp(page)
+    const last = screen(page).getByTestId('today-exam')
+    await last.scrollIntoViewIfNeeded()
+    await page.waitForTimeout(300)
+    const rowBox = await last.boundingBox()
+    const bar = await page.locator('.dz-tabbar').boundingBox()
+    expect(rowBox && bar && rowBox.y + rowBox.height <= bar.y).toBe(true)
   })
 
   test('the last option of a chapter test question scrolls fully above the action bar', async ({ page }) => {

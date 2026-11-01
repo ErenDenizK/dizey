@@ -1,6 +1,7 @@
 /*
- * Bugün: the hero (duo and one sentence of state), the one next lesson, mistakes to revisit, and the rehearsal when the exam is
- * close (src/shell/TodayView.tsx). Tokens only; no transitions or keyframes (motion comes from the engine).
+ * Bugün: the hero (duo and one sentence of state), the one next lesson as the only card, and quiet list rows for
+ * Tekrar, the question of the day and the rehearsal (src/shell/TodayView.tsx). Tokens only; no transitions or
+ * keyframes (motion comes from the engine).
  */
 .td-root {
   display: grid;
@@ -22,10 +23,11 @@
   color: var(--ink-3);
 }
 
-.td-next {
+.dz-card.td-next {
   display: grid;
   gap: var(--gap-item);
   padding: var(--space-6) var(--space-5);
+  margin-top: var(--space-2);
   text-decoration: none;
   color: var(--ink-1);
 }
@@ -45,43 +47,58 @@
   letter-spacing: var(--tracking-title1);
   font-weight: var(--weight-bold);
 }
-.td-next__progress {
-  display: grid;
-  gap: var(--gap-bound);
+.td-next__step {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-medium);
   color: var(--ink-2);
-}
-.td-next__bar {
-  display: block;
-  position: relative;
-  height: 8px;
-  border-radius: var(--corner-pill);
-  background: var(--surface-sunk);
-  box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
-  overflow: hidden;
-}
-.td-next__bar i {
-  position: absolute;
-  inset: 0 auto 0 0;
-  border-radius: inherit;
-  background: var(--action);
 }
 .td-next__action {
   margin-top: var(--space-2);
 }
 
-.dz-card.td-row {
+/* Quiet rows: no card, hairlines between, the same left edge as the hero's text. */
+.td-rows {
+  display: grid;
+}
+.td-row {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--gap-item);
+  width: 100%;
   min-height: var(--row-height);
+  padding: var(--space-2) var(--space-5);
+  text-align: start;
+  font: inherit;
+  border: 0;
+  background: none;
   text-decoration: none;
   color: var(--ink-1);
 }
-.td-row__main {
+.td-row + .td-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--space-5);
+  right: var(--space-5);
+  height: 0.5px;
+  background: var(--hairline-strong);
+}
+.td-row__value {
+  flex: none;
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.td-row__done {
+  flex: none;
   display: grid;
-  flex: 1;
-  min-width: 0;
-  gap: var(--gap-bound);
+  color: var(--ink-3);
+}
+.td-row__done svg {
+  width: 14px;
+  height: 14px;
 }
 
 /* ---- Companion slot ---------------------------------------------------------- */
@@ -103,11 +120,17 @@
   width: 108px;
 }
 
+@media (max-height: 700px) {
+  .companion-slot--large {
+    width: 84px;
+  }
+}
+
 /* ---- Week strip ------------------------------------------------------------------ */
 .td-top {
   display: grid;
   gap: var(--gap-item);
-  margin-top: var(--space-6);
+  margin-top: var(--space-4);
 }
 .td-top .td-head {
   margin-top: 0;
@@ -133,20 +156,21 @@
   color: var(--ink-2);
 }
 .td-week__dot {
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: var(--corner-pill);
   box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
 }
 .td-week__day[data-active="true"] .td-week__dot {
-  background: var(--action);
+  background: var(--ink-1);
   box-shadow: none;
 }
 .td-week__day[data-future="true"] {
-  opacity: 0.5;
+  opacity: 0.45;
 }
 .td-week__day[data-today="true"] .td-week__initial {
   color: var(--ink-1);
+  font-weight: var(--weight-bold);
 }
 .td-week__day[data-today="true"] .td-week__dot {
   outline: 1.5px solid var(--ink-2);
@@ -160,60 +184,6 @@
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-
-/* ---- Question of the day ------------------------------------------------------------ */
-.dz-card.td-daily {
-  width: 100%;
-  text-align: left;
-  font: inherit;
-  border: 0;
-}
-.td-daily__eyebrow {
-  color: var(--ink-2);
-  font-weight: var(--weight-semibold);
-}
-.td-daily__stem {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
-  overflow: hidden;
-  font-size: var(--type-body);
-  line-height: var(--leading-body);
-  color: var(--ink-1);
-}
-.td-daily__cta {
-  flex: none;
-  display: grid;
-  place-items: center;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 0 var(--space-4);
-  border-radius: var(--corner-pill);
-  background: var(--action);
-  color: var(--on-action);
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  font-weight: var(--weight-semibold);
-}
-.td-daily__tile {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--corner-chip);
-  background: var(--bad-fill);
-  color: var(--on-bad);
-}
-.td-daily__tile[data-correct="true"] {
-  background: var(--ok-fill);
-  color: var(--on-ok);
-}
-.td-daily__tile svg {
-  width: 16px;
-  height: 16px;
 }
 
 /* ---- Question sheet --------------------------------------------------------------- */

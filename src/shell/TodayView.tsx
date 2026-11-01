@@ -5,7 +5,6 @@ import { lessons } from '../content/lessons'
 import { chapterOf, chapters, pathCode } from '../content/path'
 import { type Question, questions } from '../content/questions'
 import { strings } from '../content/strings'
-import { RichText } from '../exam/Blocks'
 import { QuestionSheet } from '../exam/QuestionSheet'
 import { recordOutcome, useExam } from '../exam/store'
 import { resumeIndex } from '../lesson/progress'
@@ -17,7 +16,7 @@ import { answeredOn, dayKey, pickDaily } from '../progress/daily'
 import { saveDailyAnswer, useDailyAnswer } from '../progress/daily-store'
 import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
-import { Check, ChevronRight, Close } from '../ui/icons'
+import { Check, ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { CompanionSlot } from './CompanionSlot'
@@ -91,7 +90,7 @@ export function TodayView() {
       <div className="td-root">
         <header className="td-top">
           <div className="td-head">
-            <CompanionSlot name="today" size="medium" mood="happy" alive duo={duo} />
+            <CompanionSlot name="today" size="large" mood="happy" alive duo={duo} />
             <div className="td-head__text">
               <p className="td-head__state dz-title3" data-testid="today-state">
                 {stateLine}
@@ -102,29 +101,31 @@ export function TodayView() {
           {days.some((day) => day.active) ? <WeekStrip days={days} /> : null}
         </header>
         {main ? <NextLesson lessonId={main.id} /> : <AllDone />}
-        {show('review') ? (
-          firstLesson ? (
-            <PressLink
-              to="/lesson/$id"
-              params={{ id: firstLesson.lessonId }}
-              search={{ step: firstLesson.stepId }}
-              className="dz-card td-row"
-              data-testid="today-review"
-            >
-              <RowFace title={strings.today.review(open.length)} sub={strings.today.reviewHint} />
+        <div className="td-rows">
+          {show('review') ? (
+            firstLesson ? (
+              <PressLink
+                to="/lesson/$id"
+                params={{ id: firstLesson.lessonId }}
+                search={{ step: firstLesson.stepId }}
+                className="td-row"
+                data-testid="today-review"
+              >
+                <RowFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+              </PressLink>
+            ) : (
+              <PressLink to="/me" className="td-row" data-testid="today-review">
+                <RowFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+              </PressLink>
+            )
+          ) : null}
+          {show('daily') && daily ? <DailyRow question={daily} answered={answered} /> : null}
+          {show('exam') ? (
+            <PressLink to="/exam" className="td-row" data-testid="today-exam">
+              <RowFace title={strings.today.exam} value={strings.today.examSub} />
             </PressLink>
-          ) : (
-            <PressLink to="/me" className="dz-card td-row" data-testid="today-review">
-              <RowFace title={strings.today.review(open.length)} sub={strings.today.reviewHint} />
-            </PressLink>
-          )
-        ) : null}
-        {show('daily') && daily ? <DailyCard question={daily} answered={answered} /> : null}
-        {show('exam') ? (
-          <PressLink to="/exam" className="dz-card td-row" data-testid="today-exam">
-            <RowFace title={strings.today.exam} sub={strings.today.examSub} />
-          </PressLink>
-        ) : null}
+          ) : null}
+        </div>
       </div>
     </Screen>
   )
@@ -156,12 +157,7 @@ function NextLesson({ lessonId }: { lessonId: string }) {
       </span>
       <b className="td-next__title">{lesson.title}</b>
       {resuming ? (
-        <span className="td-next__progress">
-          <span className="td-next__bar" aria-hidden="true">
-            <i style={{ width: `${(step / lesson.steps.length) * 100}%` }} />
-          </span>
-          <small className="dz-footnote num">{strings.today.stepOf(step, lesson.steps.length)}</small>
-        </span>
+        <span className="td-next__step num">{strings.today.stepOf(step, lesson.steps.length)}</span>
       ) : null}
       <span className="dz-button td-next__action" data-kind="primary" data-wide="">
         {resuming ? strings.today.resume : strings.today.start}
@@ -182,13 +178,11 @@ function AllDone() {
   )
 }
 
-function RowFace({ title, sub }: { title: string; sub: string }) {
+function RowFace({ title, value }: { title: string; value: string }) {
   return (
     <>
-      <span className="td-row__main">
-        <span className="dz-row-main">{title}</span>
-        <small className="dz-footnote sh-row-sub">{sub}</small>
-      </span>
+      <span className="dz-row-main">{title}</span>
+      <span className="dz-footnote sh-row-sub td-row__value">{value}</span>
       <ChevronRight />
     </>
   )
@@ -222,8 +216,8 @@ function WeekStrip({ days }: { days: StripDay[] }) {
   )
 }
 
-/** The question of the day: a preview and "Çöz"; once answered, the result stays until tomorrow. */
-function DailyCard({
+/** The question of the day: one quiet row, the whole row opens the sheet; once answered it rests until tomorrow. */
+function DailyRow({
   question,
   answered,
 }: {
@@ -232,40 +226,23 @@ function DailyCard({
 }) {
   const text = strings.today.daily
   const [open, setOpen] = useState(false)
-  const stem = question.stem.find((block) => block.kind === 'text')
   const host = overlayHostRef.current
   return (
     <>
       <Pressable
-        className="dz-card td-row td-daily"
+        className="td-row"
         data-testid="today-daily"
         data-state={answered ? (answered.correct ? 'right' : 'wrong') : 'open'}
         onClick={() => setOpen(true)}
       >
+        <span className="dz-row-main">{text.eyebrow}</span>
         {answered ? (
-          <>
-            <span className="td-daily__tile" data-correct={answered.correct} aria-hidden="true">
-              {answered.correct ? <Check /> : <Close />}
-            </span>
-            <span className="td-row__main">
-              <span className="dz-row-main">{answered.correct ? text.correct : text.wrong}</span>
-              <small className="dz-footnote sh-row-sub">
-                {answered.correct ? text.correctSub : text.wrongSub}
-              </small>
-            </span>
-            <ChevronRight />
-          </>
-        ) : (
-          <>
-            <span className="td-row__main">
-              <small className="dz-footnote td-daily__eyebrow">{text.eyebrow}</small>
-              <span className="td-daily__stem">
-                {stem?.kind === 'text' ? <RichText text={stem.text} /> : null}
-              </span>
-            </span>
-            <span className="td-daily__cta">{text.solve}</span>
-          </>
-        )}
+          <span className="td-row__done" aria-hidden="true">
+            <Check />
+          </span>
+        ) : null}
+        <span className="dz-footnote sh-row-sub td-row__value">{answered ? text.next : text.solve}</span>
+        <ChevronRight />
       </Pressable>
       {host ? (
         <QuestionSheet
