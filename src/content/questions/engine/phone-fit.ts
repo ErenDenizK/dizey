@@ -42,8 +42,8 @@ function matrixProblems(rows: readonly (readonly string[])[]): string[] {
   const triangular =
     rows.every((row, i) => row.every((entry, j) => j >= i || !nonzero(entry))) ||
     rows.every((row, i) => row.every((entry, j) => j <= i || !nonzero(entry)))
-  if (!triangular && Math.min(...lines) > 2)
-    problems.push('4x4 matrix is neither triangular nor sparse in a row or column')
+  if (!triangular && Math.min(...lines) > 1)
+    problems.push('4x4 matrix is neither triangular nor has a line with one nonzero entry')
   return problems
 }
 

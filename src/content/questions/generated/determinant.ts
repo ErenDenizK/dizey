@@ -314,7 +314,7 @@ export const d2Numeric: Family = {
     if (!dense) {
       const asRow = rng.chance(0.5)
       const at = rng.int(0, size - 1)
-      const keep = rng.pick(size === 4 ? [1, 2, 2] : [1, 1, 2])
+      const keep = size === 4 ? 1 : rng.pick([1, 1, 2])
       const nonzero = rng.shuffle(Array.from({ length: size }, (_, t) => t)).slice(0, keep)
       for (let t = 0; t < size; t++) {
         if (nonzero.includes(t)) {
