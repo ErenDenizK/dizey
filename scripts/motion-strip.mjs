@@ -7,7 +7,7 @@
 //        node scripts/motion-strip.mjs <scenario> <outDir>
 // Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
-// settings-open and settings-close (Sen's gear and back), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
+// settings-open and settings-close (Sen's gear and back), chapter-test-open / chapter-test-close (Harita's chapter cell and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
 // Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390).
 import { execFileSync } from 'node:child_process'
@@ -28,6 +28,15 @@ async function enterLesson({ page, settle }) {
   await settle()
   await page.locator(PEEK_ENTER).click()
   await page.waitForSelector('[data-testid="lesson-player"]')
+  await settle()
+}
+
+const CHAPTER_CELL = '[data-testid="chapter-test-matrices"]'
+/** Harita with the first chapter's test cell in the middle of the screen, at rest. */
+async function toChapterCell({ page, settle }) {
+  await page.locator('.dz-tab').nth(1).click()
+  await settle()
+  await page.locator(CHAPTER_CELL).evaluate((el) => el.scrollIntoView({ block: 'center' }))
   await settle()
 }
 
@@ -145,6 +154,30 @@ const scenarios = {
     prep: enterLesson,
     run: async ({ tap, frames }) => {
       await tap(LESSON_CLOSE)
+      await frames(60)
+    },
+  },
+  // A chapter test grows out of its cell on Harita and folds back into it (docs/design/motion-phases.md).
+  'chapter-test-open': {
+    region: 'body',
+    scale: 2,
+    prep: toChapterCell,
+    run: async ({ tap, frames }) => {
+      await tap(CHAPTER_CELL)
+      await frames(60)
+    },
+  },
+  'chapter-test-close': {
+    region: 'body',
+    scale: 2,
+    prep: async (ctx) => {
+      await toChapterCell(ctx)
+      await ctx.page.locator(CHAPTER_CELL).click()
+      await ctx.page.waitForSelector('[data-testid="exam-run"]')
+      await ctx.settle()
+    },
+    run: async ({ tap, frames }) => {
+      await tap('[aria-label="Testten çık, sonra devam et"]')
       await frames(60)
     },
   },
