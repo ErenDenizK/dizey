@@ -113,9 +113,9 @@ export const strings = {
     resume: (name: string) => `Devam et: ${name}`,
     review: (name: string) => `Tekrar et: ${name}`,
     close: 'Kapat',
-    place: (chapter: string, index: number, total: number) => `${chapter} · ${index}. ders / ${total}`,
     steps: (done: number, total: number) => `${total} adımın ${done} tanesi tamam`,
-    chapterWeight: (items: number, total: number) => `Bu bölümden vizede ${items} / ${total} soru`,
+    chapterNote: (chapter: string, items?: number | null, total?: number) =>
+      !items || total === undefined ? chapter : `${chapter} · vizede ${items} / ${total} soru`,
   },
 
   me: {

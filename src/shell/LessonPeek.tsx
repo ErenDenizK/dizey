@@ -13,12 +13,24 @@ import { useLessonRecords } from '../lesson/store'
 import { playSound } from '../sound/player'
 import { clipWith, faceOf, insets } from './morph'
 import { PressLink } from './PressLink'
-import { morphFrom } from './stage'
+import { morphFrom, stageRef } from './stage'
 
 export type Peek = { lesson: Lesson; tile: HTMLElement }
 
 /** How far a downward drag (px) or how fast a flick (px/s) closes the card. */
 export const DISMISS = { distance: 90, speed: 600 } as const
+
+/** Runs `read` with the map behind at rest, so a tile is measured where it will come to rest. */
+function atRest<T>(read: () => T): T {
+  const stage = stageRef.current
+  const saved = stage?.style.transform ?? ''
+  if (stage) stage.style.transform = ''
+  try {
+    return read()
+  } finally {
+    if (stage) stage.style.transform = saved
+  }
+}
 
 /**
  * A lesson's card. The tapped tile lifts out of the path and opens into a larger card in the thumb's
@@ -47,14 +59,18 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     const tile = shown.tile
     const radius = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0
     clipWith(el)
-    engine.set(el, { ...insets(el, tile), y: 0 })
-    const face = faceOf(el, tile)
+    // A card opened while the last one is still folding measures its tile with the map at rest.
+    const { start, face } = atRest(() => ({ start: insets(el, tile), face: faceOf(el, tile) }))
+    engine.set(el, { ...start, y: 0 })
     engine.set(face, { opacity: 1 })
     engine.set(body, { opacity: 0, y: CHOREO.rise })
     if (scrim.current) engine.set(scrim.current, { opacity: 0 })
     tile.style.visibility = 'hidden'
     playSound('open')
+    const stage = stageRef.current
     engine.withChannel('chrome', () => {
+      // The map behind recedes as one layer; the scrim does the dimming.
+      if (stage) engine.to(stage, { scale: CHOREO.sheetRecede }, 'page')
       engine.to(el, { t: 0, r: 0, b: 0, l: 0, rad: radius }, 'page', { launch: 0.4 })
       engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
       if (scrim.current) engine.to(scrim.current, { opacity: CHOREO.sheetScrim }, 'fade')
@@ -74,10 +90,11 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     closing.current = true
     const tile = shown.tile
     const lift = engine.value(el, 'y')
-    const target = insets(el, tile)
+    // The tile is measured where it will come to rest: the map behind is still receded.
+    const stage = stageRef.current
+    const { target, face } = atRest(() => ({ target: insets(el, tile), face: faceOf(el, tile) }))
     target.t += lift
     target.b -= lift
-    const face = faceOf(el, tile)
     engine.set(face, { opacity: 0, y: -lift })
     playSound('close')
     engine.withChannel('chrome', () => {
@@ -92,6 +109,7 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
         },
       })
       engine.to(face, { y: 0 }, 'page')
+      if (stage) engine.to(stage, { scale: 1 }, 'page')
     })
   }, [peek, shown])
 
@@ -202,25 +220,18 @@ function PeekBody({ lesson, onEnter }: { lesson: Lesson; onEnter: () => void }) 
       : state === 'current'
         ? strings.sheet.resume(lesson.title)
         : strings.sheet.enter(lesson.title)
-  const place = chapter ? chapter.lessons.findIndex((item) => item.id === lesson.id) + 1 : 0
   return (
     <>
-      <header className="lp__head">
-        <span className="lp__code num">{pathCode(lesson)}</span>
-        <span className="lp__place">
-          {chapter ? (
-            <span className="dz-footnote">
-              {strings.sheet.place(chapter.label, place, chapter.lessons.length)}
-            </span>
-          ) : null}
-          <span className="lp__state" data-state={state}>
-            {state === 'current' && record
-              ? strings.sheet.resumeAt(resumeIndex(lesson, record) + 1, total)
-              : strings.path.state[state]}
-          </span>
+      <div className="lp__head">
+        <h2 className="dz-title1 lp__title">
+          <span className="lp__code num">{pathCode(lesson)}</span> {lesson.title}
+        </h2>
+        <span className="lp__state" data-state={state}>
+          {state === 'current' && record
+            ? strings.sheet.resumeAt(resumeIndex(lesson, record) + 1, total)
+            : strings.path.state[state]}
         </span>
-      </header>
-      <h2 className="dz-title1 lp__title">{lesson.title}</h2>
+      </div>
       {opening ? (
         <p className="lp__opens">
           <span className="dz-footnote">{strings.path.opensWith}</span>
@@ -243,9 +254,13 @@ function PeekBody({ lesson, onEnter }: { lesson: Lesson; onEnter: () => void }) 
         </span>
         <span className="dz-footnote lp__size">{strings.path.lessonSize(total, asks)}</span>
       </div>
-      {chapter?.examItems ? (
+      {chapter ? (
         <p className="dz-footnote lp__weight">
-          {strings.sheet.chapterWeight(chapter.examItems, examItemTotal)}
+          {strings.sheet.chapterNote(
+            chapter.label,
+            chapter.examItems,
+            chapter.examItems ? examItemTotal : undefined,
+          )}
         </p>
       ) : null}
       <PressLink
