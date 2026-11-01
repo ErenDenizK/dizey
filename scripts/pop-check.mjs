@@ -96,22 +96,31 @@ for (let t = HOLD; t + HOLD <= count - 1; t++) {
   }
 }
 // A moving edge (a clip folding, a stroke being drawn) crosses a cell in one frame too, but its neighbours
-// step in the frames next to it. A pop has no such company: drop candidates with another big jump within `NEAR`
-// cells in the 1..WAVE frames before or after.
+// step in the frames next to it. A pop has no such company: drop candidates with another full step within `NEAR` cells in the
+// 1..WAVE frames before or after.
 const NEAR = 3
 const WAVE = 2
-const near = (a, b) =>
-  Math.abs((a.c % cols) - (b.c % cols)) <= NEAR &&
-  Math.abs(Math.floor(a.c / cols) - Math.floor(b.c / cols)) <= NEAR
-// Any big jump counts as company, steady or not.
+const reach = (a, b) =>
+  Math.max(Math.abs((a.c % cols) - (b.c % cols)), Math.abs(Math.floor(a.c / cols) - Math.floor(b.c / cols)))
+// Any full step counts as company, steady or not.
 const jumps = []
 for (let t = 1; t < count; t++) {
-  for (let c = 0; c < cols * rows; c++) if (Math.abs(mean[t][c] - mean[t - 1][c]) > STEP) jumps.push({ t, c })
+  for (let c = 0; c < cols * rows; c++)
+    if (Math.abs(mean[t][c] - mean[t - 1][c]) > STEP)
+      jumps.push({ t, c, jump: Math.abs(mean[t][c] - mean[t - 1][c]) })
 }
+// A lone cell that only just clears the step is the grazed corner of an edge, not a patch popping in: a weak
+// step (under WEAK times the threshold) needs at least PATCH cells stepping in the same frame.
+const WEAK = 1.25
+const PATCH = 3
+const still = candidates.filter(
+  (cand) => !jumps.some((o) => o.t !== cand.t && Math.abs(o.t - cand.t) <= WAVE && reach(cand, o) <= NEAR),
+)
+const patch = new Map()
+for (const cand of still) patch.set(cand.t, (patch.get(cand.t) ?? 0) + 1)
 const flagged = new Map()
-for (const cand of candidates) {
-  const moving = jumps.some((o) => o.t !== cand.t && Math.abs(o.t - cand.t) <= WAVE && near(cand, o))
-  if (moving) continue
+for (const cand of still) {
+  if (cand.jump < STEP * WEAK && patch.get(cand.t) < PATCH) continue
   if (!flagged.has(cand.t)) flagged.set(cand.t, [])
   flagged.get(cand.t).push(`${cand.c % cols},${Math.floor(cand.c / cols)}(${Math.round(cand.jump)})`)
 }
