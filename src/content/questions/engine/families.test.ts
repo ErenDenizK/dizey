@@ -174,6 +174,15 @@ describe('phone-fit rules', () => {
         ['1', '2', '3', '4'],
       ]),
     ).not.toEqual([])
+    // Two nonzero entries in its sparsest line: two 3x3 minors, too much scratch work for a phone.
+    expect(
+      ok([
+        ['1', '0', '0', '2'],
+        ['2', '3', '4', '5'],
+        ['1', '1', '1', '1'],
+        ['2', '2', '2', '3'],
+      ]),
+    ).not.toEqual([])
     expect(ok(Array.from({ length: 5 }, () => ['1', '1', '1', '1', '1']))).not.toEqual([])
     expect(
       ok([
