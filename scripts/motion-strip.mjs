@@ -7,7 +7,7 @@
 //        node scripts/motion-strip.mjs <scenario> <outDir>
 // Scenarios: companion-tabs and companion-hello (the duo travelling between screens, the cold start), count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
-// chapter-test-open / chapter-test-close (alias test-close) (Harita's chapter cell and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
+// chapter-test-open / chapter-test-close (alias test-close) (Yol's chapter test node and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
 //        node scripts/pop-check.mjs <outDir>/frames   (exit 1 and the frames and cells when something steps)
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
@@ -26,15 +26,14 @@ const PEEK_ENTER = '[data-testid="lesson-peek"] .dz-button[data-kind="primary"]'
 // Settings' own way out: the floating back button, or the sheet header's "Bitti".
 const SHEET_CLOSE = '.sh-overlay [aria-label="Sen’e dön"], .sh-overlay button:has-text("Bitti")'
 const LESSON_CLOSE = '[data-testid="lesson-player"] [aria-label="Dersten çık"]'
-/** The app opens on Today; the path tiles live on Harita. */
-async function toHarita({ page, settle }) {
-  await page.locator('.dz-tab').nth(1).click()
+/** The app opens on Yol, where the path nodes live: only let it come to rest. */
+async function toYol({ settle }) {
   await settle()
 }
 /** Opens a tile's card, enters its lesson and lets everything come to rest. */
 async function enterLesson({ page, settle }) {
-  await toHarita({ page, settle })
-  await page.locator('.pa-tile:not([data-main])').first().click()
+  await toYol({ page, settle })
+  await page.locator('.pa-tile:not([data-next])').first().click()
   await settle()
   await page.locator(PEEK_ENTER).click()
   await page.waitForSelector('[data-testid="lesson-player"]')
@@ -42,9 +41,8 @@ async function enterLesson({ page, settle }) {
 }
 
 const CHAPTER_CELL = '[data-testid="chapter-test-matrices"]'
-/** Harita with the first chapter's test cell in the middle of the screen, at rest. */
+/** Yol with the first chapter's test node in the middle of the screen, at rest. */
 async function toChapterCell({ page, settle }) {
-  await page.locator('.dz-tab').nth(1).click()
   await settle()
   await page.locator(CHAPTER_CELL).evaluate((el) => el.scrollIntoView({ block: 'center' }))
   await settle()
@@ -118,18 +116,16 @@ const scenarios = {
     run: async ({ tap, frames }) => {
       await tap(tabN(1))
       await frames(40)
-      await tap(tabN(2))
-      await frames(40)
       await tap(tabN(0))
       await frames(40)
     },
   },
-  // The companion: Bugün to Sen and back (the duo travels between its anchors).
+  // The companion: Yol to Sen and back (the duo travels between its anchors).
   'companion-tabs': {
     region: 'body',
     scale: 2,
     run: async ({ tap, frames }) => {
-      await tap(tabN(2))
+      await tap(tabN(1))
       await frames(60)
       await tap(tabN(0))
       await frames(60)
@@ -147,9 +143,9 @@ const scenarios = {
   sheet: {
     region: 'body',
     scale: 2,
-    prep: toHarita,
+    prep: toYol,
     run: async ({ tap, frames, page }) => {
-      await tap('.pa-tile:not([data-main])')
+      await tap('.pa-tile:not([data-next])')
       await frames(50)
       await page
         .locator('.dz-scrim')
@@ -171,9 +167,9 @@ const scenarios = {
   'lesson-open': {
     region: 'body',
     scale: 2,
-    prep: toHarita,
+    prep: toYol,
     run: async ({ tap, frames }) => {
-      await tap('.pa-tile:not([data-main])')
+      await tap('.pa-tile:not([data-next])')
       await frames(30)
       await tap(PEEK_ENTER)
       await frames(60)
@@ -189,7 +185,7 @@ const scenarios = {
       await frames(60)
     },
   },
-  // A chapter test grows out of its cell on Harita and folds back into it (docs/design/motion-phases.md).
+  // A chapter test grows out of its node on Yol and folds back into it (docs/design/motion-phases.md).
   'chapter-test-open': {
     region: 'body',
     scale: 2,
@@ -218,7 +214,7 @@ const scenarios = {
     region: 'body',
     scale: 2,
     prep: async ({ page, settle }) => {
-      await page.locator('.dz-tab').nth(2).click()
+      await page.locator('.dz-tab').nth(1).click()
       await settle()
     },
     run: async ({ tap, frames }) => {
@@ -230,7 +226,7 @@ const scenarios = {
     region: 'body',
     scale: 2,
     prep: async ({ page, settle }) => {
-      await page.locator('.dz-tab').nth(2).click()
+      await page.locator('.dz-tab').nth(1).click()
       await settle()
       await page.locator('[data-testid="open-settings"]').click()
       await settle()
@@ -245,9 +241,9 @@ const scenarios = {
     region: 'body',
     scale: 2,
     settings: { cellReveal: true },
-    prep: toHarita,
+    prep: toYol,
     run: async ({ tap, frames }) => {
-      await tap('.pa-tile:not([data-main])')
+      await tap('.pa-tile:not([data-next])')
       await frames(30)
       await tap(PEEK_ENTER)
       await frames(60)
