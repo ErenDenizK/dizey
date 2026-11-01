@@ -4,8 +4,11 @@
  */
 export type Presentation = 'push' | 'sheet'
 
-/** Routes that open as a sheet, matched as path prefixes (`/exam` also covers `/exam/...`). */
-export const SHEET_ROUTES = ['/settings', '/exam']
+/**
+ * Routes that open as a sheet, matched as path prefixes (`/exam` also covers `/exam/...`). Settings is a
+ * plain push (Eren, 2026-11-01: not a drawer, not bottom-up, not cell by cell).
+ */
+export const SHEET_ROUTES = ['/exam']
 
 /** The one switch: false returns every route to a full-screen push (direction swap-back). */
 export const SHEETS_ON = true
