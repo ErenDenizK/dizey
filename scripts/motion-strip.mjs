@@ -40,6 +40,91 @@ const scenarios = {
       await frames(60)
     },
   },
+  press: {
+    region: '.ls-dock',
+    lesson: 'd1-determinant',
+    run: async ({ frames, page }) => {
+      const box = await page.locator('.ls-dock .sh-btn--primary').first().boundingBox()
+      await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+      await page.mouse.down()
+      await frames(8)
+      await page.mouse.up()
+      await frames(30)
+    },
+  },
+  keypad: {
+    region: '.ls-keypad-wrap',
+    lesson: 'd1-determinant',
+    prep: async ({ page, settle }) => {
+      const primary = page.locator('.ls-dock .sh-btn--primary').first()
+      for (let i = 0; i < 4; i++) {
+        await primary.click()
+        await settle()
+      }
+      await page.locator('.ex-opt', { hasText: '26' }).first().click()
+      await settle()
+      await page.locator('.ex-opt', { hasText: /^b/ }).first().click()
+      await settle()
+      await primary.click()
+      await settle()
+    },
+    run: async ({ tap, frames, page }) => {
+      await tap(page.locator('.ls-key', { hasText: /^8$/ }))
+      await frames(12)
+      await tap(page.locator('.ls-key', { hasText: /^1$/ }))
+      await frames(12)
+      await tap('.ls-key[data-fn="true"]')
+      await frames(12)
+      await tap(page.locator('.ls-key', { hasText: /^8$/ }))
+      await tap('.ls-key--go')
+      await frames(50)
+    },
+  },
+  tabs: {
+    region: 'body',
+    scale: 2,
+    run: async ({ tap, frames }) => {
+      await tap(tabN(1))
+      await frames(40)
+      await tap(tabN(2))
+      await frames(40)
+      await tap(tabN(0))
+      await frames(40)
+    },
+  },
+  sheet: {
+    region: 'body',
+    scale: 2,
+    run: async ({ tap, frames, page }) => {
+      await tap('.pa-tile:not([data-main])')
+      await frames(50)
+      await page
+        .locator('.dz-scrim')
+        .first()
+        .click({ position: { x: 20, y: 20 } })
+      await frames(50)
+    },
+  },
+  progress: {
+    region: '.ls-top',
+    lesson: 'd1-determinant',
+    run: async ({ tap, frames }) => {
+      await tap('.ls-dock .sh-btn--primary')
+      await frames(40)
+      await tap('.ls-top__btn[aria-label="Önceki adım"]')
+      await frames(40)
+    },
+  },
+  'lesson-open': {
+    region: 'body',
+    scale: 2,
+    run: async ({ tap, frames }) => {
+      await tap('.pa-tile:not([data-main])')
+      await frames(50)
+      await tap('.dz-sheet .dz-button[data-kind="primary"]')
+      await frames(50)
+    },
+  },
 }
 const plan = scenarios[scenario]
 if (!plan) throw new Error(`unknown scenario ${scenario}`)
@@ -51,7 +136,7 @@ const browser = await chromium.launch(
 )
 const context = await browser.newContext({
   viewport: { width, height: 844 },
-  deviceScaleFactor: 4,
+  deviceScaleFactor: plan.scale ?? 4,
   isMobile: true,
   hasTouch: true,
   colorScheme: 'dark',
@@ -78,14 +163,17 @@ async function settle(cap = 2400) {
   }
 }
 async function shot() {
-  const box = await page.locator(plan.region).first().boundingBox()
+  const box =
+    plan.region === 'body'
+      ? { x: 0, y: 0, width, height: 844 }
+      : await page.locator(plan.region).first().boundingBox()
   await page.screenshot({
     path: join(out, 'frames', `f${String(n++).padStart(4, '0')}.png`),
     clip: {
       x: Math.max(0, box.x - 12),
       y: Math.max(0, box.y - 6),
-      width: Math.min(width, box.width + 24),
-      height: box.height + 12,
+      width: Math.min(width, box.width + (plan.region === 'body' ? 0 : 24)),
+      height: box.height + (plan.region === 'body' ? 0 : 12),
     },
   })
 }
@@ -95,20 +183,22 @@ async function frames(count) {
     await shot()
   }
 }
+const tabN = (i) => page.locator('.dz-tab').nth(i)
 async function tap(target) {
   const locator = typeof target === 'string' ? page.locator(target) : target
   await locator.first().click()
   await shot()
 }
 
-await page.goto(`${base}lesson/${plan.lesson}`)
-await page.waitForSelector('[data-testid="lesson-player"]')
+await page.goto(plan.lesson ? `${base}lesson/${plan.lesson}` : base)
+await page.waitForSelector(plan.lesson ? '[data-testid="lesson-player"]' : '.dz-tab')
 await page.evaluate(() => document.fonts.ready)
 await settle()
 for (let i = 0; i < (plan.before ?? 0); i++) {
   await page.locator('.ls-dock .sh-btn--primary').click()
   await settle()
 }
+if (plan.prep) await plan.prep({ page, settle })
 await shot()
 await plan.run({ tap, frames, page })
 await browser.close()
@@ -136,7 +226,7 @@ try {
     '-i',
     pattern,
     '-vf',
-    `select=not(mod(n\\,2)),tile=8x${Math.ceil(n / 16)}:padding=6:color=0x222222`,
+    `select=not(mod(n\\,2)),${plan.scale ? 'scale=iw/4:-1,' : ''}tile=8x${Math.ceil(n / 16)}:padding=6:color=0x222222`,
     '-frames:v',
     '1',
     join(out, 'strip.png'),
