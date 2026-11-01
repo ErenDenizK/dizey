@@ -9,8 +9,6 @@ import { describe, expect, it } from 'vitest'
 const ALLOWED: Record<string, string> = {
   // The row's value on Bugün: the size of the rehearsal ("15 soru"), a fact like a count, not an explanation.
   'today.examSub': 'a value (question count), not a caption',
-  // TODO(design): remove. This is a real explanatory caption under the Sen mistakes list; allowed only so the guard can land.
-  'me.mistakesHint': 'known violation, to be removed with the Sen redesign',
 }
 
 const strings = readFileSync(new URL('./strings.ts', import.meta.url), 'utf8')
@@ -45,7 +43,7 @@ describe('no explanatory captions', () => {
     .map((url) => readFileSync(url, 'utf8'))
 
   it('finds the caption keys it guards', () => {
-    expect(keys).toContain('me.mistakesHint')
+    expect(keys).toContain('today.examSub')
   })
 
   it('shows no Hint, Sub or Caption string outside the allowlist', () => {

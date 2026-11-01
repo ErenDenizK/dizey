@@ -265,7 +265,6 @@ function MistakeLog() {
               </li>
             ) : null}
           </ul>
-          <p className="dz-footnote sh-hint">{strings.me.mistakesHint}</p>
         </div>
       ) : null}
     </section>

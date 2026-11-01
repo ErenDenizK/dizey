@@ -143,7 +143,6 @@ export const strings = {
     more: (count: number) => `${count} tane daha`,
     mistakes: 'Hata defteri',
     mistakesRow: (count: number) => `${count} açık hata`,
-    mistakesHint: 'Derse dönüp ilk denemede doğru yapınca listeden çıkar.',
     mistakesMore: (count: number) => `${count} hata daha göster`,
     mistakesLess: 'Daha az göster',
     mistakeExam: 'Prova sorusu',

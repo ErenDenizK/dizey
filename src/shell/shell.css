@@ -1137,9 +1137,6 @@ a.sh-node {
   display: block;
   font-weight: var(--weight-regular);
 }
-.sh-hint {
-  margin: var(--space-2) var(--card-pad) 0;
-}
 .sh-review {
   margin-top: var(--stack-gap);
 }
