@@ -14,6 +14,16 @@ export const d2CofactorExpansion: Lesson = {
   node: 'D2',
   title: 'Minör, kofaktör ve Laplace açılımı',
   matrices: {
+    V: m(
+      '$|V|$ =',
+      [
+        ['2', '0', '0', '0'],
+        ['5', '3', '0', '0'],
+        ['1', '4', '-1', '0'],
+        ['7', '2', '6', '2'],
+      ],
+      true,
+    ),
     P: m(
       '$|A|$ =',
       [
@@ -277,4 +287,55 @@ export const d2CofactorExpansion: Lesson = {
       ],
     },
   ],
+  moment: {
+    id: 'moment-triangle',
+    kind: 'choice',
+    eyebrow: 'Gizli an',
+    title: 'Hesaplamadan söyle: $|V|$ kaç?',
+    body: 'İlk satıra bak, sonra bir daha bak.',
+    skill: 'det-triangular',
+    scene: { items: ['V', '=', 'result'], result: '?' },
+    options: [
+      {
+        key: 'a',
+        content: [text('$6$')],
+        errorType: 'summed-diagonal',
+        feedback: 'Köşegeni topladın. Laplace her adımda bir elemanı kofaktörüyle çarpar.',
+      },
+      { key: 'b', content: [text('$-12$')] },
+      {
+        key: 'c',
+        content: [text('$12$')],
+        errorType: 'dropped-sign',
+        feedback: 'Köşegende $-1$ var; işaret çarpıma girer.',
+      },
+    ],
+    answer: 'b',
+    reveal: {
+      kind: 'frames',
+      frames: [
+        {
+          clear: true,
+          marks: [
+            { cell: ['V', 0, 1], tone: 'col' },
+            { cell: ['V', 0, 2], tone: 'col' },
+            { cell: ['V', 0, 3], tone: 'col' },
+          ],
+          note: 'İlk satırda tek eleman: 2',
+        },
+        {
+          marks: [
+            { cell: ['V', 0, 0], tone: 'ok' },
+            { cell: ['V', 1, 1], tone: 'ok' },
+            { cell: ['V', 2, 2], tone: 'ok' },
+            { cell: ['V', 3, 3], tone: 'ok' },
+          ],
+          note: '2 · 3 · (−1) · 2 = −12',
+        },
+      ],
+    },
+    solution:
+      'İlk satırdan açınca tek terim kalır: $2 \\cdot M_{11}$. Kalan 3×3 da aynı biçimde; her adımda köşegenden bir eleman gelir: $2 \\cdot 3 \\cdot (-1) \\cdot 2 = -12$.',
+    claims: [{ kind: 'det', matrix: 'V', equals: '-12', answer: true }],
+  },
 }
