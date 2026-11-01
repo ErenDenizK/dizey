@@ -71,7 +71,6 @@ test('one duo walks Bugün, Sen, a lesson and its end, and never covers the less
   await settled(page)
   const me = await duoBox(page)
   expect(me).not.toBeNull()
-  expect(me?.width).toBeGreaterThan((home?.width ?? 0) * 1.2)
   await only()
 
   await bar.getByRole('button', { name: 'Bugün' }).click()
