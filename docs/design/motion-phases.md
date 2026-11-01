@@ -18,7 +18,7 @@ open played backwards.
 | 2. Departure | What exactly is moving? | The source itself becomes the moving surface: same rectangle, radius and colour on the handoff frame. No swap, no flash. Content that will not survive the trip leaves first, fast (`leave`). |
 | 3. Travel | Does it read as one object? | One spring per quantity (`page` for geometry, `fade` for ink). Text never stretches: geometry is a clip or a container, never a scale on words. Interruptible: a reversal retargets from the live value and velocity. Opaque all the way. |
 | 4. Arrival | When is it readable? | The container lands, then its content arrives in reading order (top to bottom, `CHOREO.stagger`), starting when the surface is about 70% open, not after a fixed delay. Deceleration in the last third, no bounce on large surfaces. The resting look (radius, border, shadow) is reached during the last third, never swapped on the landing frame. |
-| 5. Aftermath | What else felt it? | The context reacts: what is covered recedes (`CHOREO.sheetRecede`) and comes back on close; neighbours settle in a ripple ordered by distance (35 ms apart, `ui`, a few px or 0.02 scale at most); an outline or highlight draws itself in (`draw`). Then nothing moves. |
+| 5. Aftermath | What else felt it? | The context reacts: what is covered recedes (`CHOREO.sheetRecede`) and comes back on close; neighbours settle in a ripple ordered by distance (35 ms apart, `ui`, a few px or 0.02 scale at most); an outline or highlight draws itself in (`draw`) as an SVG stroke that becomes the tile's persistent ring (the ring waits for it, no swap); a marker such as the tag rises in on `ui` after the stroke starts; a changed state crossfades. Then nothing moves. |
 
 Every row names: the element, the spring token, what the neighbours do, and the one frame to check (the
 "poster" of that phase).
@@ -35,6 +35,12 @@ Every row names: the element, the spring token, what the neighbours do, and the 
 ## How it is checked (cheap)
 
 1. `scripts/motion-strip.mjs <scenario>` films every 60 Hz frame of the interaction (script, no model).
+1b. `node scripts/pop-check.mjs <outDir>/frames` (script, no model, needs ffmpeg) enforces PR-16 (nothing changes
+   in a single frame). It scales the frames to 1x, splits them into 16 px cells and flags a cell that is steady
+   for 3 frames, jumps by more than 14 gray levels in one frame and is steady for 3 frames after (a step
+   function). Fades and springs pass through in-between values and are never flagged; a moving edge (a clip
+   folding, a stroke being drawn) is dropped when neighbouring cells step in the 2 frames either side. It prints
+   the flagged frames and cells and exits 1 if there are any. Tune with `--cell --step --hold --still`.
 2. A Haiku (or Sonnet) reader gets the phase table and the frame numbers of each phase's poster, and answers
    the table's questions per frame with yes/no and the frame file.
 3. Opus looks only at frames the reader flagged and makes the call. No Opus loops on its own work.
