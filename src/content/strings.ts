@@ -99,7 +99,7 @@ export const strings = {
     soundLab: 'Ses laboratuvarı',
     characterLab: 'Karakter ve rozetler',
     music: 'Arka plan müziği',
-    musicHint: 'Sakin, kısık; sınavda susar.',
+    musicHint: 'Ders ilerledikçe gelişir, ders bitince çözülür; sınavda susar.',
     haptics: 'Titreşim',
     hapticsHint: 'Cevapta hafif bir dokunuş.',
     cellReveal: 'Hücre hücre açılış',

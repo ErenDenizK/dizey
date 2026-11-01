@@ -7,7 +7,7 @@
 //        node scripts/motion-strip.mjs <scenario> <outDir>
 // Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
-// lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
+// settings-open and settings-close (Sen's gear and back), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
 // Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390).
 import { execFileSync } from 'node:child_process'
@@ -145,6 +145,33 @@ const scenarios = {
     prep: enterLesson,
     run: async ({ tap, frames }) => {
       await tap(LESSON_CLOSE)
+      await frames(60)
+    },
+  },
+  // Sen's gear grows into Settings and Settings folds back into the gear.
+  'settings-open': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+    },
+    run: async ({ tap, frames }) => {
+      await tap('[data-testid="open-settings"]')
+      await frames(60)
+    },
+  },
+  'settings-close': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+      await page.locator('[data-testid="open-settings"]').click()
+      await settle()
+    },
+    run: async ({ tap, frames }) => {
+      await tap('[aria-label="Sen’e dön"]')
       await frames(60)
     },
   },

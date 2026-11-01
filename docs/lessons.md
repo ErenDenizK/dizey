@@ -30,3 +30,7 @@ Short entries from our own mistakes, Eren's feedback and other projects' experie
 ## 2026-11-01: scroll-linked transforms on separate pieces never read as one surface
 
 Two Dersler scroll effects shipped and were rejected: a focus lens (each tile and heading scaled around its own centre) and a drum projection (every point mapped through one curve, path redrawn each frame). Even with mathematically consistent mapping, the eye still sees separate blocks turning on their own, and Eren judged it tiring for long use. Lesson: an effect on a scrolling list must act on the whole page as one piece (or not at all); prototype it as a phone preview before merging, since math consistency did not predict the feel. Guard: e2e "scrolling Dersler moves the path as one flat page".
+
+## 2026-11-01: a chrome fix checked on one scroll position hid the title at the other
+
+A taller top fade for the floating back button (ed00d73) was checked only on a scrolled page; at scroll 0 it sat over the large "Ayarlar" title and hid it, and Eren found it. Lesson: chrome that overlays scrolling content has two states, and both need a look. Guard: pushed screens are checked at scroll 0 and scrolled; the e2e settings test asserts the top fade is transparent at scroll 0 and visible once scrolled.
