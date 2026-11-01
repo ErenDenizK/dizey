@@ -73,8 +73,8 @@ export function ExamHome() {
                 }}
               >
                 <span className="exh-set__main">
-                  <b className="dz-title3">{strings.exam.setTitle[set.id]}</b>
-                  <span className="dz-subhead exh-set__body">{strings.exam.setBody[set.id]}</span>
+                  <span className="dz-row-main">{strings.exam.setTitle[set.id]}</span>
+                  <small className="dz-footnote sh-row-sub">{strings.exam.setBody[set.id]}</small>
                   <span className="exh-set__meta">
                     <span className="exh-chip">
                       {strings.exam.setMeta(set.size, durationFor(set.size) / 60_000)}
