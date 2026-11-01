@@ -121,7 +121,7 @@ function NextLesson({ lessonId }: { lessonId: string }) {
       <span className="ph-next__text">
         <span className="ph-next__where">
           <span className="num">{pathCode(lesson)}</span>
-          {chapter ? <span>{chapter.label}</span> : null}
+          {chapter && !resuming ? <span>{chapter.label}</span> : null}
           {resuming ? (
             <span className="num">
               {strings.today.stepOf(resumeIndex(lesson, record) + 1, lesson.steps.length)}

@@ -3,46 +3,6 @@
  * Tokens only; no transitions or keyframes (motion comes from the engine).
  */
 
-/* ---- Header: the chapter you are in, sticky under the status bar ---------------- */
-.ph-head {
-  position: sticky;
-  /* Sticky offsets are measured inside the screen's padding, so this is the very top of the screen. */
-  top: calc((env(safe-area-inset-top) + var(--space-3)) * -1);
-  z-index: 4;
-  display: grid;
-  gap: var(--space-0-5);
-  /* Back over the screen's own top padding, so the header owns the strip under the status bar. */
-  margin: calc((env(safe-area-inset-top) + var(--space-3)) * -1) calc(var(--page-gutter) * -1) 0;
-  padding: calc(env(safe-area-inset-top) + var(--space-4)) var(--page-gutter) var(--space-3);
-  background: var(--bg);
-}
-.ph-head::after {
-  content: "";
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  height: var(--space-4);
-  pointer-events: none;
-  background: linear-gradient(to bottom, var(--bg), transparent);
-}
-.ph-head p {
-  margin: 0;
-}
-.ph-head__title {
-  font-size: var(--type-title3);
-  line-height: var(--leading-title3);
-  letter-spacing: var(--tracking-title3);
-  font-weight: var(--weight-semibold);
-  color: var(--ink-1);
-}
-.ph-head__sub {
-  font-size: var(--type-footnote);
-  line-height: var(--leading-footnote);
-  letter-spacing: var(--tracking-small);
-  color: var(--ink-2);
-}
-
 /* ---- Graph paper ------------------------------------------------------------------ */
 .ph-field {
   --grid: color-mix(in oklch, var(--hairline) 70%, transparent);
@@ -104,6 +64,11 @@
   padding: 0 var(--space-1);
   border-inline: 2px solid var(--ink-3);
   border-radius: 4px;
+}
+.ph-chapter__count {
+  flex: none;
+  font-weight: var(--weight-regular);
+  color: var(--ink-2);
 }
 .ph-chapter__name {
   min-width: 0;
