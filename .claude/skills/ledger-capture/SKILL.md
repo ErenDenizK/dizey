@@ -21,7 +21,8 @@ Eren dictates long, multi-topic messages. Nothing he says may be lost, and nothi
    - bilgi → the relevant memory file or research note
    - geri bildirim → fix the output it refers to, and add a row to `docs/lessons.md` if it reveals a root cause
 6. **Write.** Add the rows to the ledger's "Gelen kutusu" table in the same turn. Columns: Kimlik, Madde, Tür, Durum, Nereye dönüştü, Yerine geçen. Ledger text is Turkish.
-7. **Reply.** Lead with results; ask only what Eren must decide, at most three questions, each with a recommendation.
+7. **Track.** If the message holds several asks, open or extend a sentence-level tracker (a Claude Doc in Turkish): one row per item with Eren's own words, the visible change he will see, one owner, status and evidence. Read his words literally; if a thread's specialty suggests another reading (e.g. "font" as consistency when he said things look small), the visible complaint wins. An item closes only when it is live and checked the way he will check it (PR-06).
+8. **Reply.** Lead with results he can try. Do not ask design questions; decide reversible choices and show them (PR-13). Ask only for facts, accounts, spend or irreversible steps, at most three, each with a recommendation.
 
 ## Unanswered questions
 
