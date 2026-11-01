@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -53,6 +53,9 @@ function beatOf(step: Step, attempt: Attempt) {
   if (isQuestion(step) && attempt.revealed) return step.reveal
   return undefined
 }
+
+/** Extra height for the option rows of a question with no picture (px). */
+const TEXT_OPTION_GROW = 12
 
 export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep: string | undefined }) {
   const [ended, setEnded] = useState<SoundEvent | null>(null)
@@ -240,6 +243,18 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     step.options.some((option) => option.content.some((block) => block.kind !== 'text'))
 
   const optionsAreStage = !hasStage && optionsWide
+
+  // With a stage, Stage.tsx sizes the option rows once per step. Without one, a text-only question's card
+  // already holds the free height, so its option rows take a fixed, fuller size; nothing is left over from
+  // the step before.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once per step
+  useLayoutEffect(() => {
+    if (hasStage) return
+    const run = root.current
+    if (!run) return
+    if (step.kind === 'choice' && !optionsWide) run.style.setProperty('--opt-grow', `${TEXT_OPTION_GROW}px`)
+    else run.style.removeProperty('--opt-grow')
+  }, [step.id, hasStage])
 
   const options =
     step.kind === 'choice' ? (

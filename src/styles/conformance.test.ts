@@ -33,8 +33,7 @@ const sources = (dir: URL): string[] =>
   })
 
 describe('custom properties', () => {
-  // The sound lab is being rebuilt from the app's own parts (PR #57); it joins this guard when that lands.
-  const files = sources(new URL('../', import.meta.url)).filter((f) => !f.includes('/src/lab/'))
+  const files = sources(new URL('../', import.meta.url))
   const text = files.map((f) => readFileSync(f, 'utf8').replace(/\/\*[\s\S]*?\*\//g, '')).join('\n')
   // Declared in a sheet (--name: …) or set from a component ('--name' in a style object or setProperty).
   const defined = new Set([...text.matchAll(/(--[\w-]+)\s*:|['"`](--[\w-]+)['"`]/g)].map((m) => m[1] ?? m[2]))
