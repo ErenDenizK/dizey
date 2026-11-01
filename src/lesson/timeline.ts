@@ -810,7 +810,7 @@ function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
       let values: Matrix = start
       const name = beat.matrix
       const text = (rows: Matrix) => rows.map((row) => row.map((v) => format(v)))
-      beat.ops.forEach((op) => {
+      beat.ops.forEach((op, index) => {
         const label = textLine(`r${b.frames.length}`, `$${rowOpLabel(op)}$`)
         const touched =
           op.kind === 'swap'
@@ -828,7 +828,9 @@ function compileInto(lesson: Lesson, beat: Beat, b: Builder) {
         writeLine(
           b,
           label,
-          (s) => ({ ...hideAll(s), marks: touched, working: { matrix: name, rows: current } }),
+          // Applied operations stay listed, one per line, so the landed beat reads as the whole sequence
+          // (a hidden middle line left a hole); only the first clears what an earlier beat wrote.
+          (s) => ({ ...(index ? s : hideAll(s)), marks: touched, working: { matrix: name, rows: current } }),
           'highlight',
         )
         values = applyRowOperation(values, toOperation(op))
