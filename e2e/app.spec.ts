@@ -328,6 +328,51 @@ test('an exam rehearsal runs, survives a reload and shows its result', async ({ 
   await expect(page.getByTestId('exam-score')).toBeVisible()
 })
 
+test('a chapter test runs six questions untimed and returns to Harita with its score', async ({ page }) => {
+  await openApp(page, './map')
+  const cell = screen(page).getByTestId('chapter-test-matrices')
+  await expect(cell).toContainText('6 soru')
+  await cell.click()
+  const run = page.getByTestId('exam-run')
+  await expect(run.getByText('Soru 1 / 6')).toBeVisible()
+  // No clock on an untimed test.
+  await expect(run.locator('.exr-clock')).toHaveCount(0)
+  for (let at = 1; at < 6; at++) {
+    await run.locator('.ex-opt').first().click()
+    await run.getByRole('button', { name: 'Sonraki' }).click()
+    await expect(run.getByText(`Soru ${at + 1} / 6`)).toBeVisible()
+  }
+  await run.getByRole('button', { name: 'Bitir' }).click()
+  await page.getByTestId('exam-finish').click()
+  await expect(page.getByTestId('exam-score')).toContainText(/\d+ \/ 6 doğru/)
+  await page.getByRole('button', { name: 'Haritaya dön' }).click()
+  await expect(screen(page).getByRole('heading', { name: 'Harita', level: 1 })).toBeVisible()
+  await expect(pushed(page)).toHaveCount(0)
+  await expect(cell).toContainText(/\d\/6$/)
+  // A chapter test is not a rehearsal: the exam hub keeps no history for it.
+  await page.goto('./exam')
+  await expect(pushed(page).getByRole('heading', { name: 'Geçmiş' })).toHaveCount(0)
+})
+
+test('a chapter whose questions are still being written explains itself', async ({ page }) => {
+  await openApp(page, './map')
+  const cell = screen(page).getByTestId('chapter-test-row-operations')
+  await expect(cell).toContainText('hazırlanıyor')
+  await cell.click()
+  const note = page.getByTestId('chapter-test-note')
+  await expect(note.getByRole('heading', { name: 'Sorular hazırlanıyor' })).toBeVisible()
+  await expect(note).toContainText('şu an 2 var')
+  await note.getByRole('button', { name: 'Tamam' }).click()
+  await expect(note).toBeHidden()
+})
+
+test('the Vize provası gate at the end of the map opens the exam hub', async ({ page }) => {
+  await openApp(page, './map')
+  await screen(page).getByTestId('vize-gate').click()
+  await expect(pushed(page).getByRole('heading', { name: 'Sınav', level: 1 })).toBeVisible()
+  await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
+})
+
 test('first launch in iPhone Safari asks to install first', async ({ page, isMobile }, testInfo) => {
   test.skip(channel !== 'production' || testInfo.project.name !== 'iphone-webkit', 'production iPhone only')
   expect(isMobile).toBe(true)

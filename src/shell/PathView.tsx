@@ -1,23 +1,29 @@
-import { useRouterState } from '@tanstack/react-router'
+import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
 import { type Chapter, chapters, examItemTotal, pathCode, tileTitle } from '../content/path'
+import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
+import { CHAPTER_TEST_SIZE, chapterTestState, createChapterSession, isChapterSet } from '../exam/chapter-test'
+import { remainingMs } from '../exam/session'
+import { saveSession, useExam } from '../exam/store'
 import { type LessonRecord, resumeIndex } from '../lesson/progress'
 import { type LessonState, stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { useSettings } from '../progress/settings'
+import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
+import { Sheet } from '../ui/Sheet'
 import { burst, glow, ring } from '../ui/shine'
 import { LessonPeek, type Peek } from './LessonPeek'
 import { drawRing, fadeOutWas, holdInk, holdTag, inkOf, raiseTag } from './morph'
 import { PressLink } from './PressLink'
-import { morphFrom, overlayHostRef } from './stage'
+import { morphFrom, overlayHostRef, stageRef } from './stage'
 import './path.css'
 
 /** Tiles per matrix row. The path reads left to right, then right to left (boustrophedon). */
@@ -37,6 +43,7 @@ export function PathView() {
   const { main } = upNext(lessons, records, 0)
   const doneCount = lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
   const [peek, setPeek] = useState<Peek | null>(null)
+  const [note, setNote] = useState<TestNote | null>(null)
   const examLine = examDate
     ? strings.path.examLine(daysUntil(examDate, new Date()), dayLabel(examDate))
     : strings.path.examWeekLine(examWeek.label)
@@ -65,12 +72,20 @@ export function PathView() {
             mainId={main?.id ?? null}
             last={index === chapters.length - 1}
             onPick={(lesson, tile) => setPeek({ lesson, tile })}
+            onNote={setNote}
           />
         ))}
+        <Gate />
         {main ? null : <AllDone />}
       </div>
       {overlayHostRef.current
-        ? createPortal(<LessonPeek peek={peek} onClose={() => setPeek(null)} />, overlayHostRef.current)
+        ? createPortal(
+            <>
+              <LessonPeek peek={peek} onClose={() => setPeek(null)} />
+              <TestNoteSheet note={note} onClose={() => setNote(null)} />
+            </>,
+            overlayHostRef.current,
+          )
         : null}
     </Screen>
   )
@@ -105,6 +120,7 @@ function ChapterMatrix({
   mainId,
   last,
   onPick,
+  onNote,
 }: {
   chapter: Chapter
   number: number
@@ -112,6 +128,7 @@ function ChapterMatrix({
   mainId: string | null
   last: boolean
   onPick: (lesson: Lesson, tile: HTMLElement) => void
+  onNote: (note: TestNote) => void
 }) {
   const box = useRef<HTMLDivElement>(null)
   const [geometry, setGeometry] = useState<Geometry | null>(null)
@@ -184,8 +201,154 @@ function ChapterMatrix({
             )
           })}
         </ol>
+        <ChapterTestCell chapter={chapter} onNote={onNote} />
       </div>
     </section>
+  )
+}
+
+type TestNote =
+  | { kind: 'preparing'; chapter: Chapter; available: number }
+  | { kind: 'replaces'; chapter: Chapter }
+
+/**
+ * The chapter's test, drawn as the augmented part of its matrix: a bar under the lessons, then one cell
+ * inside the same brackets. Six questions from the bank, untimed, never locked. A chapter whose bank has
+ * fewer than six is dimmed and says why on tap.
+ */
+function ChapterTestCell({ chapter, onNote }: { chapter: Chapter; onNote: (note: TestNote) => void }) {
+  const navigate = useNavigate()
+  const { session, chapters: results } = useExam()
+  const { ready, available } = chapterTestState(questions, chapter)
+  const last = results[chapter.id]
+  const label = ready
+    ? last
+      ? strings.path.chapterTest.scoreLabel(chapter.label, last.correct, last.total)
+      : strings.path.chapterTest.readyLabel(chapter.label, CHAPTER_TEST_SIZE)
+    : strings.path.chapterTest.preparingLabel(chapter.label)
+
+  const open = (el: HTMLElement) => {
+    morphFrom.current = el
+    const mine = session && session.set === `chapter:${chapter.id}`
+    // A test left half done is picked up again; otherwise a fresh draw.
+    if (!(mine && session.finishedAt === null)) {
+      const at = Date.now()
+      saveSession(createChapterSession(questions, chapter, at, at))
+    }
+    void navigate({ to: '/exam/run' })
+  }
+  const start = (el: HTMLElement) => {
+    // The one stored attempt would be replaced: a rehearsal in progress is never thrown away silently.
+    const rehearsalRunning =
+      session !== null &&
+      !isChapterSet(session.set) &&
+      session.finishedAt === null &&
+      remainingMs(session, Date.now()) > 0
+    if (rehearsalRunning) onNote({ kind: 'replaces', chapter })
+    else open(el)
+  }
+
+  return (
+    <div className="pa-aug">
+      <i className="pa-aug__bar" aria-hidden="true" />
+      <Pressable
+        className="pa-test"
+        data-state={ready ? (last ? 'done' : 'new') : 'preparing'}
+        data-chapter={chapter.id}
+        data-testid={`chapter-test-${chapter.id}`}
+        aria-label={label}
+        onClick={(event) =>
+          ready ? start(event.currentTarget) : onNote({ kind: 'preparing', chapter, available })
+        }
+      >
+        <span className="pa-test__text">
+          <span className="pa-test__title">{strings.path.chapterTest.title}</span>
+          <span className="pa-test__sub">
+            {ready ? strings.path.chapterTest.size(CHAPTER_TEST_SIZE) : strings.path.chapterTest.preparing}
+          </span>
+        </span>
+        {ready && last ? (
+          <span className="pa-test__score num">
+            {strings.path.chapterTest.score(last.correct, last.total)}
+          </span>
+        ) : ready ? (
+          <ChevronRight />
+        ) : null}
+      </Pressable>
+    </div>
+  )
+}
+
+/** The explanation behind a dimmed chapter test, or the warning before a test replaces a rehearsal. */
+function TestNoteSheet({ note, onClose }: { note: TestNote | null; onClose: () => void }) {
+  const [shown, setShown] = useState<TestNote | null>(note)
+  if (note && note !== shown) setShown(note)
+  const navigate = useNavigate()
+  const text = strings.path.chapterTest
+  const goOn = () => {
+    if (!shown) return
+    const at = Date.now()
+    saveSession(createChapterSession(questions, shown.chapter, at, at))
+    onClose()
+    void navigate({ to: '/exam/run' })
+  }
+  return (
+    <Sheet open={note !== null} onClose={onClose} stage={stageRef} label={text.title}>
+      {shown ? (
+        <div className="sh-sheet-body" data-testid="chapter-test-note">
+          <span className="dz-footnote sh-code">{shown.chapter.label}</span>
+          {shown.kind === 'preparing' ? (
+            <>
+              <h2 className="dz-title2">{text.preparingTitle}</h2>
+              <p className="dz-subhead">{text.preparingBody(shown.available, CHAPTER_TEST_SIZE)}</p>
+              <Pressable className="dz-button" data-kind="primary" data-wide="" onClick={onClose}>
+                {text.understood}
+              </Pressable>
+            </>
+          ) : (
+            <>
+              <h2 className="dz-title2">{text.replacesTitle}</h2>
+              <p className="dz-subhead">{text.replacesBody}</p>
+              <Pressable
+                className="dz-button"
+                data-kind="primary"
+                data-wide=""
+                onClick={() => {
+                  onClose()
+                  void navigate({ to: '/exam' })
+                }}
+              >
+                {text.replacesKeep}
+              </Pressable>
+              <Pressable className="dz-button" data-wide="" onClick={goOn}>
+                {text.replacesGo}
+              </Pressable>
+            </>
+          )}
+        </div>
+      ) : null}
+    </Sheet>
+  )
+}
+
+/** The end of the map: the full rehearsal, a pushed screen that grows out of this cell. */
+function Gate() {
+  return (
+    <PressLink
+      to="/exam"
+      className="pa-gate"
+      data-testid="vize-gate"
+      aria-label={strings.path.gate.label}
+      onClick={(event) => {
+        morphFrom.current = event.currentTarget
+      }}
+    >
+      <span className="pa-gate__text">
+        <span className="pa-gate__title">{strings.path.gate.title}</span>
+        <span className="pa-gate__sub">{strings.path.gate.body}</span>
+      </span>
+      <ChevronRight />
+    </PressLink>
   )
 }
 
@@ -369,14 +532,11 @@ function Check() {
   )
 }
 
-/** Every lesson done: the path ends in the exam rehearsal. */
+/** Every lesson done: the gate below is the next step. */
 function AllDone() {
   return (
     <div className="pa-end">
       <p className="dz-subhead">{strings.path.allDone}</p>
-      <PressLink to="/exam" className="dz-button" data-kind="primary" data-wide="">
-        {strings.path.allDoneAction}
-      </PressLink>
     </div>
   )
 }
