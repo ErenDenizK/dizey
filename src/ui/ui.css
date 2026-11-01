@@ -364,11 +364,10 @@
   top: var(--space-1);
   bottom: var(--space-1);
   left: 0;
-  width: 100px;
+  width: 0; /* set from the lens's two edges (TabBar.tsx) */
   border-radius: var(--corner-pill);
   background: var(--lens-fill);
   box-shadow: var(--lens-shadow);
-  transform-origin: 0 50%;
   will-change: transform;
 }
 .dz-tab {
