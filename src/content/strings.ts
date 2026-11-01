@@ -44,10 +44,33 @@ export const strings = {
     weight: 'Geçmiş sınavlarda',
     weightValue: (items: number, total: number) => `${items} / ${total} soru`,
     allDone: 'Bütün dersler tamam. Sırada gerçek sınav koşullarında prova var.',
-    allDoneAction: 'Sınav provasına geç',
     continueAction: (code: string, name: string) => `Devam et: ${code} ${name}`,
     startAction: (code: string, name: string) => `Başla: ${code} ${name}`,
     state: { new: 'başlanmadı', current: 'kaldığın yer', done: 'tamamlandı' },
+    chapterTest: {
+      title: 'Bölüm testi',
+      size: (count: number) => `${count} soru`,
+      score: (correct: number, total: number) => `${correct}/${total}`,
+      scoreLabel: (chapter: string, correct: number, total: number) =>
+        `Bölüm testi, ${chapter}: son sonuç ${total} sorudan ${correct} doğru`,
+      readyLabel: (chapter: string, count: number) => `Bölüm testi, ${chapter}: ${count} soru`,
+      preparing: 'hazırlanıyor',
+      preparingLabel: (chapter: string) => `Bölüm testi, ${chapter}: hazırlanıyor`,
+      preparingTitle: 'Sorular hazırlanıyor',
+      preparingBody: (have: number, need: number) =>
+        `Bu bölümün testi için bankada ${need} soru gerekiyor, şu an ${have} var. Sorular yazıldıkça test burada açılacak. Şimdilik dersleri çözmeye devam et.`,
+      understood: 'Tamam',
+      replacesTitle: 'Yarım kalan provan var',
+      replacesBody:
+        'Bölüm testini başlatırsan yarım kalan sınav provan silinir. Önce provayı bitirmek ister misin?',
+      replacesGo: 'Yine de testi başlat',
+      replacesKeep: 'Provaya dön',
+    },
+    gate: {
+      title: 'Vize provası',
+      body: 'Gerçek sınav biçimi, süreli',
+      label: 'Vize provası: sınav merkezine git',
+    },
   },
 
   sheet: {
@@ -125,6 +148,10 @@ export const strings = {
     back: 'Haritaya dön',
     subtitle: 'Vize 1 biçiminde, süreli, 5 şıklı. Puan ve cevaplar prova bitince açılır.',
     setTitle: { 'summer-2024': '2024 Yaz Okulu Vizesi', mixed: 'Karışık deneme' },
+    chapterTestTitle: (chapter: string) => `Bölüm testi · ${chapter}`,
+    backToMap: 'Haritaya dön',
+    chapterTimeNote: (percent: number) => `%${percent} başarı · süresiz`,
+    leaveChapterTest: 'Testten çık, sonra devam et',
     setBody: {
       'summer-2024': 'Gerçek sınavın soruları, kâğıttaki sırayla.',
       mixed: 'Bankadan her seferinde yeni 18 soru.',
