@@ -1,4 +1,5 @@
 import type { OptionKey, Question } from '../content/questions'
+import type { ChapterSetId } from './chapter-test'
 
 /**
  * A timed exam rehearsal in the real Vize 1 format: multiple choice, five options, answers and the
@@ -8,7 +9,8 @@ export type ExamSet = { id: 'summer-2024' | 'mixed'; size: number }
 
 export type ExamSession = {
   format: 1
-  set: ExamSet['id']
+  /** A rehearsal, or a chapter test (`chapter:<chapterId>`, untimed). */
+  set: ExamSet['id'] | ChapterSetId
   questionIds: string[]
   answers: Record<string, OptionKey | null>
   flagged: string[]
@@ -187,8 +189,8 @@ export function sealColumnsFor(count: number): number {
 }
 
 /** Best score per set, for the Sınav cards. */
-export function bestBySet(history: readonly { set: ExamSet['id']; percent: number }[]) {
-  const best: Partial<Record<ExamSet['id'], number>> = {}
+export function bestBySet(history: readonly { set: ExamSession['set']; percent: number }[]) {
+  const best: Partial<Record<string, number>> = {}
   for (const entry of history) best[entry.set] = Math.max(best[entry.set] ?? 0, entry.percent)
   return best
 }

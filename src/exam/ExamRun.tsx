@@ -9,6 +9,7 @@ import { ChevronLeft, ClockIcon, Close, Flag } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Sheet } from '../ui/Sheet'
 import { Blocks } from './Blocks'
+import { isChapterSet } from './chapter-test'
 import { clock } from './format'
 import { choose, goTo, remainingMs, tally, toggleFlag } from './session'
 import { endSession, saveSession, useExam } from './store'
@@ -79,6 +80,8 @@ export function ExamRun() {
   const question = byId.get(id)
   if (!question) return <Navigate to="/exam" />
   const total = session.questionIds.length
+  // A chapter test has no clock and leads back to the map.
+  const chapterTest = isChapterSet(session.set)
   const isLast = session.current === total - 1
   const flagged = session.flagged.includes(id)
   const counts = tally(session)
@@ -95,7 +98,11 @@ export function ExamRun() {
     <div className="exr" data-sound="none" data-testid="exam-run">
       <div ref={frame} className="exr-frame">
         <header className="exr-top">
-          <Link to="/exam" className="ls-top__btn" aria-label={strings.exam.leave}>
+          <Link
+            to={chapterTest ? '/map' : '/exam'}
+            className="ls-top__btn"
+            aria-label={chapterTest ? strings.exam.leaveChapterTest : strings.exam.leave}
+          >
             <Close />
           </Link>
           <button
@@ -113,17 +120,21 @@ export function ExamRun() {
               />
             ))}
           </button>
-          <button
-            type="button"
-            className="exr-clock num"
-            aria-live="off"
-            aria-pressed={hidden}
-            aria-label={hidden ? strings.exam.showClock : strings.exam.hideClock}
-            data-low={!hidden && left < LOW_MS}
-            onClick={() => saveSettings({ ...settings, hideExamClock: !hidden })}
-          >
-            {hidden ? <ClockIcon /> : clock(left)}
-          </button>
+          {chapterTest ? (
+            <span />
+          ) : (
+            <button
+              type="button"
+              className="exr-clock num"
+              aria-live="off"
+              aria-pressed={hidden}
+              aria-label={hidden ? strings.exam.showClock : strings.exam.hideClock}
+              data-low={!hidden && left < LOW_MS}
+              onClick={() => saveSettings({ ...settings, hideExamClock: !hidden })}
+            >
+              {hidden ? <ClockIcon /> : clock(left)}
+            </button>
+          )}
         </header>
 
         <div
