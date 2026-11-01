@@ -13,7 +13,6 @@ export interface Tab<Id extends string> {
 
 /** The bar's inner padding (.dz-tabbar padding, --space-1): the lens and the slots start this far in. */
 const PAD = 4
-const LENS_BASE = 100
 
 /**
  * The floating tab bar (docs/design/visual-system.md, "Tab bar"; motion in motion-system.md).
@@ -59,8 +58,11 @@ export function TabBar<Id extends string>({
   useLayoutEffect(() => {
     const el = lens.current
     if (!el) return
+    // Width, not scaleX: a scaled pill stretches its round ends into ovals that no longer sit
+    // concentric with the bar's own round ends.
     engine.bind(el, (v) => {
-      el.style.transform = `translate3d(${(v.l ?? 0).toFixed(2)}px, 0, 0) scaleX(${(((v.r ?? 0) - (v.l ?? 0)) / LENS_BASE).toFixed(4)})`
+      el.style.transform = `translate3d(${(v.l ?? 0).toFixed(2)}px, 0, 0)`
+      el.style.width = `${Math.max(0, (v.r ?? 0) - (v.l ?? 0)).toFixed(2)}px`
     })
   }, [])
 
@@ -174,7 +176,7 @@ export function TabBar<Id extends string>({
   return (
     <nav ref={bar} className="dz-tabbar" aria-label={label} style={{ ['--tabs' as string]: tabs.length }}>
       <div className="dz-tabbar-material" />
-      <div ref={lens} className="dz-tabbar-lens" style={{ width: LENS_BASE }} />
+      <div ref={lens} className="dz-tabbar-lens" />
       {tabs.map((tab, i) => {
         const active = tab.id === current
         return (
