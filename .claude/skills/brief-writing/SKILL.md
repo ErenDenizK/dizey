@@ -16,7 +16,7 @@ A brief leaves no question unanswered but does not prescribe the solution. Over-
 - **Eren's own words** for each item the thread owns (quote, do not paraphrase), and the visible change he expects. A paraphrase is how "make the font bigger" became "make the type consistent".
 - **Reference** to measure against, if one exists (PR-11): the old app, the original lessons, a screen he praised.
 - **Owned surfaces**: which shared files or areas this thread owns and which it must not touch (PR-14).
-- **Done condition and evidence** (tests, a walk of the live build on settled frames at 375 and 390 px, recomputation, report format).
+- **Done condition and evidence** (tests, a walk of the live build on settled frames at 375 and 390 px, recomputation, report format). For anything that moves or adds a surface: a phase-by-phase walk of each changed transition (open, settle, close, and how neighbouring elements react) and a pass over the screens and controls around it, so it fits the whole app rather than only working alone. Motion may wait until layout settles, but it is never skipped.
 - **Output destinations:** Turkish report for Eren; English decision or research notes for the repo; new ledger items sent to the system thread.
 
 ## Leave out
