@@ -592,3 +592,89 @@ test.describe('motion and visual system lab', () => {
     expect(serious, JSON.stringify(serious.map((v) => [v.id, v.nodes.length]))).toEqual([])
   })
 })
+
+test.describe('small phone (375 x 667) reach', () => {
+  test.use({ viewport: { width: 375, height: 667 } })
+
+  test('the daily question sheet keeps its action in view and the solution scrolls', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    // 5 Nov 2026 picks a tall question (a matrix stem with five options).
+    await page.clock.setFixedTime(new Date('2026-11-05T10:00:00'))
+    await openApp(page)
+    await screen(page).getByTestId('today-daily').click()
+    const sheet = page.getByTestId('question-sheet')
+    const check = page.getByTestId('question-check')
+    await expect(check).toBeVisible()
+    const inView = async (id: string) => {
+      const box = await page.getByTestId(id).boundingBox()
+      return box !== null && box.y >= 0 && box.y + box.height <= 667
+    }
+    expect(await inView('question-check')).toBe(true)
+    // The last option scrolls into view inside the sheet, above the pinned action.
+    const last = page.getByTestId('question-option-e')
+    await last.scrollIntoViewIfNeeded()
+    const lastBox = await last.boundingBox()
+    const checkBox = await check.boundingBox()
+    expect(lastBox && checkBox && lastBox.y + lastBox.height <= checkBox.y).toBe(true)
+    await last.click()
+    await check.click()
+    await expect(sheet.getByTestId('question-result')).toContainText('Çözüm')
+    const done = sheet.getByRole('button', { name: 'Tamam' })
+    expect(await done.boundingBox().then((box) => box !== null && box.y + box.height <= 667)).toBe(true)
+    await done.click()
+    await expect(sheet).toHaveCount(0)
+  })
+
+  test('the last option of a chapter test question scrolls fully above the action bar', async ({ page }) => {
+    await openApp(page, './map')
+    await screen(page).getByTestId('chapter-test-matrices').click()
+    const run = page.getByTestId('exam-run')
+    await expect(run.getByText('Soru 1 / 6')).toBeVisible()
+    await run.locator('.ex-opt').last().scrollIntoViewIfNeeded()
+    const last = await run.locator('.ex-opt').last().boundingBox()
+    const dock = await run.locator('.exr-dock').boundingBox()
+    expect(last && dock && last.y + last.height <= dock.y).toBe(true)
+  })
+
+  test('the lesson end hero keeps the whole duo inside its card', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await openApp(page, './lesson/r2-echelon-forms?step=summary')
+    await page.getByTestId('lesson-player').getByRole('button', { name: 'Dersi bitir' }).click()
+    await expect(page.getByTestId('lesson-exam-asked')).toBeVisible()
+    await page.waitForTimeout(1500)
+    const hero = await page.locator('.ls-end__stage').boundingBox()
+    const duo = await page.locator('.ls-duo').boundingBox()
+    expect(hero && duo && duo.y >= hero.y && duo.y + duo.height <= hero.y + hero.height).toBe(true)
+  })
+
+  for (const [name, path] of [
+    ['Bugün', './'],
+    ['Harita', './map'],
+    ['Sen', './me'],
+  ] as const) {
+    test(`${name} scrolls its last element clear of the tab bar`, async ({ page }) => {
+      await openApp(page, path)
+      const scroller = screen(page).locator('.dz-screen')
+      const bottom = await scroller.evaluate((el) => {
+        el.scrollTop = el.scrollHeight
+        const kids = [...el.children].filter((kid) => kid.getBoundingClientRect().height > 0)
+        return kids[kids.length - 1]?.getBoundingClientRect().bottom ?? 0
+      })
+      const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
+      expect(bar && bottom <= bar.y).toBe(true)
+    })
+  }
+
+  test('a pushed screen floats its back button above the title without overlap', async ({ page }) => {
+    await openApp(page, './settings')
+    const title = page.getByRole('heading', { name: 'Ayarlar', level: 1 })
+    // The screen arrives with motion: read the boxes once it has settled.
+    await expect
+      .poll(async () => {
+        const back = await page.locator('.dz-float-back').boundingBox()
+        const box = await title.boundingBox()
+        return Boolean(back && box && back.y >= 8 && back.y + back.height <= box.y)
+      })
+      .toBe(true)
+  })
+})
