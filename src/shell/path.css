@@ -211,6 +211,7 @@
   display: grid;
 }
 .pa-tile {
+  position: relative;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -226,6 +227,32 @@
     var(--shadow-2),
     var(--edge-light),
     inset 0 0 0 0.5px var(--hairline);
+}
+/* A lesson coming home: the outline draws itself in from the top-left corner (--trace 0..1, driven by the
+   `draw` spring), then fades back to the resting border (src/shell/morph.ts, aftermath). */
+.pa-tile[data-trace]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: var(--space-0-5);
+  border-radius: inherit;
+  pointer-events: none;
+  background: conic-gradient(
+    from var(--trace-from, 0deg),
+    var(--trace-colour, var(--ink-3)) calc(var(--trace, 0) * 360deg),
+    transparent 0
+  );
+  opacity: var(--trace-ink, 1);
+  -webkit-mask:
+    linear-gradient(var(--scrim) 0 0) content-box,
+    linear-gradient(var(--scrim) 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(var(--scrim) 0 0) content-box exclude,
+    linear-gradient(var(--scrim) 0 0);
+}
+.pa-tile[data-main] {
+  --trace-colour: var(--on-action);
 }
 .pa-tile__code {
   font-size: var(--type-title2);

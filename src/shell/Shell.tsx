@@ -2,12 +2,13 @@ import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { CHOREO } from '../engine/tokens'
+import { CHOREO, CHOREO_MS } from '../engine/tokens'
 import { ExamHome } from '../exam/ExamHome'
+import { readSettings } from '../progress/settings'
 import { ExamIcon, MeIcon, PathIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
 import { MeView } from './MeView'
-import { clipWith, faceOf, insets } from './morph'
+import { aftermath, cellField, clipWith, faceOf, insets, lastThird, reach, spreadDelay } from './morph'
 import { Onboarding } from './Onboarding'
 import { PathView } from './PathView'
 import { installPressFeedback } from './press'
@@ -117,6 +118,8 @@ export function Shell() {
       engine.withChannel('chrome', () => {
         for (const under of shellLayers(frame.current))
           if (under) engine.to(under, { opacity: 1 }, 'fade', { effect: true })
+        // Dersler comes back from its recess while the lesson folds into its tile.
+        if (stageRef.current) engine.to(stageRef.current, { scale: 1 }, 'page')
       })
       const host = frame.current
       // React has already detached the route when it really unmounts. A route still attached is a
@@ -183,30 +186,142 @@ function visibleCard() {
   return rect.width > 0 && rect.bottom > 0 && rect.top < window.innerHeight ? card : null
 }
 
+/** Runs `read` with the covered screen at rest, so a rectangle is measured where it will come to rest. */
+function atRest<T>(read: () => T): T {
+  const back = stageRef.current
+  const saved = back?.style.transform ?? ''
+  if (back) back.style.transform = ''
+  try {
+    return read()
+  } finally {
+    if (back) back.style.transform = saved
+  }
+}
+
+/** Bumped by every open and close, so a late cue of an animation that was reversed does nothing. */
+let turn = 0
+
+const contentOf = (el: HTMLElement) =>
+  el.querySelector<HTMLElement>(':scope > .sh-overlay__content') ??
+  (el.firstElementChild as HTMLElement | null)
+
+/** The parts of a route that arrive one after another: a lesson's top bar, stage, narration and dock. */
+function partsOf(el: HTMLElement) {
+  const content = contentOf(el)
+  const root = content?.firstElementChild as HTMLElement | null
+  if (!root) return content ? [content] : []
+  return root.children.length > 1 ? ([...root.children] as HTMLElement[]) : [root]
+}
+
+/** The route's parts rise in, top to bottom, `CHOREO.stagger` apart (docs/design/motion-phases.md, phase 4). */
+function arrive(parts: HTMLElement[], current: () => boolean) {
+  parts.forEach((part, i) => {
+    engine.after(i * CHOREO_MS.stagger, () => {
+      if (current()) engine.to(part, { opacity: 1, y: 0 }, 'glide')
+    })
+  })
+}
+
+/** The covered screen recedes and dims while the route grows over it. */
+function recede() {
+  const back = stageRef.current
+  if (!back) return
+  engine.to(back, { scale: CHOREO.sheetRecede }, 'page')
+  engine.to(back, { opacity: 1 - CHOREO.sheetScrim }, 'fade')
+}
+
+/** Opens at about this share of the surface being open, the next phase starts. */
+const ARRIVAL_AT = 0.7
+/** The card's face starts to give way a little before the content arrives. */
+const FACE_OUT_AT = 0.55
+
 function growFrom(el: HTMLElement, card: HTMLElement) {
-  const content = el.firstElementChild as HTMLElement | null
-  clipWith(el)
-  engine.set(el, insets(el, card))
+  const mine = ++turn
+  const current = () => turn === mine
+  const parts = partsOf(el)
+  const start = insets(el, card)
+  const { rad, ...sides } = start
+  const source = card.getBoundingClientRect()
+  for (const part of parts) engine.set(part, { opacity: 0, y: CHOREO.rise })
+  card.style.visibility = 'hidden'
   const face = faceOf(el, card)
   engine.set(face, { opacity: 1 })
-  if (content) engine.set(content, { opacity: 0, y: 12 })
-  card.style.visibility = 'hidden'
   engine.withChannel('chrome', () => {
-    engine.to(el, { t: 0, r: 0, b: 0, l: 0, rad: 0 }, 'page', {
+    recede()
+    if (readSettings().cellReveal === true) {
+      spreadCells(el, source, face, parts, card, current)
+      return
+    }
+    const from = reach(sides)
+    let faceOut = false
+    let arrived = false
+    engine.set(el, sides)
+    clipWith(el, {
+      rad: (v) => rad * (1 - lastThird(from === 0 ? 1 : 1 - reach(v) / from)),
+      watch: (v) => {
+        if (!current()) return
+        const open = from === 0 ? 1 : 1 - reach(v) / from
+        if (!faceOut && open >= FACE_OUT_AT) {
+          faceOut = true
+          engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
+        }
+        if (!arrived && open >= ARRIVAL_AT) {
+          arrived = true
+          arrive(parts, current)
+        }
+      },
+    })
+    engine.to(el, { t: 0, r: 0, b: 0, l: 0 }, 'page', {
       launch: 0.4,
       onArrive: () => {
         el.style.clipPath = ''
         card.style.visibility = ''
       },
     })
-    engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
-    engine.after(90, () => {
-      if (content) engine.to(content, { opacity: 1, y: 0 }, 'glide')
-    })
   })
 }
 
-/** Plays the exit on the route's detached DOM: back into its card, or down and out. */
+/** The matrix-cell reveal: opaque cells spread out from the card, nearest first, and the route arrives on them. */
+function spreadCells(
+  el: HTMLElement,
+  source: DOMRect,
+  face: HTMLElement,
+  parts: HTMLElement[],
+  card: HTMLElement,
+  current: () => boolean,
+) {
+  const field = cellField(el, source)
+  el.style.background = 'transparent'
+  for (const cell of field.cells) engine.set(cell.el, { opacity: 0, scale: 0.5 })
+  let landed = 0
+  let faceOut = false
+  let arrived = false
+  const total = field.cells.length
+  for (const cell of field.cells) {
+    engine.after(spreadDelay(cell.dist, field.far), () => {
+      engine.to(cell.el, { opacity: 1, scale: 1 }, 'move', {
+        onArrive: () => {
+          landed++
+          if (!faceOut && landed / total >= FACE_OUT_AT / 2) {
+            faceOut = true
+            engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
+          }
+          if (!arrived && landed / total >= ARRIVAL_AT && current()) {
+            arrived = true
+            arrive(parts, current)
+          }
+          if (landed === total) {
+            el.style.background = ''
+            field.layer.remove()
+            card.style.visibility = ''
+          }
+        },
+      })
+    })
+  }
+}
+
+/** Plays the exit on the route's detached DOM: back into its tile, or down and out. */
 function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
   // Out of the accessibility tree and out of reach: only the motion is left.
   el.inert = true
@@ -214,29 +329,77 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
   el.style.pointerEvents = 'none'
   host.append(el)
   finishExit?.()
+  const mine = ++turn
   let finished = false
   const done = () => {
     if (finished) return
     finished = true
     el.remove()
-    if (card) card.style.visibility = ''
+    if (card) {
+      card.style.visibility = ''
+      if (turn === mine && card.classList.contains('pa-tile')) aftermath(card)
+    }
     if (finishExit === done) finishExit = null
   }
   finishExit = done
   engine.withChannel('chrome', () => {
-    if (card) {
-      const content = el.firstElementChild as HTMLElement | null
-      clipWith(el)
-      engine.set(el, { t: 0, r: 0, b: 0, l: 0, rad: 0 })
-      const face = faceOf(el, card)
-      engine.set(face, { opacity: 0 })
-      card.style.visibility = 'hidden'
-      if (content) engine.to(content, { opacity: 0 }, 'fade')
-      engine.to(face, { opacity: 1 }, 'fade')
-      engine.to(el, insets(el, card), 'page', { onArrive: done })
-    } else {
+    if (!card) {
       engine.to(el, { opacity: 0 }, 'fade', { onArrive: done })
       engine.to(el, { y: CHOREO.rise * 3 }, 'page')
+      return
     }
+    const content = contentOf(el)
+    for (const old of el.querySelectorAll(':scope > [data-face], :scope > .sh-cells')) old.remove()
+    // The tile is measured where it will rest: the covered screen is still on its way back from its recess.
+    const target = atRest(() => insets(el, card))
+    const { rad, ...sides } = target
+    const rect = atRest(() => card.getBoundingClientRect())
+    const face = atRest(() => faceOf(el, card))
+    engine.set(face, { opacity: 0 })
+    card.style.visibility = 'hidden'
+    // The lesson's own ink goes first and fast.
+    if (content) engine.to(content, { opacity: 0 }, 'leave')
+    if (readSettings().cellReveal === true) {
+      retreatCells(el, rect, face, done)
+      return
+    }
+    const to = reach(sides)
+    let faceIn = false
+    clipWith(el, {
+      rad: (v) => rad * lastThird(to === 0 ? 1 : reach(v) / to),
+      watch: (v) => {
+        const closed = to === 0 ? 1 : reach(v) / to
+        if (!faceIn && closed >= 2 / 3) {
+          faceIn = true
+          engine.to(face, { opacity: 1 }, 'fade')
+        }
+        // Within half a pixel of the tile the tile itself takes over: same rectangle, same face, no swap.
+        if (to - reach(v) < 0.5) done()
+      },
+    })
+    engine.to(el, sides, 'page', { onArrive: done })
   })
+}
+
+/** The cell reveal played back: the cells draw away from the farthest corner toward the tile. */
+function retreatCells(el: HTMLElement, rect: DOMRect, face: HTMLElement, done: () => void) {
+  const field = cellField(el, rect)
+  el.style.background = 'transparent'
+  let gone = 0
+  let faceIn = false
+  const total = field.cells.length
+  for (const cell of field.cells) {
+    engine.after(CHOREO_MS.leaveHead + spreadDelay(cell.dist, field.far, true), () => {
+      engine.to(cell.el, { opacity: 0, scale: 0.5 }, 'move', {
+        onArrive: () => {
+          gone++
+          if (!faceIn && gone / total >= 2 / 3) {
+            faceIn = true
+            engine.to(face, { opacity: 1 }, 'fade')
+          }
+          if (gone === total) done()
+        },
+      })
+    })
+  }
 }
