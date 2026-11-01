@@ -146,12 +146,7 @@ function ExamDateSetting() {
         <rect x="3" y="4.5" width="14" height="12.5" rx="3" />
         <path d="M3 8.5h14M7 2.5v4M13 2.5v4" />
       </Lead>
-      <span className="dz-row-main">
-        {strings.settings.examDate}
-        <small className="dz-footnote sh-row-sub">
-          {settings.examDate ? strings.settings.examDateSet : strings.settings.examDateHint}
-        </small>
-      </span>
+      <span className="dz-row-main">{strings.settings.examDate}</span>
       {/* Trailing value and chevron, like every other row that opens something. The native picker opens
           from an invisible input laid over the whole row, so no locale placeholder (mm/dd/yyyy) shows. */}
       <span className="me-date" data-set={settings.examDate ? '' : undefined} aria-hidden="true">
@@ -178,8 +173,9 @@ function ExamDateSetting() {
 }
 
 /**
- * The colour palettes side by side. Every tile is drawn in its own palette's tokens (data-palette-preview), so
- * the learner sees all four at once and the choice applies to the whole app the moment it is tapped.
+ * The colour palettes in one row. Every swatch is drawn in its own palette's tokens (data-palette-preview), so
+ * the learner sees all four at once; the choice applies to the whole app the moment it is tapped, and the chosen
+ * swatch carries a ring.
  */
 function PaletteSetting() {
   const current = paletteOf(useSettings())
@@ -198,24 +194,19 @@ function PaletteSetting() {
             aria-pressed={id === current}
             onClick={() => choosePalette(id)}
           >
-            <span className="me-palette__card" aria-hidden="true">
+            <span className="me-palette__chip" aria-hidden="true">
               <i className="me-palette__line" />
               <i className="me-palette__line me-palette__line--short" />
               <span className="me-palette__roles">
-                <i data-role="row" />
-                <i data-role="col" />
                 <i data-role="ok" />
                 <i data-role="bad" />
+                <i data-role="action" />
               </span>
             </span>
-            <span className="me-palette__foot">
-              <span className="me-palette__name">{strings.settings.palettes[id]}</span>
-              <i className="me-palette__action" aria-hidden="true" />
-            </span>
+            <span className="me-palette__name">{strings.settings.palettes[id]}</span>
           </Pressable>
         ))}
       </div>
-      <p className="dz-footnote sh-hint">{strings.settings.paletteHint}</p>
     </section>
   )
 }
@@ -230,10 +221,7 @@ function SoundSetting() {
           <path d="M3.5 8v4h3l4 3.5v-11L6.5 8z" />
           <path d="M13.5 7.5a3.5 3.5 0 0 1 0 5M15.5 5.5a6.4 6.4 0 0 1 0 9" />
         </Lead>
-        <span className="dz-row-main">
-          {strings.settings.sound}
-          <small className="dz-footnote sh-row-sub">{strings.settings.soundHint}</small>
-        </span>
+        <span className="dz-row-main">{strings.settings.sound}</span>
         <Switch checked={on} onChange={setSoundOn} label={strings.settings.sound} />
       </div>
       {on ? (
@@ -243,10 +231,7 @@ function SoundSetting() {
             <circle cx="6" cy="14.5" r="2" />
             <circle cx="14" cy="13" r="2" />
           </Lead>
-          <span className="dz-row-main">
-            {strings.settings.music}
-            <small className="dz-footnote sh-row-sub">{strings.settings.musicHint}</small>
-          </span>
+          <span className="dz-row-main">{strings.settings.music}</span>
           <Switch checked={settings.music !== false} onChange={setMusicOn} label={strings.settings.music} />
         </div>
       ) : null}
@@ -256,10 +241,7 @@ function SoundSetting() {
             <path d="M7 3.5h6a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 15V5A1.5 1.5 0 0 1 7 3.5z" />
             <path d="M5.5 6.5h-2M5.5 9h-2" />
           </Lead>
-          <span className="dz-row-main">
-            {strings.settings.soundInSilent}
-            <small className="dz-footnote sh-row-sub">{strings.settings.soundInSilentHint}</small>
-          </span>
+          <span className="dz-row-main">{strings.settings.soundInSilent}</span>
           <Switch
             checked={settings.soundInSilent === true}
             onChange={setSoundInSilent}
@@ -272,10 +254,7 @@ function SoundSetting() {
           <rect x="6.5" y="3.5" width="7" height="13" rx="2" />
           <path d="M3.5 7.5v5M16.5 7.5v5" />
         </Lead>
-        <span className="dz-row-main">
-          {strings.settings.haptics}
-          <small className="dz-footnote sh-row-sub">{strings.settings.hapticsHint}</small>
-        </span>
+        <span className="dz-row-main">{strings.settings.haptics}</span>
         <Switch
           checked={settings.haptics !== false}
           onChange={(next) => {
@@ -339,10 +318,7 @@ function BackupSettings() {
         <Lead>
           <path d="M10 3v9M6.5 6.5 10 3l3.5 3.5M4 11.5V15a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.5" />
         </Lead>
-        <span className="dz-row-main">
-          {strings.settings.backup}
-          <small className="dz-footnote sh-row-sub">{strings.settings.backupHint}</small>
-        </span>
+        <span className="dz-row-main">{strings.settings.backup}</span>
         <span className="dz-chevron">
           <ChevronRight />
         </span>
@@ -351,10 +327,7 @@ function BackupSettings() {
         <Lead>
           <path d="M10 12V3M6.5 8.5 10 12l3.5-3.5M4 11.5V15a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2v-3.5" />
         </Lead>
-        <span className="dz-row-main">
-          {strings.settings.restore}
-          <small className="dz-footnote sh-row-sub">{strings.settings.restoreHint}</small>
-        </span>
+        <span className="dz-row-main">{strings.settings.restore}</span>
         <span className="dz-chevron">
           <ChevronRight />
         </span>
@@ -403,10 +376,7 @@ function CellRevealSetting() {
         <rect x="3.5" y="11.5" width="5" height="5" rx="1" />
         <rect x="11.5" y="11.5" width="5" height="5" rx="1" />
       </Lead>
-      <span className="dz-row-main">
-        {strings.settings.cellReveal}
-        <small className="dz-footnote sh-row-sub">{strings.settings.cellRevealHint}</small>
-      </span>
+      <span className="dz-row-main">{strings.settings.cellReveal}</span>
       <Switch
         checked={settings.cellReveal === true}
         onChange={(next) => {

@@ -455,7 +455,8 @@
   width: 26px;
   height: 26px;
   border-radius: var(--corner-pill);
-  background: var(--switch-knob);
+  /* On, the knob takes the ground colour: a neutral switch, so amber stays a screen's one action. */
+  background: color-mix(in oklch, var(--bg) calc(var(--on) * 100%), var(--switch-knob));
   box-shadow:
     0 0 0 0.5px oklch(0 0 0 / 0.06),
     0 2px 5px oklch(0 0 0 / 0.18);
