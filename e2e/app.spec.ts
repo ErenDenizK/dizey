@@ -1020,3 +1020,61 @@ test('a tap on the dimmed tab above a sheet closes it', async ({ page }) => {
   await page.mouse.click(195, 8)
   await expect(pushed(page)).toHaveCount(0)
 })
+
+test.describe('exam run and result layout', () => {
+  test.use({ viewport: { width: 375, height: 667 } })
+
+  test('a test run has exactly one primary and legible, spaced option matrices', async ({ page }) => {
+    await openApp(page, './map')
+    await page.getByTestId('chapter-test-matrices').click()
+    const run = page.getByTestId('exam-run')
+    await expect(run.getByText('Soru 1 / 6')).toBeVisible()
+    await expect(run.locator('.exr-dock [data-kind="primary"]')).toHaveCount(1)
+    await expect(run.locator('[data-kind="primary"]')).toHaveCount(1)
+    // Walk to a question whose options are matrices.
+    for (let at = 1; at < 6 && (await run.locator('.exr-opts .ex-cell').count()) === 0; at++) {
+      await run.getByRole('button', { name: 'Sonraki' }).click()
+      await expect(run.getByText(`Soru ${at + 1} / 6`)).toBeVisible()
+    }
+    const option = run.locator('.exr-opts .ex-opt', { has: page.locator('.ex-cell') }).first()
+    await option.scrollIntoViewIfNeeded()
+    const measured = await option.evaluate((option) => {
+      const cells = [...option.querySelectorAll<HTMLElement>('.ex-cell')]
+      const rects = cells.map((cell) => {
+        const range = document.createRange()
+        range.selectNodeContents(cell)
+        return range.getBoundingClientRect()
+      })
+      let gap = Number.POSITIVE_INFINITY
+      for (const [a, ra] of rects.entries())
+        for (const [b, rb] of rects.entries())
+          if (a < b && Math.abs(ra.top - rb.top) < 4)
+            gap = Math.min(gap, Math.max(rb.left - ra.right, ra.left - rb.right))
+      return {
+        size: Number.parseFloat(getComputedStyle(cells[0] as HTMLElement).fontSize),
+        gap,
+        count: cells.length,
+      }
+    })
+    expect(measured.count).toBeGreaterThan(3)
+    expect(measured.size).toBeGreaterThanOrEqual(15)
+    expect(measured.gap).toBeGreaterThanOrEqual(6)
+  })
+
+  test('the result has no stat trio and a paper mark opens that question', async ({ page }) => {
+    await openApp(page, './map')
+    await page.getByTestId('chapter-test-matrices').click()
+    const run = page.getByTestId('exam-run')
+    await expect(run.getByText('Soru 1 / 6')).toBeVisible()
+    await run.getByRole('button', { name: /^Soru haritası/ }).click()
+    await page.getByTestId('exam-finish').click()
+    const result = page.getByTestId('exam-result')
+    await expect(page.getByTestId('exam-score')).toBeVisible()
+    await expect(result.getByText('Doğru', { exact: true })).toHaveCount(0)
+    await expect(result.getByText('Boş', { exact: true })).toHaveCount(1) // the filter segment only
+    await expect(result.locator('.exs-stats')).toHaveCount(0)
+    await result.getByRole('button', { name: /^Soru 2,/ }).click()
+    await expect(result.locator('.exs-item').nth(1).locator('.exs-item__body')).toBeVisible()
+    await expect(result.locator('.exs-item__body')).toHaveCount(1)
+  })
+})

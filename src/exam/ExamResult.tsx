@@ -1,5 +1,5 @@
 import { Link, Navigate, useNavigate } from '@tanstack/react-router'
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { lessons } from '../content/lessons'
 import { chapters, pathCode, tileTitle } from '../content/path'
 import type { Question } from '../content/questions'
@@ -51,9 +51,6 @@ function Result({ session }: { session: ExamSession }) {
   // A chapter test returns to the map; a rehearsal to the exam hub.
   const home = isChapterSet(session.set) ? '/map' : '/exam'
   const result = score(session, questions)
-  const finishedAt = session.finishedAt ?? session.startedAt
-  const used = Math.max(1, Math.round((finishedAt - session.startedAt) / 60_000))
-  const allowed = Math.round(session.durationMs / 60_000)
   const paper = session.questionIds
     .map((id) => byId.get(id))
     .filter((question): question is Question => Boolean(question))
@@ -62,6 +59,18 @@ function Result({ session }: { session: ExamSession }) {
   const [filter, setFilter] = useState<Filter>('all')
   const [open, setOpen] = useState<string | null>(null)
   const [allTopics, setAllTopics] = useState(false)
+  const [pending, setPending] = useState<string | null>(null)
+  // A tapped mark of the paper row opens that question's review and brings it into view.
+  const reveal = (id: string) => {
+    setFilter('all')
+    setOpen(id)
+    setPending(id)
+  }
+  useEffect(() => {
+    if (!pending) return
+    root.current?.querySelector(`[data-q="${pending}"]`)?.scrollIntoView({ block: 'start' })
+    setPending(null)
+  }, [pending])
 
   const root = useRef<HTMLDivElement>(null)
   const count = useRef<HTMLSpanElement>(null)
@@ -117,11 +126,10 @@ function Result({ session }: { session: ExamSession }) {
   return (
     <div ref={root} className="exs" data-testid="exam-result">
       <header className="exs-top">
+        <h1 className="dz-title2 exs-top__title">{setTitle(session.set, chapters)}</h1>
         <Link to={home} className="ls-top__btn" aria-label={strings.exam.close}>
           <Close />
         </Link>
-        <span className="dz-footnote exs-top__title">{setTitle(session.set, chapters)}</span>
-        <span />
       </header>
 
       {/* biome-ignore lint/a11y/noStaticElementInteractions: the tap only skips motion; nothing is lost without it */}
@@ -129,55 +137,40 @@ function Result({ session }: { session: ExamSession }) {
       <section className="exs-hero" onClick={() => engine.finishChannel(CHANNEL)}>
         <div className="exs-seal" style={{ '--cols': sealColumnsFor(paper.length) } as React.CSSProperties}>
           <span className="exs-seal__name">{strings.exam.sealName}</span>
-          <div
+          <fieldset
             className="exs-seal__grid"
-            role="img"
             aria-label={strings.exam.sealLabel(result.correct, result.total)}
           >
             <i className="exs-seal__br exs-seal__br--l" />
-            {statuses.map((status, at) => (
-              // biome-ignore lint/suspicious/noArrayIndexKey: one cell per question, in paper order
-              <span key={at} className="exs-seal__cell" data-status={status}>
-                <StatusGlyph status={status} />
-              </span>
+            {paper.map((question, at) => (
+              <button
+                key={question.id}
+                type="button"
+                className="exs-seal__cell sh-press"
+                data-status={statuses[at]}
+                aria-label={`${strings.exam.questionN(at + 1)}, ${strings.exam.status[statuses[at] as QuestionStatus]}`}
+                onClick={() => reveal(question.id)}
+              >
+                <StatusGlyph status={statuses[at] as QuestionStatus} />
+              </button>
             ))}
             <i className="exs-seal__br exs-seal__br--r" />
-          </div>
+          </fieldset>
         </div>
 
         <div className="exs-score" data-testid="exam-score" data-enter="">
-          <h1
+          <h2
             className="exs-score__big num"
             aria-label={strings.exam.sealLabel(result.correct, result.total)}
           >
             <span ref={count}>{result.correct}</span>
             <span className="exs-score__of">/ {result.total}</span>
-          </h1>
+          </h2>
           <p className="exs-score__verdict">{strings.exam.verdict(result.percent)}</p>
           <span className="exs-sr">
             {result.correct} / {result.total} doğru · {result.wrong} yanlış · {result.blank} boş
           </span>
         </div>
-
-        <dl className="exs-stats" data-enter="">
-          <div data-status="correct">
-            <dt>{strings.exam.stat.correct}</dt>
-            <dd className="num">{result.correct}</dd>
-          </div>
-          <div data-status="wrong">
-            <dt>{strings.exam.stat.wrong}</dt>
-            <dd className="num">{result.wrong}</dd>
-          </div>
-          <div data-status="blank">
-            <dt>{strings.exam.stat.blank}</dt>
-            <dd className="num">{result.blank}</dd>
-          </div>
-        </dl>
-        <p className="dz-footnote exs-time num" data-enter="">
-          {isChapterSet(session.set)
-            ? strings.exam.chapterTimeNote(result.percent)
-            : strings.exam.resultTime(result.percent, used, allowed)}
-        </p>
       </section>
 
       {topics.length ? (
@@ -296,7 +289,7 @@ function ReviewItem({
   const picked = question.options.find((option) => option.key === chosen)
   const wide = question.options.some((option) => option.content.some((block) => block.kind !== 'text'))
   return (
-    <article className="exs-item" data-open={open}>
+    <article className="exs-item" data-open={open} data-q={question.id}>
       <Pressable
         className="exs-item__head"
         aria-expanded={open}
