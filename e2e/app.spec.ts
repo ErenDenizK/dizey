@@ -123,9 +123,9 @@ test('finishing a lesson shows its answers seal and offers the next lesson', asy
   await openApp(page, './lesson/r2-echelon-forms?step=summary')
   await page.getByTestId('lesson-player').getByRole('button', { name: 'Dersi bitir' }).click()
   const end = page.getByTestId('lesson-end')
-  await expect(end).toContainText('Ders tamam')
+  await expect(end).toContainText('Bu dersi bitirdin')
   await expect(end.getByRole('img', { name: /3 sorunun cevapları/ })).toBeVisible()
-  await end.getByRole('button', { name: /Sıradaki · 2\.3/ }).click()
+  await end.getByRole('button', { name: /^Sıradaki: / }).click()
   await expect(page).toHaveURL(/lesson\/r3-rank/)
   await expect(page.getByTestId('lesson-player').getByRole('progressbar')).toHaveAttribute(
     'aria-valuenow',
@@ -772,6 +772,32 @@ test.describe('small phone (375 x 667) reach', () => {
     const hero = await page.locator('.ls-end__stage').boundingBox()
     const duo = await page.locator('.ls-duo').boundingBox()
     expect(hero && duo && duo.y >= hero.y && duo.y + duo.height <= hero.y + hero.height).toBe(true)
+  })
+
+  test('the lesson end shows the lesson code once, one single-line primary action, fully on screen', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await openApp(page, './lesson/r2-echelon-forms?step=summary')
+    await page.getByTestId('lesson-player').getByRole('button', { name: 'Dersi bitir' }).click()
+    await expect(page.getByTestId('lesson-exam-asked')).toBeVisible()
+    await page.waitForTimeout(1500)
+    const code = ((await page.locator('.ls-top').textContent()) ?? '').match(/\d+\.\d+/)?.[0] ?? ''
+    expect(code).not.toBe('')
+    const text = (await page.locator('body').textContent()) ?? ''
+    expect(text.split(code).length - 1).toBeLessThanOrEqual(1)
+    const primary = page.getByTestId('lesson-end').locator('[data-kind="primary"]')
+    await expect(primary).toHaveCount(1)
+    await expect(primary).toBeVisible()
+    const box = await primary.boundingBox()
+    const lineHeight = await primary.evaluate((el) => Number.parseFloat(getComputedStyle(el).lineHeight))
+    const viewport = page.viewportSize()
+    expect(box && viewport).toBeTruthy()
+    expect(box?.height ?? 0).toBeLessThanOrEqual(lineHeight * 1.6 + 40)
+    const label = primary.locator('.ls-end__next-label')
+    const labelHeight = (await label.boundingBox())?.height ?? 0
+    expect(labelHeight).toBeLessThanOrEqual(lineHeight * 1.6)
+    expect(box && viewport && box.y >= 0 && box.y + box.height <= viewport.height).toBe(true)
   })
 
   for (const [name, path] of [

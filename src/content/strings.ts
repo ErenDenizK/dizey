@@ -305,19 +305,24 @@ export const strings = {
   },
 
   lessonEnd: {
-    eyebrow: (code: string) => `${code} · Ders tamam`,
     title: 'Bu dersi bitirdin',
     momentTitle: 'Gizli anı çözdün: sezgi mührü senin.',
     chapterTitle: (chapter: string) => `${chapter} bölümü bitti`,
     chapterWeight: (items: number) => `Vizede ${items} / 34 soru bu bölümden.`,
-    score: (correct: number, total: number) => `Her kare bir soru: ilk denemede ${correct} / ${total} doğru.`,
+    score: (correct: number, total: number) =>
+      correct === 0
+        ? 'Hepsini birlikte çözdük; ikinci tur çok daha hızlı geçer.'
+        : correct === total
+          ? total === 1
+            ? 'Sorunun cevabını ilk denemede buldun.'
+            : `${total} sorunun hepsini ilk denemede bildin.`
+          : `${total} sorunun ${correct}'${accusativeSuffix(correct)} ilk denemede bildin.`,
     noQuestions: 'Bu derste soru yoktu; sıradakine geçebilirsin.',
     sealName: 'Cevapların',
     sealLabel: (correct: number, total: number) => `${total} sorunun cevapları, ${correct} doğru`,
-    next: (code: string) => `Sıradaki · ${code}`,
+    next: (title: string) => `Sıradaki: ${title}`,
     back: 'Derslere dön',
     examAsked: 'Sınavda böyle sorulur',
-    examAskedSub: 'Bu konudan bir vize sorusu',
     examTry: 'Dene',
   },
 
@@ -352,3 +357,10 @@ export const strings = {
     skip: "Şimdilik Safari'de dene",
   },
 } as const
+
+/** The possessive-accusative suffix of a number said aloud ("3'ünü", "5'ini", "10'unu"), for "sorunun N'ini". */
+function accusativeSuffix(n: number): string {
+  const ones = ['ı', 'ini', 'sini', 'ünü', 'ünü', 'ini', 'sını', 'sini', 'ini', 'unu']
+  const tens = ['', 'unu', 'sini', 'unu', 'ını', 'sini', 'ını', 'ini', 'ini', 'ı']
+  return n % 10 === 0 ? (tens[Math.floor(n / 10) % 10] ?? 'ini') : (ones[n % 10] ?? 'ini')
+}

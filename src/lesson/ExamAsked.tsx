@@ -25,12 +25,9 @@ export function ExamAsked({ question }: { question: Question }) {
   const [open, setOpen] = useState(false)
   const [given, setGiven] = useState<string | null>(null)
   return (
-    <div ref={mounted} data-enter="">
-      <Pressable className="dz-card ls-asked" data-testid="lesson-exam-asked" onClick={() => setOpen(true)}>
-        <span className="ls-asked__main">
-          <span className="dz-row-main">{strings.lessonEnd.examAsked}</span>
-          <small className="dz-footnote sh-row-sub">{strings.lessonEnd.examAskedSub}</small>
-        </span>
+    <div ref={mounted} data-late="">
+      <Pressable className="ls-asked" data-testid="lesson-exam-asked" onClick={() => setOpen(true)}>
+        <span className="ls-asked__main">{strings.lessonEnd.examAsked}</span>
         <ChevronRight />
       </Pressable>
       {host ? (

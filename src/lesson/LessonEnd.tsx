@@ -1,18 +1,20 @@
-import { Link, useNavigate } from '@tanstack/react-router'
+import { useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { Duo, type DuoHandle } from '../character/Duo'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { chapterOf, chapters, pathCode } from '../content/path'
+import { chapterOf, chapters } from '../content/path'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { useExam } from '../exam/store'
 import { BadgeReveal, landReveal } from '../rewards/BadgeReveal'
 import { type Badge, earnedBadges } from '../rewards/badges'
 import { markShown, unshown } from '../rewards/store'
+import { PressLink } from '../shell/PressLink'
 import { returnTab } from '../shell/stage'
 import type { SoundEvent } from '../sound/score'
 import { Check, Close } from '../ui/icons'
+import { Pressable } from '../ui/Pressable'
 import { burst, glow, lightScore, pointIn, SHINE_CHANNEL, type SparkTone, sweep } from '../ui/shine'
 import { ExamAsked, examQuestionFor } from './ExamAsked'
 import { endResults, nextLesson, type Result, sealColumns } from './end'
@@ -77,15 +79,18 @@ export function LessonEnd({
     const cells = [...el.querySelectorAll<HTMLElement>('.ls-seal__cell')]
     const [left, right] = [...el.querySelectorAll<HTMLElement>('.ls-seal__br')]
     const enter = [...el.querySelectorAll<HTMLElement>('[data-enter]')]
+    const late = [...el.querySelectorAll<HTMLElement>('[data-late]')]
     for (const cell of cells) engine.set(cell, { scale: 0.55, opacity: 0 })
     if (left && right) {
       engine.set(left, { x: -SEAL_GAP, opacity: 0 })
       engine.set(right, { x: SEAL_GAP, opacity: 0 })
     }
-    for (const item of enter) engine.set(item, { y: 12, opacity: 0 })
+    for (const item of [...enter, ...late]) engine.set(item, { y: 12, opacity: 0 })
     const sealed = () => {
       onSealed()
       hop()
+      // The exam challenge springs in once the seal has settled.
+      for (const item of late) engine.to(item, { y: 0, opacity: 1 }, 'move')
       celebrate(el, reward, perfect)
     }
     // The duo watches the cells fill, then cheers when the brackets close.
@@ -167,9 +172,6 @@ export function LessonEnd({
       </div>
 
       <div className="ls-end__narr">
-        <p className="ls-eyebrow" data-enter="">
-          {strings.lessonEnd.eyebrow(pathCode(lesson))}
-        </p>
         <h1 className="ls-title" data-enter="">
           {chapterDone && chapter
             ? strings.lessonEnd.chapterTitle(chapter.label)
@@ -177,7 +179,7 @@ export function LessonEnd({
               ? strings.lessonEnd.momentTitle
               : strings.lessonEnd.title}
         </h1>
-        <p className="ls-body" data-enter="">
+        <p className="ls-body ls-end__line" data-enter="">
           {results.length ? strings.lessonEnd.score(correct, results.length) : strings.lessonEnd.noQuestions}
           {chapterDone && chapter?.examItems ? ` ${strings.lessonEnd.chapterWeight(chapter.examItems)}` : ''}
         </p>
@@ -186,22 +188,30 @@ export function LessonEnd({
 
       <div className="ls-dock ls-end__dock" data-enter="">
         {next ? (
-          <button
-            type="button"
-            className="sh-btn sh-btn--primary sh-press ls-end__next"
-            onClick={() => void navigate({ to: '/lesson/$id', params: { id: next.id } })}
+          <>
+            <Pressable
+              className="dz-button ls-end__next"
+              data-kind="primary"
+              data-wide=""
+              onClick={() => void navigate({ to: '/lesson/$id', params: { id: next.id } })}
+            >
+              <span className="ls-end__next-label">{strings.lessonEnd.next(next.title)}</span>
+            </Pressable>
+            <PressLink to={returnTab.current} className="dz-text-button" data-sound="close">
+              {strings.lessonEnd.back}
+            </PressLink>
+          </>
+        ) : (
+          <PressLink
+            to={returnTab.current}
+            className="dz-button"
+            data-kind="primary"
+            data-wide=""
+            data-sound="close"
           >
-            <span className="ls-end__next-kicker">{strings.lessonEnd.next(pathCode(next))}</span>
-            <span className="ls-end__next-title">{next.title}</span>
-          </button>
-        ) : null}
-        <Link
-          to={returnTab.current}
-          className={`sh-btn sh-press ${next ? 'sh-btn--soft' : 'sh-btn--primary'}`}
-          data-sound="close"
-        >
-          {strings.lessonEnd.back}
-        </Link>
+            {strings.lessonEnd.back}
+          </PressLink>
+        )}
       </div>
     </div>
   )

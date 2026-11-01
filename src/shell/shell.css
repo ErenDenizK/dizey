@@ -1432,34 +1432,21 @@ a.dz-button[data-kind="primary"] {
   display: grid;
   gap: var(--space-2);
 }
-.ls-end__dock .sh-btn {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+.ls-end__line {
+  text-wrap: balance;
 }
-.ls-end__dock a.sh-btn {
-  display: grid;
-  place-items: center;
-  text-decoration: none;
+.ls-end__dock {
+  justify-items: center;
 }
-.ls-end__dock .sh-btn {
-  padding-inline: var(--space-5);
-}
-/* The next lesson's button names it on two lines: the code as a kicker, the title in full where it fits. */
+/* One line: the next lesson's title truncates, never wraps. */
 .ls-end__next {
-  display: grid;
-  gap: 0;
-  padding-block: var(--space-2);
+  display: flex;
+  min-width: 0;
 }
-.ls-end__next-kicker {
-  font-size: var(--type-caption);
-  font-weight: var(--weight-semibold);
-  opacity: 0.75;
-  line-height: var(--leading-caption);
-  letter-spacing: var(--tracking-caption);
-}
-.ls-end__next-title {
+.ls-end__next-label {
+  min-width: 0;
   overflow: hidden;
+  white-space: nowrap;
   text-overflow: ellipsis;
 }
 
@@ -1577,33 +1564,27 @@ a.dz-button[data-kind="primary"] {
   visibility: hidden;
 }
 
-/* "Sınavda böyle sorulur" at a lesson's end: a compact row under the score. */
-.dz-card.ls-asked {
+/* "Sınavda böyle sorulur" at a lesson's end: a quiet challenge row on the text's left edge, not a card. */
+.ls-asked {
   display: flex;
   align-items: center;
-  gap: var(--gap-item);
-  width: 100%;
-  min-height: var(--row-height);
+  justify-content: flex-start;
+  gap: var(--space-1);
+  min-height: var(--target);
+  padding: 0;
   border: 0;
+  background: none;
   text-align: left;
   font: inherit;
+  font-weight: var(--weight-semibold);
   color: var(--ink-1);
 }
-.ls-asked__main {
-  display: grid;
-  flex: 1;
-  min-width: 0;
-  gap: var(--gap-bound);
+.ls-asked svg {
+  color: var(--ink-3);
 }
-/* A short phone (iPhone SE class): the exam row gives up its second line and the duo shrinks a little, so
-   the hero keeps room for the whole duo and the seal or the badge instead of clipping the heads. */
+/* A short phone (iPhone SE class): the duo shrinks a little, so the hero keeps room for the whole duo and the
+   seal or the badge instead of clipping the heads. */
 @media (max-height: 700px) {
-  .dz-card.ls-asked {
-    min-height: var(--target);
-  }
-  .ls-asked .sh-row-sub {
-    display: none;
-  }
   .ls-duo {
     width: clamp(88px, 20vh, 150px);
   }
