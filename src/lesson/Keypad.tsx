@@ -50,7 +50,7 @@ export function Keypad({
             disabled={disabled}
             onClick={() => press(key)}
           >
-            {key}
+            {key === '−' ? <MinusGlyph /> : key}
           </button>
         ))}
         <button
@@ -64,5 +64,14 @@ export function Keypad({
         </button>
       </div>
     </div>
+  )
+}
+
+/** The font's minus is a thin short dash next to the digits; drawn at digit width and stroke instead. */
+function MinusGlyph() {
+  return (
+    <svg className="ls-key__glyph" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M4 12h16" />
+    </svg>
   )
 }

@@ -988,6 +988,16 @@ a.sh-node {
   line-height: var(--leading-none);
   letter-spacing: var(--tracking-title);
 }
+.ls-key__glyph {
+  display: block;
+  width: 1em;
+  height: 1em;
+  margin-inline: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
 .ls-key[data-fn="true"] {
   background: var(--surface);
 }
