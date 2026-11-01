@@ -268,6 +268,13 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
     const from = reach(sides)
     // The card's own content leaves at once; what is left is one opaque surface that grows.
     engine.to(face, { opacity: 0 }, 'leave', { onArrive: () => face.remove() })
+    // The growing surface is the card's own colour on the handoff frame and eases to the page colour
+    // over the last third of the travel, with the radius.
+    const tone = getComputedStyle(card).backgroundColor
+    const paint = (open: number) => {
+      el.style.background = `color-mix(in oklch, var(--bg) ${(lastThird(open) * 100).toFixed(1)}%, ${tone})`
+    }
+    paint(0)
     let arrived = false
     engine.set(el, sides)
     clipWith(el, {
@@ -275,6 +282,7 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
       watch: (v) => {
         if (!current()) return
         const open = from === 0 ? 1 : 1 - reach(v) / from
+        paint(open)
         if (!arrived && open >= ARRIVAL_AT) {
           arrived = true
           arrive(el, current)
@@ -285,6 +293,7 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
       launch: 0.4,
       onArrive: () => {
         el.style.clipPath = ''
+        el.style.background = ''
         card.style.visibility = ''
       },
     })
