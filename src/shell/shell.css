@@ -1576,3 +1576,22 @@ a.dz-button[data-kind="primary"] {
 .ls-ghost {
   visibility: hidden;
 }
+
+/* "Sınavda böyle sorulur" at a lesson's end: a compact row under the score. */
+.dz-card.ls-asked {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-item);
+  width: 100%;
+  min-height: var(--row-height);
+  border: 0;
+  text-align: left;
+  font: inherit;
+  color: var(--ink-1);
+}
+.ls-asked__main {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  gap: var(--gap-bound);
+}

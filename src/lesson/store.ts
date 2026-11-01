@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
 import { appStorage } from '../lib/storage/app-storage'
+import { markActive } from '../progress/activity-store'
 import { emptyRecord, type LessonRecord } from './progress'
 
 const KEY = 'dizey.lessons'
@@ -59,4 +60,5 @@ export function saveRecord(id: string, record: LessonRecord) {
   records = { ...read(), [id]: record }
   appStorage.setItem(KEY, JSON.stringify(records))
   notify()
+  markActive()
 }

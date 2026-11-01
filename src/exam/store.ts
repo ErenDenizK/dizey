@@ -1,6 +1,7 @@
 import { useSyncExternalStore } from 'react'
 import { questions } from '../content/questions'
 import { appStorage } from '../lib/storage/app-storage'
+import { markActive } from '../progress/activity-store'
 import type { ExamOutcomes } from '../progress/mistakes'
 import { chapterIdOf, isChapterSet } from './chapter-test'
 import { type ExamResult, type ExamSession, finish, parseSession, score } from './session'
@@ -116,6 +117,7 @@ export function saveSession(session: ExamSession) {
 export function endSession(now: number) {
   const session = snapshot.session
   if (!session || session.finishedAt !== null) return
+  markActive(now)
   const done = finish(session, now)
   const at = done.finishedAt ?? now
   const outcomes = mergeOutcomes(snapshot.outcomes, done, at)
@@ -137,4 +139,13 @@ export function endSession(now: number) {
 
 export function discardSession() {
   commit(null)
+}
+
+/**
+ * One graded answer outside a test (the question of the day, "Sınavda böyle sorulur"): it becomes the latest
+ * outcome of that question, so a wrong one joins the mistake log exactly like a wrong exam answer.
+ */
+export function recordOutcome(questionId: string, given: string, correct: boolean, at: number) {
+  markActive(at)
+  commit(snapshot.session, snapshot.history, { ...snapshot.outcomes, [questionId]: { correct, given, at } })
 }
