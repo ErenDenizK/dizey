@@ -304,6 +304,10 @@ describe('rowOps', () => {
         expect(frames.at(-1)?.working?.rows).toEqual(
           lesson.matrices[beat.result]?.rows.map((row) => row.map((v) => v.replace(/^\+/, ''))),
         )
+        // Every applied operation stays listed: no hidden line leaves a hole between shown ones.
+        const last = frames.at(-1)
+        const keys = last?.lines.flatMap((line) => line.tokens.map((t) => t.key)) ?? []
+        expect(keys.every((key) => last?.shown.includes(key))).toBe(true)
       }
     }
   })
