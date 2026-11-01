@@ -158,8 +158,9 @@
   align-items: center;
   gap: var(--space-2);
 }
-/* The paper: one segment per question. Answered segments fill, the current one is the action colour and
-   taller, a flagged one carries the spark. The whole strip opens the question map. */
+/* The paper: one segment per question, one vocabulary shared with the question map: answered = inked fill,
+   current = a ring in the primary ink, unanswered = hairline; a flagged one carries a small mark. The whole
+   strip opens the question map. */
 .exr-paper {
   display: flex;
   align-items: center;
@@ -176,14 +177,26 @@
   background: var(--hairline-strong);
 }
 .exr-paper i[data-done="true"] {
-  background: var(--ink-3);
-}
-.exr-paper i[data-flag="true"] {
-  background: var(--col-ink);
+  background: var(--ink-2);
 }
 .exr-paper i[data-current="true"] {
   height: 12px;
-  background: var(--action);
+  background: transparent;
+  box-shadow: inset 0 0 0 1.5px var(--ink-1);
+}
+.exr-paper i[data-current="true"][data-done="true"] {
+  background: var(--ink-2);
+}
+.exr-paper i[data-flag="true"]::after {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 50%;
+  width: 5px;
+  height: 5px;
+  translate: -50% 0;
+  border-radius: 50%;
+  background: var(--col-ink);
 }
 .exr-clock {
   display: grid;
@@ -221,7 +234,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: var(--space-1) var(--space-1) 0;
+  margin: var(--space-1) 0 0;
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   font-weight: var(--weight-semibold);
@@ -266,25 +279,24 @@
   gap: var(--space-2);
   padding-top: var(--space-2);
 }
+/* Back and flag: two quiet icon buttons of one size and one surface; the flag's on-state is its filled glyph. */
 .exr-icon {
   display: grid;
   place-items: center;
   height: var(--button-height);
   border-radius: var(--corner-button);
   background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
-  color: var(--ink-1);
+  box-shadow: var(--edge-light);
+  color: var(--ink-2);
 }
 .exr-icon:disabled {
   color: var(--ink-3);
-  box-shadow: none;
-  background: transparent;
-  outline: 1px solid var(--hairline);
-  outline-offset: -1px;
+  opacity: 0.6;
 }
-.exr-icon[data-on="true"] {
-  color: var(--col-ink);
+.exr-icon[aria-pressed="true"] {
+  color: var(--ink-1);
 }
+
 .exr-next {
   width: 100%;
 }
@@ -315,12 +327,12 @@
 }
 .exr-cell[data-done="true"] {
   background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
+  box-shadow: var(--edge-light);
   color: var(--ink-1);
 }
 .exr-cell[aria-current="step"] {
-  box-shadow: inset 0 0 0 2px var(--action);
-  color: var(--action);
+  box-shadow: inset 0 0 0 2px var(--ink-1);
+  color: var(--ink-1);
 }
 .exr-cell[data-flag="true"]::after {
   content: "";
@@ -333,8 +345,8 @@
   background: var(--col-ink);
 }
 .exr-map__note {
-  margin: calc(-1 * var(--space-2)) 0 0;
-  text-align: center;
+  margin: 0;
+  text-align: start;
 }
 
 /* ---- Result ---------------------------------------------------------------------------- */
@@ -349,25 +361,34 @@
     max(var(--space-6), calc(env(safe-area-inset-bottom) + var(--space-4)));
   background: var(--bg);
 }
+/* One left edge: the title, the paper's name, the section labels and the cards all start on the gutter. */
 .exs-top {
-  display: grid;
-  grid-template-columns: 44px 1fr 44px;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-height: var(--target);
 }
 .exs-top__title {
-  text-align: center;
-  font-weight: var(--weight-semibold);
+  margin: 0;
+  min-width: 0;
+  color: var(--ink-1);
+}
+.exs-top .ls-top__btn {
+  flex: none;
+  margin-right: calc(var(--space-2) * -1);
 }
 .exs-hero {
   display: grid;
-  justify-items: center;
-  gap: var(--space-4);
-  padding: var(--space-6) 0 var(--space-2);
+  justify-items: start;
+  gap: var(--space-5);
+  padding: var(--space-4) 0 var(--space-2);
 }
 .exs-seal {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: var(--space-2);
+  width: 100%;
 }
 .exs-seal__name {
   font-size: var(--type-footnote);
@@ -377,10 +398,13 @@
   letter-spacing: var(--tracking-small);
 }
 .exs-seal__grid {
-  --seal-cell: clamp(36px, 10.5vw, 46px);
+  margin: 0;
+  border: 0;
+  min-width: 0;
+  --seal-cell: 100%;
   position: relative;
   display: grid;
-  grid-template-columns: repeat(var(--cols), var(--seal-cell));
+  grid-template-columns: repeat(var(--cols), minmax(0, 56px));
   gap: var(--space-2);
   padding: var(--space-2) var(--space-3);
 }
@@ -405,8 +429,10 @@
   display: grid;
   place-items: center;
   width: var(--seal-cell);
-  height: var(--seal-cell);
+  aspect-ratio: 1;
   border-radius: 10px;
+  padding: 0;
+  border: 0;
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
   font-weight: var(--weight-semibold);
@@ -417,6 +443,10 @@
   width: 44%;
   height: 44%;
 }
+button.exs-seal__cell {
+  min-height: var(--target);
+  cursor: pointer;
+}
 [data-status="correct"].exs-seal__cell,
 [data-status="correct"].exs-tile {
   background: var(--ok-fill);
@@ -424,9 +454,8 @@
 }
 [data-status="wrong"].exs-seal__cell,
 [data-status="wrong"].exs-tile {
-  background: var(--bad-tint);
-  color: var(--bad-ink);
-  box-shadow: inset 0 0 0 1.5px var(--bad-edge);
+  background: var(--bad-fill);
+  color: var(--on-bad);
 }
 [data-status="blank"].exs-seal__cell,
 [data-status="blank"].exs-tile {
@@ -437,9 +466,9 @@
 
 .exs-score {
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: var(--space-1);
-  text-align: center;
+  text-align: start;
 }
 .exs-score__big {
   display: flex;
@@ -472,47 +501,6 @@
   clip-path: inset(50%);
   white-space: nowrap;
 }
-.exs-stats {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
-  width: 100%;
-  margin: var(--space-2) 0 0;
-}
-.exs-stats div {
-  display: grid;
-  gap: var(--space-0-5);
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--corner-button);
-  background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
-}
-.exs-stats dt {
-  font-size: var(--type-footnote);
-  line-height: var(--leading-footnote);
-  color: var(--ink-2);
-  letter-spacing: var(--tracking-small);
-}
-.exs-stats dd {
-  margin: 0;
-  font-size: var(--type-title1);
-  line-height: var(--leading-title1);
-  font-weight: var(--weight-bold);
-  letter-spacing: var(--tracking-title1);
-}
-.exs-stats [data-status="correct"] dd {
-  color: var(--ok-ink);
-}
-.exs-stats [data-status="wrong"] dd {
-  color: var(--bad-ink);
-}
-.exs-stats [data-status="blank"] dd {
-  color: var(--ink-2);
-}
-.exs-time {
-  margin: 0;
-}
-
 .exs-group__head {
   display: flex;
   align-items: center;
@@ -520,8 +508,9 @@
   gap: var(--space-3);
   margin: var(--group-gap) 0 var(--space-2);
 }
-.exs-group__head .dz-section-label {
-  margin: 0 var(--space-1);
+.exs-group__head .dz-section-label,
+.exs-group > .dz-section-label {
+  margin-inline: 0;
 }
 .exs-topic {
   position: relative;
@@ -566,6 +555,8 @@
 .exs-tile {
   --seal-cell: 40px;
   flex: none;
+  width: 40px;
+  height: 40px;
 }
 .exs-item__n {
   font-weight: var(--weight-semibold);
@@ -639,4 +630,51 @@
   justify-content: center;
   color: var(--action);
   font-weight: var(--weight-semibold);
+}
+
+/* Matrix options keep the question matrix's scale and real column spacing; two columns only where the
+   widest 3x3 still fits (390 px and up), otherwise one. */
+.exr-opts.ex-opts[data-wide="true"] {
+  grid-template-columns: 1fr;
+}
+.exr-opts.ex-opts[data-wide="true"] .ex-opt {
+  justify-content: flex-start;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-3);
+}
+.exr-opts.ex-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
+  grid-column: auto;
+}
+.exr-opts.ex-opts[data-wide="true"] .ex-opt__key {
+  position: static;
+  width: 28px;
+  height: 28px;
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+}
+.exr-opts.ex-opts[data-wide="true"] .ex-opt__body {
+  flex: 1;
+  justify-content: center;
+}
+.exr-opts.ex-opts[data-wide="true"] .ex-mat {
+  font-size: 1.1em;
+  column-gap: var(--space-3);
+}
+/* Two columns (390 px and up, 3x3 or smaller): the key sits above the matrix so the matrix keeps the room. */
+@media (min-width: 390px) {
+  .exr-opts.ex-opts[data-wide="true"][data-stacked="false"] {
+    grid-template-columns: 1fr 1fr;
+  }
+  .exr-opts.ex-opts[data-wide="true"][data-stacked="false"] .ex-opt {
+    position: relative;
+    padding: calc(var(--space-8) + var(--space-3)) var(--space-1) var(--space-3);
+  }
+  .exr-opts.ex-opts[data-wide="true"][data-stacked="false"] .ex-opt__key {
+    position: absolute;
+    top: var(--space-2);
+    left: var(--space-2);
+  }
+  .exr-opts.ex-opts[data-wide="true"][data-stacked="false"] .ex-mat {
+    font-size: 1em;
+  }
 }
