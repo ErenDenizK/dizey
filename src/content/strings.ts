@@ -199,19 +199,13 @@ export const strings = {
   exam: {
     title: 'Sınav',
     back: 'Haritaya dön',
-    subtitle: 'Vize 1 biçiminde, süreli, 5 şıklı. Puan ve cevaplar prova bitince açılır.',
     setTitle: { 'summer-2024': '2024 Yaz Okulu Vizesi', mixed: 'Karışık deneme' },
     chapterTestTitle: (chapter: string) => `Bölüm testi · ${chapter}`,
     backToMap: 'Haritaya dön',
     chapterTimeNote: (percent: number) => `%${percent} başarı · süresiz`,
     leaveChapterTest: 'Testten çık, sonra devam et',
-    setBody: {
-      'summer-2024': 'Gerçek sınavın soruları, kâğıttaki sırayla.',
-      mixed: 'Bankadan her seferinde yeni 18 soru.',
-    },
     setMeta: (count: number, minutes: number) => `${count} soru · ${minutes} dk`,
-    best: (percent: number) => `En iyi %${percent}`,
-    sets: 'Provalar',
+    lastAttempts: (percents: readonly number[]) => percents.map((percent) => `%${percent}`).join(' · '),
     start: 'Provayı başlat',
     startRules: [
       'Puan ve doğru cevaplar prova bitince açılır.',
@@ -224,8 +218,6 @@ export const strings = {
     inProgressMeta: (answered: number, total: number, left: string) =>
       `${answered} / ${total} cevaplı · ${left} kaldı`,
     resume: 'Devam et',
-    history: 'Geçmiş',
-    historyRow: (correct: number, total: number) => `${correct} / ${total} doğru`,
     leave: 'Provadan çık, sonra devam et',
     hideClock: 'Süreyi gizle',
     showClock: 'Süreyi göster',
