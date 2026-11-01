@@ -21,8 +21,8 @@ import './path-home.css'
 /**
  * Yol: the whole route as one game-like path, and the home screen. Every lesson and every chapter test walks a
  * grid in a serpentine (src/shell/path-layout.ts), Satır's blue along the rows and Sütun's plum down the
- * columns; what you have walked is full strength, what is left is faint. A sticky header names the chapter you
- * are in, the duo stands by the lesson you are on, and a dock above the tab bar holds the next lesson's card
+ * columns; what you have walked is full strength, what is left is faint. Each chapter opens with its bracketed
+ * number, name and count; the duo stands by the lesson you are on, and a dock above the tab bar holds the next lesson's card
  * with the satellites (question of the day, mistakes, the rehearsal). Every lesson stays open (no locks).
  */
 export function PathHome() {
@@ -36,7 +36,6 @@ export function PathHome() {
   const reached = main ? (mainNode?.index ?? -1) : Number.POSITIVE_INFINITY
 
   const root = useRef<HTMLDivElement>(null)
-  const head = useRef<HTMLElement>(null)
   const duo = useRef<DuoHandle>(null)
   useEffect(() => {
     duo.current?.react('happy')
@@ -44,21 +43,9 @@ export function PathHome() {
   useCelebrations(root, records)
   useWalked(root, reached)
   useOpening(root, main?.id ?? null)
-  const chapterIndex = useChapterInView(root, head, mainNode?.chapter ?? chapters.length - 1)
-  const chapter = chapters[chapterIndex]
-  const doneInChapter = chapter?.lessons.filter((l) => stateOf(records[l.id]) === 'done').length ?? 0
 
   return (
     <Screen title={strings.path.title}>
-      <header ref={head} className="ph-head" data-testid="path-head">
-        <p className="ph-head__title">{chapter?.label}</p>
-        <p className="ph-head__sub">
-          {strings.path.chapterOrdinal(chapterIndex + 1)} ·{' '}
-          <span className="num">
-            {strings.path.chapterCount(doneInChapter, chapter?.lessons.length ?? 0)}
-          </span>
-        </p>
-      </header>
       <div className="ph-field">
         <div ref={root} className="ph-root" style={{ height: layout.height }} data-testid="path">
           <svg className="ph-wires" width="100%" height={layout.height} aria-hidden="true">
@@ -91,6 +78,12 @@ export function PathHome() {
                   {header.chapter + 1}
                 </span>
                 <span className="ph-chapter__name">{c.label}</span>
+                <span className="ph-chapter__count num">
+                  {strings.path.chapterCount(
+                    c.lessons.filter((l) => stateOf(records[l.id]) === 'done').length,
+                    c.lessons.length,
+                  )}
+                </span>
               </h2>
             )
           })}
@@ -145,43 +138,9 @@ export function PathHome() {
   )
 }
 
-/** How far below the sticky header (px) a chapter's heading counts as reached: the header names the chapter you are in. */
-const HEADING_LEAD = 160
-
-/**
- * The chapter whose heading has reached the top of the screen (scrolled under the sticky header, or within
- * `HEADING_LEAD` below it; the first chapter before any has): what the header names. Only a change of
- * chapter renders.
- */
-function useChapterInView(
-  root: React.RefObject<HTMLElement | null>,
-  head: React.RefObject<HTMLElement | null>,
-  initial: number,
-) {
-  const [index, setIndex] = useState(initial)
-  useEffect(() => {
-    const scroller = root.current?.closest<HTMLElement>('.dz-screen')
-    const bar = head.current
-    if (!scroller || !bar) return
-    const headings = [...(root.current?.querySelectorAll<HTMLElement>('.ph-chapter') ?? [])]
-    const measure = () => {
-      const line = bar.getBoundingClientRect().bottom + HEADING_LEAD
-      let found = 0
-      headings.forEach((heading, i) => {
-        const box = heading.getBoundingClientRect()
-        if (box.top + box.height / 2 <= line) found = i
-      })
-      setIndex(found)
-    }
-    scroller.addEventListener('scroll', measure, { passive: true })
-    return () => scroller.removeEventListener('scroll', measure)
-  }, [root, head])
-  return index
-}
-
 /**
  * Opening the app, and coming back to a new lesson: the view glides to the lesson you are on, like a camera
- * finding your place, so it lands between the header and the dock. It rides the spring engine (never a native
+ * finding your place, so it lands between the top of the screen and the dock. It rides the spring engine (never a native
  * smooth scroll), and a touch stops it at once.
  */
 function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string | null) {
@@ -190,14 +149,13 @@ function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string
     const scroller = host?.closest<HTMLElement>('.dz-screen')
     if (!host || !scroller || !scroller.clientHeight || !mainId) return
     const node = host.querySelector<HTMLElement>(`.pa-tile[data-lesson="${mainId}"]`)
-    const bar = scroller.querySelector<HTMLElement>('.ph-head')
     const dock = scroller.querySelector<HTMLElement>('.ph-dock')
-    if (!node || !bar || !dock) return
+    if (!node || !dock) return
     const frame = scroller.getBoundingClientRect()
     const box = node.getBoundingClientRect()
     const center = box.top - frame.top + scroller.scrollTop + box.height / 2
-    // The free band of the screen: under the header and above the dock, which rests at the bottom.
-    const top = bar.getBoundingClientRect().bottom - frame.top
+    // The free band of the screen: under the screen's top padding and above the dock, which rests at the bottom.
+    const top = Number.parseFloat(getComputedStyle(scroller).paddingTop) || 0
     const bottom = dock.getBoundingClientRect().top - frame.top
     const goal = Math.max(
       0,

@@ -54,7 +54,6 @@ export const strings = {
   path: {
     title: 'Yol',
     listLabel: 'Dersler',
-    chapterOrdinal: (number: number) => `${number}. bölüm`,
     examLine: (days: number, date: string) =>
       days > 0 ? `Vize 1'e ${days} gün · ${date}` : `Vize 1 · ${date}`,
     examWeekLine: (date: string) => `Vize 1 · ${date} civarı`,

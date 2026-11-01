@@ -24,7 +24,7 @@ test('Yol offers the first lesson on the path', async ({ page }) => {
 
 test('the path groups lessons into chapters and Sen shows version and commit', async ({ page }) => {
   await openApp(page)
-  await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
+  await expect(screen(page).getByRole('heading', { name: /^Determinant\b/ })).toBeVisible()
   // Every chapter has its heading in the path; the nodes are its lessons (10 + 3 + 4 + 2 + 4) and one test each.
   await expect(screen(page).getByRole('heading', { level: 2 })).toHaveCount(5)
   const nodes = screen(page).getByRole('list', { name: 'Dersler' })
@@ -43,9 +43,10 @@ test('the tab bar is Yol and Sen and a fresh start leads into the first lesson a
   const buttons = page.getByRole('navigation', { name: 'Bölümler' }).getByRole('button')
   await expect(buttons).toHaveText(['Yol', 'Sen'])
   await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText('Yol')
-  // The header names the chapter you are in.
-  await expect(screen(page).getByTestId('path-head')).toContainText('Matrisler')
-  await expect(screen(page).getByTestId('path-head')).toContainText('1. bölüm')
+  // Each chapter opens with its number, name and count; no header repeats it.
+  await expect(screen(page).getByTestId('chapter-matrices')).toContainText('Matrisler')
+  await expect(screen(page).getByTestId('chapter-matrices')).toContainText('0 / 10')
+  await expect(screen(page).getByTestId('path-head')).toHaveCount(0)
   await expect(screen(page).getByText('Vize tarihi belli değil')).toHaveCount(0)
   await expect(page.locator('.dz-icon-button--float')).toHaveCount(0)
   const next = screen(page).getByTestId('today-next')
@@ -365,24 +366,6 @@ test('every node is a tap target of at least 44 px and its aria-label carries th
     expect(node.height).toBeGreaterThanOrEqual(56)
     expect(node.label.length).toBeGreaterThan(8)
   }
-})
-
-test('the sticky header names the chapter that has scrolled under it', async ({ page }) => {
-  await openApp(page)
-  const pane = screen(page)
-  await expect(pane.getByTestId('path-head')).toContainText('Matrisler')
-  await pane
-    .locator('.dz-screen')
-    .evaluate((s) =>
-      s.scrollTo(
-        0,
-        s.scrollTop +
-          (document.querySelector('[data-testid="chapter-determinants"]')?.getBoundingClientRect().top ?? 0),
-      ),
-    )
-  await expect(pane.getByTestId('path-head')).toContainText('Determinant')
-  await expect(pane.getByTestId('path-head')).toContainText('3. bölüm')
-  await expect(pane.getByTestId('path-head')).toContainText('0 / 4')
 })
 
 test('Yol edges: one amber lesson node, equal nodes, one language of corners, nothing spills sideways', async ({
@@ -1196,16 +1179,14 @@ test.describe('Yol, the path home', () => {
     await openApp(page)
     const node = screen(page).locator('.pa-tile[data-next]')
     await expect(node).toHaveAttribute('data-lesson', 'd3-determinant-properties')
-    // The glide rides the spring engine; wait for it to land between the header and the dock.
+    // The glide rides the spring engine; wait for it to land between the top of the screen and the dock.
     await expect
       .poll(async () => {
         const box = await node.boundingBox()
-        const head = await screen(page).getByTestId('path-head').boundingBox()
         const dock = await screen(page).getByTestId('path-dock').boundingBox()
-        return Boolean(box && head && dock && box.y >= head.y + head.height && box.y + box.height <= dock.y)
+        return Boolean(box && dock && box.y >= 0 && box.y + box.height <= dock.y)
       })
       .toBe(true)
-    await expect(screen(page).getByTestId('path-head')).toContainText('Determinant')
   })
 
   test('rows and columns of the walk use different tokens, and what is ahead is faint', async ({ page }) => {
