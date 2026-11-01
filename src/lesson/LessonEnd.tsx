@@ -129,7 +129,7 @@ export function LessonEnd({
     <div ref={root} className="ls-end" data-testid="lesson-end">
       {/* biome-ignore lint/a11y/noStaticElementInteractions: the tap only skips motion; nothing is lost without it */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: as above */}
-      <div className="ls-end__stage" onClick={land}>
+      <div className="ls-end__stage" data-badge={badge ? '' : undefined} onClick={land}>
         <i className="ls-end__halo" aria-hidden="true" />
         <Duo ref={duo} mood="neutral" className="ls-duo" />
         {badge ? (

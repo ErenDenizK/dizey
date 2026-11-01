@@ -68,12 +68,7 @@ export function BadgeReveal({
   }, [badge.id])
 
   return (
-    <div
-      ref={root}
-      className="badge-reveal"
-      role="img"
-      aria-label={`${kicker}: ${text.name}. ${text.line}`}
-    >
+    <div ref={root} className="badge-reveal" role="img" aria-label={`${kicker}: ${text.name}. ${text.line}`}>
       <Emblem badge={badge} art={art} className="badge-reveal__emblem" />
       <p className="badge-reveal__kicker" data-enter="">
         {kicker} · {text.name}

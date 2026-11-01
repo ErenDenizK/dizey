@@ -1489,3 +1489,15 @@ a.dz-button[data-kind="primary"] {
 .ls-seal[hidden] {
   display: none;
 }
+/* While a new rozet shows, the duo steps back so the emblem and its sentence fit any phone. */
+.ls-end__stage[data-badge] .ls-duo {
+  width: clamp(72px, 14vh, 120px);
+}
+@media (max-height: 700px) {
+  .ls-end__stage[data-badge] .ls-duo {
+    width: 64px;
+  }
+  .ls-end__stage[data-badge] .badge-reveal__emblem {
+    width: 88px;
+  }
+}
