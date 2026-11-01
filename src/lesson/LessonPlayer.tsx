@@ -264,7 +264,6 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       className="ls-run"
       data-testid="lesson-player"
       data-options-stage={optionsAreStage || undefined}
-      data-hug={(hasStage && step.kind === 'choice' && !attempt.revealed) || undefined}
     >
       <div className="ls-top">
         <Link

@@ -1608,30 +1608,6 @@ a.dz-button[data-kind="primary"] {
 }
 
 /*
- * A choice question with a picture: the stage and the options share the free height. The stage starts from
- * its scene (the cell is still fitted to the full free height, see Stage.tsx) and never shrinks below it; the
- * options start from their natural rows. Of the height left over the stage takes two parts and the options
- * one, stretched evenly over their rows, so the card has no dead band and the options read full, not cramped.
- */
-.ls-run[data-hug] .ls-main {
-  flex: 2 1 auto;
-}
-.ls-run[data-hug] .ls-stage {
-  flex: 1 0 auto;
-  min-height: 0;
-}
-.ls-run[data-hug] .ls-narr {
-  flex-shrink: 0;
-}
-.ls-run[data-hug] .ls-dock {
-  flex: 1 1 auto;
-  grid-template-rows: 1fr auto;
-}
-.ls-run[data-hug] .ls-opts {
-  align-content: stretch;
-}
-
-/*
  * Lesson top bar at the weight of the rest of the screen: the close and back controls are filled 40 px
  * discs with full-size glyphs (not bare 16 px strokes), the progress is an 8 px pill, and the counter reads
  * in the primary ink.

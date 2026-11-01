@@ -190,11 +190,7 @@ function useStageLayout(
       box.style.height = ''
       box.style.flex = ''
       box.style.minHeight = ''
-      // On a question with options the stage hugs its scene and the options take the rest (data-hug on the
-      // run). The cell is still fitted to the full free height, measured with the hug lifted for a moment.
-      const run = box.closest<HTMLElement>('[data-hug]')
-      run?.removeAttribute('data-hug')
-      let next = box.offsetHeight
+      const next = box.offsetHeight
       width.current = box.clientWidth
       // Fit the cell to the height the stage is going to.
       const content = scene.current
@@ -210,10 +206,6 @@ function useStageLayout(
           { width: content.offsetWidth, height: content.offsetHeight },
         )
         box.style.setProperty('--cell', `${cell}px`)
-      }
-      if (run) {
-        run.setAttribute('data-hug', '')
-        next = box.offsetHeight
       }
       // Where everything rests now, in stage coordinates (transforms taken out).
       const origin = box.getBoundingClientRect()
