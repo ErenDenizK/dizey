@@ -243,6 +243,15 @@
   padding-top: var(--space-2);
   box-shadow: none;
 }
+/* In a sheet the header row stays put while the list scrolls under it, so Bitti is always one tap away. */
+[data-present="sheet"] .dz-screen[data-pushed] .dz-screen-head {
+  position: sticky;
+  top: calc(var(--space-2) * -1);
+  z-index: 4;
+  margin: calc(var(--space-2) * -1) calc(var(--page-gutter) * -1) var(--gap-block);
+  padding: var(--space-2) var(--page-gutter) var(--space-2);
+  background: var(--surface);
+}
 [data-present="sheet"] .dz-screen[data-pushed] .dz-screen-grabber {
   display: block;
   justify-self: center;

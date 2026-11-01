@@ -707,6 +707,24 @@ test('Settings opens as a sheet over the dimmed tab and a drag down closes it', 
   await expect(page.getByTestId('open-settings')).toBeVisible()
 })
 
+test('a sheet keeps its title row and Bitti in view while its list scrolls', async ({ page }) => {
+  await openApp(page, './me')
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByTestId('app-version')).toBeVisible()
+  const sheet = pushed(page)
+  await sheet.locator('.dz-screen').evaluate((el) => el.scrollTo(0, 600))
+  const done = page.getByRole('button', { name: 'Bitti', exact: true })
+  const top = (await sheet.boundingBox())?.y ?? 0
+  await expect
+    .poll(async () => {
+      const d = await done.boundingBox()
+      return Boolean(d && d.y >= top && d.y < top + 120)
+    })
+    .toBe(true)
+  await done.click()
+  await expect(sheet).toHaveCount(0)
+})
+
 test('a tap on the dimmed tab above a sheet closes it', async ({ page }) => {
   await openApp(page, './me')
   await page.getByTestId('open-settings').click()
