@@ -826,6 +826,23 @@ test.describe('small phone (375 x 667) reach', () => {
     expect(hero && duo && duo.y >= hero.y && duo.y + duo.height <= hero.y + hero.height).toBe(true)
   })
 
+  test('the daily question brings its verdict into view after checking', async ({ page }) => {
+    await openApp(page)
+    await screen(page).getByTestId('today-daily').click()
+    const sheet = page.getByTestId('question-sheet')
+    await sheet.getByTestId('question-option-a').click()
+    await page.getByTestId('question-check').click()
+    const verdict = sheet.locator('.td-q__verdict')
+    await expect(verdict).toBeVisible()
+    await expect
+      .poll(async () => {
+        const v = await verdict.boundingBox()
+        const foot = await sheet.locator('.td-q__foot').boundingBox()
+        return Boolean(v && foot && v.y >= 0 && v.y + v.height <= foot.y)
+      })
+      .toBe(true)
+  })
+
   test('the lesson end shows the lesson code once, one single-line primary action, fully on screen', async ({
     page,
   }) => {
@@ -836,8 +853,9 @@ test.describe('small phone (375 x 667) reach', () => {
     await page.waitForTimeout(1500)
     const code = ((await page.locator('.ls-top').textContent()) ?? '').match(/\d+\.\d+/)?.[0] ?? ''
     expect(code).not.toBe('')
-    const text = (await page.locator('body').textContent()) ?? ''
-    expect(text.split(code).length - 1).toBeLessThanOrEqual(1)
+    // Only the lesson itself counts: the map stays mounted under it and shows its own tile codes.
+    const text = (await page.getByTestId('lesson-player').textContent()) ?? ''
+    expect(text.split(code).length - 1).toBe(1)
     const primary = page.getByTestId('lesson-end').locator('[data-kind="primary"]')
     await expect(primary).toHaveCount(1)
     await expect(primary).toBeVisible()
