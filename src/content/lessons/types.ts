@@ -372,6 +372,12 @@ export interface SummaryStep extends StepBase {
 
 export type Step = ExplainStep | ChoiceStep | KeypadStep | SummaryStep
 
+/**
+ * A gizli an: one secret bonus question after the last step. It is not a step: no progress, record or streak
+ * ever sees it. A wrong pick is a try, not a mistake.
+ */
+export type Moment = ChoiceStep
+
 export interface Lesson {
   /** Stable forever once merged. */
   readonly id: string
@@ -379,4 +385,6 @@ export interface Lesson {
   readonly title: string
   readonly matrices: Readonly<Record<string, MatrixBlock>>
   readonly steps: readonly Step[]
+  /** Optional gizli an, offered after Bitir until it is solved. */
+  readonly moment?: Moment
 }

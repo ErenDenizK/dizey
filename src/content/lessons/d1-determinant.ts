@@ -81,6 +81,15 @@ export const d1Determinant: Lesson = {
       ],
       true,
     ),
+    Z: m(
+      '$|A|$ =',
+      [
+        ['1', '2', '3'],
+        ['0', '4', '4'],
+        ['2', '1', '3'],
+      ],
+      true,
+    ),
   },
   steps: [
     {
@@ -321,4 +330,49 @@ export const d1Determinant: Lesson = {
       ],
     },
   ],
+  moment: {
+    id: 'moment-columns',
+    kind: 'choice',
+    eyebrow: 'Gizli an',
+    title: 'Hesaplamadan söyle: $|A|$ kaç?',
+    body: 'Çarpmana gerek yok, matrise bak.',
+    skill: 'det-dependent-columns',
+    scene: { items: ['Z', '=', 'result'], result: '?' },
+    options: [
+      {
+        key: 'a',
+        content: [text('$28$')],
+        errorType: 'down-diagonals-only',
+        feedback: 'Yalnız sağa inenleri topladın. Önce sütunlara bak.',
+      },
+      { key: 'b', content: [text('$0$')] },
+      {
+        key: 'c',
+        content: [text('$56$')],
+        errorType: 'added-both-sums',
+        feedback: 'İki toplamı topladın; biri çıkarılır. Önce sütunlara bak.',
+      },
+    ],
+    answer: 'b',
+    reveal: {
+      kind: 'frames',
+      frames: [
+        {
+          clear: true,
+          marks: [
+            { cell: ['Z', '*', 0], tone: 'col' },
+            { cell: ['Z', '*', 1], tone: 'col' },
+          ],
+          note: '1. ve 2. sütun',
+        },
+        { marks: [{ cell: ['Z', '*', 2], tone: 'ok' }], note: '3. sütun = 1. + 2. sütun ⇒ |A| = 0' },
+      ],
+    },
+    solution:
+      'Üçüncü sütun, ilk ikisinin toplamı: $(3, 4, 3) = (1, 0, 2) + (2, 4, 1)$. Sütunlar bağımlı, bu yüzden $|A| = 0$. Sarrus da aynısını verir: $28 - 28 = 0$.',
+    claims: [
+      { kind: 'det', matrix: 'Z', equals: '0' },
+      { kind: 'sarrus', matrix: 'Z', plus: '28', minus: '28' },
+    ],
+  },
 }
