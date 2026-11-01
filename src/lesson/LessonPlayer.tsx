@@ -14,6 +14,7 @@ import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
 import { Check, ChevronLeft, Close } from '../ui/icons'
 import { RollNumber } from '../ui/RollNumber'
+import { useEase } from './ease'
 import { Keypad } from './Keypad'
 import { LessonEnd } from './LessonEnd'
 import { momentState, readMoments, setMoment } from './moments'
@@ -135,6 +136,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   }, [lesson.id, step.id, moment])
 
   const root = useRef<HTMLDivElement>(null)
+  const back = useRef<HTMLButtonElement>(null)
+  const backOff = index === 0 || ended !== null || moment !== null
+  useEase(back, !backOff)
   useLessonMotion(root, index, lesson.steps.length)
   useAnswerMotion(root, attempt.wrong, attempt.solved)
 
@@ -408,11 +412,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           </Link>
         )}
         <button
+          ref={back}
           type="button"
           className="ls-top__btn sh-press"
           aria-label={strings.lesson.back}
           data-sound="none"
-          disabled={index === 0 || ended !== null || moment !== null}
+          disabled={backOff}
           onClick={() => go(index - 1)}
         >
           <ChevronLeft />

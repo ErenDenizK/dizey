@@ -964,7 +964,24 @@ a.sh-node {
   line-height: var(--leading-title1);
   letter-spacing: var(--tracking-title1);
 }
+/* The line box is fixed by a zero-width space, so an empty field, a placeholder and digits share one
+   height; the placeholder floats over it (centred by the same text-align) and fades out. */
+.ls-answer {
+  position: relative;
+}
+.ls-answer::before {
+  content: "\200b";
+}
+.ls-answer__last {
+  display: inline-block;
+}
 .ls-answer__hint {
+  position: absolute;
+  inset-inline: 0;
+  top: var(--space-3);
+  pointer-events: none;
+}
+.ls-answer__hint > span {
   color: var(--ink-3);
   font-size: var(--type-body);
   font-weight: var(--weight-medium);
@@ -1020,12 +1037,20 @@ a.sh-node {
     min-height: 44px;
     padding-block: var(--space-2);
   }
+  .ls-answer__hint {
+    top: var(--space-2);
+  }
   .ls-key {
     min-height: 40px;
   }
 }
 .ls-key:disabled {
   opacity: 0.45;
+}
+/* The check key eases between its dim and lit looks (useEase drives --on, 0 to 1). */
+.ls-key--go[data-ease],
+.ls-key--go[data-ease]:disabled {
+  opacity: calc(0.45 + 0.55 * var(--on, 1));
 }
 
 /* Mistake log and exam date */
@@ -1471,6 +1496,12 @@ a.dz-button[data-kind="primary"] {
 }
 .ls-top__btn:disabled {
   background: none;
+}
+/* The back button eases between its bare dim arrow and its lit disc (useEase drives --on, 0 to 1). */
+.ls-top__btn[data-ease],
+.ls-top__btn[data-ease]:disabled {
+  color: color-mix(in oklab, var(--sh-ink) calc(var(--on, 1) * 100%), var(--sh-line));
+  background: color-mix(in oklab, var(--control-soft) calc(var(--on, 1) * 100%), transparent);
 }
 .ls-top__btn svg {
   width: 18px;

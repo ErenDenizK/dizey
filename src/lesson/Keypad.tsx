@@ -1,4 +1,8 @@
+import { useLayoutEffect, useRef } from 'react'
 import { strings } from '../content/strings'
+import { engine } from '../engine/driver'
+import { ENTER_FLOOR, SHIFT } from '../engine/tokens'
+import { useEase } from './ease'
 
 const fractionKeys = ['1', '2', '3', '⌫', '4', '5', '6', '−', '7', '8', '9', '/', '0'] as const
 /** Without the fraction key, 0 takes its place and the check key spans the whole last row. */
@@ -34,10 +38,43 @@ export function Keypad({
     else if (key === '/') onChange(value.includes('/') || value === '' ? value : `${value}/`)
     else if (value.length < 8) onChange(value + key)
   }
+  const hint = useRef<HTMLSpanElement>(null)
+  const last = useRef<HTMLSpanElement>(null)
+  const check = useRef<HTMLButtonElement>(null)
+  const before = useRef<string | null>(null)
+  const checkable = !disabled && value !== '' && value !== '−'
+  useEase(check, checkable)
+  // Direct feedback for a typed key: the new last character rises in. The placeholder fades out when
+  // the first character arrives and back in when the field empties; a delete just lands.
+  useLayoutEffect(() => {
+    const previous = before.current
+    before.current = value
+    const ink = hint.current
+    const tail = last.current
+    const shown = value === '' ? 1 : 0
+    if (ink) {
+      if (previous === null) engine.set(ink, { opacity: shown })
+      else engine.withChannel('chrome', () => engine.to(ink, { opacity: shown }, 'fade'))
+    }
+    if (!tail) return
+    if (previous !== null && value.length > previous.length && value.startsWith(previous)) {
+      engine.set(tail, { opacity: ENTER_FLOOR, y: SHIFT.count })
+      engine.withChannel('chrome', () => {
+        engine.to(tail, { opacity: 1 }, 'ui')
+        engine.to(tail, { y: 0 }, 'ui')
+      })
+    } else engine.set(tail, { opacity: 1, y: 0 })
+  }, [value])
   return (
     <div className="ls-keypad-wrap" data-sound={sound}>
       <output className="ls-answer" aria-label={strings.lesson.answerField}>
-        {value || <span className="ls-answer__hint">{strings.lesson.answerPlaceholder}</span>}
+        <span ref={hint} className="ls-answer__hint" aria-hidden={value !== '' || undefined}>
+          <span>{strings.lesson.answerPlaceholder}</span>
+        </span>
+        {value.slice(0, -1)}
+        <span ref={last} className="ls-answer__last">
+          {value.slice(-1)}
+        </span>
       </output>
       <div className="ls-keypad">
         {keys.map((key) => (
@@ -54,10 +91,11 @@ export function Keypad({
           </button>
         ))}
         <button
+          ref={check}
           type="button"
           className="ls-key ls-key--go sh-press"
           data-wide={!fraction}
-          disabled={disabled || value === '' || value === '−'}
+          disabled={!checkable}
           onClick={onSubmit}
         >
           {strings.lesson.check}
