@@ -1544,3 +1544,62 @@ a.dz-button[data-kind="primary"] {
 .ls-run[data-options-stage] .ls-opts .ex-mat {
   font-size: var(--type-title2);
 }
+
+/*
+ * A choice question with a picture: the stage and the options share the free height. The stage starts from
+ * its scene (the cell is still fitted to the full free height, see Stage.tsx) and the options from their
+ * rows; each takes half of what is left, so the card never has a dead band and the options grow to a
+ * comfortable, full row instead of sitting cramped under it.
+ */
+.ls-run[data-hug] .ls-main {
+  flex: 1 1 auto;
+}
+.ls-run[data-hug] .ls-stage {
+  flex: 1 1 auto;
+  min-height: 0;
+}
+.ls-run[data-hug] .ls-dock {
+  flex: 1 1 auto;
+  min-height: 0;
+  grid-template-rows: 1fr auto;
+}
+.ls-run[data-hug] .ls-opts {
+  max-height: none;
+  align-content: end;
+  grid-auto-rows: minmax(52px, 84px);
+}
+
+/*
+ * Lesson top bar at the weight of the rest of the screen: the close and back controls are filled 40 px
+ * discs with full-size glyphs (not bare 16 px strokes), the progress is an 8 px pill, and the counter reads
+ * in the primary ink.
+ */
+.ls-top {
+  grid-template-columns: 44px 44px 1fr auto;
+  min-height: 48px;
+}
+.ls-top__btn {
+  width: 40px;
+  height: 40px;
+  margin: 2px;
+  border-radius: var(--corner-pill);
+  background: var(--control-soft);
+}
+.ls-top__btn:disabled {
+  background: none;
+}
+.ls-top__btn svg {
+  width: 18px;
+  height: 18px;
+}
+.ls-progress {
+  height: 8px;
+  border-radius: var(--corner-pill);
+  background: var(--control-soft);
+}
+.ls-progress__fill {
+  border-radius: var(--corner-pill);
+}
+.ls-count {
+  color: var(--ink-1);
+}
