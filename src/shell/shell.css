@@ -32,22 +32,26 @@
 /* type */
 .sh-title {
   margin: 0;
-  font-size: 1.9rem;
-  line-height: 1.15;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: var(--type-large);
+  line-height: var(--leading-large);
+  font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-large);
 }
 .sh-sub {
-  margin: 4px 0 0;
+  margin: var(--space-1) 0 0;
   color: var(--sh-muted);
-  font-size: 0.92rem;
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
 }
 .sh-label {
   display: block;
-  margin: 0 0 8px;
-  font-size: 0.85rem;
-  font-weight: 400;
+  margin: 0 0 var(--space-2);
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-regular);
   color: var(--sh-muted);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
 }
 .sh-muted {
   color: var(--sh-muted);
@@ -64,9 +68,11 @@
   min-height: var(--button-height);
   border: 0;
   border-radius: var(--corner-button);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--type-title3);
+  font-weight: var(--weight-semibold);
   cursor: pointer;
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .sh-btn--primary {
   background: var(--sh-action);
@@ -81,10 +87,12 @@
   border: 0;
   background: none;
   color: var(--sh-muted);
-  font-size: 0.95rem;
+  font-size: var(--type-subhead);
   text-decoration: underline;
   text-underline-offset: 3px;
   cursor: pointer;
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
 }
 .sh-spacer {
   flex: 1;
@@ -92,7 +100,7 @@
 .sh-dock {
   position: sticky;
   bottom: 0;
-  padding-top: 8px;
+  padding-top: var(--space-2);
   background: linear-gradient(transparent, var(--sh-bg) 30%);
 }
 .sh-chev {
@@ -111,20 +119,23 @@
   z-index: 40;
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: max(56px, env(safe-area-inset-top)) 24px max(28px, env(safe-area-inset-bottom));
+  gap: var(--space-6);
+  padding: max(var(--space-12), env(safe-area-inset-top)) var(--space-6)
+    max(var(--space-6), env(safe-area-inset-bottom));
   background: var(--sh-bg);
   color: var(--sh-ink);
   font-family: "Onest", system-ui, -apple-system, sans-serif;
 }
 .sh-onb__intro {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .sh-onb h1 {
   margin: 0;
-  font-size: 1.7rem;
-  line-height: 1.2;
+  font-size: var(--type-large);
+  line-height: var(--leading-large);
+  letter-spacing: var(--tracking-large);
+  font-weight: var(--weight-bold);
 }
 .sh-onb p {
   margin: 0;
@@ -132,15 +143,15 @@
 }
 .sh-onb__steps {
   margin: 0;
-  padding: 4px 16px;
+  padding: var(--space-1) var(--space-4);
   list-style: none;
 }
 .sh-onb__steps li {
   display: grid;
   grid-template-columns: 36px 1fr;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: center;
-  padding: 12px 0;
+  padding: var(--space-3) 0;
   border-bottom: 1px solid var(--sh-line);
 }
 .sh-onb__steps li:last-child {
@@ -153,7 +164,7 @@
   height: 36px;
   border-radius: var(--corner-pill);
   background: var(--sh-soft);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .sh-onb svg {
   width: 18px;
@@ -168,14 +179,14 @@
 /* Exam: home cards, the rehearsal screen and the review */
 .ex-set {
   display: grid;
-  gap: 6px;
-  padding: 18px;
+  gap: var(--gap-bound);
+  padding: var(--card-pad);
 }
 .ex-set .sh-sub {
   margin: 0;
 }
 .ex-set .sh-btn {
-  margin-top: 8px;
+  margin-top: var(--space-3);
 }
 .ex-btn-link {
   display: grid;
@@ -184,7 +195,7 @@
 }
 .ex-review-link {
   display: inline-block;
-  margin-top: 8px;
+  margin-top: var(--space-2);
 }
 .ex-run {
   position: fixed;
@@ -192,22 +203,25 @@
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   max-width: 440px;
   margin-inline: auto;
-  padding: max(12px, env(safe-area-inset-top)) 16px max(16px, env(safe-area-inset-bottom));
+  padding: max(var(--space-3), env(safe-area-inset-top)) var(--page-gutter)
+    max(var(--space-4), env(safe-area-inset-bottom));
   background: var(--sh-bg);
 }
 .ex-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: var(--type-footnote);
   color: var(--sh-muted);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
 }
 .ex-top__btn {
   min-height: 44px;
-  padding: 0 6px;
+  padding: 0 var(--space-2);
   border: 0;
   background: none;
   color: var(--sh-ink);
@@ -216,17 +230,19 @@
 }
 .ex-clock {
   min-height: 44px;
-  padding: 0 6px;
+  padding: 0 var(--space-2);
   border: 0;
   background: none;
   font-family: inherit;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   cursor: pointer;
   min-width: 4ch;
   text-align: right;
-  font-size: 1rem;
+  font-size: var(--type-title3);
   color: var(--sh-ink);
   font-variant-numeric: tabular-nums;
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .ex-clock[data-low="true"] {
   color: var(--danger-11);
@@ -237,17 +253,18 @@
   overflow-y: auto;
   display: grid;
   align-content: start;
-  gap: 12px;
+  gap: var(--space-3);
 }
 .ex-stem {
   display: grid;
-  gap: 12px;
-  padding: 18px;
+  gap: var(--space-3);
+  padding: var(--card-pad);
 }
 .ex-text {
   margin: 0;
-  font-size: 1.02rem;
-  line-height: 1.5;
+  font-size: var(--type-body);
+  line-height: var(--leading-read);
+  letter-spacing: var(--tracking-body);
 }
 .ex-tex .dz-m {
   font-size: 1.05em;
@@ -273,7 +290,7 @@
   display: inline-grid;
   gap: 2px 10px;
   padding: 4px 12px;
-  font-size: 1.1rem;
+  font-size: 1.1em;
   font-variant-numeric: tabular-nums;
 }
 .ex-mat::before,
@@ -337,11 +354,11 @@
 .ex-system {
   display: grid;
   justify-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .ex-opts {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -350,9 +367,9 @@
 .ex-opt {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   min-height: 56px;
-  padding: 8px 14px;
+  padding: var(--space-2) var(--card-pad);
   border: 1.5px solid transparent;
   border-radius: var(--corner-button);
   background: var(--sh-surface);
@@ -373,8 +390,10 @@
   height: 28px;
   border-radius: var(--corner-chip);
   background: var(--control-soft);
-  font-size: 0.85rem;
-  font-weight: 600;
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
 }
 .ex-opt[aria-pressed="true"] .ex-opt__key {
   background: var(--sh-action);
@@ -384,17 +403,17 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: var(--space-2);
   min-width: 0;
 }
 .ex-bottom {
   display: grid;
-  gap: 10px;
+  gap: var(--space-2);
 }
 .ex-nav {
   display: grid;
   grid-template-columns: repeat(9, 1fr);
-  gap: 4px;
+  gap: var(--space-1);
 }
 .ex-nav__item {
   position: relative;
@@ -404,9 +423,11 @@
   background: var(--control-soft);
   color: var(--sh-muted);
   font: inherit;
-  font-size: 0.75rem;
+  font-size: var(--type-caption);
   font-variant-numeric: tabular-nums;
   cursor: pointer;
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
 }
 .ex-nav__item[data-done="true"] {
   background: var(--sh-soft-strong);
@@ -415,7 +436,7 @@
 .ex-nav__item[aria-current="step"] {
   box-shadow: inset 0 0 0 2px var(--sh-action);
   color: var(--sh-ink);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .ex-nav__item[data-flag="true"]::after {
   content: "";
@@ -430,7 +451,7 @@
 .ex-bar {
   display: grid;
   grid-template-columns: 1fr 2fr;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ex-confirm {
   position: fixed;
@@ -438,19 +459,22 @@
   z-index: 11;
   display: grid;
   place-items: end center;
-  padding: 16px max(16px, env(safe-area-inset-bottom));
+  padding: var(--page-gutter) max(var(--page-gutter), env(safe-area-inset-bottom));
   background: var(--sh-scrim);
 }
 .ex-confirm__card {
   display: grid;
-  gap: 10px;
+  gap: var(--space-3);
   width: 100%;
   max-width: 408px;
-  padding: 20px;
+  padding: var(--space-5);
 }
 .ex-confirm__card h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: var(--type-title2);
+  line-height: var(--leading-title2);
+  letter-spacing: var(--tracking-title);
+  font-weight: var(--weight-bold);
 }
 .ex-confirm__card p {
   margin: 0;
@@ -458,27 +482,30 @@
 }
 .ex-score {
   display: grid;
-  gap: 4px;
-  padding: 20px;
+  gap: var(--space-1);
+  padding: var(--space-5);
 }
 .ex-score b {
-  font-size: 1.6rem;
+  font-size: var(--type-large);
   font-variant-numeric: tabular-nums;
+  line-height: var(--leading-large);
+  letter-spacing: var(--tracking-large);
+  font-weight: var(--weight-bold);
 }
 .ex-score .sh-sub {
   margin: 0;
 }
 .ex-review {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ex-item summary {
   display: grid;
   grid-template-columns: 32px 1fr auto;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
   min-height: 52px;
-  padding: 0 16px;
+  padding: 0 var(--card-pad);
   list-style: none;
   cursor: pointer;
 }
@@ -486,7 +513,7 @@
   display: none;
 }
 .ex-item__n {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
 }
 .ex-item[data-status="correct"] .ex-item__st {
@@ -500,14 +527,14 @@
 }
 .ex-item__body {
   display: grid;
-  gap: 12px;
-  padding: 0 16px 16px;
+  gap: var(--space-3);
+  padding: 0 var(--card-pad) var(--card-pad);
 }
 .ex-answer,
 .ex-solution {
   display: grid;
-  gap: 6px;
-  padding: 12px;
+  gap: var(--space-2);
+  padding: var(--space-3);
   border-radius: var(--corner-inner);
   background: var(--sh-soft);
 }
@@ -518,7 +545,9 @@
 .ex-feedback,
 .ex-solution p {
   margin: 0;
-  font-size: 0.92rem;
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
 }
 
 /* Lesson player (INTERIM tokens: swapped for the motion and visual system's once it lands). */
@@ -531,10 +560,11 @@ a.sh-node {
   z-index: 10;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-3);
   max-width: 440px;
   margin-inline: auto;
-  padding: max(8px, env(safe-area-inset-top)) 16px max(12px, env(safe-area-inset-bottom));
+  padding: max(var(--space-2), env(safe-area-inset-top)) var(--page-gutter)
+    max(var(--space-3), env(safe-area-inset-bottom));
   background: var(--sh-bg);
 }
 /* Top bar: close, back, progress, lesson code and count. It never moves between steps. */
@@ -542,7 +572,7 @@ a.sh-node {
   display: grid;
   grid-template-columns: 44px 44px 1fr auto;
   align-items: center;
-  gap: 4px;
+  gap: var(--space-1);
 }
 .ls-top__btn {
   display: grid;
@@ -553,10 +583,11 @@ a.sh-node {
   border-radius: var(--corner-button);
   background: none;
   color: var(--sh-ink);
-  font-size: 1.3rem;
-  font-weight: 600;
+  font-size: var(--type-title2);
+  font-weight: var(--weight-semibold);
   text-decoration: none;
   cursor: pointer;
+  line-height: var(--leading-none);
 }
 .ls-top__btn:disabled {
   color: var(--sh-line);
@@ -567,7 +598,7 @@ a.sh-node {
 }
 .ls-progress {
   height: 6px;
-  margin-inline: 4px 8px;
+  margin-inline: var(--space-1) var(--space-2);
   border-radius: 3px;
   background: var(--sh-soft);
   overflow: hidden;
@@ -580,12 +611,13 @@ a.sh-node {
 }
 .ls-count {
   min-width: 4.5em;
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
-  letter-spacing: 0.02em;
+  letter-spacing: var(--tracking-small);
   text-align: right;
   color: var(--sh-muted);
+  line-height: var(--leading-footnote);
 }
 /*
  * One fixed screen: the stage takes the free height and the math is the largest thing on it; the
@@ -597,7 +629,7 @@ a.sh-node {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3);
 }
 .ls-narr {
   flex: 0 1 auto;
@@ -605,7 +637,7 @@ a.sh-node {
   overflow-y: auto;
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: var(--space-2);
   overscroll-behavior: contain;
 }
 /*
@@ -614,32 +646,34 @@ a.sh-node {
  */
 .ls-main[data-stage="false"] .ls-narr {
   flex: 1;
-  gap: 12px;
+  gap: var(--space-3);
   align-content: safe center;
-  padding: 24px 20px;
+  padding: var(--space-6) var(--space-5);
   border-radius: var(--corner-stage);
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
 }
 .ls-eyebrow {
   margin: 0;
-  font-size: 0.8rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-eyebrow);
   text-transform: uppercase;
   color: var(--sh-muted);
+  line-height: var(--leading-caption);
 }
 .ls-title {
   margin: 0;
-  font-size: 1.41rem;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  font-size: var(--type-title1);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-title1);
+  letter-spacing: var(--tracking-title1);
 }
 .ls-body {
   margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: var(--type-body);
+  line-height: var(--leading-read);
+  letter-spacing: var(--tracking-body);
 }
 .ls-stage {
   --cell: 64px;
@@ -649,8 +683,8 @@ a.sh-node {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 12px;
-  padding: 16px 12px;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-3);
   border-radius: var(--corner-stage);
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
@@ -667,7 +701,7 @@ a.sh-node {
   width: max-content;
   font-family: var(--font-ui);
   font-size: calc(var(--cell) * 0.48);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
@@ -683,7 +717,7 @@ a.sh-node {
   overflow: visible;
 }
 .ls-stage .ex-mat-label {
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   color: var(--sh-muted);
 }
 /* Old stage labels: the matrix name sits small above its brackets, so "A = … B = …" never crowds the row. */
@@ -699,7 +733,7 @@ a.sh-node {
 .ls-stage .ex-mat .ex-cell[data-empty] {
   background: var(--sh-soft);
   color: var(--sh-muted);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .ls-stage .ex-mat {
   gap: 0.1em;
@@ -738,13 +772,13 @@ a.sh-node {
 }
 .ls-op {
   font-size: 1.1em;
-  font-weight: 500;
+  font-weight: var(--weight-medium);
 }
 .ls-result {
   min-width: 1ch;
   font-family: var(--font-ui);
   font-size: 1.2em;
-  font-weight: 700;
+  font-weight: var(--weight-bold);
   font-variant-numeric: tabular-nums;
   white-space: nowrap;
   color: var(--sh-muted);
@@ -764,7 +798,7 @@ a.sh-node {
   padding: 7px 0;
   font-family: var(--font-math);
   font-size: clamp(17px, 6cqw, 24px);
-  font-weight: 500;
+  font-weight: var(--weight-medium);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -784,7 +818,7 @@ a.sh-node {
   flex-wrap: wrap;
   align-items: center;
   column-gap: 0.34em;
-  row-gap: 4px;
+  row-gap: var(--space-1);
   min-height: 34px;
   max-width: 100%;
 }
@@ -808,7 +842,7 @@ a.sh-node {
 }
 .ls-tok[data-role="ok"] {
   color: var(--color-ok-ink);
-  font-weight: 700;
+  font-weight: var(--weight-bold);
 }
 .ls-area {
   width: min(240px, 70vw);
@@ -857,15 +891,15 @@ a.sh-node {
 }
 .tone[data-tone="row"] {
   color: var(--color-row-ink);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .tone[data-tone="col"] {
   color: var(--color-col-ink);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .tone[data-tone="ok"] {
   color: var(--color-ok-ink);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 /*
  * Verdict states never ride one channel: colour, an icon in the key chip and the verdict text each say it.
@@ -895,16 +929,16 @@ a.sh-node {
   height: 13px;
 }
 .ls-feedback {
-  padding: 12px 14px;
+  padding: var(--space-3) var(--card-pad);
   border-radius: var(--corner-button);
   background: var(--control-soft);
-  line-height: 1.5;
+  line-height: var(--leading-read);
 }
 .ls-feedback[data-tone="wrong"] {
   /* A wrong try: a red mark beside the hint on a plain card, never a tinted box with a stripe. */
   display: grid;
   grid-template-columns: 24px 1fr;
-  gap: var(--space-2);
+  gap: var(--gap-related);
   align-items: start;
   background: var(--surface);
   box-shadow: var(--shadow-1), var(--edge-light);
@@ -914,7 +948,8 @@ a.sh-node {
   place-items: center;
   width: 24px;
   height: 24px;
-  margin-top: 1px;
+  /* Centred on the first line of the hint, whatever its line height. */
+  margin-top: calc((var(--leading-read) - var(--space-6)) / 2); /* the mark is 24 */
   border-radius: var(--corner-pill);
   background: var(--bad-fill);
   color: var(--on-bad);
@@ -933,8 +968,8 @@ a.sh-node {
 /* The verdict takes the options' place in the dock; the question stays on screen above it. */
 .ls-verdict {
   display: grid;
-  gap: 10px;
-  padding: 14px 14px 16px;
+  gap: var(--space-3);
+  padding: var(--card-pad);
   border-radius: var(--corner-card, 20px);
   background: var(--sh-surface);
   box-shadow: var(--shadow-1);
@@ -946,11 +981,12 @@ a.sh-node {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 4px 8px;
+  gap: var(--space-1) var(--space-2);
   margin: 0;
-  font-size: 1.2rem;
-  font-weight: 700;
-  line-height: 1.25;
+  font-size: var(--type-title2);
+  font-weight: var(--weight-bold);
+  line-height: var(--leading-title2);
+  letter-spacing: var(--tracking-title);
 }
 .ls-verdict[data-tone="ok"] .ls-verdict__title {
   color: var(--color-ok-ink);
@@ -972,15 +1008,17 @@ a.sh-node {
 }
 .ls-verdict__given {
   flex-basis: 100%;
-  font-size: 0.94rem;
-  font-weight: 500;
+  font-size: var(--type-subhead);
+  font-weight: var(--weight-medium);
   color: var(--sh-muted);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
 }
 /* Not struck through: a struck 0 reads as theta. The verdict colour says it was wrong. */
 .ls-verdict__given s {
   text-decoration: none;
   color: var(--bad-ink);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .ls-verdict__answer {
   min-height: 48px;
@@ -1000,24 +1038,24 @@ a.sh-node {
 }
 .ls-verdict__solution {
   margin: 0;
-  line-height: 1.5;
+  line-height: var(--leading-read);
   max-height: 9.2em;
   overflow-y: auto;
 }
 .ls-points {
   display: grid;
-  gap: 10px;
+  gap: var(--space-2);
   margin: 0;
-  padding: 14px 16px;
+  padding: var(--space-3) var(--card-pad);
   border-radius: var(--corner-card, 20px);
   background: var(--sh-surface);
   box-shadow: var(--shadow-1);
   list-style: none;
-  line-height: 1.5;
+  line-height: var(--leading-read);
 }
 .ls-points li {
   position: relative;
-  padding-left: 22px;
+  padding-left: var(--space-6);
 }
 /* A small filled cell, the app's mastery glyph, marks each point. */
 .ls-points li::before {
@@ -1032,25 +1070,27 @@ a.sh-node {
 }
 .ls-score {
   margin: 0;
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
 }
 .ls-dock {
   flex: none;
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ls-opts .ex-opt {
   min-height: 52px;
-  font-size: 1.06rem;
-  font-weight: 500;
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
 }
 /* Options never push the question off screen: long lists scroll inside the dock. */
 .ls-opts {
   max-height: 50dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  padding: 2px;
-  margin: -2px;
+  padding: var(--space-0-5);
+  margin: calc(-1 * var(--space-0-5));
 }
 /* Matrix or system options sit two to a row, the math centred in its card. */
 .ls-opts[data-wide="true"],
@@ -1061,7 +1101,7 @@ a.sh-node {
 .ex-opts[data-wide="true"] .ex-opt {
   position: relative;
   justify-content: center;
-  padding: 10px 8px 10px 34px;
+  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-10);
 }
 .ls-opts[data-wide="true"] .ex-opt__key,
 .ex-opts[data-wide="true"] .ex-opt__key {
@@ -1071,7 +1111,10 @@ a.sh-node {
   width: 22px;
   height: 22px;
   border-radius: var(--corner-chip);
-  font-size: 0.78rem;
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  font-weight: var(--weight-semibold);
 }
 .ls-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd),
 .ex-opts[data-wide="true"] .ex-opt:last-child:nth-child(odd) {
@@ -1079,24 +1122,25 @@ a.sh-node {
 }
 .ls-keypad-wrap {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ls-answer {
   display: block;
   min-height: 52px;
-  padding: 12px 16px;
+  padding: var(--space-3) var(--card-pad);
   border-radius: var(--corner-button);
   background: var(--sh-surface);
   box-shadow: inset 0 0 0 1.5px var(--sh-line);
   font-family: var(--font-ui);
-  font-size: 1.3rem;
+  font-size: var(--type-title1);
   font-variant-numeric: tabular-nums;
   text-align: center;
+  line-height: var(--leading-title1);
 }
 .ls-keypad {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 6px;
+  gap: var(--space-2);
 }
 .ls-key {
   min-height: 48px;
@@ -1107,8 +1151,9 @@ a.sh-node {
   box-shadow: 0 1px 2px var(--sh-shadow);
   color: var(--sh-ink);
   font-family: var(--font-ui);
-  font-size: 1.2rem;
+  font-size: var(--type-title2);
   cursor: pointer;
+  line-height: var(--leading-none);
 }
 .ls-key[data-fn="true"] {
   background: var(--surface);
@@ -1117,8 +1162,10 @@ a.sh-node {
   grid-column: span 3;
   background: var(--sh-action);
   color: var(--sh-on-action);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: var(--type-title3);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .ls-key:disabled {
   opacity: 0.45;
@@ -1140,7 +1187,7 @@ a.sh-node {
   padding: var(--space-3) var(--card-pad);
   color: inherit;
   text-decoration: none;
-  line-height: 1.45;
+  line-height: var(--leading-body);
 }
 .sh-mistake b {
   display: block;
@@ -1150,6 +1197,7 @@ a.sh-node {
   font-size: var(--type-footnote);
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
+  line-height: var(--leading-footnote);
 }
 /* App frame: tab panes and full-screen routes. */
 .sh-pane {
@@ -1229,9 +1277,9 @@ a.dz-button[data-kind="primary"] {
 
 .sh-segments {
   display: inline-flex;
-  gap: 2px;
+  gap: var(--space-0-5);
   margin: 0;
-  padding: 2px;
+  padding: var(--space-0-5);
   border: 0;
   border-radius: var(--corner-pill);
   background: var(--surface-sunk);
@@ -1242,6 +1290,7 @@ a.dz-button[data-kind="primary"] {
   border-radius: var(--corner-pill);
   font-size: var(--type-subhead);
   color: var(--ink-2);
+  line-height: var(--leading-subhead);
 }
 .sh-segment[aria-pressed="true"] {
   background: var(--control-selected);
@@ -1291,7 +1340,7 @@ a.dz-button[data-kind="primary"] {
   border-radius: var(--corner-chip);
   box-shadow: var(--shadow-2);
   font-family: var(--font-math);
-  font-weight: 600;
+  font-weight: var(--weight-semibold);
   font-variant-numeric: tabular-nums;
   line-height: 1;
   transform-origin: 50% 50%;
@@ -1359,15 +1408,9 @@ a.dz-button[data-kind="primary"] {
   color: var(--sh-ink);
 }
 
-/* Text-only steps (see .ls-main[data-stage="false"] .ls-narr): larger reading type, points without a nested card. */
-.ls-main[data-stage="false"] .ls-title {
-  font-size: 1.6rem;
-}
-.ls-main[data-stage="false"] .ls-body {
-  font-size: 1.06rem;
-}
+/* Text-only steps (see .ls-main[data-stage="false"] .ls-narr): the same type roles as every step, points without a nested card. */
 .ls-main[data-stage="false"] .ls-points {
-  padding: 4px 0;
+  padding: var(--space-1) 0;
   background: none;
   box-shadow: none;
 }
@@ -1381,7 +1424,7 @@ a.dz-button[data-kind="primary"] {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: var(--space-3);
 }
 .ls-end__stage {
   flex: 1 1 0;
@@ -1390,8 +1433,8 @@ a.dz-button[data-kind="primary"] {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 18px;
-  padding: 20px 16px;
+  gap: var(--space-4);
+  padding: var(--space-5) var(--space-4);
   border-radius: var(--corner-stage);
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
@@ -1428,20 +1471,22 @@ a.dz-button[data-kind="primary"] {
 .ls-seal {
   display: grid;
   justify-items: center;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ls-seal__name {
-  font-size: 0.94rem;
-  font-weight: 600;
+  font-size: var(--type-subhead);
+  font-weight: var(--weight-semibold);
   color: var(--sh-muted);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
 }
 .ls-seal__grid {
   --seal-cell: clamp(44px, 15vw, 68px);
   position: relative;
   display: grid;
   grid-template-columns: repeat(var(--cols), var(--seal-cell));
-  gap: 8px;
-  padding: 8px 14px;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
 }
 .ls-seal__br {
   position: absolute;
@@ -1467,8 +1512,9 @@ a.dz-button[data-kind="primary"] {
   border-radius: var(--corner-inner);
   background: var(--sh-soft);
   color: var(--sh-muted);
-  font-size: 1.2rem;
-  font-weight: 600;
+  font-size: var(--type-title2);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-none);
 }
 .ls-seal__cell svg {
   width: 45%;
@@ -1487,7 +1533,7 @@ a.dz-button[data-kind="primary"] {
 }
 .ls-end__narr {
   display: grid;
-  gap: 8px;
+  gap: var(--space-2);
 }
 .ls-end__dock .sh-btn {
   white-space: nowrap;
@@ -1500,18 +1546,20 @@ a.dz-button[data-kind="primary"] {
   text-decoration: none;
 }
 .ls-end__dock .sh-btn {
-  padding-inline: 18px;
+  padding-inline: var(--space-5);
 }
 /* The next lesson's button names it on two lines: the code as a kicker, the title in full where it fits. */
 .ls-end__next {
   display: grid;
-  gap: 1px;
-  padding-block: 8px;
+  gap: 0;
+  padding-block: var(--space-2);
 }
 .ls-end__next-kicker {
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-size: var(--type-caption);
+  font-weight: var(--weight-semibold);
   opacity: 0.75;
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
 }
 .ls-end__next-title {
   overflow: hidden;
@@ -1542,7 +1590,7 @@ a.dz-button[data-kind="primary"] {
   grid-auto-rows: minmax(128px, auto);
 }
 .ls-run[data-options-stage] .ls-opts .ex-mat {
-  font-size: var(--type-title2);
+  font-size: 1.2em;
 }
 
 /*
@@ -1581,7 +1629,7 @@ a.dz-button[data-kind="primary"] {
 .ls-top__btn {
   width: 40px;
   height: 40px;
-  margin: 2px;
+  justify-self: center;
   border-radius: var(--corner-pill);
   background: var(--control-soft);
 }

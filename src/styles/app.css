@@ -35,10 +35,10 @@
   --spacing: 4px;
   --radius-full: var(--corner-pill);
   --radius-card: var(--corner-card);
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
-  --font-weight-semibold: 600;
-  --font-weight-bold: 700;
+  --font-weight-regular: var(--weight-regular);
+  --font-weight-medium: var(--weight-medium);
+  --font-weight-semibold: var(--weight-semibold);
+  --font-weight-bold: var(--weight-bold);
 }
 
 html {
@@ -69,11 +69,17 @@ html {
   font-feature-settings: var(--font-features);
   font-optical-sizing: auto;
   font-size: var(--type-body);
+  font-weight: var(--weight-regular);
   letter-spacing: var(--tracking-body);
-  line-height: var(--leading-body);
+  line-height: var(--leading-base);
   color: var(--ink-1);
   background: var(--bg);
   -webkit-font-smoothing: antialiased;
+}
+
+/* Bold inside text follows the theme's bold (UA "bolder" would ignore the dark lift). Zero specificity: any class wins. */
+:where(.dz) :where(b, strong) {
+  font-weight: var(--weight-bold);
 }
 
 /*
