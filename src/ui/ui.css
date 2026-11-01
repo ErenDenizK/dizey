@@ -166,6 +166,12 @@
   top: calc(env(safe-area-inset-top) + var(--space-2));
   left: var(--space-2);
 }
+.dz-float-action {
+  position: absolute;
+  z-index: 6;
+  top: calc(env(safe-area-inset-top) + var(--space-2));
+  right: var(--space-2);
+}
 .dz-icon-button--float {
   background: var(--surface);
   box-shadow: var(--shadow-1), var(--edge-light);

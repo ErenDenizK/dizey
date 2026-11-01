@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as LabRouteImport } from './routes/lab'
 import { Route as MapRouteImport } from './routes/map'
 import { Route as MeRouteImport } from './routes/me'
+import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as ExamIndexRouteImport } from './routes/exam.index'
 import { Route as ExamResultRouteImport } from './routes/exam.result'
 import { Route as ExamRunRouteImport } from './routes/exam.run'
@@ -38,6 +39,11 @@ const MapRoute = MapRouteImport.update({
 const MeRoute = MeRouteImport.update({
   id: '/me',
   path: '/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SettingsRoute = SettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ExamIndexRoute = ExamIndexRouteImport.update({
@@ -76,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/lab': typeof LabRoute
   '/map': typeof MapRoute
   '/me': typeof MeRoute
+  '/settings': typeof SettingsRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
   '/lab/character': typeof LabCharacterRoute
@@ -88,6 +95,7 @@ export interface FileRoutesByTo {
   '/lab': typeof LabRoute
   '/map': typeof MapRoute
   '/me': typeof MeRoute
+  '/settings': typeof SettingsRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
   '/lab/character': typeof LabCharacterRoute
@@ -101,6 +109,7 @@ export interface FileRoutesById {
   '/lab': typeof LabRoute
   '/map': typeof MapRoute
   '/me': typeof MeRoute
+  '/settings': typeof SettingsRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
   '/lab_/character': typeof LabCharacterRoute
@@ -115,6 +124,7 @@ export interface FileRouteTypes {
     | '/lab'
     | '/map'
     | '/me'
+    | '/settings'
     | '/exam/result'
     | '/exam/run'
     | '/lab/character'
@@ -127,6 +137,7 @@ export interface FileRouteTypes {
     | '/lab'
     | '/map'
     | '/me'
+    | '/settings'
     | '/exam/result'
     | '/exam/run'
     | '/lab/character'
@@ -139,6 +150,7 @@ export interface FileRouteTypes {
     | '/lab'
     | '/map'
     | '/me'
+    | '/settings'
     | '/exam/result'
     | '/exam/run'
     | '/lab_/character'
@@ -152,6 +164,7 @@ export interface RootRouteChildren {
   LabRoute: typeof LabRoute
   MapRoute: typeof MapRoute
   MeRoute: typeof MeRoute
+  SettingsRoute: typeof SettingsRoute
   ExamResultRoute: typeof ExamResultRoute
   ExamRunRoute: typeof ExamRunRoute
   LabCharacterRoute: typeof LabCharacterRoute
@@ -188,6 +201,13 @@ declare module '@tanstack/react-router' {
       path: '/me'
       fullPath: '/me'
       preLoaderRoute: typeof MeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/settings': {
+      id: '/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof SettingsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/exam/': {
@@ -240,6 +260,7 @@ const rootRouteChildren: RootRouteChildren = {
   LabRoute: LabRoute,
   MapRoute: MapRoute,
   MeRoute: MeRoute,
+  SettingsRoute: SettingsRoute,
   ExamResultRoute: ExamResultRoute,
   ExamRunRoute: ExamRunRoute,
   LabCharacterRoute: LabCharacterRoute,

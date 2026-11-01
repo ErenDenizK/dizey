@@ -17,12 +17,15 @@ export function Screen({
   backLabel,
   children,
   pushed = false,
+  action,
 }: {
   title: string
   back?: () => void
   backLabel?: string
   children: ReactNode
   pushed?: boolean
+  /** A control floating at the top right, like the back button at the top left. */
+  action?: ReactNode
 }) {
   return (
     <div className="dz-screen-frame" style={{ position: 'absolute', inset: 0 }}>
@@ -40,6 +43,7 @@ export function Screen({
           </Pressable>
         </div>
       ) : null}
+      {action ? <div className="dz-float-action">{action}</div> : null}
     </div>
   )
 }

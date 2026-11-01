@@ -109,3 +109,18 @@ export function ClockIcon() {
     </svg>
   )
 }
+
+/** Ayarlar: a gear, eight teeth around a round hub. */
+export function GearIcon() {
+  return (
+    <svg viewBox="0 0 26 26" width="26" height="26" aria-hidden="true">
+      <circle cx="13" cy="13" r="3.4" {...stroke} />
+      <path
+        d="M13 3.5v2.6M13 19.9v2.6M3.5 13h2.6M19.9 13h2.6M6.3 6.3l1.9 1.9M17.8 17.8l1.9 1.9M6.3 19.7l1.9-1.9M17.8 8.2l1.9-1.9"
+        {...stroke}
+        strokeWidth={2.2}
+      />
+      <circle cx="13" cy="13" r="6.6" {...stroke} />
+    </svg>
+  )
+}

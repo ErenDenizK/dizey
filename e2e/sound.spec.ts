@@ -41,7 +41,7 @@ test('sounds play by default and the Me switch turns them off', async ({ page })
   await walkLesson(page)
   await expect.poll(() => oscillators(page)).toBeGreaterThan(0)
 
-  await page.goto('./me')
+  await page.goto('./settings')
   const toggle = page.getByRole('switch', { name: 'Sesler' })
   await expect(toggle).toBeChecked()
   await toggle.click()
@@ -60,7 +60,7 @@ test('no sound is made while lesson sounds are off', async ({ page }) => {
 })
 
 test('turning lesson sounds on plays a preview', async ({ page }) => {
-  await openApp(page, './me', { sound: false })
+  await openApp(page, './settings', { sound: false })
   const toggle = page.getByRole('switch', { name: 'Sesler' })
   await toggle.click()
   await expect(toggle).toBeChecked()
@@ -75,6 +75,7 @@ test('the interface sounds: a tab switch and a switch both play', async ({ page 
   await page.locator('.dz-tab').last().click()
   await expect.poll(() => oscillators(page)).toBeGreaterThan(before)
   const afterTab = await oscillators(page)
+  await page.getByTestId('open-settings').click()
   await page.getByRole('switch', { name: 'Titreşim' }).click()
   await expect.poll(() => oscillators(page)).toBeGreaterThan(afterTab)
 })
@@ -119,6 +120,7 @@ test('background music plays after the first tap and stops when turned off', asy
   // A new section has been written without any tap.
   expect(await oscillators(page)).toBeGreaterThan(playing)
 
+  await page.getByTestId('open-settings').click()
   await page.getByRole('switch', { name: 'Arka plan müziği' }).click()
   await page.waitForTimeout(1000)
   const stopped = await oscillators(page)
