@@ -30,4 +30,4 @@ A question Eren did not answer stays open on the board and is asked again at the
 
 ## Ownership
 
-Only the system thread edits the ledger and the board. Other threads send it their items (message the thread or the coordinator); they do not edit those docs, to avoid write conflicts.
+Only the ledger owner (the thread named in project memory `dizey-operating-system`) edits the ledger and the board; when the owner thread ends, ownership passes to the next thread the coordinator names, so the ledger never stops. The ledger stopped at P11 on 10-31 because its owner thread had finished; 22 prompts were backfilled on 11-01. Other threads send it their items (message the thread or the coordinator); they do not edit those docs, to avoid write conflicts.
