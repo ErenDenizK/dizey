@@ -1,5 +1,6 @@
+import { type MusicCue, planLesson, type StepKind } from './form'
 import { PROGRESSION, seeded } from './harmony'
-import { composeSection, idleChord, SECTION } from './music'
+import { composeSection, freshState, idleCue, SECTION } from './music'
 import { EVENTS, type SoundEvent } from './score'
 import { createSynth, PALETTES, type PaletteId } from './synth'
 
@@ -153,21 +154,62 @@ export async function calibrate() {
   return table
 }
 
+function loudnessOf(buffer: AudioBuffer) {
+  const channels = [buffer.getChannelData(0), buffer.getChannelData(1)]
+  let peak = 0
+  for (const d of channels) for (const x of d) peak = Math.max(peak, Math.abs(x))
+  return { loudness: round(momentary(channels, false)), peakDb: round(20 * Math.log10(peak)) }
+}
+
 /** Background music: loudness of eight sections (the whole idle walk) at the normal level, per palette. */
 export async function measureMusic(palette: PaletteId = 'rhodes', masterDb = 0) {
   const sections = 8
   const ctx = new OfflineAudioContext(2, Math.ceil(RATE * (SECTION * sections + 4)), RATE)
   const synth = createSynth(ctx, { random: seeded(7), palette, masterDb })
   const random = seeded(11)
-  let last: number | undefined
+  let state = freshState(0)
   for (let n = 0; n < sections; n++) {
-    const written = composeSection(idleChord(n), 0.05 + n * SECTION, random, last)
-    last = written.last
+    const written = composeSection(idleCue(n), 0.05 + n * SECTION, random, state, n === 0)
+    state = written.state
     synth.playMusic(written.notes)
   }
-  const buffer = await ctx.startRendering()
-  const channels = [buffer.getChannelData(0), buffer.getChannelData(1)]
-  let peak = 0
-  for (const d of channels) for (const x of d) peak = Math.max(peak, Math.abs(x))
-  return { palette, loudness: round(momentary(channels, false)), peakDb: round(20 * Math.log10(peak)) }
+  return { palette, ...loudnessOf(await ctx.startRendering()) }
+}
+
+/** A planned lesson of `steps` steps: explanations with a question every fourth, so the plan has acts. */
+export function sampleKinds(steps = 12): StepKind[] {
+  return Array.from({ length: steps }, (_, i) => (i % 4 === 3 ? 'choice' : 'explain'))
+}
+
+/** Renders a whole planned lesson (2 sections per step) and returns the stereo buffer. */
+export async function renderLesson(
+  plan: readonly MusicCue[],
+  options: { palette?: PaletteId; masterDb?: number; lessonEnd?: boolean; seed?: number } = {},
+) {
+  const { palette = 'rhodes', masterDb = 0, lessonEnd = false, seed = 0 } = options
+  const sections = plan.length * 2
+  const length = SECTION * sections + (lessonEnd ? 12 : 4)
+  const ctx = new OfflineAudioContext(2, Math.ceil(RATE * length), RATE)
+  const synth = createSynth(ctx, { random: seeded(7), palette, masterDb })
+  const random = seeded(11)
+  let state = freshState(seed)
+  let at = 0.05
+  plan.forEach((cue) => {
+    state = { ...state, bar: 0 }
+    for (let k = 0; k < 2; k++) {
+      const written = composeSection(cue, at, random, state, k === 0)
+      state = written.state
+      synth.playMusic(written.notes)
+      at += SECTION
+    }
+  })
+  if (lessonEnd) synth.play('lessonEnd', { chord: plan.at(-1)?.chord ?? 'IV' }, at - 0.8)
+  return ctx.startRendering()
+}
+
+/** Loudness of a whole planned lesson at its loudest (the peak energy), per palette. */
+export async function measureLessonMusic(palette: PaletteId = 'rhodes', masterDb = 0, steps = 12) {
+  const plan = planLesson(sampleKinds(steps), 1234)
+  const buffer = await renderLesson(plan, { palette, masterDb })
+  return { palette, peakEnergy: Math.max(...plan.map((c) => c.energy)), ...loudnessOf(buffer) }
 }

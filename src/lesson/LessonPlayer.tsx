@@ -8,6 +8,7 @@ import { engine } from '../engine/driver'
 import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
+import { hashOf, planLesson } from '../sound/form'
 import { haptic } from '../sound/haptics'
 import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
@@ -91,8 +92,17 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const setShown = (value: number) => setPlay({ key: beatKey, shown: value })
   const playing = shown < frames.length
   // Sounds follow the lesson's chord walk, so they are built from the step on screen.
+  const plan = useMemo(
+    () =>
+      planLesson(
+        lesson.steps.map((s) => s.kind),
+        hashOf(lesson.id),
+      ),
+    [lesson],
+  )
   const cue = (event: SoundEvent, cell?: number) =>
     playSound(event, {
+      chord: plan[index]?.chord ?? 'I',
       step: index,
       steps: lesson.steps.length,
       ...(cell === undefined ? {} : { index: cell }),
@@ -104,7 +114,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const sounded = useRef<number | null>(null)
   // biome-ignore lint/correctness/useExhaustiveDependencies: one cue per step change
   useEffect(() => {
-    setSoundContext({ step: index, steps: lesson.steps.length })
+    setSoundContext({
+      step: index,
+      steps: lesson.steps.length,
+      chord: plan[index]?.chord ?? 'I',
+      ...(plan[index] ? { music: plan[index] } : {}),
+    })
     if (sounded.current === null) playSound('lessonOpen')
     else if (sounded.current !== index) cue('step')
     sounded.current = index

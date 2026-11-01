@@ -360,12 +360,7 @@ export function createScore(random: () => number) {
 
     for (const raw of spec.parts) {
       const part = { ...DEFAULT_PART, ...raw }
-      const id =
-        part.chord !== 'step'
-          ? part.chord
-          : context.steps
-            ? chordAt(context.step, context.steps)
-            : (context.chord ?? chordAt(context.step, context.steps))
+      const id = part.chord !== 'step' ? part.chord : (context.chord ?? chordAt(context.step, context.steps))
       const chord = CHORDS[id]
       const voicing: number[] = previous ? nearest(chord.voicing, previous) : [...chord.voicing]
       const voiceKind: NoteKind = part.voice === 'glass' ? 'shine' : 'main'
