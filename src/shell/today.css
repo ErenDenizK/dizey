@@ -133,6 +133,9 @@
   display: grid;
   gap: var(--gap-item);
   margin-top: var(--space-4);
+  /* The scene takes the free height above the work and sits centred in it, so the space reads as a stage, not a hole. */
+  flex: 1 0 auto;
+  align-content: center;
 }
 .td-top .td-head {
   margin-top: 0;
