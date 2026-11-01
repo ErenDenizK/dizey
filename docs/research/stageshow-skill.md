@@ -70,3 +70,21 @@ first, unchanged digits still".
   "What replaces something arrives as it leaves").
 - Text that changes inside one control (button labels between states): one slot, footprint decided first.
 - Run Stageshow's whole-screen detectors over tabs, sheets and pushes once approved.
+
+## Second pass: feedback UI (Eren, 2026-11-01 13:20Z)
+
+Scope: buttons, keys, page transitions, progress bars. Filming and frame reading ran on smaller models
+(script + Sonnet for capture, Haiku for before/after reading); Opus judged only the flagged frames.
+
+| Surface | Before (frames) | Rule | Fix |
+| --- | --- | --- | --- |
+| Button press | Scale starts on the first frame after pointer down | clean | none |
+| Tab switch | New page faded in over the fully opaque old one: two titles and two card sets overprinted for about 10 frames | Solid things do not fade through; page swap recipe | Old pane leaves on `leave` while the new one rises 12 px and fades in, same frame (`Shell.tsx`) |
+| Lesson opening from the sheet | Lesson page faded in over Dersler, the sheet and the tab bar for about 12 frames | Same | Shell panes, sheet host and tab bar fade out on `leave` under the rising route, and back on close |
+| Keypad answer | Placeholder replaced by the digit in one frame; every digit swapped in one frame | Every change moves; nothing pops | Typed digit rises in on `ui`; placeholder fades (`Keypad.tsx`) |
+| Check key, back button | Disabled to enabled look in one frame | Nothing pops | `useEase` drives `--on` 0..1 on `fade` (`src/lesson/ease.ts`) |
+| Progress bar | Fill glides | clean | none |
+
+After: tab switch and lesson opening keep a short crossfade of 2 to 3 frames (inherent to a crossfade,
+which is the recipe) instead of 10 to 12 double-exposed frames. Still open: tapping "Derse gir" updates the
+sheet's status line and button label in the same frame the lesson starts opening (state written at tap).

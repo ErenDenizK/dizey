@@ -36,8 +36,8 @@ function tabOf(pathname: string): TabPath | null {
 
 /**
  * The app frame: three tab panes kept mounted (so each keeps its scroll position), the floating tab
- * bar, and full-screen routes (a lesson, a rehearsal) on top. Tabs are peers: the incoming pane fades
- * in over the outgoing one, which hides only when the fade lands, so no frame is ever empty
+ * bar, and full-screen routes (a lesson, a rehearsal) on top. Tabs are peers: the outgoing pane leaves
+ * quickly while the incoming one rises in, and the old one hides when its exit lands
  * (docs/design/motion-system.md).
  */
 export function Shell() {
@@ -64,19 +64,27 @@ export function Shell() {
       pane.style.zIndex = active ? '1' : ''
       pane.toggleAttribute('inert', !active)
       if (active) {
+        // A pane that was hidden enters from nothing; one still on its way out simply turns back.
+        const hidden = pane.style.visibility === 'hidden'
         pane.style.visibility = ''
         if (previous === null || previous === id) continue
-        engine.set(pane, { opacity: 0 })
+        if (hidden) engine.set(pane, { opacity: 0, y: CHOREO.rise })
+        engine.withChannel('chrome', () => {
+          engine.to(pane, { opacity: 1 }, 'enter')
+          engine.to(pane, { y: 0 }, 'move')
+        })
+      } else if (previous === null || pane.style.visibility === 'hidden') {
+        pane.style.visibility = 'hidden'
+      } else {
+        // Leaving in the same frame the newcomer arrives: never two pages at full strength.
         engine.withChannel('chrome', () =>
-          engine.to(pane, { opacity: 1 }, 'fade', {
+          engine.to(pane, { opacity: 0 }, 'leave', {
+            effect: true,
             onArrive: () => {
-              const old = panes.current[previous]
-              if (old && shown.current !== previous) old.style.visibility = 'hidden'
+              if (shown.current !== id) pane.style.visibility = 'hidden'
             },
           }),
         )
-      } else if (id !== previous) {
-        pane.style.visibility = 'hidden'
       }
     }
   }, [tab])
@@ -97,10 +105,19 @@ export function Shell() {
       engine.withChannel('chrome', () => {
         engine.to(el, { opacity: 1 }, 'fade')
         engine.to(el, { y: 0 }, 'page', { launch: CHOREO.launch })
+        // The shell (an open sheet and the tab bar too) goes out as the route comes in, never two
+        // screens at once.
+        for (const under of shellLayers(frame.current))
+          if (under) engine.to(under, { opacity: 0 }, 'leave', { effect: true })
       })
     }
     // The route's DOM outlives its unmount as a ghost that plays the exit.
     return () => {
+      // The shell comes back under the leaving route (a no-op when it never went out).
+      engine.withChannel('chrome', () => {
+        for (const under of shellLayers(frame.current))
+          if (under) engine.to(under, { opacity: 1 }, 'fade', { effect: true })
+      })
       const host = frame.current
       // React has already detached the route when it really unmounts. A route still attached is a
       // development StrictMode re-run: moving it would leave React a node it can no longer remove.
@@ -148,6 +165,11 @@ export function Shell() {
       <Onboarding />
     </div>
   )
+}
+
+/** What a full-screen route covers: the tab panes, the sheet host and the tab bar (which only slides). */
+function shellLayers(host: HTMLElement | null) {
+  return [stageRef.current, overlayHostRef.current, host?.querySelector<HTMLElement>('.dz-tabbar') ?? null]
 }
 
 /** Ends the exit still playing, if any (a route can open again before it lands). */
