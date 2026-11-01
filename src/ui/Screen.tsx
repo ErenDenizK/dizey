@@ -97,19 +97,28 @@ export function Screen({
         </h1>
         {children}
       </div>
-      <div ref={edge} className="dz-edge-top" data-floating={floating ? '' : undefined} aria-hidden="true" />
-      {back ? (
-        <div ref={backBox} className="dz-float-back">
-          <Pressable className="dz-icon-button dz-icon-button--float" onClick={back} aria-label={backLabel}>
-            <ChevronLeft />
-          </Pressable>
-        </div>
-      ) : null}
-      {action ? (
-        <div ref={actionBox} className="dz-float-action">
-          {action}
-        </div>
-      ) : null}
+      {/* One layer for the chrome: a route's arrival animates the frame's children, and the fade and the
+          floating controls keep their own scroll-driven opacity inside it. */}
+      <div className="dz-screen-chrome">
+        <div
+          ref={edge}
+          className="dz-edge-top"
+          data-floating={floating ? '' : undefined}
+          aria-hidden="true"
+        />
+        {back ? (
+          <div ref={backBox} className="dz-float-back">
+            <Pressable className="dz-icon-button dz-icon-button--float" onClick={back} aria-label={backLabel}>
+              <ChevronLeft />
+            </Pressable>
+          </div>
+        ) : null}
+        {action ? (
+          <div ref={actionBox} className="dz-float-action">
+            {action}
+          </div>
+        ) : null}
+      </div>
     </div>
   )
 }

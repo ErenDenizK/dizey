@@ -151,6 +151,17 @@
 
 /* ---- Top edge (no bar: the tab bar names the page) ------------------------- */
 /* Content dissolves under the status bar instead of meeting a hard band. Same recipe as the bottom edge. */
+/* Holds the top fade and the floating controls above the scroller; only the controls take touches. */
+.dz-screen-chrome {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+}
+.dz-screen-chrome > .dz-float-back,
+.dz-screen-chrome > .dz-float-action {
+  pointer-events: auto;
+}
 .dz-edge-top {
   position: absolute;
   inset: 0 0 auto 0;
