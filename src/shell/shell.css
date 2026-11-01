@@ -1103,7 +1103,19 @@ a.sh-node {
 .ex-opts[data-wide="true"] .ex-opt {
   position: relative;
   justify-content: center;
-  padding: var(--space-3) var(--space-2) var(--space-3) var(--space-10);
+  padding: var(--space-3) var(--space-1) var(--space-3) var(--space-8);
+}
+/*
+ * A matrix option scales down with its column on narrow phones instead of spilling past it: a 3x3 is about
+ * 6.3em wide and a column's room for it is about 36% of the list's width, so the em is capped at 5cqi.
+ */
+.ls-opts[data-wide="true"],
+.ex-opts[data-wide="true"] {
+  container-type: inline-size;
+}
+.ls-opts[data-wide="true"] .ex-mat,
+.ex-opts[data-wide="true"] .ex-mat {
+  font-size: min(1.1em, 5cqi);
 }
 .ls-opts[data-wide="true"] .ex-opt__key,
 .ex-opts[data-wide="true"] .ex-opt__key {
@@ -1592,31 +1604,31 @@ a.dz-button[data-kind="primary"] {
   grid-auto-rows: minmax(128px, auto);
 }
 .ls-run[data-options-stage] .ls-opts .ex-mat {
-  font-size: 1.2em;
+  font-size: min(1.2em, 5.6cqi);
 }
 
 /*
  * A choice question with a picture: the stage and the options share the free height. The stage starts from
- * its scene (the cell is still fitted to the full free height, see Stage.tsx) and the options from their
- * rows; each takes half of what is left, so the card never has a dead band and the options grow to a
- * comfortable, full row instead of sitting cramped under it.
+ * its scene (the cell is still fitted to the full free height, see Stage.tsx) and never shrinks below it; the
+ * options start from their natural rows. Of the height left over the stage takes two parts and the options
+ * one, stretched evenly over their rows, so the card has no dead band and the options read full, not cramped.
  */
 .ls-run[data-hug] .ls-main {
-  flex: 1 1 auto;
+  flex: 2 1 auto;
 }
 .ls-run[data-hug] .ls-stage {
-  flex: 1 1 auto;
+  flex: 1 0 auto;
   min-height: 0;
+}
+.ls-run[data-hug] .ls-narr {
+  flex-shrink: 0;
 }
 .ls-run[data-hug] .ls-dock {
   flex: 1 1 auto;
-  min-height: 0;
   grid-template-rows: 1fr auto;
 }
 .ls-run[data-hug] .ls-opts {
-  max-height: none;
-  align-content: end;
-  grid-auto-rows: minmax(52px, 84px);
+  align-content: stretch;
 }
 
 /*
