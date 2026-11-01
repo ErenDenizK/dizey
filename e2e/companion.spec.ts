@@ -18,6 +18,21 @@ async function duoBox(page: Page): Promise<Box | null> {
 const meets = (a: Box, b: Box) =>
   a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height
 
+/** Waits until the duo sits on the visible anchor named `name` (the hello and travels have ended there). */
+async function onAnchor(page: Page, name: string) {
+  await expect
+    .poll(
+      async () => {
+        const duo = await duoBox(page)
+        const slot = await page.locator(`.sh-pane:not([inert]) [data-slot="${name}"]`).first().boundingBox()
+        if (!duo || !slot) return Number.POSITIVE_INFINITY
+        return Math.max(Math.abs(duo.x - slot.x), Math.abs(duo.y - slot.y), Math.abs(duo.width - slot.width))
+      },
+      { intervals: [150], timeout: 15_000 },
+    )
+    .toBeLessThan(4)
+}
+
 /** Waits until the duo has stood still for half a second (the crouch before a leap is a pause too). */
 async function settled(page: Page) {
   let last = ''
@@ -46,11 +61,13 @@ test('one duo walks Bugün, Sen, a lesson and its end, and never covers the less
   const only = async () => expect(page.locator('svg.duo')).toHaveCount(1)
 
   await only()
+  await onAnchor(page, 'today')
   await settled(page)
   const home = await duoBox(page)
   expect(home).not.toBeNull()
 
   await bar.getByRole('button', { name: 'Sen' }).click()
+  await onAnchor(page, 'me')
   await settled(page)
   const me = await duoBox(page)
   expect(me).not.toBeNull()
@@ -58,6 +75,7 @@ test('one duo walks Bugün, Sen, a lesson and its end, and never covers the less
   await only()
 
   await bar.getByRole('button', { name: 'Bugün' }).click()
+  await onAnchor(page, 'today')
   await settled(page)
   expect(Math.abs(((await duoBox(page))?.x ?? 0) - (home?.x ?? 0))).toBeLessThan(40)
 
