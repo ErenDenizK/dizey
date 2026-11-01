@@ -8,7 +8,7 @@ This file is loaded in every session. Keep it short; details live in the files i
 
 | What | Where | Language |
 | --- | --- | --- |
-| Every instruction Eren has given, itemised, with history | Claude Doc "Dizey Prompt Defteri" (prompt ledger) | Turkish |
+| Every instruction Eren has given, itemised, with history; read it before working | Claude Doc "Dizey Prompt Defteri" (prompt ledger) | Turkish |
 | Current decisions, plan, open questions | Claude Doc "Dizey Sistem Board" | Turkish |
 | The operating system itself (this process, in full) | Claude Doc "Dizey Çalışma Sistemi" | Turkish |
 | Adopted principles | `docs/principles.md` | English |
@@ -44,7 +44,7 @@ Run `.claude/skills/ledger-capture`: split the message into ledger items, route 
 
 ## Models and cost
 
-- Default model: Opus. Use Sonnet for a task type only after a blind side-by-side on the same small task shows equal quality; record the result as a principle.
+- Model per work type (PR-09): Opus for design, decisions, plans, hard edge cases and the final visual judgment; Sonnet subagents for implementing planned changes and repeating loops; Haiku or Sonnet subagents for reading screenshots, videos and keyframes (code detectors first). Opus never loops on its own review. First move of a task type to a smaller model: compare one small sample with Opus and record it.
 - Before starting subagents, parallel threads, deep research or workflows, tell Eren the rough size and get his OK. Report heavy spend briefly at the end of each plan step (as an estimate; exact token counts are not visible).
 - Briefs for threads and subagents: `.claude/skills/brief-writing`.
 
