@@ -8,6 +8,8 @@
 // Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
 // lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
+// Then check for one-frame pops (PR-16, nothing changes in a single frame):
+//        node scripts/pop-check.mjs <outDir>/frames   (exit 1 and the frames and cells when something steps)
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
 // Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390).
 import { execFileSync } from 'node:child_process'
