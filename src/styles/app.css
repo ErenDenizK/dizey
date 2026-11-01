@@ -221,3 +221,8 @@ html {
   border-radius: 0;
   background: none;
 }
+/* An answer option is read on its own, often a bare fraction: full size, not the in-text 0.8em. */
+.ls-opts .dz-m-frac,
+.ex-opts .dz-m-frac {
+  font-size: 1em;
+}

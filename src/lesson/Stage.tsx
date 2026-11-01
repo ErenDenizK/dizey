@@ -237,6 +237,20 @@ function useStageLayout(
           }
         }
       }
+      // A formula-only beat is shown at display size, one line per formula: the size shrinks to the
+      // widest line instead of a formula breaking in two.
+      box.style.removeProperty('--work-fit')
+      const formulas = !content && work.current?.querySelectorAll<HTMLElement>('.ls-line')
+      if (formulas && formulas.length > 0) {
+        const style = getComputedStyle(box)
+        const room =
+          box.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight)
+        const widest = Math.max(...Array.from(formulas, (line) => line.scrollWidth))
+        if (widest > room) {
+          box.style.setProperty('--work-fit', (Math.floor((room / widest) * 100) / 100).toString())
+          next = box.offsetHeight
+        }
+      }
       // Where everything rests now, in stage coordinates (transforms taken out).
       const origin = box.getBoundingClientRect()
       const now = new Map<string, Rest>()

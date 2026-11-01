@@ -338,6 +338,10 @@
 .ex-frac > span + span {
   border-top: 1.25px solid currentColor;
 }
+/* In an option matrix the fraction is the whole entry the learner compares: near full size. */
+.ls-opts .ex-frac {
+  font-size: 0.95em;
+}
 .ex-cell[data-bar="before"] {
   position: relative;
   margin-left: 10px;
@@ -811,6 +815,11 @@ a.sh-node {
   font-size: 1.4em;
   line-height: 1.5;
 }
+/* A beat that is only formulas (no matrix on the stage) is the stage's whole content: display size. */
+.ls-stage:not(:has(.ex-mat, .dz-m-mat)) .ls-work {
+  row-gap: var(--space-4);
+  font-size: calc(clamp(24px, 9cqw, 36px) * var(--work-fit, 1));
+}
 .ls-work .ls-line:has(.dz-m-mat) {
   justify-content: center;
   justify-self: center;
@@ -823,6 +832,14 @@ a.sh-node {
   row-gap: var(--space-1);
   min-height: 34px;
   max-width: 100%;
+}
+.ls-stage:not(:has(.ex-mat, .dz-m-mat)) .ls-line {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+/* Chromium breaks at <wbr> even under nowrap. */
+.ls-stage:not(:has(.ex-mat, .dz-m-mat)) .ls-line wbr {
+  display: none;
 }
 .ls-group {
   display: inline-flex;
