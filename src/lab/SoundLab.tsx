@@ -16,8 +16,9 @@ import {
 import { listenSounds, playSound, setMusicOn, setMusicSoft, setPalette, setSoundOn } from '../sound/player'
 import { createScore, EVENTS, type Plan, type SoundEvent } from '../sound/score'
 import { PALETTES, type PaletteId } from '../sound/synth'
-import { ChevronLeft, ChevronRight } from '../ui/icons'
+import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
+import { Screen } from '../ui/Screen'
 import { Switch } from '../ui/Switch'
 import '../ui/ui.css'
 import './lab.css'
@@ -414,199 +415,190 @@ export function SoundLab() {
   }
 
   return (
-    <div className="dz dz-app">
-      <div className="sl-page" data-sound="none">
-        <header className="sl-console">
-          <div className="sl-readout">
-            <Pressable
-              className="dz-icon-button sl-back"
-              aria-label={lab.back}
-              onClick={() => void navigate({ to: '/me' })}
-            >
-              <ChevronLeft />
-            </Pressable>
-            <div className="sl-readout__main" aria-live="polite">
-              <span className="sl-readout__name">{chordLabel(readout.chord) || readName}</span>
-              <span className="sl-readout__meta">
-                {readRoman} · {readFn} · {readout.event}
-                {readout.detail ? ` · ${readout.detail}` : ''}
-              </span>
-            </div>
-            <Switch checked={on} onChange={setSoundOn} label={text.console.sound} />
+    <div className="dz dz-app" data-sound="none">
+      <Screen title={text.title} back={() => void navigate({ to: '/me' })} backLabel={lab.back} pushed>
+        <p className="dz-subhead sl-lead">{text.intro}</p>
+        {on ? null : <p className="dz-subhead sl-lead">{text.off}</p>}
+        <div className="dz-list">
+          <div className="dz-row">
+            <span className="dz-row-main">
+              {text.silentTitle}
+              <small className="dz-footnote sh-row-sub">{text.silentBody}</small>
+            </span>
           </div>
-          <Keyboard lit={lit} />
-        </header>
+          <div className="dz-row sl-legend" aria-hidden="true">
+            {(Object.keys(text.console.legend) as Light[]).map((k) => (
+              <span key={k} className="dz-footnote">
+                <i data-on={k} />
+                {text.console.legend[k]}
+              </span>
+            ))}
+          </div>
+        </div>
 
-        <main className="sl-main">
-          <h1 className="dz-large-title sl-title">{text.title}</h1>
-          <p className="dz-subhead sl-lead">{text.intro}</p>
-          {on ? null : <p className="dz-subhead sl-lead">{text.off}</p>}
-          <div className="dz-list">
-            <div className="dz-row">
+        <h2 className="dz-section-label">{text.lesson.eyebrow}</h2>
+        <p className="dz-footnote sl-lead">{text.lesson.lead}</p>
+        <div className="dz-card sl-stage" ref={stage}>
+          <div className="sl-mats">
+            <Matrix name="A" values={A} row={scene.row} />
+            <span className="sl-op">·</span>
+            <Matrix name="B" values={B} col={scene.col} />
+            <span className="sl-op">=</span>
+            <Matrix name="C" values={C} filled={scene.filled} fresh={scene.fresh} done={scene.done} />
+          </div>
+          <div className="sl-opts">
+            {scene.options?.map((o) => (
+              <span key={o.value} className="sl-opt" data-state={o.state}>
+                {o.value}
+              </span>
+            ))}
+          </div>
+          <div className="dz-subhead sl-cap" aria-live="polite">
+            {scene.caption}
+          </div>
+          <div className="sl-progress">
+            <span ref={progress} />
+          </div>
+          <Pressable
+            className="dz-button"
+            data-kind={playing ? 'secondary' : 'primary'}
+            data-wide=""
+            onClick={playing ? stopLesson : startLesson}
+            data-testid="sound-lesson"
+          >
+            {playing ? text.lesson.stop : text.lesson.play}
+          </Pressable>
+        </div>
+
+        <h2 className="dz-section-label">{text.lesson.walk}</h2>
+        <p className="dz-footnote sl-lead">{text.lesson.walkLead}</p>
+        <fieldset className="sl-walk" aria-label={text.lesson.walk}>
+          {PROGRESSION.map((id, i) => (
+            <Pressable
+              key={id}
+              className="sl-chip"
+              aria-pressed={step === i}
+              onClick={() => {
+                setStep(i)
+                playSound('step', { step: i, steps: STEPS })
+              }}
+            >
+              <b>{text.chords[id][1]}</b>
+              <small>{text.chords[id][0]}</small>
+            </Pressable>
+          ))}
+        </fieldset>
+
+        <h2 className="dz-section-label">{text.palette.eyebrow}</h2>
+        <div className="dz-list">
+          <div className="dz-row">
+            <span className="dz-row-main" id="sl-palette">
+              {text.palette.label}
+            </span>
+            <fieldset className="sh-segments" aria-labelledby="sl-palette">
+              {(Object.keys(PALETTES) as PaletteId[]).map((id) => (
+                <Pressable
+                  key={id}
+                  className="sh-segment"
+                  aria-pressed={palette === id}
+                  onClick={() => {
+                    setPalette(id)
+                    play('correct')
+                  }}
+                >
+                  {text.palette.items[id].name}
+                </Pressable>
+              ))}
+            </fieldset>
+          </div>
+          <div className="dz-row">
+            <span className="dz-row-main dz-footnote">{text.palette.items[palette].body}</span>
+          </div>
+        </div>
+
+        <h2 className="dz-section-label">{text.music.eyebrow}</h2>
+        <p className="dz-footnote sl-lead">{text.music.lead}</p>
+        <div className="dz-list">
+          <div className="dz-row">
+            <span className="dz-row-main">{text.music.on}</span>
+            <Switch checked={settings.music !== false} onChange={setMusicOn} label={text.music.on} />
+          </div>
+          <div className="dz-row">
+            <span className="dz-row-main">{text.music.soft}</span>
+            <Switch checked={settings.musicSoft === true} onChange={setMusicSoft} label={text.music.soft} />
+          </div>
+        </div>
+
+        <h2 className="dz-section-label">{text.singles.eyebrow}</h2>
+        <p className="dz-footnote sl-lead">{text.singles.lead(chordName, roman)}</p>
+        <div className="dz-list">
+          {PLAIN.map((event) =>
+            row(
+              event,
+              text.tags[TIER_TAG[EVENTS[event].tier]],
+              undefined,
+              event === 'land' ? step : undefined,
+            ),
+          )}
+        </div>
+
+        <h2 className="dz-section-label">{text.interface.eyebrow}</h2>
+        <p className="dz-footnote sl-lead">{text.interface.lead}</p>
+        <div className="dz-list">
+          {TOUCH.map((event) => row(event, '', undefined, event === 'tab' ? step % 4 : undefined))}
+        </div>
+
+        <h2 className="dz-section-label">{text.rewards.eyebrow}</h2>
+        <p className="dz-footnote sl-lead">{text.rewards.lead}</p>
+        <div className="dz-list">
+          {REWARDS.map(([event, size]) => {
+            const rise = EVENTS[event].parts.reduce((n, part) => n + (part.arpeggio?.count ?? 0), 0)
+            return row(event, text.tags[size], text.rewards.rise(rise))
+          })}
+        </div>
+
+        <h2 className="dz-section-label">{text.theory.eyebrow}</h2>
+        <details className="dz-list sl-more">
+          <summary className="dz-row">
+            <span className="dz-row-main">{text.theory.title}</span>
+            <span className="dz-chevron sl-more__chev">
+              <ChevronRight />
+            </span>
+          </summary>
+          {text.theory.paragraphs.map((p) => (
+            <div key={p} className="dz-row">
+              <span className="dz-row-main dz-footnote">{p}</span>
+            </div>
+          ))}
+        </details>
+
+        <h2 className="dz-section-label">{text.rules.eyebrow}</h2>
+        <div className="dz-list">
+          {text.rules.items.map(([title, body]) => (
+            <div key={title} className="dz-row">
               <span className="dz-row-main">
-                {text.silentTitle}
-                <small className="dz-footnote sh-row-sub">{text.silentBody}</small>
+                {title}
+                <small className="dz-footnote sh-row-sub">{body}</small>
               </span>
             </div>
-            <div className="dz-row sl-legend" aria-hidden="true">
-              {(Object.keys(text.console.legend) as Light[]).map((k) => (
-                <span key={k} className="dz-footnote">
-                  <i data-on={k} />
-                  {text.console.legend[k]}
-                </span>
-              ))}
-            </div>
+          ))}
+        </div>
+        <div className="sl-dock-space" aria-hidden="true" />
+      </Screen>
+      <div className="dz-edge-bottom sl-edge" aria-hidden="true" />
+      <section className="sl-dock" aria-label={text.console.label}>
+        <div className="sl-readout">
+          <div className="sl-readout__main" aria-live="polite">
+            <span className="sl-readout__name">{chordLabel(readout.chord) || readName}</span>
+            <span className="sl-readout__meta">
+              {readRoman} · {readFn} · {readout.event}
+              {readout.detail ? ` · ${readout.detail}` : ''}
+            </span>
           </div>
-
-          <h2 className="dz-section-label">{text.lesson.eyebrow}</h2>
-          <p className="dz-footnote sl-lead">{text.lesson.lead}</p>
-          <div className="dz-card sl-stage" ref={stage}>
-            <div className="sl-mats">
-              <Matrix name="A" values={A} row={scene.row} />
-              <span className="sl-op">·</span>
-              <Matrix name="B" values={B} col={scene.col} />
-              <span className="sl-op">=</span>
-              <Matrix name="C" values={C} filled={scene.filled} fresh={scene.fresh} done={scene.done} />
-            </div>
-            <div className="sl-opts">
-              {scene.options?.map((o) => (
-                <span key={o.value} className="sl-opt" data-state={o.state}>
-                  {o.value}
-                </span>
-              ))}
-            </div>
-            <div className="dz-subhead sl-cap" aria-live="polite">
-              {scene.caption}
-            </div>
-            <div className="sl-progress">
-              <span ref={progress} />
-            </div>
-            <Pressable
-              className="dz-button"
-              data-kind={playing ? 'secondary' : 'primary'}
-              data-wide=""
-              onClick={playing ? stopLesson : startLesson}
-              data-testid="sound-lesson"
-            >
-              {playing ? text.lesson.stop : text.lesson.play}
-            </Pressable>
-          </div>
-
-          <h2 className="dz-section-label">{text.lesson.walk}</h2>
-          <p className="dz-footnote sl-lead">{text.lesson.walkLead}</p>
-          <fieldset className="sl-walk" aria-label={text.lesson.walk}>
-            {PROGRESSION.map((id, i) => (
-              <Pressable
-                key={id}
-                className="sl-chip"
-                aria-pressed={step === i}
-                onClick={() => {
-                  setStep(i)
-                  playSound('step', { step: i, steps: STEPS })
-                }}
-              >
-                <b>{text.chords[id][1]}</b>
-                <small>{text.chords[id][0]}</small>
-              </Pressable>
-            ))}
-          </fieldset>
-
-          <h2 className="dz-section-label">{text.palette.eyebrow}</h2>
-          <div className="dz-list">
-            <div className="dz-row">
-              <span className="dz-row-main" id="sl-palette">
-                {text.palette.label}
-              </span>
-              <fieldset className="sh-segments" aria-labelledby="sl-palette">
-                {(Object.keys(PALETTES) as PaletteId[]).map((id) => (
-                  <Pressable
-                    key={id}
-                    className="sh-segment"
-                    aria-pressed={palette === id}
-                    onClick={() => {
-                      setPalette(id)
-                      play('correct')
-                    }}
-                  >
-                    {text.palette.items[id].name}
-                  </Pressable>
-                ))}
-              </fieldset>
-            </div>
-            <div className="dz-row">
-              <span className="dz-row-main dz-footnote">{text.palette.items[palette].body}</span>
-            </div>
-          </div>
-
-          <h2 className="dz-section-label">{text.music.eyebrow}</h2>
-          <p className="dz-footnote sl-lead">{text.music.lead}</p>
-          <div className="dz-list">
-            <div className="dz-row">
-              <span className="dz-row-main">{text.music.on}</span>
-              <Switch checked={settings.music !== false} onChange={setMusicOn} label={text.music.on} />
-            </div>
-            <div className="dz-row">
-              <span className="dz-row-main">{text.music.soft}</span>
-              <Switch checked={settings.musicSoft === true} onChange={setMusicSoft} label={text.music.soft} />
-            </div>
-          </div>
-
-          <h2 className="dz-section-label">{text.singles.eyebrow}</h2>
-          <p className="dz-footnote sl-lead">{text.singles.lead(chordName, roman)}</p>
-          <div className="dz-list">
-            {PLAIN.map((event) =>
-              row(
-                event,
-                text.tags[TIER_TAG[EVENTS[event].tier]],
-                undefined,
-                event === 'land' ? step : undefined,
-              ),
-            )}
-          </div>
-
-          <h2 className="dz-section-label">{text.interface.eyebrow}</h2>
-          <p className="dz-footnote sl-lead">{text.interface.lead}</p>
-          <div className="dz-list">
-            {TOUCH.map((event) => row(event, '', undefined, event === 'tab' ? step % 4 : undefined))}
-          </div>
-
-          <h2 className="dz-section-label">{text.rewards.eyebrow}</h2>
-          <p className="dz-footnote sl-lead">{text.rewards.lead}</p>
-          <div className="dz-list">
-            {REWARDS.map(([event, size]) => {
-              const rise = EVENTS[event].parts.reduce((n, part) => n + (part.arpeggio?.count ?? 0), 0)
-              return row(event, text.tags[size], text.rewards.rise(rise))
-            })}
-          </div>
-
-          <h2 className="dz-section-label">{text.theory.eyebrow}</h2>
-          <details className="dz-list sl-more">
-            <summary className="dz-row">
-              <span className="dz-row-main">{text.theory.title}</span>
-              <span className="dz-chevron sl-more__chev">
-                <ChevronRight />
-              </span>
-            </summary>
-            {text.theory.paragraphs.map((p) => (
-              <div key={p} className="dz-row">
-                <span className="dz-row-main dz-footnote">{p}</span>
-              </div>
-            ))}
-          </details>
-
-          <h2 className="dz-section-label">{text.rules.eyebrow}</h2>
-          <div className="dz-list">
-            {text.rules.items.map(([title, body]) => (
-              <div key={title} className="dz-row">
-                <span className="dz-row-main">
-                  {title}
-                  <small className="dz-footnote sh-row-sub">{body}</small>
-                </span>
-              </div>
-            ))}
-          </div>
-        </main>
-      </div>
+          <Switch checked={on} onChange={setSoundOn} label={text.console.sound} />
+        </div>
+        <Keyboard lit={lit} />
+      </section>
     </div>
   )
 }
