@@ -1025,16 +1025,18 @@ test.describe('exam run and result layout', () => {
   test.use({ viewport: { width: 375, height: 667 } })
 
   test('a test run has exactly one primary and legible, spaced option matrices', async ({ page }) => {
-    await openApp(page, './map')
-    await page.getByTestId('chapter-test-matrices').click()
+    // The 2024 paper keeps the real order (chapter tests shuffle), so a matrix-option question is always reached.
+    await openApp(page, './exam')
+    await pushed(page).getByTestId('exam-set-summer-2024').click()
+    await pushed(page).getByTestId('exam-start').click()
     const run = page.getByTestId('exam-run')
-    await expect(run.getByText('Soru 1 / 6')).toBeVisible()
+    await expect(run.getByText('Soru 1 / 15')).toBeVisible()
     await expect(run.locator('.exr-dock [data-kind="primary"]')).toHaveCount(1)
     await expect(run.locator('[data-kind="primary"]')).toHaveCount(1)
     // Walk to a question whose options are matrices.
-    for (let at = 1; at < 6 && (await run.locator('.exr-opts .ex-cell').count()) === 0; at++) {
+    for (let at = 1; at < 15 && (await run.locator('.exr-opts .ex-cell').count()) === 0; at++) {
       await run.getByRole('button', { name: 'Sonraki' }).click()
-      await expect(run.getByText(`Soru ${at + 1} / 6`)).toBeVisible()
+      await expect(run.getByText(`Soru ${at + 1} / 15`)).toBeVisible()
     }
     const option = run.locator('.exr-opts .ex-opt', { has: page.locator('.ex-cell') }).first()
     await option.scrollIntoViewIfNeeded()
