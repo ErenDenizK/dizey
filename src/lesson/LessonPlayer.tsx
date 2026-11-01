@@ -341,7 +341,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       </div>
 
       {ended ? (
-        <LessonEnd lesson={lesson} onSealed={() => cue(ended)} />
+        <LessonEnd lesson={lesson} reward={ended} onSealed={() => cue(ended)} />
       ) : (
         <>
           <div className="ls-main" data-stage={hasStage}>

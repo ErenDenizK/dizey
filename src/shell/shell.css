@@ -1293,12 +1293,25 @@ a.dz-button[data-kind="primary"] {
   background: var(--sh-surface);
   box-shadow: 0 1px 2px var(--sh-shadow);
   overflow: hidden;
+  position: relative;
+  isolation: isolate;
+}
+/* The card's own light (src/ui/shine.ts drives --glow): warm, from behind the seal, never past the card's edge. */
+.ls-end__halo {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background: radial-gradient(closest-side at 50% 58%, var(--glow-spark), transparent);
+  opacity: var(--glow, 0);
+  transform: scale(calc(0.8 + var(--glow, 0) * 0.35));
 }
 .ls-duo {
   display: block;
   width: clamp(96px, 26vh, 150px);
   height: auto;
   overflow: visible;
+  filter: drop-shadow(0 0 calc(var(--glow, 0) * 16px) var(--glow-spark));
 }
 .ls-duo__head {
   transform-box: fill-box;
@@ -1376,8 +1389,21 @@ a.dz-button[data-kind="primary"] {
   height: 45%;
 }
 .ls-seal__cell[data-result="right"] {
+  position: relative;
+  overflow: hidden;
   background: var(--ok-fill);
   color: var(--on-ok);
+  box-shadow: 0 0 calc(var(--glow, 0) * 20px) calc(var(--glow, 0) * 2px) var(--glow-ok);
+}
+/* A sheen crosses a right cell once when the seal's home chord sounds (--sweep 0 to 1). */
+.ls-seal__cell[data-result="right"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 38%, var(--sheen) 50%, transparent 62%);
+  background-size: 300% 100%;
+  background-position: calc((1 - var(--sweep, 1)) * 100%) 0;
 }
 .ls-seal__cell[data-result="miss"] {
   color: var(--sh-ink);

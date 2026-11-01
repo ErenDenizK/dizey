@@ -453,3 +453,48 @@
     backdrop-filter: none;
   }
 }
+
+/*
+ * The light layer (src/ui/shine.ts): sparks and rings for earned moments. A layer covers its host and never takes a
+ * touch; sparks are four-pointed stars with a soft core, drawn without filters so a burst stays cheap.
+ */
+.fx-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+.fx-spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  --spark-tone: var(--spark);
+  --spark-glow: var(--glow-spark);
+  background: radial-gradient(closest-side, var(--spark-glow), transparent);
+}
+.fx-spark[data-tone="action"] {
+  --spark-tone: var(--action);
+}
+.fx-spark[data-tone="ok"] {
+  --spark-tone: var(--ok-ink);
+  --spark-glow: var(--glow-ok);
+}
+.fx-spark::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--spark-tone);
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+.fx-ring {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  border-radius: var(--corner-pill);
+  box-shadow:
+    0 0 0 1.5px var(--ok-fill),
+    0 0 10px var(--glow-ok);
+  pointer-events: none;
+}

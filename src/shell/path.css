@@ -183,6 +183,10 @@
 .pa-bracket-fill {
   stroke: var(--ok-fill);
 }
+/* The tick that finishes a chapter lights its brackets (--glow on .pa-deco, from src/ui/shine.ts; 0 otherwise). */
+.pa-bracket-fill {
+  filter: drop-shadow(0 0 calc(var(--glow, 0) * 6px) var(--glow-ok));
+}
 .pa-link {
   stroke: var(--ink-1);
   stroke-width: 6;
@@ -247,7 +251,8 @@
   background: var(--ok-tint);
   box-shadow:
     var(--shadow-1),
-    inset 0 0 0 1px var(--ok-edge);
+    inset 0 0 0 1px var(--ok-edge),
+    0 0 calc(var(--glow, 0) * 26px) calc(var(--glow, 0) * 3px) var(--glow-ok);
 }
 .pa-tile[data-state="done"] .pa-tile__code {
   color: var(--ok-ink);

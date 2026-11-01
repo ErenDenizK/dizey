@@ -283,6 +283,11 @@
   --col-tint: oklch(0.27 0.025 322);
   --col-edge: oklch(0.45 0.06 322);
   --spark: oklch(0.86 0.09 95);
+  /* Light for earned moments only (src/ui/shine.ts): the spark as a glow, a verdict-green glow and a white sheen.
+     Alphas are peaks; the engine scales them down with --glow. */
+  --glow-spark: oklch(0.86 0.09 95 / 0.34);
+  --glow-ok: oklch(0.72 0.1 165 / 0.42);
+  --sheen: oklch(1 0 0 / 0.42);
   --on-row: oklch(1 0 0);
   --on-col: oklch(0.183 0.009 268.6);
   --on-ok: oklch(0.183 0.009 268.6);

@@ -19,6 +19,7 @@ import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Sheet } from '../ui/Sheet'
+import { burst, glow, ring } from '../ui/shine'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import './path.css'
@@ -554,15 +555,23 @@ function useCelebrations(root: React.RefObject<HTMLDivElement | null>, records: 
   useEffect(() => {
     if (!onPath || !pending.current.length) return
     const ids = pending.current.splice(0)
+    const now = new Set(seen.current)
+    // The new ticks stay hidden while the lesson closes, so the first one seen is the one that lands.
+    for (const id of ids) {
+      const check = root.current?.querySelector<SVGSVGElement>(`[data-lesson="${id}"] .pa-tile__check`)
+      if (check) engine.set(check, { scale: 0.3, opacity: 0 })
+    }
     // Wait for the lesson to finish closing.
     engine.withChannel('chrome', () =>
       engine.after(420, () => {
         for (const id of ids) {
           const tile = root.current?.querySelector<HTMLElement>(`[data-lesson="${id}"]`)
           if (!tile) continue
+          const chapter = chapters.find((c) => c.lessons.some((lesson) => lesson.id === id))
+          const complete = Boolean(chapter?.lessons.every((lesson) => now.has(lesson.id)))
+          lightTick(tile, complete)
           engine.set(tile, { scale: 0.86 })
           engine.to(tile, { scale: 1 }, 'settle')
-          const chapter = chapters.find((c) => c.lessons.some((lesson) => lesson.id === id))
           const local = chapter?.lessons.findIndex((lesson) => lesson.id === id) ?? -1
           const section = tile.closest('.pa-chapter')
           const link = section?.querySelector<SVGLineElement>(`[data-segment="${local}"]`)
@@ -571,6 +580,60 @@ function useCelebrations(root: React.RefObject<HTMLDivElement | null>, records: 
       }),
     )
   }, [onPath, root])
+}
+
+/** Check pop delay after the tile starts settling, and the tick's draw delay after the disc lands (ms). */
+const TICK_MS = { pop: 140, draw: 60 } as const
+
+/**
+ * The lesson's tick lands on the path: the disc pops, the tick draws itself in, and as it closes a ring of light
+ * leaves it and the tile glows green once. The tick that finishes a chapter also lights the chapter's brackets and
+ * throws a few sparks from the tile (src/ui/shine.ts).
+ */
+function lightTick(tile: HTMLElement, chapterDone: boolean) {
+  const check = tile.querySelector<SVGSVGElement>('.pa-tile__check')
+  const mark = check?.querySelector<SVGPathElement>('path')
+  if (!check || !mark) return
+  // Measured before the tile's settle scales it.
+  const center = {
+    x: check.getBoundingClientRect().left - tile.getBoundingClientRect().left + check.clientWidth / 2,
+    y: check.getBoundingClientRect().top - tile.getBoundingClientRect().top + check.clientHeight / 2,
+  }
+  const length = mark.getTotalLength()
+  mark.style.strokeDasharray = `${length} ${length}`
+  engine.bind(mark, (v) => {
+    mark.style.strokeDashoffset = `${(v.offset ?? 0).toFixed(2)}`
+  })
+  engine.set(mark, { offset: length })
+  engine.set(check, { scale: 0.3, opacity: 0 })
+  engine.after(TICK_MS.pop, () => {
+    engine.to(check, { opacity: 1 }, 'fade')
+    engine.to(check, { scale: 1 }, 'land')
+    engine.after(TICK_MS.draw, () => {
+      engine.to(mark, { offset: 0 }, 'draw', {
+        onArrive: () => {
+          mark.style.strokeDasharray = ''
+          mark.style.strokeDashoffset = ''
+        },
+      })
+      ring(tile, center.x, center.y)
+      glow(tile, 1)
+      if (!chapterDone) return
+      const matrix = tile.closest<HTMLElement>('.pa-matrix')
+      const deco = matrix?.querySelector<HTMLElement>('.pa-deco')
+      if (deco) glow(deco, 1, 0.35)
+      if (matrix) {
+        const box = matrix.getBoundingClientRect()
+        const at = tile.getBoundingClientRect()
+        burst(matrix, at.left - box.left + at.width / 2, at.top - box.top + at.height / 2, {
+          count: 12,
+          speed: 200,
+          seed: 5,
+          tones: ['spark', 'ok', 'action'],
+        })
+      }
+    })
+  })
 }
 
 function drawIn(link: SVGLineElement) {

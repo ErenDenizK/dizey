@@ -126,3 +126,26 @@ All 13 checks pass in light and dark.
 - Back swipe inside the standalone app may compete with a system gesture; verify on device before relying on it.
 - The tab bar scrub and the sheet drag were verified by unit tests and by eye in Chromium, not yet with a real
   finger.
+
+## Light (earned moments)
+
+`src/ui/shine.ts` adds light on top of motion, only where a learner earned it (law 6). Everything runs on the
+engine, so a tap lands it and reduced motion keeps only the glows (they fade; sparks, rings and sheens travel, so
+they are skipped). Tokens: `--glow-spark`, `--glow-ok`, `--sheen` (tokens.css); springs `bloom` (glow swells,
+~0.35 s), `ember` (glow dies away, ~1.3 s), `sheen` (a ring or sheen crossing, ~0.8 s).
+
+The light follows the music: `lightScore(event)` reads the same score the synth plays, so the card warms on each
+chord before the home chord, a spark leaves on each arpeggio note, and the climax lands on the home chord. With
+sound off the light keeps the same rhythm.
+
+| Moment | Light |
+| --- | --- |
+| Lesson end (every lesson) | Card warms on ii and V; on I the card glows, each right seal cell glows green and a sheen crosses it, left to right 70 ms apart |
+| Lesson end, every answer right on the first try | Plus a 10-spark burst from the seal; the card keeps a faint afterglow |
+| Half of all lessons done | Plus sparks climbing an arc over the duo on the arpeggio, a 12-spark burst, the duo glows |
+| Chapter finished | Plus a 16-spark burst and two side bursts from the seal brackets, the duo glows, the card keeps a warm afterglow |
+| Back on the path after a lesson | The new tick pops and draws itself, a ring of light leaves it, the tile glows green once |
+| The tick that finishes a chapter | Plus the chapter's brackets light up and 12 sparks leave the tile |
+
+Never on a single right answer, a tab, a button or a screen open: those are frequent, and light there would
+wear out the meaning of light.
