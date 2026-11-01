@@ -56,6 +56,7 @@ export const lab = {
     console: {
       idle: 'Hazır',
       sound: 'Sesler',
+      label: 'Çalan ses',
       legend: {
         chord: 'akor',
         tension: 'renk',

@@ -16,34 +16,30 @@
   --sl-key-white: #5d5952;
   --sl-key-black: #181715;
 }
-.sl-page {
+/* ---- Console: a floating card docked where the tab bar sits on tab screens ---- */
+.sl-dock {
   position: absolute;
-  inset: 0;
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  background: var(--bg);
-  color: var(--ink-1);
+  left: var(--bar-inset);
+  right: var(--bar-inset);
+  bottom: var(--bar-bottom);
+  z-index: 20;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3) var(--space-3);
+  border-radius: var(--corner-card);
+  background: var(--glass-fill);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow: var(--glass-rim), var(--glass-edge), var(--shadow-2);
 }
-
-/* ---- Console: solid, two rows (readout, keyboard) ---- */
-.sl-console {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  padding: env(safe-area-inset-top) var(--page-gutter) var(--space-3);
-  background: var(--bg);
-  box-shadow:
-    0 0.5px 0 var(--hairline),
-    0 8px 16px -12px oklch(0 0 0 / 0.35);
+/* The page scrolls clear of the docked console. */
+.sl-dock-space {
+  height: calc(var(--space-16) + var(--space-8));
 }
 .sl-readout {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  min-height: var(--nav-height);
-}
-.sl-back {
-  margin-left: calc(-1 * var(--space-3));
+  gap: var(--space-3);
 }
 .sl-readout__main {
   flex: 1;
@@ -51,8 +47,8 @@
   display: grid;
 }
 .sl-readout__name {
-  font-size: var(--type-title3);
-  line-height: var(--leading-title3);
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
   font-weight: var(--weight-semibold);
 }
 .sl-readout__meta {
@@ -109,17 +105,11 @@
 }
 
 /* ---- Page body: the app's large title, section labels and grouped lists ---- */
-.sl-main {
-  padding: 0 var(--page-gutter) calc(env(safe-area-inset-bottom) + var(--space-12));
-}
-.sl-title {
-  margin-bottom: var(--space-2);
-}
 .sl-lead {
   margin: calc(-1 * var(--space-1)) var(--space-1) var(--space-3);
 }
-.sl-title + .sl-lead {
-  margin: 0 0 var(--space-5);
+.dz-large-title + .sl-lead {
+  margin: calc(-1 * var(--space-3)) var(--space-1) var(--space-5);
 }
 .sl-legend {
   justify-content: space-between;
@@ -348,4 +338,9 @@
 }
 .sl-more[open] .sl-more__chev {
   transform: rotate(-90deg);
+}
+
+/* The bottom fade reaches up behind the whole console, not just a tab bar's height. */
+.sl-edge {
+  height: calc(var(--bar-bottom) + var(--space-16) + var(--space-12));
 }
