@@ -42,7 +42,7 @@ export const MOODS: Record<Mood, Partial<Record<FaceChannel, number>>> = {
   proud: { openR: 0.05, happy: 0.4, mc: 1, mo: 0.2, blush: 0.8 },
   console: { happy: 0.45, mc: 0.6, brow: 1, tilt: 12, hy: 2 },
   curious: { openL: 1.12, openR: 1.12, mc: 0.25, mo: 0.3, brow: 1, tilt: 3, ly: -1.2, lx: 0.8 },
-  wow: { openL: 1.2, openR: 1.2, mc: 0.35, mo: 1.15, brow: 1, tilt: 6, blush: 0.45 },
+  wow: { openL: 1.2, openR: 1.2, mc: 0.35, mo: 1.15, blush: 0.45 },
 }
 
 /** Per face channel: stiffness and start delay (eyes, brows, mouth, tilt), all critically damped. */
