@@ -36,6 +36,10 @@ export function SettingsView() {
       pushed
     >
       <PaletteSetting />
+      <h2 className="dz-section-label">{strings.settings.motion}</h2>
+      <div className="dz-list">
+        <CellRevealSetting />
+      </div>
       <h2 className="dz-section-label">{strings.settings.audio}</h2>
       <div className="dz-list">
         <SoundSetting />
@@ -385,5 +389,31 @@ function BackupSettings() {
         </div>
       ) : null}
     </>
+  )
+}
+
+function CellRevealSetting() {
+  const settings = useSettings()
+  return (
+    <div className="dz-row">
+      <Lead>
+        <rect x="3.5" y="3.5" width="5" height="5" rx="1" />
+        <rect x="11.5" y="3.5" width="5" height="5" rx="1" />
+        <rect x="3.5" y="11.5" width="5" height="5" rx="1" />
+        <rect x="11.5" y="11.5" width="5" height="5" rx="1" />
+      </Lead>
+      <span className="dz-row-main">
+        {strings.settings.cellReveal}
+        <small className="dz-footnote sh-row-sub">{strings.settings.cellRevealHint}</small>
+      </span>
+      <Switch
+        checked={settings.cellReveal === true}
+        onChange={(next) => {
+          const { cellReveal: _, ...rest } = readSettings()
+          saveSettings(next ? { ...rest, cellReveal: true } : rest)
+        }}
+        label={strings.settings.cellReveal}
+      />
+    </div>
   )
 }
