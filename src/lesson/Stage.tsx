@@ -211,6 +211,24 @@ export function fitCell(
   return Math.round(Math.min(bounds.max, Math.max(bounds.min, probe * scale)))
 }
 
+/** The smallest share of its size a too-wide work line shrinks to before it wraps. */
+const WORK_FIT_MIN = 0.7
+/** On a short screen, the smallest share work lines shrink to so the scene keeps its smallest cell. */
+const WORK_SHORT_MIN = 0.75
+/** The cell floor on a screen too short for CELL.min even after the work lines gave way: clipped never. */
+const CELL_SHORT_MIN = 20
+/** A plot beside a matrix takes at most this share of the stage height, and never less than AREA_MIN px. */
+const AREA_SHARE = 0.5
+const AREA_MIN = 140
+
+/** A work line's width on one line: its groups never break, so their widths plus the gaps between them. */
+function naturalWidth(line: HTMLElement): number {
+  const groups = Array.from(line.children) as HTMLElement[]
+  if (groups.length === 0) return 0
+  const gap = Number.parseFloat(getComputedStyle(line).columnGap) || 0
+  return groups.reduce((sum, g) => sum + g.offsetWidth, 0) + gap * (groups.length - 1)
+}
+
 type Rest = { cx: number; cy: number; w: number; h: number; el: HTMLElement | SVGElement }
 
 /** Parts of the stage that keep their identity across commits (and steps): matrices by name, the result, ops. */
@@ -281,10 +299,40 @@ function useStageLayout(
         const style = getComputedStyle(box)
         const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
         const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+        // A work line too wide for the stage shrinks as one piece (down to WORK_FIT_MIN) instead of
+        // breaking between its products; past that it wraps between whole groups.
+        box.style.removeProperty('--work-scale')
+        const lines = work.current?.querySelectorAll<HTMLElement>('.ls-line') ?? []
+        const widest = Math.max(0, ...Array.from(lines, naturalWidth))
+        const room = box.clientWidth - padX
+        if (widest > room) {
+          const scale = Math.max(WORK_FIT_MIN, Math.floor(((room - 2) / widest) * 100) / 100)
+          box.style.setProperty('--work-scale', scale.toString())
+        }
+        let notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
+        // On a short screen the work lines give way before the scene drops under its smallest cell.
+        if (work.current && notes > NOTE_GAP) {
+          const sceneMin = (content.offsetHeight * CELL.min) / CELL.probe
+          const room = next - padY - sceneMin - NOTE_GAP
+          const height = notes - NOTE_GAP
+          if (height > room && room > 0) {
+            const current = Number.parseFloat(box.style.getPropertyValue('--work-scale')) || 1
+            const scale = Math.max(WORK_SHORT_MIN, Math.floor(current * (room / height) * 100) / 100)
+            box.style.setProperty('--work-scale', scale.toString())
+            notes = work.current.getBoundingClientRect().height + NOTE_GAP
+          }
+        }
+        // A plot shares the stage with its matrix: it takes at most AREA_SHARE of the height the work lines
+        // leave, so the matrix keeps the scale it has in the steps around it.
+        if (area.current) {
+          const share = Math.max(AREA_MIN, Math.round((next - padY - notes) * AREA_SHARE))
+          box.style.setProperty('--area-max', `${share}px`)
+        }
         const areaHeight = area.current ? area.current.getBoundingClientRect().height + NOTE_GAP : 0
-        const notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
         const free = { width: box.clientWidth - padX, height: next - padY - notes - areaHeight }
-        const measure = () => fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
+        const floor = { min: CELL_SHORT_MIN, max: CELL.max }
+        const measure = () =>
+          fitCell(free, { width: content.offsetWidth, height: content.offsetHeight }, CELL.probe, floor)
         // Matrices side by side with nothing (or only "∼") between them (A and B, compared) stack when the stage is tall
         // enough that stacking makes every cell clearly larger; a row with operators always reads across.
         delete content.dataset.flow
