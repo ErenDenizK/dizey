@@ -20,7 +20,7 @@
   color: var(--ink-2);
 }
 
-.td-next {
+.dz-card.td-next {
   display: grid;
   gap: var(--gap-item);
   padding: var(--space-6) var(--space-5);
@@ -67,7 +67,7 @@
   margin-top: var(--space-2);
 }
 
-.td-row {
+.dz-card.td-row {
   display: flex;
   align-items: center;
   gap: var(--gap-item);
