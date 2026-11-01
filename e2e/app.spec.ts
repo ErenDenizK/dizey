@@ -186,6 +186,10 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
 test('the exam line counts down once a date is set', async ({ page }) => {
   await openApp(page, './settings')
   await page.getByLabel('Vize 1 tarihi').fill('2026-11-19')
+  // Reaching the field scrolled the page, which tucks the back button away; scrolling up brings it back.
+  await pushed(page)
+    .locator('.dz-screen')
+    .evaluate((s) => s.scrollTo(0, 0))
   await page.getByRole('button', { name: 'Sen’e dön' }).click()
   await tab(page, 'Harita').click()
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
@@ -242,6 +246,22 @@ test('settings live behind the gear in Sen: palette, back, and labs behind a lon
   await page.getByTestId('open-settings').click()
   await expect(page.getByRole('heading', { name: 'Ayarlar', level: 1 })).toBeVisible()
   await expect(page.getByText('Görünüm', { exact: true })).toBeVisible()
+  // The top fade must not cover the title at scroll 0, and must be there once the page has moved.
+  const fadeOpacity = () =>
+    pushed(page)
+      .locator('.dz-edge-top')
+      .evaluate((el) => Number.parseFloat(getComputedStyle(el).opacity))
+  await expect.poll(fadeOpacity).toBe(0)
+  await page
+    .locator('.dz-screen')
+    .last()
+    .evaluate((s) => s.scrollTo(0, 200))
+  await expect.poll(fadeOpacity).toBeGreaterThan(0.5)
+  await page
+    .locator('.dz-screen')
+    .last()
+    .evaluate((s) => s.scrollTo(0, 0))
+  await expect.poll(fadeOpacity).toBe(0)
   const before = await page.evaluate(() => document.documentElement.dataset.palette)
   const other = page.locator('[data-palette-preview="tahta"]')
   await other.click()
