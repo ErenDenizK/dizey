@@ -4,7 +4,7 @@ import { createPortal } from 'react-dom'
 import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { type Chapter, chapters, examItemTotal, pathCode, tileTitle } from '../content/path'
+import { type Chapter, chapters, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
@@ -15,7 +15,6 @@ import { type LessonRecord, resumeIndex } from '../lesson/progress'
 import { type LessonState, stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { useSettings } from '../progress/settings'
-import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Sheet } from '../ui/Sheet'
@@ -91,19 +90,21 @@ export function PathView() {
   )
 }
 
-/** One thin segment per lesson, grouped by chapter: the whole course at a glance. */
+/**
+ * One equal-width segment per chapter, so no chapter shrinks to a sliver: a finished chapter is full, the
+ * chapter in progress is filled to its share, the others are a hairline track.
+ */
 function Meter({ records, done }: { records: Records; done: number }) {
   return (
     <div className="pa-meter" role="img" aria-label={strings.path.meterLabel(done, lessons.length)}>
       {chapters.map((chapter) => {
-        const states = chapter.lessons.map((lesson) => stateOf(records[lesson.id]))
-        const done = states.filter((state) => state === 'done').length
-        const current = states.includes('current') ? 1 : 0
+        const finished = chapter.lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
         const total = chapter.lessons.length
         return (
-          <span key={chapter.id} className="pa-meter__track" style={{ flexGrow: total }}>
-            <i className="pa-meter__now" style={{ width: `${((done + current) / total) * 100}%` }} />
-            <i className="pa-meter__done" style={{ width: `${(done / total) * 100}%` }} />
+          <span key={chapter.id} className="pa-meter__track" data-complete={finished === total || undefined}>
+            {finished > 0 ? (
+              <i className="pa-meter__done" style={{ width: `${(finished / total) * 100}%` }} />
+            ) : null}
           </span>
         )
       })}
@@ -176,10 +177,9 @@ function ChapterMatrix({
           <h2 id={`chapter-${chapter.id}`} className="pa-chapter__title">
             {chapter.label}
           </h2>
-          <span className="pa-chapter__sub" data-complete={complete || undefined}>
-            {complete ? strings.path.chapterDone : strings.path.chapterCount(done, total)}
-            {chapter.examItems ? ` · ${strings.path.chapterWeight(chapter.examItems, examItemTotal)}` : ''}
-          </span>
+        </span>
+        <span className="pa-chapter__count num" data-complete={complete || undefined}>
+          {strings.path.chapterCount(done, total)}
         </span>
       </header>
       <div ref={box} className="pa-matrix">
@@ -262,18 +262,16 @@ function ChapterTestCell({ chapter, onNote }: { chapter: Chapter; onNote: (note:
           ready ? start(event.currentTarget) : onNote({ kind: 'preparing', chapter, available })
         }
       >
-        <span className="pa-test__text">
-          <span className="pa-test__title">{strings.path.chapterTest.title}</span>
-          <span className="pa-test__sub">
+        <span className="pa-wide__text">
+          <span className="pa-wide__title">{strings.path.chapterTest.title}</span>
+          <span className="pa-wide__sub">
             {ready ? strings.path.chapterTest.size(CHAPTER_TEST_SIZE) : strings.path.chapterTest.preparing}
           </span>
         </span>
         {ready && last ? (
-          <span className="pa-test__score num">
+          <span className="pa-wide__value num">
             {strings.path.chapterTest.score(last.correct, last.total)}
           </span>
-        ) : ready ? (
-          <ChevronRight />
         ) : null}
       </Pressable>
     </div>
@@ -345,11 +343,10 @@ function Gate() {
         morphFrom.current = event.currentTarget
       }}
     >
-      <span className="pa-gate__text">
-        <span className="pa-gate__title">{strings.path.gate.title}</span>
-        <span className="pa-gate__sub">{strings.path.gate.body}</span>
+      <span className="pa-wide__text">
+        <span className="pa-wide__title">{strings.path.gate.title}</span>
+        <span className="pa-wide__sub">{strings.path.gate.body}</span>
       </span>
-      <ChevronRight />
     </PressLink>
   )
 }

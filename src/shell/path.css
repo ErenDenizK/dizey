@@ -56,23 +56,19 @@
 }
 .pa-meter__track {
   position: relative;
-  flex-basis: 0;
+  flex: 1 1 0;
+  min-width: 0;
   height: 8px;
   border-radius: var(--corner-pill);
   background: var(--surface-sunk);
   box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
   overflow: hidden;
 }
-.pa-meter__track i {
+.pa-meter__done {
   position: absolute;
   inset: 0 auto 0 0;
-  border-radius: inherit;
-}
-.pa-meter__now {
-  background: var(--action);
-  opacity: 0.45;
-}
-.pa-meter__done {
+  min-width: 8px;
+  border-radius: var(--corner-pill);
   background: var(--ok-fill);
 }
 .me-hero__row i[data-state="current"] {
@@ -89,7 +85,7 @@
 }
 .pa-chapter__head {
   display: grid;
-  grid-template-columns: auto 1fr;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
   gap: var(--space-3);
   padding-inline: var(--space-1);
@@ -123,15 +119,15 @@
   letter-spacing: var(--tracking-title);
   font-weight: var(--weight-bold);
 }
-.pa-chapter__sub {
-  font-size: var(--type-footnote);
-  line-height: var(--leading-footnote);
-  color: var(--ink-2);
-  letter-spacing: var(--tracking-small);
-}
-.pa-chapter__sub[data-complete] {
-  color: var(--ok-ink);
+.pa-chapter__count {
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
   font-weight: var(--weight-semibold);
+  color: var(--ink-2);
+  letter-spacing: var(--tracking-body);
+}
+.pa-chapter__count[data-complete] {
+  color: var(--ok-ink);
 }
 
 /* ---- Matrix: brackets, path and tiles -------------------------------------- */
@@ -139,7 +135,7 @@
   position: relative;
   margin-top: var(--space-4);
   /* Tight sides: at 18 px body type every pixel of tile width keeps a title on its three lines. */
-  padding: var(--space-5) var(--space-4);
+  padding: var(--space-5) var(--space-2);
 }
 .pa-deco {
   position: absolute;
@@ -179,7 +175,8 @@
   position: relative;
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: var(--space-6) var(--space-6);
+  align-items: stretch;
+  gap: var(--space-5) var(--space-2);
   margin: 0;
   padding: 0;
   list-style: none;
@@ -187,15 +184,17 @@
 .pa-grid > li {
   position: relative;
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
 }
 .pa-tile {
   position: relative;
   display: flex;
   flex-direction: column;
+  height: 100%;
   justify-content: flex-start;
   gap: var(--space-2);
   min-height: 104px;
-  padding: var(--space-2) var(--space-2) var(--space-3) var(--space-3);
+  padding: var(--space-2) 0 var(--space-3) var(--space-3);
   border-radius: var(--corner-button);
   background: var(--surface-raised);
   color: var(--ink-1);
@@ -249,12 +248,14 @@
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 3;
   overflow: hidden;
+  padding-right: var(--space-2);
+  text-wrap: balance;
   font-size: var(--type-caption);
   line-height: var(--leading-caption);
   font-weight: var(--weight-medium);
   color: var(--ink-2);
-  overflow-wrap: break-word;
-  hyphens: auto;
+  overflow-wrap: normal;
+  hyphens: manual;
   letter-spacing: var(--tracking-caption);
 }
 .pa-tile[data-state="done"] {
@@ -315,22 +316,21 @@
   border-radius: inherit;
   background: var(--on-action);
 }
+/* The marker lives inside the tile's own box, in the strip the lesson you are on reserves under its title. */
+.pa-tile[data-main] {
+  padding-bottom: calc(var(--space-8) + var(--space-2));
+}
 .pa-here {
   position: absolute;
   z-index: 2;
-  top: -13px;
-  left: 0;
-  right: 0;
-  width: max-content;
-  margin-inline: auto;
-  padding: var(--space-0-5) var(--space-2);
-  border-radius: var(--corner-pill);
-  background: var(--ink-1);
-  color: var(--bg);
+  left: var(--space-3);
+  bottom: var(--space-4);
+  max-width: calc(100% - var(--space-4));
+  white-space: nowrap;
+  color: var(--on-action);
   font-size: var(--type-caption);
   line-height: var(--leading-caption);
   font-weight: var(--weight-semibold);
-  box-shadow: var(--shadow-1);
   pointer-events: none;
   letter-spacing: var(--tracking-caption);
 }
@@ -349,46 +349,45 @@
   border-radius: var(--corner-pill);
   opacity: 0.18;
 }
-.pa-test {
+.pa-test,
+.pa-gate {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  min-height: 56px;
-  padding: var(--space-2) var(--space-4);
+  min-height: 80px;
+  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
   border-radius: var(--corner-button);
   background: var(--surface-raised);
   color: var(--ink-1);
   text-align: start;
+  text-decoration: none;
   box-shadow:
     var(--shadow-2),
     var(--edge-light),
     inset 0 0 0 0.5px var(--hairline);
 }
-.pa-test svg {
-  flex: none;
-  color: var(--ink-2);
-}
-.pa-test__text {
+.pa-wide__text {
   display: grid;
-  gap: var(--space-0-5);
+  gap: var(--space-1);
   min-width: 0;
 }
-.pa-test__title {
-  font-size: var(--type-callout);
-  line-height: var(--leading-callout);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-body);
+.pa-wide__title {
+  font-size: var(--type-title2);
+  line-height: var(--leading-none);
+  letter-spacing: var(--tracking-title);
+  font-weight: var(--weight-bold);
+  padding-top: var(--space-1);
 }
-.pa-test__sub {
+.pa-wide__sub {
   font-size: var(--type-caption);
   line-height: var(--leading-caption);
   font-weight: var(--weight-medium);
   color: var(--ink-2);
   letter-spacing: var(--tracking-caption);
 }
-.pa-test__score {
+.pa-wide__value {
   font-size: var(--type-title2);
   line-height: var(--leading-none);
   letter-spacing: var(--tracking-title);
@@ -401,54 +400,22 @@
     var(--shadow-1),
     inset 0 0 0 1px var(--ok-edge);
 }
+.pa-test[data-state="done"] .pa-wide__title {
+  color: var(--ok-ink);
+}
 /* Not written yet: quieter, flat, still a normal cell (never a lock). */
 .pa-test[data-state="preparing"] {
   background: var(--surface-sunk);
   box-shadow: inset 0 0 0 1px var(--hairline-strong);
 }
-.pa-test[data-state="preparing"] .pa-test__title {
+.pa-test[data-state="preparing"] .pa-wide__title {
   color: var(--ink-2);
 }
 
 /* ---- End of the path ---------------------------------------------------------- */
-/* The gate: the full rehearsal, one cell wide, after the last chapter. */
+/* The gate: the full rehearsal, the same cell as a lesson tile but a full row wide. */
 .pa-gate {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  min-height: 64px;
   margin-top: var(--space-8);
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--corner-button);
-  background: var(--surface-raised);
-  color: var(--ink-1);
-  text-decoration: none;
-  box-shadow:
-    var(--shadow-2),
-    var(--edge-light),
-    inset 0 0 0 1.5px var(--hairline-strong);
-}
-.pa-gate svg {
-  flex: none;
-  color: var(--ink-2);
-}
-.pa-gate__text {
-  display: grid;
-  gap: var(--space-0-5);
-}
-.pa-gate__title {
-  font-size: var(--type-title3);
-  line-height: var(--leading-title3);
-  letter-spacing: var(--tracking-title3);
-  font-weight: var(--weight-bold);
-}
-.pa-gate__sub {
-  font-size: var(--type-caption);
-  line-height: var(--leading-caption);
-  letter-spacing: var(--tracking-caption);
-  color: var(--ink-2);
 }
 .pa-end {
   display: grid;
