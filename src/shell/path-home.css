@@ -1,0 +1,405 @@
+/*
+ * Yol: the home screen, the whole route as one walk on graph paper (src/shell/PathHome.tsx, path-layout.ts).
+ * Tokens only; no transitions or keyframes (motion comes from the engine).
+ */
+
+/* ---- Header: the chapter you are in, sticky under the status bar ---------------- */
+.ph-head {
+  position: sticky;
+  top: 0;
+  z-index: 4;
+  display: grid;
+  gap: var(--space-0-5);
+  /* Back over the screen's own top padding, so the header owns the strip under the status bar. */
+  margin: calc((env(safe-area-inset-top) + var(--space-3)) * -1) calc(var(--page-gutter) * -1) 0;
+  padding: calc(env(safe-area-inset-top) + var(--space-4)) var(--page-gutter) var(--space-3);
+  background: var(--bg);
+}
+.ph-head::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  height: var(--space-4);
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg), transparent);
+}
+.ph-head p {
+  margin: 0;
+}
+.ph-head__title {
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.ph-head__sub {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---- Graph paper ------------------------------------------------------------------ */
+.ph-field {
+  --grid: color-mix(in oklch, var(--hairline) 70%, transparent);
+  /* Full bleed: the paper runs edge to edge under the path and the gate. */
+  margin: 0 calc(var(--page-gutter) * -1);
+  background-image:
+    linear-gradient(to bottom, var(--grid) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid) 1px, transparent 1px);
+  background-size: 25px 25px;
+}
+.ph-root {
+  position: relative;
+}
+.ph-wires {
+  position: absolute;
+  inset: 0;
+  overflow: visible;
+}
+/* Rows are Satır's blue, columns Sütun's plum; the part of the walk still ahead is faint. */
+.ph-wire {
+  stroke-width: 6;
+  stroke-linecap: round;
+}
+.ph-wire[data-axis="row"] {
+  stroke: var(--row-fill);
+}
+.ph-wire[data-axis="col"] {
+  stroke: var(--col-fill);
+}
+.ph-wire[data-faint] {
+  opacity: 0.25;
+}
+
+/* ---- Chapter headings: a 1 x 1 bracket and a name, on the side the column does not run ---------- */
+.ph-chapter {
+  position: absolute;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 40px;
+  translate: 0 -50%;
+  padding: 0 var(--page-gutter);
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.ph-chapter[data-side="end"] {
+  justify-content: flex-end;
+}
+.ph-chapter__no {
+  display: inline-grid;
+  place-items: center;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 var(--space-1);
+  border-inline: 2px solid var(--ink-3);
+  border-radius: 4px;
+}
+.ph-chapter__name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---- Nodes ----------------------------------------------------------------------- */
+.ph-nodes {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* A zero-size anchor on the grid intersection: the node is centred on it, whatever its size. */
+.ph-slot {
+  position: absolute;
+  width: 0;
+  height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.pa-tile,
+.pa-test {
+  position: relative;
+  isolation: isolate;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--corner-button);
+  color: var(--ink-3);
+  text-decoration: none;
+  --node-glow: 0 0 calc(var(--glow, 0) * 26px) calc(var(--glow, 0) * 3px) var(--glow-ok);
+  --node-ring: inset 0 0 0 0 transparent;
+  box-shadow: var(--node-ring), var(--node-glow);
+}
+/* A source coming home (node, test, gate): the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
+.pa-tile__trace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.pa-tile__trace rect {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-linecap: butt;
+}
+/* The old fill, crossfading out when a node's state changes on screen (path-effects.ts, useStateChange). */
+.pa-tile__was {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Not walked yet: the surface, the code in the quietest ink. */
+.pa-tile {
+  background: var(--surface);
+  --node-ring: inset 0 0 0 1.5px var(--hairline-strong);
+}
+.pa-tile__code {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+}
+.pa-tile__check {
+  width: 26px;
+  height: 26px;
+}
+.pa-tile__check path {
+  fill: none;
+  stroke: var(--on-ok);
+  stroke-width: 2.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+/* Done: green with a tick. Weak first tries add a thin ring in the bad ink; the lesson is still done. */
+.pa-tile[data-state="done"] {
+  background: var(--ok-fill);
+  --node-ring: inset 0 0 0 0 transparent;
+}
+.pa-tile[data-state="done"][data-level="bad"] {
+  --node-ring: inset 0 0 0 2.5px var(--bad-ink);
+}
+/* The lesson you are on: larger, amber-tinted with an amber outline (the one filled amber is the dock's button). */
+.pa-tile[data-next] {
+  width: 68px;
+  height: 68px;
+  background: color-mix(in oklch, var(--action) 24%, var(--surface));
+  color: var(--action);
+  --node-ring: inset 0 0 0 2.5px var(--action);
+  --press-strength: 0.1;
+}
+.pa-tile[data-next] .pa-tile__code {
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-bold);
+}
+
+/* The chapter's test: a bracketed node [ ] that ends its chapter, never locked. */
+.pa-test {
+  background: none;
+  --press-tone: var(--ink-1);
+}
+.pa-test::before,
+.pa-test::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  border: 3px solid var(--ink-3);
+  border-radius: 4px;
+}
+.pa-test::before {
+  left: 0;
+  border-right: 0;
+}
+.pa-test::after {
+  right: 0;
+  border-left: 0;
+}
+.pa-test[data-state="done"]::before,
+.pa-test[data-state="done"]::after {
+  border-color: var(--ok-fill);
+}
+.pa-test[data-state="preparing"]::before,
+.pa-test[data-state="preparing"]::after {
+  border-color: var(--hairline-strong);
+}
+.pa-test__score {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+  color: var(--ok-ink);
+}
+
+/* The duo stands by the lesson you are on, on the outer side where no run reaches it. */
+.ph-duo {
+  position: absolute;
+  top: -30px;
+  pointer-events: none;
+  z-index: 1;
+}
+.ph-slot[data-col="0"] .ph-duo {
+  right: 22px;
+}
+.ph-slot[data-col="1"] .ph-duo {
+  left: 22px;
+}
+.ph-root .companion-slot--large {
+  width: 52px;
+}
+
+/* ---- End of the path: the gate ------------------------------------------------------ */
+.ph-end {
+  padding: var(--space-4) var(--page-gutter) var(--space-8);
+}
+.pa-gate {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  min-height: 64px;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--corner-button);
+  background: var(--surface-raised);
+  color: var(--ink-1);
+  text-align: start;
+  text-decoration: none;
+  box-shadow:
+    var(--shadow-2),
+    var(--edge-light),
+    inset 0 0 0 0.5px var(--hairline);
+}
+.pa-wide__text {
+  display: grid;
+  gap: var(--space-0-5);
+  min-width: 0;
+}
+.pa-wide__title {
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-semibold);
+}
+.pa-wide__sub {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+
+/* ---- Dock: satellites over the next lesson, sticky above the tab bar ------------------ */
+.ph-dock {
+  position: sticky;
+  bottom: calc(var(--bar-height) + var(--bar-bottom) + var(--space-3));
+  z-index: 4;
+  display: grid;
+  gap: var(--space-2);
+  /* The path dissolves into the dock instead of meeting its edge. */
+  margin-top: calc(var(--space-6) * -1);
+  padding-top: var(--space-6);
+  background: linear-gradient(to bottom, transparent, var(--bg) var(--space-6));
+}
+.ph-chips {
+  display: flex;
+  gap: var(--space-2);
+}
+.ph-chips:empty {
+  display: none;
+}
+.ph-chip {
+  flex: 1 1 0;
+  min-width: 0;
+  display: grid;
+  align-content: center;
+  min-height: 48px;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--corner-inner);
+  background: var(--surface);
+  box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
+  text-align: start;
+  text-decoration: none;
+  font: inherit;
+  color: var(--ink-1);
+}
+.ph-chip__title,
+.ph-chip__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+}
+.ph-chip__title {
+  font-weight: var(--weight-medium);
+  color: var(--ink-2);
+}
+.ph-chip__value {
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.dz-card.ph-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-item);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  text-decoration: none;
+  color: var(--ink-1);
+}
+.ph-next__text {
+  display: grid;
+  min-width: 0;
+}
+.ph-next__where {
+  display: flex;
+  gap: var(--space-2);
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-2);
+  white-space: nowrap;
+}
+.ph-next__where > span:nth-child(2) {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ph-next__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-semibold);
+}
+.ph-next__action {
+  flex: none;
+  min-height: var(--target);
+  padding: 0 var(--space-5);
+}

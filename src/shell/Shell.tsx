@@ -4,7 +4,7 @@ import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO, CHOREO_MS } from '../engine/tokens'
 import { readSettings } from '../progress/settings'
-import { MeIcon, PathIcon, TodayIcon } from '../ui/icons'
+import { MeIcon, PathIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
 import { CompanionLayer } from './CompanionLayer'
 import { MeView } from './MeView'
@@ -36,8 +36,7 @@ import './shell.css'
 type TabPath = '/' | '/map' | '/me'
 
 const tabs = [
-  { id: '/', label: strings.tabs.today, Icon: TodayIcon },
-  { id: '/map', label: strings.tabs.map, Icon: PathIcon },
+  { id: '/', label: strings.tabs.path, Icon: PathIcon },
   { id: '/me', label: strings.tabs.me, Icon: MeIcon },
 ] as const
 

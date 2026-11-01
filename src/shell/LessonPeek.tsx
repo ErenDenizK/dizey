@@ -14,6 +14,7 @@ import { playSound } from '../sound/player'
 import { clipWith, faceOf, insets } from './morph'
 import { PressLink } from './PressLink'
 import { morphFrom, stageRef } from './stage'
+import './lesson-peek.css'
 
 export type Peek = { lesson: Lesson; tile: HTMLElement }
 

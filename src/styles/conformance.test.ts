@@ -6,7 +6,14 @@ import { describe, expect, it } from 'vitest'
  * 4 px or less (brackets and bars), or an em of the math it wraps. Type and spacing have their own guard
  * (type-space.test.ts). One-off radii are how a design stops looking like one system.
  */
-const sheets = ['../shell/shell.css', '../shell/me.css', '../shell/path.css', '../ui/ui.css', './app.css']
+const sheets = [
+  '../shell/shell.css',
+  '../shell/me.css',
+  '../shell/path-home.css',
+  '../shell/lesson-peek.css',
+  '../ui/ui.css',
+  './app.css',
+]
 
 const declarations = (file: string, prop: string) =>
   [

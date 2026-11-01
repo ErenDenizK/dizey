@@ -58,9 +58,9 @@ export function ExamHome() {
   return (
     <Screen
       title={strings.exam.title}
-      back={() => void navigate({ to: '/map' })}
+      back={() => void navigate({ to: '/' })}
       backLabel={strings.exam.back}
-      parent={strings.tabs.map}
+      parent={strings.tabs.path}
       pushed
     >
       <div className="exh">

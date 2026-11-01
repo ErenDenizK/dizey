@@ -9,15 +9,9 @@ export const strings = {
   goHome: 'Ana sayfaya dön',
 
   chrome: { done: 'Bitti', back: 'Geri' },
-  tabs: { today: 'Bugün', map: 'Harita', me: 'Sen', label: 'Bölümler' },
+  tabs: { path: 'Yol', me: 'Sen', label: 'Bölümler' },
 
   today: {
-    hero: {
-      resume: 'Kaldığın yerden devam edelim.',
-      fresh: 'İlk derse başlayalım.',
-      next: 'Sıradaki ders hazır.',
-      done: 'Bütün dersler bitti. Prova zamanı.',
-    },
     start: 'Başla',
     resume: 'Devam et',
     stepOf: (step: number, total: number) => `Adım ${step} / ${total}`,
@@ -29,7 +23,6 @@ export const strings = {
     examSub: '15 soru',
     examDays: (days: number) => `${days} gün kaldı`,
     examToday: 'Bugün',
-    companion: 'Satır ve Sütun',
     daily: {
       eyebrow: 'Günün sorusu',
       solve: 'Çöz',
@@ -59,7 +52,9 @@ export const strings = {
   },
 
   path: {
-    title: 'Harita',
+    title: 'Yol',
+    listLabel: 'Dersler',
+    chapterOrdinal: (number: number) => `${number}. bölüm`,
     examLine: (days: number, date: string) =>
       days > 0 ? `Vize 1'e ${days} gün · ${date}` : `Vize 1 · ${date}`,
     examWeekLine: (date: string) => `Vize 1 · ${date} civarı`,
@@ -175,10 +170,10 @@ export const strings = {
 
   exam: {
     title: 'Sınav',
-    back: 'Haritaya dön',
+    back: 'Yola dön',
     setTitle: { 'summer-2024': '2024 Yaz Okulu Vizesi', mixed: 'Karışık deneme' },
     chapterTestTitle: (chapter: string) => `Bölüm testi · ${chapter}`,
-    backToMap: 'Haritaya dön',
+    backToMap: 'Yola dön',
     chapterTimeNote: (percent: number) => `%${percent} başarı · süresiz`,
     leaveChapterTest: 'Testten çık, sonra devam et',
     setMeta: (count: number, minutes: number) => `${count} soru · ${minutes} dk`,

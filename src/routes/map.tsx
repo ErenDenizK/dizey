@@ -1,4 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 
-// Tab screens live in the shell, mounted once so each keeps its scroll position.
-export const Route = createFileRoute('/map')({ component: () => null })
+// The old Harita tab is the path on the home screen now: keep old links working.
+export const Route = createFileRoute('/map')({
+  beforeLoad: ({ location }) => {
+    throw redirect({ to: '/', search: location.search as never, replace: true })
+  },
+})
