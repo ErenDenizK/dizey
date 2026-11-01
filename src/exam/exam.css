@@ -87,10 +87,7 @@
 .exh-paper[data-live="true"] .dz-button {
   margin-top: var(--space-2);
 }
-.exh-expander {
-  overflow: hidden;
-}
-.exh-expander__inner {
+.exh-paper .dz-expander__inner {
   display: grid;
   gap: var(--space-3);
   padding-top: var(--space-2);

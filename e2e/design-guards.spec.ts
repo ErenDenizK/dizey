@@ -128,8 +128,6 @@ const screens: readonly (readonly [string, (page: Page) => Promise<void>])[] = [
  */
 const RULE: readonly [number, number] = [4, 3]
 const budgets: Record<string, readonly [number, number]> = {
-  // TODO(design): tighten to 4 (measured 6: 14, 15, 17, 18, 22 and 32 px)
-  Harita: [6, 3],
   // TODO(design): tighten to 4 (measured 6: 15, 17, 18, 22, 26 and 60 px)
   'Test sonucu': [6, 3],
 }

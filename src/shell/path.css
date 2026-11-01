@@ -6,53 +6,40 @@
   display: grid;
 }
 
-/* ---- Summary ---------------------------------------------------------------- */
+/* ---- Summary: one line ------------------------------------------------------ */
 .pa-summary {
   display: grid;
-  grid-template-columns: auto 1fr;
-  align-items: baseline;
-  column-gap: var(--space-3);
-  row-gap: var(--space-3);
+  gap: var(--space-3);
   margin-top: var(--space-4);
 }
 .pa-summary p {
   margin: 0;
 }
+.pa-summary__line {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  color: var(--ink-2);
+}
 .pa-summary__count {
   display: flex;
   align-items: baseline;
   gap: var(--space-1);
-  font-size: var(--type-title3);
-  font-weight: var(--weight-medium);
-  color: var(--ink-2);
-  line-height: var(--leading-title3);
-  letter-spacing: var(--tracking-title3);
 }
 .pa-summary__count b {
-  font-size: var(--type-large);
-  line-height: var(--leading-none);
-  letter-spacing: var(--tracking-large);
+  font-weight: var(--weight-bold);
   color: var(--ink-1);
 }
 .pa-summary__exam {
-  justify-self: end;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--corner-pill);
-  background: var(--surface-sunk);
-  box-shadow: inset 0 0 0 0.5px var(--hairline);
-  font-size: var(--type-footnote);
-  font-weight: var(--weight-semibold);
-  color: var(--ink-1);
-  line-height: var(--leading-footnote);
-  letter-spacing: var(--tracking-small);
-}
-.pa-summary > :not(p) {
-  grid-column: 1 / -1;
+  text-align: end;
 }
 .pa-meter {
   display: flex;
   gap: var(--space-1);
-  margin-top: var(--space-1);
 }
 .pa-meter__track {
   position: relative;
@@ -71,144 +58,136 @@
   border-radius: var(--corner-pill);
   background: var(--ok-fill);
 }
-.me-hero__row i[data-state="current"] {
-  background: var(--action);
-  box-shadow: none;
-}
-.me-hero__row i[data-state="done"] {
-  background: var(--ok-fill);
-  box-shadow: none;
-}
-/* ---- Chapter ---------------------------------------------------------------- */
+
+/* ---- Chapter row ------------------------------------------------------------- */
 .pa-chapter {
-  margin-top: var(--space-8);
+  position: relative;
+  margin-top: var(--space-2);
+}
+.pa-summary + .pa-chapter {
+  margin-top: var(--space-4);
 }
 .pa-chapter__head {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
+  position: relative;
+  min-height: 48px;
+  border-bottom: 0.5px solid var(--hairline);
+}
+.pa-chapter__heading {
+  margin: 0;
+  font: inherit;
+}
+/* The whole row is the toggle; the squares sit above it on the right and are links of their own. */
+.pa-chapter__toggle {
+  display: flex;
   align-items: center;
   gap: var(--space-3);
-  padding-inline: var(--space-1);
+  width: 100%;
+  min-height: 48px;
+  padding: 0 var(--space-3);
+  color: var(--ink-1);
+  text-align: start;
 }
 .pa-chapter__no {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--corner-chip);
-  background: var(--surface-sunk);
-  color: var(--ink-1);
-  box-shadow: inset 0 0 0 1px var(--hairline-strong);
-  font-weight: var(--weight-bold);
-  font-size: var(--type-callout);
-  line-height: var(--leading-none);
-}
-.pa-chapter[data-complete] .pa-chapter__no {
-  background: var(--ok-fill);
-  color: var(--on-ok);
-  box-shadow: none;
-}
-.pa-chapter__titles {
-  display: grid;
-  min-width: 0;
-}
-.pa-chapter__title {
-  margin: 0;
-  font-size: var(--type-title2);
-  line-height: var(--leading-title2);
-  letter-spacing: var(--tracking-title);
-  font-weight: var(--weight-bold);
-}
-.pa-chapter__count {
+  flex: none;
+  width: var(--space-6);
   font-size: var(--type-callout);
   line-height: var(--leading-callout);
-  font-weight: var(--weight-semibold);
-  color: var(--ink-2);
   letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-bold);
+  color: var(--ink-2);
 }
-.pa-chapter__count[data-complete] {
-  color: var(--ok-ink);
+.pa-chapter__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
 }
-
-/* ---- Matrix: brackets, path and tiles -------------------------------------- */
-.pa-matrix {
-  position: relative;
-  margin-top: var(--space-4);
-  /* Tight sides: at 18 px body type every pixel of tile width keeps a title on its three lines. */
-  padding: var(--space-5) var(--space-2);
+.pa-chapter[data-open] .pa-chapter__no {
+  color: var(--ink-1);
 }
-.pa-deco {
+.pa-cells {
   position: absolute;
-  inset: 0;
-  overflow: visible;
-  pointer-events: none;
-}
-.pa-bracket,
-.pa-bracket-fill {
-  fill: none;
-  stroke-width: 2.5;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.pa-bracket {
-  stroke: var(--ink-1);
-  opacity: 0.18;
-}
-.pa-bracket-fill {
-  stroke: var(--ok-fill);
-}
-/* The tick that finishes a chapter lights its brackets (--glow on .pa-deco, from src/ui/shine.ts; 0 otherwise). */
-.pa-bracket-fill {
-  filter: drop-shadow(0 0 calc(var(--glow, 0) * 6px) var(--glow-ok));
-}
-.pa-link {
-  stroke: var(--ink-1);
-  stroke-width: 6;
-  stroke-linecap: round;
-  opacity: 0.14;
-}
-.pa-link[data-walked] {
-  stroke: var(--ok-fill);
-  opacity: 1;
-}
-.pa-grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  align-items: stretch;
-  gap: var(--space-5) var(--space-2);
+  inset: 0 var(--space-3) 0 auto;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: var(--space-0-5);
   margin: 0;
   padding: 0;
   list-style: none;
+  pointer-events: none;
 }
-.pa-grid > li {
+.pa-cells > li {
+  display: grid;
+  pointer-events: auto;
+}
+/* The square is the link itself (the shell morphs a lesson out of it); the touch target grows past it. */
+.pa-cell {
   position: relative;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
+}
+.pa-cell::after {
+  content: "";
+  position: absolute;
+  inset: -16px -1.5px;
+}
+.pa-cell[data-level="ok"] {
+  background: var(--ok-fill);
+  box-shadow: none;
+}
+.pa-cell[data-level="done"] {
+  background: var(--ok-edge);
+  box-shadow: none;
+}
+.pa-cell[data-level="mid"] {
+  background: var(--spark);
+  box-shadow: none;
+}
+.pa-cell[data-level="bad"] {
+  background: var(--bad-ink);
+  box-shadow: none;
+}
+/* The lesson you are on, found across the whole route: an outline in the action colour, no fill. */
+.pa-cell[data-next] {
+  box-shadow: inset 0 0 0 2px var(--action);
+}
+
+/* ---- Open chapter: its lessons, then its test ----------------------------------- */
+.pa-lessons {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: var(--space-2) 0;
+  list-style: none;
+}
+.pa-lessons > li {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
 }
-.pa-tile {
+.pa-tile,
+.pa-test {
   position: relative;
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  justify-content: flex-start;
-  gap: var(--space-2);
-  min-height: 104px;
-  padding: var(--space-2) 0 var(--space-3) var(--space-3);
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-1) var(--space-3);
   border-radius: var(--corner-button);
-  background: var(--surface-raised);
   color: var(--ink-1);
   text-align: start;
   text-decoration: none;
-  box-shadow:
-    var(--shadow-2),
-    var(--edge-light),
-    inset 0 0 0 0.5px var(--hairline);
+  box-shadow: 0 0 calc(var(--glow, 0) * 26px) calc(var(--glow, 0) * 3px) var(--glow-ok);
 }
-/* A source coming home (tile, test cell, gate, Me map cell): the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
-.pa-tile {
-  isolation: isolate;
-}
+/* A source coming home (row, test, gate, square): the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
 .pa-tile__trace {
   position: absolute;
   top: 0;
@@ -221,14 +200,7 @@
   stroke: var(--ink-3);
   stroke-linecap: butt;
 }
-.pa-tile[data-main] .pa-tile__trace rect {
-  stroke: var(--action);
-}
-/* While the stroke draws it is the ring, so the resting ring waits for it. */
-.pa-tile[data-main][data-trace] {
-  box-shadow: 0 12px 24px -10px var(--shadow-color);
-}
-/* The old fill, crossfading out when a tile's state changes on screen (PathView, useStateChange). */
+/* The old fill, crossfading out when a row's state changes on screen (PathView, useStateChange). */
 .pa-tile__was {
   position: absolute;
   inset: 0;
@@ -237,127 +209,92 @@
   pointer-events: none;
 }
 .pa-tile__code {
-  font-size: var(--type-title2);
-  line-height: var(--leading-none);
-  letter-spacing: var(--tracking-title);
-  font-weight: var(--weight-bold);
-  padding-top: var(--space-1);
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-2);
 }
 .pa-tile__title {
-  display: -webkit-box;
-  -webkit-box-orient: vertical;
-  -webkit-line-clamp: 3;
+  min-width: 0;
   overflow: hidden;
-  padding-right: var(--space-2);
-  text-wrap: balance;
-  font-size: var(--type-caption);
-  line-height: var(--leading-caption);
-  font-weight: var(--weight-medium);
-  color: var(--ink-2);
-  overflow-wrap: normal;
-  hyphens: manual;
-  letter-spacing: var(--tracking-caption);
-}
-.pa-tile[data-state="done"] {
-  background: var(--ok-tint);
-  box-shadow:
-    var(--shadow-1),
-    inset 0 0 0 1px var(--ok-edge),
-    0 0 calc(var(--glow, 0) * 26px) calc(var(--glow, 0) * 3px) var(--glow-ok);
-}
-.pa-tile[data-state="done"] .pa-tile__code {
-  color: var(--ok-ink);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-regular);
 }
 .pa-tile__check {
-  position: absolute;
-  top: var(--space-2);
-  right: var(--space-2);
   width: 18px;
   height: 18px;
 }
-.pa-tile__check circle {
-  fill: var(--ok-fill);
-}
 .pa-tile__check path {
   fill: none;
-  stroke: var(--on-ok);
-  stroke-width: 2.2;
+  stroke: var(--ok-ink);
+  stroke-width: 2;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-/* The lesson you are on: the one dark tile, ringed like a selected cell. */
-.pa-tile[data-main] {
-  background: var(--action);
-  color: var(--on-action);
-  --press-tone: var(--on-action);
-  --press-strength: 0.14;
-  box-shadow:
-    0 0 0 3px var(--bg),
-    0 0 0 5.5px var(--action),
-    0 12px 24px -10px var(--shadow-color);
+/* The lesson you are on: the surface tone and the screen's one amber pill. */
+.pa-tile[data-next] {
+  background: var(--surface);
+  --press-strength: 0.1;
 }
-.pa-tile[data-main] .pa-tile__title {
-  color: var(--on-action);
-  opacity: 0.82;
+.pa-tile[data-next] .pa-tile__code,
+.pa-tile[data-next] .pa-tile__title {
+  color: var(--ink-1);
+  font-weight: var(--weight-semibold);
 }
-.pa-tile__bar {
-  position: absolute;
-  left: var(--space-3);
-  right: var(--space-3);
-  bottom: 7px;
-  height: 3px;
+.pa-tile__go {
+  padding: var(--space-0-5) var(--space-3);
   border-radius: var(--corner-pill);
-  background: color-mix(in oklch, var(--on-action) 25%, transparent);
-  overflow: hidden;
-}
-.pa-tile__bar i {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--on-action);
-}
-/* The marker lives inside the tile's own box, in the strip the lesson you are on reserves under its title. */
-.pa-tile[data-main] {
-  padding-bottom: calc(var(--space-8) + var(--space-2));
-}
-.pa-here {
-  position: absolute;
-  z-index: 2;
-  left: var(--space-3);
-  bottom: var(--space-4);
-  max-width: calc(100% - var(--space-4));
-  white-space: nowrap;
+  background: var(--action);
   color: var(--on-action);
   font-size: var(--type-caption);
   line-height: var(--leading-caption);
-  font-weight: var(--weight-semibold);
-  pointer-events: none;
   letter-spacing: var(--tracking-caption);
+  font-weight: var(--weight-semibold);
+  white-space: nowrap;
 }
 
-/* ---- Chapter test: the augmented part of the matrix ------------------------------ */
-/* A bar under the lessons (the line of [A | b]) and one cell inside the same brackets. */
-.pa-aug {
-  position: relative;
-  display: grid;
-  gap: var(--space-4);
-  margin-top: var(--space-5);
+/* The chapter's test: the last row of the list, set off by a little room. */
+.pa-test {
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-top: var(--space-1);
 }
-.pa-aug__bar {
-  height: 0;
-  border-top: 2.5px solid var(--ink-1);
-  border-radius: var(--corner-pill);
-  opacity: 0.18;
+.pa-test__title {
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
 }
-.pa-test,
+.pa-test__value {
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  color: var(--ink-2);
+}
+.pa-test[data-state="done"] .pa-test__value {
+  color: var(--ok-ink);
+  font-weight: var(--weight-semibold);
+}
+/* Not written yet: quieter, still a normal row (never a lock). */
+.pa-test[data-state="preparing"] .pa-test__title {
+  color: var(--ink-2);
+}
+
+/* ---- End of the path ---------------------------------------------------------- */
+/* The gate: the full rehearsal, one raised row after the last chapter. */
 .pa-gate {
   position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-3);
-  min-height: 80px;
-  padding: var(--space-3) var(--space-4) var(--space-3) var(--space-3);
+  min-height: 64px;
+  margin-top: var(--space-6);
+  padding: var(--space-3) var(--space-4);
   border-radius: var(--corner-button);
   background: var(--surface-raised);
   color: var(--ink-1);
@@ -370,15 +307,14 @@
 }
 .pa-wide__text {
   display: grid;
-  gap: var(--space-1);
+  gap: var(--space-0-5);
   min-width: 0;
 }
 .pa-wide__title {
-  font-size: var(--type-title2);
-  line-height: var(--leading-none);
-  letter-spacing: var(--tracking-title);
-  font-weight: var(--weight-bold);
-  padding-top: var(--space-1);
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
 }
 .pa-wide__sub {
   font-size: var(--type-caption);
@@ -387,40 +323,10 @@
   color: var(--ink-2);
   letter-spacing: var(--tracking-caption);
 }
-.pa-wide__value {
-  font-size: var(--type-title2);
-  line-height: var(--leading-none);
-  letter-spacing: var(--tracking-title);
-  font-weight: var(--weight-bold);
-  color: var(--ok-ink);
-}
-.pa-test[data-state="done"] {
-  background: var(--ok-tint);
-  box-shadow:
-    var(--shadow-1),
-    inset 0 0 0 1px var(--ok-edge);
-}
-.pa-test[data-state="done"] .pa-wide__title {
-  color: var(--ok-ink);
-}
-/* Not written yet: quieter, flat, still a normal cell (never a lock). */
-.pa-test[data-state="preparing"] {
-  background: var(--surface-sunk);
-  box-shadow: inset 0 0 0 1px var(--hairline-strong);
-}
-.pa-test[data-state="preparing"] .pa-wide__title {
-  color: var(--ink-2);
-}
-
-/* ---- End of the path ---------------------------------------------------------- */
-/* The gate: the full rehearsal, the same cell as a lesson tile but a full row wide. */
-.pa-gate {
-  margin-top: var(--space-8);
-}
 .pa-end {
   display: grid;
   gap: var(--space-3);
-  margin-top: var(--space-8);
+  margin-top: var(--space-6);
 }
 .pa-end p {
   margin: 0 var(--space-1);

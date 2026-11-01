@@ -26,7 +26,10 @@ test('Harita offers the first lesson on the path', async ({ page }) => {
 test('the path groups lessons into chapters and Sen shows version and commit', async ({ page }) => {
   await openApp(page, './map')
   await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
-  await expect(screen(page).locator('.pa-chapter__count').first()).toHaveText('0 / 10')
+  // A chapter is one row: its name and one readiness square per lesson, grouped under the chapter's progress.
+  const squares = screen(page).getByRole('list', { name: 'Matrisler, 0 / 10 ders tamam' })
+  await expect(squares.getByTestId('map-cell')).toHaveCount(10)
+  await expect(screen(page).getByRole('list', { name: 'Determinant, 0 / 4 ders tamam' })).toBeVisible()
   await tab(page, 'Sen').click()
   await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
@@ -92,6 +95,7 @@ test('a tile opens its card, a tap outside folds it back, and the lesson grows o
 
 test('a lesson opens from its tile card and hides the tab bar', async ({ page }) => {
   await openApp(page, './map')
+  await screen(page).getByTestId('chapter-toggle-determinants').click()
   await screen(page)
     .getByRole('button', { name: /^3\.1 / })
     .click()
@@ -282,7 +286,7 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
   await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toHaveCount(0)
 })
 
-test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments, readiness map and the gear', async ({
+test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments and the gear', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
@@ -298,13 +302,14 @@ test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments,
   await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
   await expect(sen.getByRole('heading', { name: /Rozetler/ })).toBeVisible()
   await expect(sen.getByTestId('moments-album')).toBeVisible()
-  // No explanatory caption under the map, and the shelf shows every badge: none lit, all ten dim and inert.
-  await expect(sen.getByText(/Her kare bir ders/)).toHaveCount(0)
+  // The readiness squares live on Harita now, not here, and the shelf shows every badge: none lit, all ten dim and inert.
+  await expect(sen.getByTestId('map-cell')).toHaveCount(0)
+  await expect(sen.getByText(/Hazırlık haritası/)).toHaveCount(0)
   await expect(sen.getByText(/Çalıştıkça gelir/)).toHaveCount(0)
   await expect(sen.getByTestId('badge-locked')).toHaveCount(10)
   await expect(sen.getByTestId('badge-earned')).toHaveCount(0)
   await expect(sen.getByTestId('moments-album').getByRole('img')).toHaveCount(6)
-  // A wrong first try in the first determinant lesson fills the log row and colours its map cell.
+  // A wrong first try in the first determinant lesson fills the log row.
   await openApp(page, './lesson/d1-determinant')
   const player = page.getByTestId('lesson-player')
   const next = player.getByRole('button', { name: 'İleri' })
@@ -312,15 +317,16 @@ test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments,
   await player.getByRole('group').getByRole('button').filter({ hasText: '26' }).click()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
-  await expect(sen.locator('[data-lesson="d1-determinant"]')).toHaveAttribute('data-level', 'bad')
   await expect(sen.getByTestId('mistake-row')).toContainText('1 açık hata')
-  // A map cell opens its lesson.
-  await sen.locator('[data-lesson="d1-determinant"]').click()
+  // The wrong try colours the lesson's square on Harita, and the square opens its lesson.
+  await tab(page, 'Harita').click()
+  const cell = screen(page).locator('.pa-cell[data-lesson="d1-determinant"]')
+  await expect(cell).toHaveAttribute('data-level', 'bad')
+  await cell.click()
   await expect(page.getByTestId('lesson-player')).toBeVisible()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
-  // The text button still opens Settings (the map sits low now, so the page was scrolled to reach its cell).
-  await sen.locator('.dz-screen').evaluate((screen) => screen.scrollTo(0, 0))
+  await expect(sen.getByTestId('me-scene')).toBeVisible()
   await page.getByTestId('open-settings').click()
   await expect(page.getByRole('heading', { name: 'Ayarlar', level: 1 })).toBeVisible()
 })
@@ -337,14 +343,53 @@ test('the exam line counts down once a date is set', async ({ page }) => {
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
 })
 
-test('every path tile shows its whole title at phone width', async ({ page }) => {
+test('every open lesson row is one line, and its aria-label carries the whole title', async ({ page }) => {
   await openApp(page, './map')
-  const clipped = await screen(page)
-    .locator('.pa-tile__title')
-    .evaluateAll((titles) =>
-      titles.filter((t) => t.scrollHeight > t.clientHeight + 1).map((t) => t.textContent),
+  for (const id of ['matrices', 'row-operations', 'determinants', 'inverse', 'systems']) {
+    const toggle = screen(page).getByTestId(`chapter-toggle-${id}`)
+    if ((await toggle.getAttribute('aria-expanded')) !== 'true') await toggle.click()
+    const body = screen(page).locator(`#chapter-body-${id}`)
+    await expect(body).toBeVisible()
+    await page.waitForTimeout(700)
+    const rows = await body.locator('.pa-tile, .pa-test').evaluateAll((els) =>
+      els.map((el) => {
+        const title = el.querySelector<HTMLElement>('.pa-tile__title, .pa-test__title')
+        return {
+          height: (el as HTMLElement).offsetHeight,
+          wraps: title ? title.scrollHeight > title.clientHeight + 1 : false,
+          label: el.getAttribute('aria-label') ?? '',
+        }
+      }),
     )
-  expect(clipped).toEqual([])
+    expect(rows.length).toBeGreaterThan(1)
+    for (const row of rows) {
+      expect(row.wraps).toBe(false)
+      expect(row.height).toBeGreaterThanOrEqual(44)
+      expect(row.height).toBeLessThanOrEqual(56)
+      expect(row.label.length).toBeGreaterThan(8)
+    }
+  }
+})
+
+test('Harita opens exactly one chapter, the one with the next lesson, and a tap swaps it', async ({
+  page,
+}) => {
+  await openApp(page, './map')
+  const pane = screen(page)
+  const toggles = pane.locator('.pa-chapter__toggle')
+  await expect(toggles).toHaveCount(5)
+  await expect(pane.locator('.pa-chapter__toggle[aria-expanded="true"]')).toHaveCount(1)
+  await expect(pane.getByTestId('chapter-toggle-matrices')).toHaveAttribute('aria-expanded', 'true')
+  await pane.getByTestId('chapter-toggle-determinants').click()
+  await expect(pane.getByTestId('chapter-toggle-determinants')).toHaveAttribute('aria-expanded', 'true')
+  await expect(pane.getByTestId('chapter-toggle-matrices')).toHaveAttribute('aria-expanded', 'false')
+  await expect(pane.locator('#chapter-body-matrices')).toHaveCount(0)
+  await expect(pane.locator('#chapter-body-determinants .pa-tile')).toHaveCount(4)
+  // The whole row is the target: tall enough, and it closes the chapter again.
+  const box = await pane.getByTestId('chapter-toggle-determinants').boundingBox()
+  expect(box?.height).toBeGreaterThanOrEqual(44)
+  await pane.getByTestId('chapter-toggle-determinants').click()
+  await expect(pane.locator('.pa-chapter__toggle[aria-expanded="true"]')).toHaveCount(0)
 })
 
 test('Harita edges: even progress strip, a clear resume marker, one tile language', async ({ page }) => {
@@ -358,18 +403,18 @@ test('Harita edges: even progress strip, a clear resume marker, one tile languag
     .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width))
   expect(widths.length).toBeGreaterThan(0)
   for (const w of widths) expect(w).toBeGreaterThanOrEqual(12)
-  // (b) The marker sits inside its tile and overlaps none of the tile's text or marks.
-  const clash = await pane.locator('.pa-tile[data-main]').evaluate((tile) => {
-    const tag = tile.parentElement?.querySelector<HTMLElement>('.pa-here')
-    if (!tag) return ['no marker']
-    const mark = tag.getBoundingClientRect()
+  // (b) The pill sits inside its row and overlaps none of the row's text or marks.
+  const clash = await pane.locator('.pa-tile[data-next]').evaluate((tile) => {
+    const pill = tile.querySelector<HTMLElement>('.pa-tile__go')
+    if (!pill) return ['no pill']
+    const mark = pill.getBoundingClientRect()
     const box = tile.getBoundingClientRect()
     const problems: string[] = []
     if (mark.left < box.left || mark.right > box.right || mark.top < box.top || mark.bottom > box.bottom)
-      problems.push('marker leaves the tile')
+      problems.push('pill leaves the row')
     const hits = (r: DOMRect) =>
       mark.left < r.right && mark.right > r.left && mark.top < r.bottom && mark.bottom > r.top
-    for (const el of tile.querySelectorAll<HTMLElement>('.pa-tile__code, .pa-tile__bar, .pa-tile__check')) {
+    for (const el of tile.querySelectorAll<HTMLElement>('.pa-tile__code, .pa-tile__check')) {
       if (hits(el.getBoundingClientRect())) problems.push(el.className.toString())
     }
     const title = tile.querySelector<HTMLElement>('.pa-tile__title')
@@ -381,34 +426,21 @@ test('Harita edges: even progress strip, a clear resume marker, one tile languag
     return problems
   })
   expect(clash).toEqual([])
-  // (c) Tiles in one row are equally tall.
-  const rows = await pane.locator('.pa-grid').evaluateAll((grids) =>
-    grids.flatMap((grid) => {
-      const byTop = new Map<number, number[]>()
-      for (const tile of grid.querySelectorAll<HTMLElement>('.pa-tile')) {
-        const li = tile.parentElement as HTMLElement
-        const heights = byTop.get(li.offsetTop) ?? []
-        heights.push(tile.offsetHeight)
-        byTop.set(li.offsetTop, heights)
-      }
-      return [...byTop.values()].filter((heights) => new Set(heights).size > 1)
-    }),
-  )
-  expect(rows).toEqual([])
-  // (d) The chapter test cell and the gate speak the tile's language: same radius and outline.
-  const look = (sel: string) =>
+  // (c) Lesson rows are equally tall, and exactly one pill (the screen's one amber element) is on show.
+  const heights = await pane
+    .locator('.pa-tile')
+    .evaluateAll((tiles) => [...new Set(tiles.map((tile) => (tile as HTMLElement).offsetHeight))])
+  expect(heights).toHaveLength(1)
+  await expect(pane.locator('.pa-tile__go')).toHaveCount(1)
+  // (d) The chapter test row and the gate speak the row's language: the same corner radius.
+  const radius = (sel: string) =>
     pane
       .locator(sel)
       .first()
-      .evaluate((el) => {
-        const style = getComputedStyle(el)
-        return { radius: style.borderRadius, border: style.borderWidth, shadow: style.boxShadow }
-      })
-  const tileLook = await look('.pa-tile:not([data-main]):not([data-state="done"])')
-  const gateLook = await look('[data-testid="vize-gate"]')
-  expect(gateLook).toEqual(tileLook)
-  const testLook = await look('.pa-test[data-state="new"]')
-  expect(testLook.radius).toBe(tileLook.radius)
+      .evaluate((el) => getComputedStyle(el).borderTopLeftRadius)
+  const tileRadius = await radius('.pa-tile')
+  expect(await radius('[data-testid="vize-gate"]')).toBe(tileRadius)
+  expect(await radius('.pa-test')).toBe(tileRadius)
   // Nothing spills sideways.
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
@@ -421,7 +453,7 @@ test('scrolling Harita moves the path as one flat page', async ({ page }) => {
     s.scrollTop = 520
     s.dispatchEvent(new Event('scroll'))
     await new Promise((done) => setTimeout(done, 200))
-    const pieces = [...s.querySelectorAll<HTMLElement>('.pa-summary, .pa-chapter__head, .pa-grid > li')]
+    const pieces = [...s.querySelectorAll<HTMLElement>('.pa-summary, .pa-chapter__head, .pa-lessons > li')]
     return pieces.filter(
       (el) => getComputedStyle(el).transform !== 'none' || getComputedStyle(el).opacity !== '1',
     ).length
@@ -603,6 +635,7 @@ test('a chapter test runs six questions untimed and returns to Harita with its s
 
 test('a chapter whose questions are still being written explains itself', async ({ page }) => {
   await openApp(page, './map')
+  await screen(page).getByTestId('chapter-toggle-row-operations').click()
   const cell = screen(page).getByTestId('chapter-test-row-operations')
   await expect(cell).toContainText('hazırlanıyor')
   await cell.click()
@@ -827,14 +860,14 @@ test.describe('small phone (375 x 667) reach', () => {
     const sen = screen(page)
     await expect(sen.getByTestId('me-scene')).toBeVisible()
     await expect(sen.getByTestId('badge-locked').first()).toBeVisible()
-    await expect(sen.locator('.me-map')).toBeVisible()
+    await expect(sen.getByTestId('moments-album')).toBeVisible()
     await page.evaluate(() => {
       const pane = document.querySelector('.sh-pane:not([inert])')
       for (const el of pane?.querySelectorAll('*') ?? [])
         if (el.scrollHeight > el.clientHeight + 1) el.scrollTop = 1e6
     })
     const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
-    const last = await sen.locator('.me-map').boundingBox()
+    const last = await sen.getByTestId('moments-album').boundingBox()
     expect(last && bar && last.y + last.height <= bar.y).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   })
