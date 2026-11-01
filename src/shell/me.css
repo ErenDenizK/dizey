@@ -100,7 +100,7 @@
   height: auto;
 }
 .me-moments__slot--hidden svg {
-  opacity: 0.45;
+  opacity: 0.2;
   filter: brightness(0) invert(0.5);
 }
 .me-moments__mark {

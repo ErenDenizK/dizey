@@ -187,6 +187,6 @@
 }
 /* Not earned yet: a dim silhouette in the same bracket frame. Not a control, so nothing about it invites a tap. */
 .badge-shelf__item--locked svg {
-  opacity: 0.45;
+  opacity: 0.2;
   filter: brightness(0) invert(0.5);
 }
