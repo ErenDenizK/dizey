@@ -140,6 +140,14 @@ const AREA_HOLD = 280
  * so cells never resize while a beat plays.
  */
 export const CELL = { probe: 64, min: 30, max: 88 } as const
+/**
+ * Option-row growth for a question step: the rows of one step take what the fitted scene leaves unused, up
+ * to maxGrow px each, keeping reserve px for a wrong-try hint (two lines and its gap) and line px for each
+ * work line the reveal adds. Under minGrow it is not worth a different row height.
+ */
+export const FILL = { maxGrow: 28, minGrow: 4, reserve: 96, line: 40 } as const
+/** A question step's options, for sizing their rows once per step (key: the step). */
+export type Fill = { key: string; rows: number; extraLines: number }
 /** Gap between the scene and the work lines, in px. */
 const NOTE_GAP = 12
 
@@ -173,8 +181,10 @@ function useStageLayout(
   scene: RefObject<HTMLDivElement | null>,
   area: RefObject<SVGSVGElement | null>,
   work: RefObject<HTMLDivElement | null>,
+  fill: Fill | undefined,
 ) {
   const rest = useRef<Map<string, Rest> | null>(null)
+  const filled = useRef<string | undefined>(undefined)
   const natural = useRef(0)
   const width = useRef(0)
   const glide = useRef<Target | null>(null)
@@ -190,10 +200,13 @@ function useStageLayout(
       box.style.height = ''
       box.style.flex = ''
       box.style.minHeight = ''
-      // On a question with options the stage hugs its scene and the options take the rest (data-hug on the
-      // run). The cell is still fitted to the full free height, measured with the hug lifted for a moment.
-      const run = box.closest<HTMLElement>('[data-hug]')
-      run?.removeAttribute('data-hug')
+      // A question's option rows are sized once, when its step enters, and then hold for the whole step.
+      const run = box.closest<HTMLElement>('.ls-run')
+      const refill = fill?.key !== filled.current
+      if (refill) {
+        filled.current = fill?.key
+        run?.style.removeProperty('--opt-grow')
+      }
       let next = box.offsetHeight
       width.current = box.clientWidth
       // Fit the cell to the height the stage is going to.
@@ -210,10 +223,19 @@ function useStageLayout(
           { width: content.offsetWidth, height: content.offsetHeight },
         )
         box.style.setProperty('--cell', `${cell}px`)
-      }
-      if (run) {
-        run.setAttribute('data-hug', '')
-        next = box.offsetHeight
+        // Height the fitted scene leaves unused (a wide, short scene) goes to the option rows, minus room
+        // for the tallest wrong-try hint, so the stage never re-fits smaller during the step.
+        if (refill && fill && run) {
+          const used = content.offsetHeight + padY + notes + areaHeight
+          const floor = Number.parseFloat(style.minHeight) || 0
+          const reserve = FILL.reserve + fill.extraLines * FILL.line
+          const spare = next - Math.max(used + reserve, floor)
+          const grow = Math.max(0, Math.min(FILL.maxGrow, Math.floor(spare / fill.rows)))
+          if (grow >= FILL.minGrow) {
+            run.style.setProperty('--opt-grow', `${grow}px`)
+            next = box.offsetHeight
+          }
+        }
       }
       // Where everything rests now, in stage coordinates (transforms taken out).
       const origin = box.getBoundingClientRect()
@@ -567,6 +589,7 @@ export function Stage({
   final,
   stagger,
   transport,
+  fill,
 }: {
   lesson: Lesson
   scene: Scene | undefined
@@ -577,12 +600,14 @@ export function Stage({
   stagger: number
   /** Pause, play or replay, in the stage corner. */
   transport?: { mode: 'pause' | 'play' | 'replay'; onPress: () => void } | undefined
+  /** A question's options: their rows take the height the scene leaves unused, once per step. */
+  fill?: Fill | undefined
 }) {
   const box = useRef<HTMLDivElement>(null)
   const sceneBox = useRef<HTMLDivElement>(null)
   const areaBox = useRef<SVGSVGElement>(null)
   const workBox = useRef<HTMLDivElement>(null)
-  useStageLayout(box, sceneBox, areaBox, workBox)
+  useStageLayout(box, sceneBox, areaBox, workBox, fill)
   useReveal(box, state.shown, state.flights, stagger)
   useLanding(box, state.working, state.landFrom)
   const areaName = state.area ?? final.area
