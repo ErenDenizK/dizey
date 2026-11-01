@@ -7,7 +7,7 @@
 //        node scripts/motion-strip.mjs <scenario> <outDir>
 // Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
-// chapter-test-open / chapter-test-close (Harita's chapter cell and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
+// chapter-test-open / chapter-test-close (alias test-close) (Harita's chapter cell and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
 //        node scripts/pop-check.mjs <outDir>/frames   (exit 1 and the frames and cells when something steps)
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
@@ -24,8 +24,14 @@ const FRAME = 1000 / 60
 
 const PEEK_ENTER = '[data-testid="lesson-peek"] .dz-button[data-kind="primary"]'
 const LESSON_CLOSE = '[data-testid="lesson-player"] [aria-label="Dersten çık"]'
+/** The app opens on Today; the path tiles live on Harita. */
+async function toHarita({ page, settle }) {
+  await page.locator('.dz-tab').nth(1).click()
+  await settle()
+}
 /** Opens a tile's card, enters its lesson and lets everything come to rest. */
 async function enterLesson({ page, settle }) {
+  await toHarita({ page, settle })
   await page.locator('.pa-tile:not([data-main])').first().click()
   await settle()
   await page.locator(PEEK_ENTER).click()
@@ -119,6 +125,7 @@ const scenarios = {
   sheet: {
     region: 'body',
     scale: 2,
+    prep: toHarita,
     run: async ({ tap, frames, page }) => {
       await tap('.pa-tile:not([data-main])')
       await frames(50)
@@ -142,6 +149,7 @@ const scenarios = {
   'lesson-open': {
     region: 'body',
     scale: 2,
+    prep: toHarita,
     run: async ({ tap, frames }) => {
       await tap('.pa-tile:not([data-main])')
       await frames(30)
@@ -215,6 +223,7 @@ const scenarios = {
     region: 'body',
     scale: 2,
     settings: { cellReveal: true },
+    prep: toHarita,
     run: async ({ tap, frames }) => {
       await tap('.pa-tile:not([data-main])')
       await frames(30)
@@ -233,6 +242,7 @@ const scenarios = {
     },
   },
 }
+scenarios['test-close'] = scenarios['chapter-test-close']
 const plan = scenarios[scenario]
 if (!plan) throw new Error(`unknown scenario ${scenario}`)
 
