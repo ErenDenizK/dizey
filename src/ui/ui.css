@@ -174,22 +174,134 @@
 .dz-edge-top[data-floating] {
   height: calc(env(safe-area-inset-top) + var(--space-2) + var(--target) + var(--space-4));
 }
-/* Pushed screens: the back button floats on its own surface and stays while the page scrolls. */
-.dz-float-back {
-  position: absolute;
-  z-index: 6;
-  top: calc(env(safe-area-inset-top) + var(--space-2));
-  left: var(--space-2);
-}
+/* A tab screen's one action floats at the top right and tucks away while reading down. */
 .dz-float-action {
   position: absolute;
   z-index: 6;
   top: calc(env(safe-area-inset-top) + var(--space-2));
-  right: var(--space-2);
+  right: calc(var(--page-gutter) - var(--space-2));
 }
-.dz-icon-button--float {
+/* Visually hidden, still read by assistive tech: the h1 of a screen whose hero is its top. */
+.dz-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+/* A plain text button: 48 px to touch, the label is the whole look. */
+.dz-text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0 var(--space-2);
+  border-radius: var(--corner-button);
+  color: var(--ink-2);
+  font-size: var(--type-body);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-medium);
+  background: none;
+}
+
+/* Scene, second level: a header row inside the page (title left, "Bitti" right), no floating controls. */
+.dz-screen-head {
+  display: grid;
+  margin: 0 0 var(--gap-block);
+}
+.dz-screen-head__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-item);
+  min-height: var(--target);
+}
+.dz-screen-head__title {
+  margin: 0;
+  min-width: 0;
+  color: var(--ink-1);
+}
+/* The text sits on the page gutter's edge, like the content under it. */
+.dz-screen-head .dz-text-button {
+  flex: none;
+  margin-right: calc(var(--space-2) * -1);
+  color: var(--ink-1);
+  font-weight: var(--weight-semibold);
+}
+.dz-screen-grabber {
+  display: none;
+}
+
+/* As a sheet (the overlay host says so): a raised surface with a large top radius and a grabber. */
+[data-present="sheet"] .dz-screen[data-pushed] {
   background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
+  border-radius: var(--corner-sheet) var(--corner-sheet) 0 0;
+  padding-top: var(--space-2);
+  box-shadow: none;
+}
+[data-present="sheet"] .dz-screen[data-pushed] .dz-screen-grabber {
+  display: block;
+  justify-self: center;
+  width: 36px;
+  height: 5px;
+  margin: 0 0 var(--space-2);
+  border-radius: var(--corner-pill);
+  background: var(--hairline-strong);
+}
+
+/* Masthead: one solid row, name left, one context slot right; a hairline under it once scrolled. */
+.dz-screen[data-chrome="masthead"] {
+  padding-top: calc(env(safe-area-inset-top) + var(--target) + var(--space-2));
+}
+.dz-masthead {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 6;
+  padding-top: env(safe-area-inset-top);
+  background: var(--bg);
+  pointer-events: auto;
+}
+.dz-masthead__row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-related);
+  min-height: var(--target);
+  padding: 0 var(--page-gutter);
+}
+.dz-masthead__title {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+  color: var(--ink-1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dz-masthead__back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  flex: none;
+  min-height: var(--target);
+  margin-left: calc(var(--page-gutter) * -1 + var(--space-2));
+  padding: 0 var(--space-2);
+  color: var(--ink-2);
+  font-size: var(--type-body);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-medium);
+}
+.dz-masthead__action {
+  flex: none;
+  margin-right: calc(var(--space-2) * -1);
+}
+.dz-masthead__rule {
+  height: 0.5px;
+  background: var(--hairline-strong);
 }
 
 /* ---- Pressables ------------------------------------------------------------- */
