@@ -285,6 +285,7 @@
   --on-row: oklch(1 0 0);
   --on-col: oklch(0.183 0.009 268.6);
   --on-ok: oklch(0.183 0.009 268.6);
+  --on-bad: oklch(1 0 0);
   --backdrop: oklch(0 0 0);
 }
 
