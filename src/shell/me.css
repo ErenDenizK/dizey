@@ -7,6 +7,9 @@
   margin-top: var(--space-2);
   padding: 0;
 }
+.me-scene .companion-slot--large {
+  width: 168px;
+}
 .me-scene__state {
   margin: 0;
   font-size: var(--type-subhead);
@@ -16,12 +19,7 @@
   color: var(--ink-2);
 }
 
-.me-block__hint {
-  margin: var(--gap-related) var(--card-pad) 0;
-  color: var(--ink-3);
-}
-
-/* Hazırlık haritası: a caption and a row of cells per chapter. */
+/* Hazırlık haritası: a label row and a row of squares per chapter. One square is one lesson. */
 .me-map {
   display: grid;
   gap: var(--gap-block);
@@ -32,68 +30,97 @@
 }
 .me-map__label {
   display: flex;
+  align-items: baseline;
   justify-content: space-between;
   gap: var(--gap-related);
-  margin: 0;
+  margin: 0 0 var(--space-1);
+}
+.me-map__name {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.me-map__count {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-regular);
   color: var(--ink-2);
 }
 .me-map__row {
   display: grid;
   grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+  justify-items: center;
+  row-gap: var(--space-1);
 }
-/* The whole column slice is the target (48 px tall); the drawn cell inside is smaller. */
+/* The square is the link itself (the shell morphs a lesson out of it); the touch target grows past it. */
 .me-map__cell {
-  display: grid;
-  place-items: center;
-  min-height: var(--target);
-}
-.me-map__cell i {
-  width: 24px;
-  height: 24px;
-  max-width: 100%;
+  position: relative;
+  width: 28px;
+  height: 28px;
   border-radius: var(--corner-chip);
   box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
 }
-.me-map__cell[data-level="ok"] i {
+.me-map__cell::after {
+  content: "";
+  position: absolute;
+  inset: -8px -4px;
+}
+.me-map__cell[data-level="ok"] {
   background: var(--ok-fill);
   box-shadow: none;
 }
-.me-map__cell[data-level="bad"] i {
-  background: var(--bad-fill);
+.me-map__cell[data-level="done"] {
+  background: var(--ok-edge);
   box-shadow: none;
 }
-.me-map__cell[data-level="mid"] i,
-.me-map__cell[data-level="done"] i {
-  background: var(--ink-3);
+.me-map__cell[data-level="mid"] {
+  background: var(--spark);
+  box-shadow: none;
+}
+.me-map__cell[data-level="bad"] {
+  background: var(--bad-ink);
   box-shadow: none;
 }
 
-/* Gizli anlar: a row of slots, found in full and the rest as silhouettes. */
+/* Gizli anlar: one compact row; found moments in full under it, the rest as one silhouette. */
 .me-moments {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap-item);
-  margin: 0;
-  padding: var(--card-pad);
-  list-style: none;
+  margin-top: var(--gap-group);
   border-radius: var(--corner-card);
   background: var(--surface);
   box-shadow: var(--shadow-1), var(--edge-light);
 }
+.me-moments__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-item);
+  margin: 0;
+  padding: 0 var(--card-pad) var(--card-pad);
+  list-style: none;
+}
 .me-moments__slot {
   display: grid;
   align-content: start;
-  width: 56px;
+  justify-items: center;
+  gap: var(--space-0-5);
+  width: 64px;
 }
 .me-moments__slot svg {
   display: block;
   width: 100%;
   height: auto;
 }
-.me-moments__slot:not([data-found]) {
-  opacity: 0.32;
+.me-moments__slot--more {
+  width: 88px;
 }
-.me-moments__slot:not([data-found]) svg {
+.me-moments__slot--more .me-moments__code {
+  white-space: nowrap;
+}
+.me-moments__slot--more svg {
+  width: 64px;
+  opacity: 0.45;
   filter: brightness(0) invert(0.5);
 }
 .me-moments__code {
@@ -105,35 +132,45 @@
   letter-spacing: var(--tracking-caption);
   color: var(--ink-1);
 }
+.me-moments__slot--more .me-moments__code {
+  color: var(--ink-2);
+}
+
+/* The shared section row: title left, count right, an optional chevron. */
+.me-row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-item);
+  min-height: var(--target);
+  margin: 0;
+  padding: var(--space-2) var(--card-pad);
+}
+.me-row__title {
+  flex: 1;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.me-row__count {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-regular);
+  color: var(--ink-2);
+}
 
 /* Hata defteri: a compact entry row; the list opens under it. */
 .me-mistakes {
   margin-top: var(--gap-group);
 }
 .me-mistakes__row {
-  display: flex;
-  align-items: center;
-  gap: var(--gap-item);
   width: 100%;
-  min-height: var(--target);
-  padding: var(--space-2) var(--card-pad);
   border-radius: var(--corner-card);
   background: var(--surface);
-  color: var(--ink-1);
   text-align: start;
   box-shadow: var(--shadow-1), var(--edge-light);
-}
-.me-mistakes__title {
-  flex: 1;
-  font-size: var(--type-body);
-  line-height: var(--leading-body);
-  letter-spacing: var(--tracking-body);
-  font-weight: var(--weight-semibold);
-}
-.me-mistakes__count {
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  color: var(--ink-2);
 }
 .me-mistakes__chevron {
   display: grid;

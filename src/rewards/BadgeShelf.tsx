@@ -5,12 +5,12 @@ import { useMoments } from '../lesson/moments'
 import { useLessonRecords } from '../lesson/store'
 import { Pressable } from '../ui/Pressable'
 import { BadgeReveal } from './BadgeReveal'
-import { BADGES, type BadgeId, earnedBadges } from './badges'
+import { BADGES, type Badge, type BadgeId, earnedBadges } from './badges'
 import { Emblem } from './Emblem'
 import { markShown, useShown } from './store'
 
 /**
- * Sen's rozet wall: every badge, earned ones in full and the rest as dim silhouettes (no lock, no "not yet" text).
+ * Sen's rozet shelf: earned badges large with their names; every badge not earned yet folds into one silhouette tile ("N tane daha").
  * A badge not shown yet carries a spark dot; a tap plays its moment above the shelf (and marks it shown). A tap on a shown badge replays it.
  */
 export function BadgeShelf() {
@@ -19,6 +19,7 @@ export function BadgeShelf() {
   const moments = useMoments()
   const shown = useShown()
   const earned = earnedBadges({ records, history, moments })
+  const unearned = BADGES.filter((badge) => !earned.some((item) => item.id === badge.id))
   const [open, setOpen] = useState<{ id: BadgeId; n: number } | null>(null)
   const current = earned.find((badge) => badge.id === open?.id)
   return (
@@ -34,20 +35,8 @@ export function BadgeShelf() {
           </div>
         ) : null}
         <div className="badge-shelf__grid">
-          {BADGES.map((badge) => {
+          {earned.map((badge) => {
             const name = strings.badges.items[badge.id].name
-            if (!earned.some((item) => item.id === badge.id))
-              return (
-                <div
-                  key={badge.id}
-                  className="badge-shelf__item badge-shelf__item--unearned"
-                  role="img"
-                  aria-label={`${name}, ${strings.me.badgeHidden}`}
-                >
-                  <Emblem badge={badge} />
-                  <span className="badge-shelf__name">{name}</span>
-                </div>
-              )
             return (
               <Pressable
                 key={badge.id}
@@ -65,8 +54,18 @@ export function BadgeShelf() {
               </Pressable>
             )
           })}
+          {unearned.length ? (
+            <div
+              className="badge-shelf__more"
+              data-testid="badges-more"
+              role="img"
+              aria-label={`${strings.me.more(unearned.length)}, ${strings.me.badgeHidden}`}
+            >
+              <Emblem badge={unearned[0] as Badge} />
+              <span className="badge-shelf__more-text num">{strings.me.more(unearned.length)}</span>
+            </div>
+          ) : null}
         </div>
-        <p className="dz-footnote badge-shelf__hint">{strings.badges.shelfHint}</p>
       </div>
     </section>
   )

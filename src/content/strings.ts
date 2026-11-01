@@ -128,7 +128,6 @@ export const strings = {
       chapters > 0 ? `${done} / ${total} ders · ${chapters} bölüm bitti` : `${done} / ${total} ders`,
     stateFresh: (total: number) => `${total} dersin hepsi seni bekliyor`,
     readiness: 'Hazırlık haritası',
-    readinessHint: 'Her kare bir ders; rengi o dersteki ilk denemelerin.',
     readinessChapter: (label: string, done: number, total: number) =>
       `${label}, ${done} / ${total} ders tamam`,
     readinessCell: (code: string, name: string, level: string) => `${code} ${name}: ${level}`,
@@ -144,6 +143,7 @@ export const strings = {
     momentFound: (code: string) => `${code}: gizli an bulundu`,
     momentHidden: 'Henüz bulunmadı',
     badgeHidden: 'henüz kazanılmadı',
+    more: (count: number) => `${count} tane daha`,
     mistakes: 'Hata defteri',
     mistakesRow: (count: number) => `${count} açık hata`,
     mistakesHint: 'Derse dönüp ilk denemede doğru yapınca listeden çıkar.',
