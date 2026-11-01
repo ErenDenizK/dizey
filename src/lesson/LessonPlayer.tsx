@@ -13,6 +13,7 @@ import { haptic } from '../sound/haptics'
 import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
 import { Check, ChevronLeft, Close } from '../ui/icons'
+import { RollNumber } from '../ui/RollNumber'
 import { Keypad } from './Keypad'
 import { LessonEnd } from './LessonEnd'
 import { momentState, readMoments, setMoment } from './moments'
@@ -426,8 +427,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         >
           <span className="ls-progress__fill" />
         </div>
+        {/* Only the step number rolls; the code and the total stay still. */}
         <span className="ls-count" aria-hidden="true">
-          {pathCode(lesson)} · {strings.lesson.count(index + 1, lesson.steps.length)}
+          {pathCode(lesson)} · <RollNumber value={index + 1} />/{lesson.steps.length}
         </span>
       </div>
 

@@ -20,8 +20,9 @@ const enter = (el: Element, from: Record<string, number>, delay: number) => {
 
 /**
  * Step change: the narration enters from the side the learner is walking to (0.35 opacity, 14 px, 35 ms
- * apart); the counter rolls; the progress fill glides. Within a step, anything new in the narration (the
- * feedback) and any new dock row rises into place instead of appearing in one frame.
+ * apart); the counter's changed digits roll (RollNumber); the progress fill glides. Within a step,
+ * anything new in the narration (the feedback) and any new dock row rises into place instead of
+ * appearing in one frame.
  */
 export function useLessonMotion(root: RefObject<HTMLElement | null>, index: number, steps: number) {
   const shownIndex = useRef<number | null>(null)
@@ -43,8 +44,7 @@ export function useLessonMotion(root: RefObject<HTMLElement | null>, index: numb
           seen.current.add(el)
           enter(el, { opacity: ENTER_FLOOR, x: SHIFT.narr * direction }, order * CHOREO_MS.stagger)
         })
-        const count = box.querySelector('.ls-count')
-        if (count && previous !== null) enter(count, { opacity: 0, y: SHIFT.count * direction }, 0)
+        // The counter rolls only its changed digits itself (RollNumber).
       } else {
         let order = 0
         for (const el of narration) {

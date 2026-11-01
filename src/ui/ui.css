@@ -497,3 +497,23 @@
     0 0 10px var(--glow-ok);
   pointer-events: none;
 }
+
+/* ---- Rolling number (RollNumber.tsx) ----------------------------------------- */
+/* Each place is one cell; the leaving and arriving digits share it and pass through a soft top and bottom edge. */
+.dz-roll {
+  display: inline-flex;
+  font-variant-numeric: tabular-nums;
+}
+.dz-roll__slot {
+  display: inline-grid;
+  overflow: clip;
+  overflow-clip-margin: 0.15em;
+  mask-image: linear-gradient(to bottom, transparent 0, black 22%, black 78%, transparent 100%);
+}
+.dz-roll__slot:not([data-leaving]) {
+  mask-image: none;
+}
+.dz-roll__digit {
+  grid-area: 1 / 1;
+  will-change: transform;
+}
