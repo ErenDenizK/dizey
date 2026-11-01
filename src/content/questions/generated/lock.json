@@ -1,0 +1,25 @@
+{
+  "_readme": "Fingerprints of generated questions, id -> content. Only add via \"pnpm lock:questions\"; never edit a locked entry. See lock.test.ts.",
+  "fingerprints": {
+    "v1-gen-d2-numeric-01": "7f848a71b77e5a6b",
+    "v1-gen-d2-numeric-02": "f0cb00be39211732",
+    "v1-gen-d2-numeric-03": "3b6b291665c9dbb6",
+    "v1-gen-d2-numeric-04": "bdede8b822060a35",
+    "v1-gen-d3-row-ops-01": "92f4c6937e45c0d3",
+    "v1-gen-d3-row-ops-02": "3cb36fb1e46ec4a4",
+    "v1-gen-d3-row-ops-03": "1e71c74706392a5c",
+    "v1-gen-d3-row-ops-04": "15ca829d489e3308",
+    "v1-gen-d3-scalar-01": "b9540cf27b49eb16",
+    "v1-gen-d3-scalar-02": "647eac43131ae2d5",
+    "v1-gen-d3-scalar-03": "2bed120a9877cc44",
+    "v1-gen-d3-scalar-04": "45126322771c4995",
+    "v1-gen-d3-singular-param-01": "baa3968967c3f4c0",
+    "v1-gen-d3-singular-param-02": "3bc3fe1de7a0631b",
+    "v1-gen-d3-singular-param-03": "03267c8cc094d149",
+    "v1-gen-d3-singular-param-04": "c0b30e87b7541d0a",
+    "v1-gen-d4-adjugate-01": "232f4d6c4ddb127e",
+    "v1-gen-d4-adjugate-02": "68862828accc6351",
+    "v1-gen-d4-adjugate-03": "0b33f01d020e110c",
+    "v1-gen-d4-adjugate-04": "bc944559f47efa83"
+  }
+}

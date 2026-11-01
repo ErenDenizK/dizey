@@ -1,14 +1,18 @@
 import { useCallback, useRef, useState } from 'react'
 import { type Question, questions } from '../content/questions'
+import { isGenerated } from '../content/questions/types'
 import { strings } from '../content/strings'
 import { QuestionSheet } from '../exam/QuestionSheet'
 import { recordOutcome } from '../exam/store'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 
-/** The bank question that belongs to a lesson's node, if there is one (the first in bank order). */
+/**
+ * The real exam question that belongs to a lesson's node, if there is one (the first in bank order).
+ * Generated practice items are skipped: this card says "Sınavda böyle sorulur", a claim only a printed question can back.
+ */
 export function examQuestionFor(node: string, bank: readonly Question[] = questions): Question | null {
-  return bank.find((question) => question.node === node) ?? null
+  return bank.find((question) => question.node === node && !isGenerated(question)) ?? null
 }
 
 /**
