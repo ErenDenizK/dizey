@@ -206,7 +206,7 @@
     var(--edge-light),
     inset 0 0 0 0.5px var(--hairline);
 }
-/* A lesson coming home: the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
+/* A source coming home (tile, test cell, gate, Me map cell): the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
 .pa-tile {
   isolation: isolate;
 }
@@ -413,6 +413,7 @@
 /* ---- End of the path ---------------------------------------------------------- */
 /* The gate: the full rehearsal, one cell wide, after the last chapter. */
 .pa-gate {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;

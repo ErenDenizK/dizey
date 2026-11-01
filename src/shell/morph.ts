@@ -323,8 +323,28 @@ export function release(tile: HTMLElement, delay = 0) {
 }
 
 /**
- * Aftermath of a lesson coming home: the tile's outline draws itself in from its top-left corner (and becomes
- * its ring, or fades), its tag rises in after the stroke starts, and the nearest tiles settle one after
+ * The siblings of a source that ripple: elements of the same base class (its first class) inside the closest
+ * ancestor that holds any, so a chapter-test cell stirs the other cells and a lesson tile its grid, whatever
+ * the source's own class. A source alone in its kind (the gate) has none.
+ */
+function neighboursOf(source: HTMLElement) {
+  const base = source.classList[0]
+  if (!base) return []
+  for (let box = source.parentElement; box; box = box.parentElement) {
+    const kin = [...box.querySelectorAll<HTMLElement>(`.${CSS.escape(base)}`)].filter(
+      (other) =>
+        other !== source &&
+        !other.hasAttribute('data-face') &&
+        getComputedStyle(other).visibility !== 'hidden',
+    )
+    if (kin.length > 0) return kin
+  }
+  return []
+}
+
+/**
+ * Aftermath of a source coming home (a lesson tile, a chapter-test cell, the gate, a Me map cell): the outline draws itself in from its top-left corner (and becomes
+ * its ring if it has one, or fades), its tag rises in after the stroke starts, and the nearest tiles settle one after
  * another, nearest first. Under reduced motion the tag only fades in.
  */
 export function aftermath(tile: HTMLElement) {
@@ -339,8 +359,7 @@ export function aftermath(tile: HTMLElement) {
     raiseAll(CHOREO_MS.stagger)
 
     const origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
-    const near = [...document.querySelectorAll<HTMLElement>('.pa-tile')]
-      .filter((other) => other !== tile && getComputedStyle(other).visibility !== 'hidden')
+    const near = neighboursOf(tile)
       .map((other) => {
         const r = other.getBoundingClientRect()
         const dx = r.left + r.width / 2 - origin.x
