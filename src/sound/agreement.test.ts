@@ -44,6 +44,11 @@ describe('sounds agree with the music', () => {
     })
   })
 
+  it('inside a lesson, a planned chord in the context wins over the step walk', () => {
+    for (const chord of ['I', 'vi', 'ii', 'V', 'iv', 'IV'] as ChordId[])
+      for (const event of quick) check(event, { step: 3, steps: 12, chord }, chord)
+  })
+
   it('an answer adds only its leaning 4th over the chord, and resolves it', () => {
     PROGRESSION.forEach((chord, step) => {
       const plan = createScore(seeded(2)).plan('correct', { step, steps: PROGRESSION.length })
