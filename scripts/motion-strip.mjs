@@ -199,7 +199,11 @@ await context.addInitScript(() => {
 })
 if (plan.settings)
   await context.addInitScript(
-    (value) => localStorage.setItem('dizey.settings', JSON.stringify(value)),
+    // App storage prefixes keys by build channel ("dev:" for a local build, none in production).
+    (value) => {
+      for (const prefix of ['', 'dev:'])
+        localStorage.setItem(`${prefix}dizey.settings`, JSON.stringify(value))
+    },
     plan.settings,
   )
 const page = await context.newPage()
