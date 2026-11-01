@@ -58,6 +58,7 @@
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  letter-spacing: var(--tracking-small);
 }
 
 .sl-kbd {
@@ -146,6 +147,7 @@
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-title3);
 }
 .sl-mat {
   display: grid;
@@ -166,6 +168,7 @@
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-small);
 }
 .sl-cell {
   display: grid;
@@ -176,6 +179,7 @@
   font-family: var(--font-math);
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .sl-cell[data-empty] {
   background: transparent;
@@ -273,6 +277,7 @@
   line-height: var(--leading-caption);
   color: var(--ink-2);
   white-space: nowrap;
+  letter-spacing: var(--tracking-caption);
 }
 .sl-chip[aria-pressed="true"] {
   background: var(--action);
@@ -290,7 +295,7 @@
 }
 .sl-ev__name {
   display: block;
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-medium);
 }
 .sl-ev__chords {
   display: block;
@@ -299,6 +304,7 @@
   line-height: var(--leading-footnote);
   font-weight: var(--weight-medium);
   color: var(--row-ink);
+  letter-spacing: var(--tracking-small);
 }
 .sl-ev[data-tier="reward"] .sl-ev__chords {
   color: var(--col-ink);
@@ -313,6 +319,7 @@
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   color: var(--ink-3);
+  letter-spacing: var(--tracking-small);
 }
 .sl-ev__play {
   flex: none;

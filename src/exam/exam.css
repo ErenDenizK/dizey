@@ -60,6 +60,7 @@
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
   font-variant-numeric: tabular-nums;
+  letter-spacing: var(--tracking-caption);
 }
 .exh-chip[data-tone="ok"] {
   color: var(--ok-ink);
@@ -152,6 +153,7 @@
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
   transform: translateY(-1px);
+  letter-spacing: var(--tracking-caption);
 }
 .exh-warn {
   margin: 0;
@@ -254,6 +256,7 @@
   line-height: var(--leading-footnote);
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-small);
 }
 .exr-count__flag {
   display: inline-flex;
@@ -401,6 +404,7 @@
   line-height: var(--leading-footnote);
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-small);
 }
 .exs-seal__grid {
   --seal-cell: clamp(36px, 10.5vw, 46px);
@@ -436,6 +440,7 @@
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
   font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-title3);
 }
 .exs-seal__cell svg,
 .exs-tile svg {
@@ -481,6 +486,7 @@
   line-height: var(--leading-title1);
   font-weight: var(--weight-semibold);
   color: var(--ink-3);
+  letter-spacing: var(--tracking-title1);
 }
 .exs-score__verdict {
   margin: 0;
@@ -515,12 +521,14 @@
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-small);
 }
 .exs-stats dd {
   margin: 0;
   font-size: var(--type-title1);
   line-height: var(--leading-title1);
   font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-title1);
 }
 .exs-stats [data-status="correct"] dd {
   color: var(--ok-ink);
@@ -562,6 +570,7 @@
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   font-weight: var(--weight-bold);
+  letter-spacing: var(--tracking-small);
 }
 
 .exs-items {
@@ -640,6 +649,7 @@
   line-height: var(--leading-footnote);
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-small);
 }
 .exs-empty {
   margin: var(--space-4) var(--space-1);
