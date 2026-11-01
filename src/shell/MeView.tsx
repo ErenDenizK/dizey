@@ -1,20 +1,30 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import type { DuoHandle } from '../character/Duo'
 import { lessons } from '../content/lessons'
-import { chapters, codeOfNode } from '../content/path'
+import { chapters, codeOfNode, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { RichText } from '../exam/Blocks'
 import { useExam } from '../exam/store'
+import { useMoments } from '../lesson/moments'
 import { stateOf } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
+import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
+import { hasNewProgress, moodOf, parseSeen, readinessOf } from '../progress/readiness'
 import { BadgeShelf } from '../rewards/BadgeShelf'
-import { GearIcon } from '../ui/icons'
+import { badgeOf } from '../rewards/badges'
+import { Emblem } from '../rewards/Emblem'
+import { ChevronRight, GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
+import { CompanionSlot } from './CompanionSlot'
 import { PressLink } from './PressLink'
 import { morphFrom } from './stage'
 import './me.css'
+
+/** Lessons done when Sen was last on show; the duo reacts when there are more now. */
+const SEEN_KEY = 'dizey.me.seen'
 
 export function MeView() {
   return (
@@ -35,64 +45,145 @@ export function MeView() {
         </PressLink>
       }
     >
-      <CourseMatrix />
+      <Scene />
+      <ReadinessMap />
       <BadgeShelf />
+      <SecretMoments />
       <MistakeLog />
     </Screen>
   )
 }
 
-/**
- * The profile's head: the whole course as one matrix, a row per chapter and a cell per lesson, beside the
- * three numbers that matter before the exam. It is the same picture as the Dersler path, folded small.
- */
-function CourseMatrix() {
+/** The profile's head: the duo in a mood that follows progress, and one line of state under it. */
+function Scene() {
   const records = useLessonRecords()
-  const { outcomes, history } = useExam()
   const done = lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
-  const mistakes = openMistakes(lessons, records, questions, outcomes).length
-  const best = history.reduce<(typeof history)[number] | null>(
-    (top, entry) => (!top || entry.percent > top.percent ? entry : top),
-    null,
+  const chaptersDone = chapters.filter((chapter) =>
+    chapter.lessons.every((lesson) => stateOf(records[lesson.id]) === 'done'),
+  ).length
+  const mood = moodOf(done, chaptersDone)
+  const root = useRef<HTMLElement>(null)
+  const duo = useRef<DuoHandle>(null)
+  const latest = useRef({ done, mood })
+  latest.current = { done, mood }
+
+  // The tab panes stay mounted, so "Sen opens" is the pane losing its inert flag.
+  useEffect(() => {
+    const pane = root.current?.closest('.sh-pane')
+    if (!pane) return
+    const visit = () => {
+      if (pane.hasAttribute('inert')) return
+      const { done: count, mood: current } = latest.current
+      const seen = parseSeen(appStorage.getItem(SEEN_KEY))
+      if (hasNewProgress(count, seen)) duo.current?.react(current === 'neutral' ? 'happy' : current)
+      if (seen !== count) appStorage.setItem(SEEN_KEY, String(count))
+    }
+    visit()
+    const watch = new MutationObserver(visit)
+    watch.observe(pane, { attributes: true, attributeFilter: ['inert'] })
+    return () => watch.disconnect()
+  }, [])
+
+  return (
+    <section ref={root} className="me-scene" aria-label={strings.me.companion} data-testid="me-scene">
+      <CompanionSlot name="me" size="large" mood={mood} duo={duo} />
+      <p className="me-scene__state num">
+        {done ? strings.me.state(done, lessons.length, chaptersDone) : strings.me.stateFresh(lessons.length)}
+      </p>
+    </section>
   )
+}
+
+/**
+ * Hazırlık haritası: a row per chapter, a cell per lesson, coloured by first-try accuracy. Not a number.
+ * A tap opens the lesson the way the path does: the lesson grows out of the cell.
+ */
+function ReadinessMap() {
+  const records = useLessonRecords()
   const widest = Math.max(...chapters.map((chapter) => chapter.lessons.length))
   return (
-    <section className="me-hero" aria-label={strings.me.matrix}>
-      <div className="me-hero__matrix" style={{ '--cols': widest } as React.CSSProperties}>
-        {chapters.map((chapter) => (
-          <div key={chapter.id} className="me-hero__row" title={chapter.label}>
-            {chapter.lessons.map((lesson) => (
-              <i key={lesson.id} data-state={stateOf(records[lesson.id])} />
-            ))}
-          </div>
-        ))}
+    <section aria-labelledby="readiness" className="me-block">
+      <h2 id="readiness" className="dz-section-label">
+        {strings.me.readiness}
+      </h2>
+      <div className="me-map" style={{ '--cols': widest } as React.CSSProperties}>
+        {chapters.map((chapter) => {
+          const finished = chapter.lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
+          return (
+            <section
+              key={chapter.id}
+              className="me-map__chapter"
+              aria-label={strings.me.readinessChapter(chapter.label, finished, chapter.lessons.length)}
+            >
+              <p className="me-map__label dz-footnote">
+                <span>{chapter.label}</span>
+                <span className="num">
+                  {finished} / {chapter.lessons.length}
+                </span>
+              </p>
+              <div className="me-map__row">
+                {chapter.lessons.map((lesson) => {
+                  const level = readinessOf(lesson, records[lesson.id])
+                  return (
+                    <PressLink
+                      key={lesson.id}
+                      to="/lesson/$id"
+                      params={{ id: lesson.id }}
+                      className="me-map__cell"
+                      data-level={level}
+                      data-testid="map-cell"
+                      data-lesson={lesson.id}
+                      aria-label={strings.me.readinessCell(
+                        pathCode(lesson),
+                        tileTitle(lesson),
+                        strings.me.level[level],
+                      )}
+                      onClick={(event) => {
+                        morphFrom.current = event.currentTarget
+                      }}
+                    >
+                      <i />
+                    </PressLink>
+                  )
+                })}
+              </div>
+            </section>
+          )
+        })}
       </div>
-      <dl className="me-hero__stats">
-        <div>
-          <dt className="dz-footnote">{strings.me.statLessons}</dt>
-          <dd className="num">
-            {done}
-            <small> / {lessons.length}</small>
-          </dd>
-        </div>
-        <div>
-          <dt className="dz-footnote">{strings.me.statMistakes}</dt>
-          <dd className="num">{mistakes}</dd>
-        </div>
-        <div>
-          <dt className="dz-footnote">{strings.me.statExam}</dt>
-          <dd className="num">
-            {best ? (
-              <>
-                {best.correct}
-                <small> / {best.total}</small>
-              </>
-            ) : (
-              <small>{strings.me.statExamNone}</small>
-            )}
-          </dd>
-        </div>
-      </dl>
+      <p className="dz-footnote me-block__hint">{strings.me.readinessHint}</p>
+    </section>
+  )
+}
+
+/** Gizli anlar: one slot per lesson that hides a moment; found ones in full, the rest as silhouettes. */
+function SecretMoments() {
+  const moments = useMoments()
+  const withMoment = lessons.filter((lesson) => lesson.moment)
+  if (!withMoment.length) return null
+  const found = withMoment.filter((lesson) => moments[lesson.id] === 'solved').length
+  return (
+    <section aria-labelledby="moments" className="me-block">
+      <h2 id="moments" className="dz-section-label">
+        {strings.me.moments} · {strings.me.momentsCount(found, withMoment.length)}
+      </h2>
+      <ul className="me-moments" data-testid="moments-album">
+        {withMoment.map((lesson) => {
+          const solved = moments[lesson.id] === 'solved'
+          return (
+            <li
+              key={lesson.id}
+              className="me-moments__slot"
+              data-found={solved || undefined}
+              role="img"
+              aria-label={solved ? strings.me.momentFound(pathCode(lesson)) : strings.me.momentHidden}
+            >
+              <Emblem badge={badgeOf('insight')} />
+              {solved ? <span className="num me-moments__code">{pathCode(lesson)}</span> : null}
+            </li>
+          )
+        })}
+      </ul>
     </section>
   )
 }
@@ -103,16 +194,27 @@ function MistakeLog() {
   const records = useLessonRecords()
   const { outcomes } = useExam()
   const [all, setAll] = useState(false)
+  const [open, setOpen] = useState(false)
   const list = openMistakes(lessons, records, questions, outcomes)
   const shown = all ? list : list.slice(0, MISTAKES_SHOWN)
+  if (!list.length) return null
   return (
-    <section aria-labelledby="mistakes">
-      <h2 id="mistakes" className="dz-section-label">
-        {strings.me.mistakes}
-        {list.length ? ` · ${list.length}` : ''}
-      </h2>
-      {list.length ? (
-        <>
+    <section aria-label={strings.me.mistakes} className="me-mistakes">
+      <Pressable
+        className="me-mistakes__row"
+        aria-expanded={open}
+        aria-controls="mistake-list"
+        data-testid="mistake-row"
+        onClick={() => setOpen(!open)}
+      >
+        <span className="me-mistakes__title">{strings.me.mistakes}</span>
+        <span className="me-mistakes__count num">{strings.me.mistakesRow(list.length)}</span>
+        <span className="me-mistakes__chevron" data-open={open || undefined}>
+          <ChevronRight />
+        </span>
+      </Pressable>
+      {open ? (
+        <div id="mistake-list">
           <ul className="dz-list sh-mistakes">
             {shown.map((mistake) => (
               <li
@@ -155,10 +257,8 @@ function MistakeLog() {
             ) : null}
           </ul>
           <p className="dz-footnote sh-hint">{strings.me.mistakesHint}</p>
-        </>
-      ) : (
-        <p className="dz-card dz-subhead">{strings.me.mistakesEmpty}</p>
-      )}
+        </div>
+      ) : null}
     </section>
   )
 }

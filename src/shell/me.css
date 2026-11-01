@@ -1,94 +1,149 @@
 /* Profil (src/shell/MeView.tsx). Tokens only; no transitions or keyframes. */
-/*
- * Hero: one primary number and two secondary ones, on one grid. Lessons done is the hero (display 30) beside the
- * progress matrix; mistakes and best rehearsal sit below, each under the column above it, as title2 values.
- */
-.me-hero {
+/* Scene: the duo, large and centred, with one line of state under it. */
+.me-scene {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-5);
-  margin-top: calc(var(--space-2) * -1);
-  padding: var(--space-5) var(--card-pad);
-  border-radius: var(--corner-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
+  justify-items: center;
+  gap: var(--gap-related);
+  margin-top: calc(var(--space-6) * -1);
+  padding: 0;
 }
-.me-hero__matrix {
-  position: relative;
-  display: grid;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
-}
-.me-hero__matrix::before,
-.me-hero__matrix::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  width: 6px;
-  border: 2.5px solid var(--ink-1);
-  opacity: 0.35;
-}
-.me-hero__matrix::before {
-  left: 0;
-  border-right: 0;
-  border-radius: 3px 0 0 3px;
-}
-.me-hero__matrix::after {
-  right: 0;
-  border-left: 0;
-  border-radius: 0 3px 3px 0;
-}
-.me-hero__row {
-  display: grid;
-  grid-template-columns: repeat(var(--cols), 13px);
-  gap: var(--space-1);
-}
-.me-hero__row i {
-  height: 13px;
-  border-radius: 4px;
-  background: var(--surface-sunk);
-  box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
-}
-.me-hero__stats {
-  display: contents;
-}
-.me-hero__stats div {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: var(--gap-bound);
-  min-width: 0;
-}
-/* The two secondary stats start a new row, separated from the hero by a hairline across the card. */
-.me-hero__stats div:not(:first-child) {
-  align-self: start;
-  padding-top: var(--gap-block);
-  box-shadow: inset 0 0.5px 0 var(--hairline-strong);
-}
-.me-hero__stats dd {
+.me-scene__state {
   margin: 0;
-  font-size: var(--type-title2);
-  line-height: var(--leading-title2);
-  letter-spacing: var(--tracking-title);
-  font-weight: var(--weight-bold);
-}
-.me-hero__stats div:first-child dd {
-  font-size: var(--type-large);
-  line-height: var(--leading-large);
-  letter-spacing: var(--tracking-large);
-}
-.me-hero__stats small {
   font-size: var(--type-subhead);
   line-height: var(--leading-subhead);
   letter-spacing: var(--tracking-body);
   font-weight: var(--weight-medium);
   color: var(--ink-2);
 }
-.me-hero__stats div:first-child small {
-  font-size: var(--type-title3);
-  line-height: var(--leading-title3);
-  letter-spacing: var(--tracking-title3);
+
+.me-block__hint {
+  margin: var(--gap-related) var(--card-pad) 0;
+  color: var(--ink-3);
+}
+
+/* Hazırlık haritası: a caption and a row of cells per chapter. */
+.me-map {
+  display: grid;
+  gap: var(--gap-block);
+  padding: var(--card-pad);
+  border-radius: var(--corner-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.me-map__label {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--gap-related);
+  margin: 0;
+  color: var(--ink-2);
+}
+.me-map__row {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), minmax(0, 1fr));
+}
+/* The whole column slice is the target (48 px tall); the drawn cell inside is smaller. */
+.me-map__cell {
+  display: grid;
+  place-items: center;
+  min-height: var(--target);
+}
+.me-map__cell i {
+  width: 24px;
+  height: 24px;
+  max-width: 100%;
+  border-radius: var(--corner-chip);
+  box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
+}
+.me-map__cell[data-level="ok"] i {
+  background: var(--ok-fill);
+  box-shadow: none;
+}
+.me-map__cell[data-level="bad"] i {
+  background: var(--bad-fill);
+  box-shadow: none;
+}
+.me-map__cell[data-level="mid"] i,
+.me-map__cell[data-level="done"] i {
+  background: var(--ink-3);
+  box-shadow: none;
+}
+
+/* Gizli anlar: a row of slots, found in full and the rest as silhouettes. */
+.me-moments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--gap-item);
+  margin: 0;
+  padding: var(--card-pad);
+  list-style: none;
+  border-radius: var(--corner-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.me-moments__slot {
+  display: grid;
+  align-content: start;
+  width: 56px;
+}
+.me-moments__slot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.me-moments__slot:not([data-found]) {
+  opacity: 0.32;
+}
+.me-moments__slot:not([data-found]) svg {
+  filter: brightness(0) invert(0.5);
+}
+.me-moments__code {
+  display: block;
+  text-align: center;
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caption);
+  color: var(--ink-1);
+}
+
+/* Hata defteri: a compact entry row; the list opens under it. */
+.me-mistakes {
+  margin-top: var(--gap-group);
+}
+.me-mistakes__row {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-item);
+  width: 100%;
+  min-height: var(--target);
+  padding: var(--space-2) var(--card-pad);
+  border-radius: var(--corner-card);
+  background: var(--surface);
+  color: var(--ink-1);
+  text-align: start;
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.me-mistakes__title {
+  flex: 1;
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
+}
+.me-mistakes__count {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  color: var(--ink-2);
+}
+.me-mistakes__chevron {
+  display: grid;
+  color: var(--ink-3);
+}
+.me-mistakes__chevron[data-open] {
+  transform: rotate(90deg);
+}
+#mistake-list {
+  margin-top: var(--gap-related);
 }
 .me-lead {
   display: grid;

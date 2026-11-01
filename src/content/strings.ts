@@ -88,14 +88,29 @@ export const strings = {
 
   me: {
     title: 'Sen',
-    matrix: 'Ders matrisi',
-    statLessons: 'ders tamam',
-    statMistakes: 'açık hata',
-    statExam: 'en iyi prova',
-    statExamNone: 'henüz yok',
+    companion: 'Satır ve Sütun',
+    state: (done: number, total: number, chapters: number) =>
+      chapters > 0 ? `${done} / ${total} ders · ${chapters} bölüm bitti` : `${done} / ${total} ders`,
+    stateFresh: (total: number) => `${total} dersin hepsi seni bekliyor`,
+    readiness: 'Hazırlık haritası',
+    readinessHint: 'Her kare bir ders; rengi o dersteki ilk denemelerin.',
+    readinessChapter: (label: string, done: number, total: number) =>
+      `${label}, ${done} / ${total} ders tamam`,
+    readinessCell: (code: string, name: string, level: string) => `${code} ${name}: ${level}`,
+    level: {
+      none: 'başlanmadı',
+      ok: 'ilk denemeler çoğunlukla doğru',
+      mid: 'ilk denemeler karışık',
+      bad: 'ilk denemeler çoğunlukla yanlış',
+      done: 'tamam, soru yok',
+    },
+    moments: 'Gizli anlar',
+    momentsCount: (found: number, total: number) => `${found} / ${total}`,
+    momentFound: (code: string) => `${code}: gizli an bulundu`,
+    momentHidden: 'Henüz bulunmadı',
+    badgeHidden: 'henüz kazanılmadı',
     mistakes: 'Hata defteri',
-    mistakesEmpty:
-      'Açık hata yok. Derslerde ve provalarda ilk denemede yanlış yaptığın sorular burada toplanır.',
+    mistakesRow: (count: number) => `${count} açık hata`,
     mistakesHint: 'Derse dönüp ilk denemede doğru yapınca listeden çıkar.',
     mistakesMore: (count: number) => `${count} hata daha göster`,
     mistakesLess: 'Daha az göster',
@@ -279,7 +294,6 @@ export const strings = {
   badges: {
     shelf: 'Rozetler',
     shelfHint: 'Çalıştıkça gelir; puanın değil, yaptığın iş.',
-    empty: 'İlk dersini bitirince ilk rozetin burada olur.',
     newOne: 'Yeni rozet',
     one: 'Rozet',
     count: (n: number) => `${n} rozet`,
