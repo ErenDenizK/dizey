@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { strings } from '../content/strings'
 import { useExam } from '../exam/store'
+import { useMoments } from '../lesson/moments'
 import { useLessonRecords } from '../lesson/store'
 import { Pressable } from '../ui/Pressable'
 import { BadgeReveal } from './BadgeReveal'
@@ -15,8 +16,9 @@ import { markShown, useShown } from './store'
 export function BadgeShelf() {
   const records = useLessonRecords()
   const { history } = useExam()
+  const moments = useMoments()
   const shown = useShown()
-  const earned = earnedBadges({ records, history })
+  const earned = earnedBadges({ records, history, moments })
   const [open, setOpen] = useState<{ id: BadgeId; n: number } | null>(null)
   const current = earned.find((badge) => badge.id === open?.id)
   return (

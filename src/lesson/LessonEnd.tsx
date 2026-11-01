@@ -15,6 +15,7 @@ import type { SoundEvent } from '../sound/score'
 import { Check, Close } from '../ui/icons'
 import { burst, glow, lightScore, pointIn, SHINE_CHANNEL, type SparkTone, sweep } from '../ui/shine'
 import { endResults, nextLesson, type Result, sealColumns } from './end'
+import { useMoments } from './moments'
 import { recordOf, useLessonRecords } from './store'
 
 const END_CHANNEL = 'lesson-end'
@@ -36,10 +37,13 @@ const BADGE_MAX = 3
 export function LessonEnd({
   lesson,
   reward,
+  insight = false,
   onSealed,
 }: {
   lesson: Lesson
   reward: SoundEvent
+  /** The gizli an was solved on this visit. */
+  insight?: boolean
   onSealed: () => void
 }) {
   const navigate = useNavigate()
@@ -57,8 +61,11 @@ export function LessonEnd({
   const duo = useRef<DuoHandle>(null)
   const records = useLessonRecords()
   const { history } = useExam()
+  const moments = useMoments()
   // Rozetler this lesson end will show, fixed when the screen opens.
-  const [fresh] = useState<Badge[]>(() => unshown(earnedBadges({ records, history })).slice(0, BADGE_MAX))
+  const [fresh] = useState<Badge[]>(() =>
+    unshown(earnedBadges({ records, history, moments })).slice(0, BADGE_MAX),
+  )
   const [badge, setBadge] = useState<Badge | null>(null)
   const proud = chapterDone || perfect
   // biome-ignore lint/correctness/useExhaustiveDependencies: the ceremony plays once, when the screen opens
@@ -162,7 +169,11 @@ export function LessonEnd({
           {strings.lessonEnd.eyebrow(pathCode(lesson))}
         </p>
         <h1 className="ls-title" data-enter="">
-          {chapterDone && chapter ? strings.lessonEnd.chapterTitle(chapter.label) : strings.lessonEnd.title}
+          {chapterDone && chapter
+            ? strings.lessonEnd.chapterTitle(chapter.label)
+            : insight
+              ? strings.lessonEnd.momentTitle
+              : strings.lessonEnd.title}
         </h1>
         <p className="ls-body" data-enter="">
           {results.length ? strings.lessonEnd.score(correct, results.length) : strings.lessonEnd.noQuestions}

@@ -6,8 +6,11 @@ import { BADGES, earnedBadges, NOTEBOOK_FIXES } from './badges'
 import { parseShown, unshown } from './store'
 
 const done = (answers: LessonRecord['answers'] = {}): LessonRecord => ({ at: null, doneAt: 1, answers })
-const ids = (records: Record<string, LessonRecord>, history: unknown[] = []) =>
-  earnedBadges({ records, history: history as never }).map((badge) => badge.id)
+const ids = (
+  records: Record<string, LessonRecord>,
+  history: unknown[] = [],
+  moments: Record<string, string> = {},
+) => earnedBadges({ records, history: history as never, moments }).map((badge) => badge.id)
 
 describe('rozetler', () => {
   it('has a name and a sentence for every badge', () => {
@@ -50,6 +53,11 @@ describe('rozetler', () => {
     expect(ids({ x: { ...done(), cleared: many } })).toContain('clean-notebook')
   })
 
+  it('gives the sezgi mührü badge once any gizli an is solved, not for a skip', () => {
+    expect(ids({}, [], { 'd1-determinant': 'skipped', x: 'open' })).toEqual([])
+    expect(ids({}, [], { 'd1-determinant': 'solved' })).toEqual(['insight'])
+  })
+
   it('gives the rehearsal badge for a finished rehearsal', () => {
     expect(ids({}, [{}])).toEqual(['rehearsal'])
   })
@@ -58,7 +66,7 @@ describe('rozetler', () => {
     expect(parseShown('nonsense')).toEqual({})
     expect(parseShown('[1]')).toEqual({})
     expect(parseShown('{"sarrus":5,"later-badge":7,"bad":"x"}')).toEqual({ sarrus: 5, 'later-badge': 7 })
-    const earned = earnedBadges({ records: { 'd1-determinant': done() }, history: [] })
+    const earned = earnedBadges({ records: { 'd1-determinant': done() }, history: [], moments: {} })
     expect(unshown(earned, { sarrus: 5 }).map((badge) => badge.id)).toEqual(['first-lesson'])
   })
 })

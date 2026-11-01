@@ -18,6 +18,7 @@ export type BadgeId =
   | 'fixed'
   | 'clean-notebook'
   | 'rehearsal'
+  | 'insight'
 
 /** The badge's colour family: the math roles, the verdict green, the spark and the action honey. */
 export type BadgeHue = 'row' | 'col' | 'ok' | 'spark' | 'action'
@@ -32,6 +33,8 @@ export type Badge = {
 export type Progress = {
   records: Readonly<Record<string, LessonRecord>>
   history: readonly HistoryEntry[]
+  /** Gizli an state per lesson id (src/lesson/moments.ts). */
+  moments: Readonly<Record<string, string>>
 }
 
 /** Shelf order: the path's order for techniques, then habits. */
@@ -45,6 +48,7 @@ export const BADGES: readonly Badge[] = [
   { id: 'fixed', hue: 'ok', kind: 'habit' },
   { id: 'clean-notebook', hue: 'ok', kind: 'habit' },
   { id: 'rehearsal', hue: 'spark', kind: 'habit' },
+  { id: 'insight', hue: 'col', kind: 'habit' },
 ]
 
 /** Mistakes fixed for the notebook badge. */
@@ -64,6 +68,7 @@ const RULES: Record<BadgeId, (p: Progress) => boolean> = {
   fixed: (p) => fixes(p) >= 1,
   'clean-notebook': (p) => fixes(p) >= NOTEBOOK_FIXES,
   rehearsal: (p) => p.history.length >= 1,
+  insight: (p) => Object.values(p.moments).some((state) => state === 'solved'),
 }
 
 export function earnedBadges(progress: Progress): Badge[] {

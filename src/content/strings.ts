@@ -194,11 +194,19 @@ export const strings = {
     newGroup: 'Yeni anlatım',
     newGroupNote: 'Sıfırdan yazılan dersler',
     open: 'Derse gir',
+    moment: {
+      eyebrowFirst: 'Gizli an · not tutulmaz',
+      eyebrowAgain: 'Gizli an',
+      skip: 'Geç',
+      skipLabel: 'Gizli soruyu geç',
+      next: 'İleri',
+    },
   },
 
   lessonEnd: {
     eyebrow: (code: string) => `${code} · Ders tamam`,
     title: 'Bu dersi bitirdin',
+    momentTitle: 'Gizli anı çözdün: sezgi mührü senin.',
     chapterTitle: (chapter: string) => `${chapter} bölümü bitti`,
     chapterWeight: (items: number) => `Vizede ${items} / 34 soru bu bölümden.`,
     score: (correct: number, total: number) => `Her kare bir soru: ilk denemede ${correct} / ${total} doğru.`,
@@ -228,6 +236,7 @@ export const strings = {
       fixed: { name: 'Düzelttin', line: 'Bir hatana geri dönüp doğrusunu buldun.' },
       'clean-notebook': { name: 'Temiz defter', line: 'Beş hatanı düzelttin; hata defterin işini yapıyor.' },
       rehearsal: { name: 'Prova', line: 'İlk sınav provanı baştan sona bitirdin.' },
+      insight: { name: 'Sezgi mührü', line: 'Hesaplamadan, matrise bakarak gördün.' },
     },
   },
 
