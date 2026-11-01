@@ -236,7 +236,8 @@ function arrive(el: HTMLElement, current: () => boolean) {
   const content = contentOf(el)
   const parts = partsOf(el).filter((part) => part !== content)
   for (const part of parts) engine.set(part, { opacity: 0, y: CHOREO.rise })
-  if (content) engine.set(content, { opacity: 1 })
+  // The container carries the page colour: it fades up over the growing surface instead of covering it at once.
+  if (content) engine.to(content, { opacity: 1 }, 'fade')
   parts.forEach((part, i) => {
     engine.after(i * CHOREO_MS.stagger, () => {
       if (current()) engine.to(part, { opacity: 1, y: 0 }, 'glide')
@@ -250,6 +251,18 @@ function recede() {
   if (!back) return
   engine.to(back, { scale: CHOREO.sheetRecede }, 'page')
   engine.to(back, { opacity: 1 - CHOREO.sheetScrim }, 'fade')
+}
+
+function standIn(surface: HTMLElement) {
+  const host = surface.parentElement
+  if (!host) return
+  const scrim = document.createElement('div')
+  scrim.className = 'dz-scrim'
+  scrim.setAttribute('aria-hidden', 'true')
+  scrim.style.pointerEvents = 'none'
+  host.insertBefore(scrim, surface)
+  engine.set(scrim, { opacity: CHOREO.sheetScrim })
+  engine.withChannel('chrome', () => engine.to(scrim, { opacity: 0 }, 'fade', { onArrive: () => scrim.remove() }))
 }
 
 /** Opens at about this share of the surface being open, the next phase starts. */
@@ -269,6 +282,9 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
   card.style.visibility = 'hidden'
   const face = faceOf(el, card)
   engine.set(face, { opacity: 1 })
+  // The card's own scrim goes with the card; the covered screen's dimming takes over from it, so for a
+  // moment a stand-in holds the same darkness and fades as the screen recedes (no step in the dimming).
+  if (card.classList.contains('lp')) standIn(el)
   engine.withChannel('chrome', () => {
     recede()
     if (readSettings().cellReveal === true) {
