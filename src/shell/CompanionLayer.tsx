@@ -24,6 +24,9 @@ const AFTER_MS = 90
 const LOOK_BACK_MS = 800
 /** After a route change the layer keeps following its anchor this long (screens moving under it). */
 const FOLLOW_MS = 700
+/** The follow also lasts until the anchor has been still this long (a slower device's screen still moving), up to FOLLOW_MAX_MS. */
+const FOLLOW_STILL_MS = 200
+const FOLLOW_MAX_MS = 3000
 /** The cold start hello: waking, the hop, and when the travel to the first anchor begins. */
 const HELLO_MS = { wake: 170, hop: 260, go: 440 } as const
 const HELLO_FROM = { scale: 0.34, y: 0.46 } as const
@@ -122,6 +125,8 @@ function createController(
     tracking = true
     clock = 0
     trackEnd = ms
+    let lastGoal: ReturnType<typeof goalOf> | null = null
+    let movedAt = 0
     engine.withChannel(CHANNEL, () =>
       engine.addTicker({
         step: (dt) => {
@@ -129,6 +134,8 @@ function createController(
           const anchor = registry.active
           if (anchor?.el.isConnected) {
             const goal = goalOf(anchor)
+            if (!lastGoal || apart(goal, lastGoal) > 0.2) movedAt = clock
+            lastGoal = goal
             if (travel && !travel.landed) {
               if (apart(goal, travel.goal) > 0.3) {
                 travel.goal = goal
@@ -140,7 +147,8 @@ function createController(
             }
             edge(anchor)
           }
-          const going = clock < trackEnd || (travel !== null && !settled())
+          const anchorMoving = clock - movedAt < FOLLOW_STILL_MS && clock < FOLLOW_MAX_MS
+          const going = clock < trackEnd || anchorMoving || (travel !== null && !settled())
           if (!going) tracking = false
           return going
         },
