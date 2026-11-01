@@ -16,6 +16,7 @@ import {
   insets,
   lastThird,
   reach,
+  release,
   spreadDelay,
 } from './morph'
 import { Onboarding } from './Onboarding'
@@ -262,7 +263,9 @@ function standIn(surface: HTMLElement) {
   scrim.style.pointerEvents = 'none'
   host.insertBefore(scrim, surface)
   engine.set(scrim, { opacity: CHOREO.sheetScrim })
-  engine.withChannel('chrome', () => engine.to(scrim, { opacity: 0 }, 'fade', { onArrive: () => scrim.remove() }))
+  engine.withChannel('chrome', () =>
+    engine.to(scrim, { opacity: 0 }, 'fade', { onArrive: () => scrim.remove() }),
+  )
 }
 
 /** Opens at about this share of the surface being open, the next phase starts. */
@@ -381,7 +384,10 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     el.remove()
     if (card) {
       card.style.visibility = ''
-      if (turn === mine && card.classList.contains('pa-tile')) aftermath(card)
+      if (card.classList.contains('pa-tile')) {
+        if (turn === mine) aftermath(card)
+        else release(card)
+      }
     }
     if (finishExit === done) finishExit = null
   }
@@ -399,6 +405,8 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     const { rad, ...sides } = target
     const rect = atRest(() => card.getBoundingClientRect())
     const face = atRest(() => faceOf(el, card))
+    // The ring is drawn by the aftermath; the landing face must not already wear it.
+    face.setAttribute('data-trace', '')
     engine.set(face, { opacity: 0 })
     card.style.visibility = 'hidden'
     holdTagsOf(card)

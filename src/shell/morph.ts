@@ -212,8 +212,56 @@ export function raiseTag(tag: HTMLElement, delay = 0) {
   })
 }
 
+type Ink = { el: HTMLElement; color: string; opacity: string }
+const pendingInk = new WeakMap<HTMLElement, () => void>()
+
+/** The ink (colour and opacity) of a tile's text parts, as it is now. */
+export function inkOf(tile: HTMLElement): Ink[] {
+  return [...tile.querySelectorAll<HTMLElement>('.pa-tile__code, .pa-tile__title')].map((el) => {
+    const style = getComputedStyle(el)
+    return { el, color: style.color, opacity: style.opacity }
+  })
+}
+
+/**
+ * The text of a tile whose state just changed keeps its old ink and shifts to the new one with the fill's
+ * crossfade (`fadeOutWas` starts it), instead of swapping colour in one frame.
+ */
+export function holdInk(tile: HTMLElement, before: Ink[]) {
+  const after = inkOf(tile)
+  const pairs = before.flatMap((old) => {
+    const now = after.find((item) => item.el.className === old.el.className)
+    return now && (now.color !== old.color || now.opacity !== old.opacity) ? [{ old, now }] : []
+  })
+  if (pairs.length === 0) return
+  const paint = (m: number) => {
+    for (const { old, now } of pairs) {
+      now.el.style.color = `color-mix(in oklch, ${now.color} ${(m * 100).toFixed(1)}%, ${old.color})`
+      now.el.style.opacity = String(Number(old.opacity) + (Number(now.opacity) - Number(old.opacity)) * m)
+    }
+  }
+  paint(0)
+  pendingInk.set(tile, () => {
+    const mix: Target = { isConnected: true }
+    engine.bind(mix, (v) => paint(v.m ?? 0), { m: 0 })
+    engine.withChannel('chrome', () =>
+      engine.to(mix, { m: 1 }, 'fade', {
+        onArrive: () => {
+          mix.isConnected = false
+          for (const { now } of pairs) {
+            now.el.style.color = ''
+            now.el.style.opacity = ''
+          }
+        },
+      }),
+    )
+  })
+}
+
 /** Fades out the old fills left over a tile whose state just changed (see `useStateChange` in PathView). */
 export function fadeOutWas(tile: HTMLElement) {
+  pendingInk.get(tile)?.()
+  pendingInk.delete(tile)
   for (const was of tile.querySelectorAll<HTMLElement>(':scope > .pa-tile__was')) {
     engine.withChannel('chrome', () =>
       engine.to(was, { opacity: 0 }, 'fade', { onArrive: () => was.remove() }),
@@ -235,16 +283,23 @@ export function holdTagsOf(tile: HTMLElement) {
 }
 
 /**
+ * Lets go of everything a closing lesson held back on its tile: tags, new check or bar, old fill and old
+ * ink. The aftermath does it on its schedule; a close that ends without an aftermath (interrupted by a
+ * newer open or close) calls it so nothing stays transparent.
+ */
+export function release(tile: HTMLElement, delay = 0) {
+  for (const tag of tagsOf(tile)) raiseTag(tag, delay)
+  for (const part of heldIn(tile)) raiseTag(part, 0)
+  fadeOutWas(tile)
+}
+
+/**
  * Aftermath of a lesson coming home: the tile's outline draws itself in from its top-left corner (and becomes
  * its ring, or fades), its tag rises in after the stroke starts, and the nearest tiles settle one after
  * another, nearest first. Under reduced motion the tag only fades in.
  */
 export function aftermath(tile: HTMLElement) {
-  const raiseAll = (delay: number) => {
-    for (const tag of tagsOf(tile)) raiseTag(tag, delay)
-    for (const part of heldIn(tile)) raiseTag(part, 0)
-    fadeOutWas(tile)
-  }
+  const raiseAll = (delay: number) => release(tile, delay)
   if (engine.reducedMotion || !tile.isConnected) {
     raiseAll(0)
     return

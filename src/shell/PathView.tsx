@@ -15,7 +15,7 @@ import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { burst, glow, ring } from '../ui/shine'
 import { LessonPeek, type Peek } from './LessonPeek'
-import { drawRing, fadeOutWas, holdTag, raiseTag } from './morph'
+import { drawRing, fadeOutWas, holdInk, holdTag, inkOf, raiseTag } from './morph'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef } from './stage'
 import './path.css'
@@ -335,18 +335,19 @@ function Tag({ lesson, children }: { lesson: string; children: string }) {
  * the tile is hidden (a lesson folding into it) the same parts wait for the aftermath in morph.ts.
  */
 function useStateChange(id: string, key: string) {
-  const last = useRef<{ key: string; fill: string } | null>(null)
+  const last = useRef<{ key: string; fill: string; ink: ReturnType<typeof inkOf> } | null>(null)
   useLayoutEffect(() => {
     const tile = document.querySelector<HTMLElement>(`.pa-tile[data-lesson="${id}"]`)
     if (!tile) return
     const before = last.current
-    last.current = { key, fill: getComputedStyle(tile).backgroundColor }
+    last.current = { key, fill: getComputedStyle(tile).backgroundColor, ink: inkOf(tile) }
     if (!before || before.key === key) return
     const hidden = tile.style.visibility === 'hidden'
     const was = document.createElement('span')
     was.className = 'pa-tile__was'
     was.style.background = before.fill
     tile.prepend(was)
+    holdInk(tile, before.ink)
     for (const part of tile.querySelectorAll<HTMLElement>(
       ':scope > .pa-tile__check, :scope > .pa-tile__bar',
     )) {
