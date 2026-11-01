@@ -67,8 +67,9 @@ describe('duo rig', () => {
   })
 
   it('draws the happy eye as an upward arch and the open mouth deeper than the closed one', () => {
-    expect(eyePath(1, 0)).toBe('M-2.6 0C-2.6 -5.32 2.6 -5.32 2.6 0C2.6 5.32 -2.6 5.32 -2.6 0Z')
-    expect(eyePath(1, 1)).toContain('C2.6 -0.04')
-    expect(mouthPath(0.6, 0)).toBe('M-4 0Q0 1.92 4 0Q0 1.92 -4 0Z')
+    expect(eyePath(1, 0)).toBe('M-1.9 0C-1.9 -3.9 1.9 -3.9 1.9 0C1.9 3.9 -1.9 3.9 -1.9 0Z')
+    // Fully happy: the lower lid sits above the eye line, an upward arch.
+    expect(eyePath(1, 1)).toContain('C1.9 -2.14')
+    expect(mouthPath(0.6, 0)).toBe('M-2.8 0Q0 1.56 2.8 0Q0 1.56 -2.8 0Z')
   })
 })

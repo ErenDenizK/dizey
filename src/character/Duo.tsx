@@ -15,6 +15,8 @@ export type DuoHandle = {
 
 /** Head placement in the pair: Satır lower left in front, Sütun upper right behind (old geometry, 3.1). */
 const PLACE: Record<Who, [number, number]> = { col: [34, -4], row: [0, 18] }
+/** The face centre in the head's box: a little below the middle, where a soft toy's face sits. */
+const FACE_Y = 28.5
 /** The ground line the contact shadows sit on, in viewBox units. */
 const GROUND = 67.5
 /** Idle life: a blink every few seconds and, now and then, a short glance. Never a loop of body motion. */
@@ -38,15 +40,15 @@ function draw(rig: Rig, head: Head, parts: Parts) {
     'transform',
     `translate(22 ${48 + y}) rotate(${v('rot')}) scale(${v('sx')} ${v('sy')}) translate(-22 -48)`,
   )
-  parts.face.setAttribute('transform', `translate(${22 + v('lx')} ${26 + v('hy') + v('ly')})`)
+  parts.face.setAttribute('transform', `translate(${22 + v('lx')} ${FACE_Y + v('hy') + v('ly')})`)
   const happy = v('happy')
   parts.eyes[0].setAttribute('d', eyePath(v('openL') * rig.lid(head, 0), happy))
   parts.eyes[1].setAttribute('d', eyePath(v('openR') * rig.lid(head, 1), happy))
   parts.mouth.setAttribute('d', mouthPath(v('mc'), v('mo')))
   const brow = Math.min(Math.max(v('brow'), 0), 1)
   const tilt = v('tilt')
-  parts.brows[0].setAttribute('transform', `translate(-7.5 -10.6) rotate(${-tilt})`)
-  parts.brows[1].setAttribute('transform', `translate(7.5 -10.6) rotate(${tilt})`)
+  parts.brows[0].setAttribute('transform', `translate(-6.6 -8.3) rotate(${-tilt})`)
+  parts.brows[1].setAttribute('transform', `translate(6.6 -8.3) rotate(${tilt})`)
   for (const b of parts.brows) b.style.opacity = String(brow)
   const blush = Math.min(Math.max(v('blush'), 0), 1)
   for (const c of parts.cheeks) c.style.opacity = String(blush)
@@ -58,7 +60,7 @@ function draw(rig: Rig, head: Head, parts: Parts) {
 
 /**
  * Satır and Sütun, alive: two heads whose faces are drawn every frame from the spring rig, with a soft light from
- * the top left, cheeks that warm with joy, bracket-corner brows and contact shadows on one ground line.
+ * the top left, cheeks that warm with joy, soft arc brows and contact shadows on one ground line.
  */
 export function Duo({
   mood = 'happy',
@@ -189,13 +191,13 @@ export function Duo({
           <circle cx="22" cy="26" r="22" fill={`url(#${id}-shade)`} />
           <circle cx="22" cy="26" r="22" fill={`url(#${id}-gloss)`} />
           <g className="duo__face">
-            <ellipse className="duo__cheek" cx="-11.5" cy="5" rx="3.6" ry="2.2" />
-            <ellipse className="duo__cheek" cx="11.5" cy="5" rx="3.6" ry="2.2" />
-            <path className="duo__eye" transform="translate(-7.5 -3)" />
-            <path className="duo__eye" transform="translate(7.5 -3)" />
+            <ellipse className="duo__cheek" cx="-10.4" cy="3.4" rx="3.4" ry="2.1" />
+            <ellipse className="duo__cheek" cx="10.4" cy="3.4" rx="3.4" ry="2.1" />
+            <path className="duo__eye" transform="translate(-6.6 -1)" />
+            <path className="duo__eye" transform="translate(6.6 -1)" />
             <path className="duo__brow" d={browPath(0)} />
             <path className="duo__brow" d={browPath(1)} />
-            <path className="duo__mouth" transform="translate(0 8)" />
+            <path className="duo__mouth" transform="translate(0 5.6)" />
           </g>
         </g>
       </g>

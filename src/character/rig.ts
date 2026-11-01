@@ -26,7 +26,7 @@ const REST: Record<ChannelName, number> = {
   brow: 0,
   tilt: 0,
   hy: 0,
-  blush: 0,
+  blush: 0.3,
   lx: 0,
   ly: 0,
   y: 0,
@@ -74,8 +74,8 @@ const HOP = {
   proudAt: 120,
 }
 const LEAN = { tilt: -4, sink: 0.9, hold: 650 }
-/** The happy eye becomes an upward arch at this; more would flip it inside out. */
-const HAPPY_CAP = 0.65
+/** How far the happy eye's lower lid rises: at 1 the eye is a soft upward arch (^), never inside out. */
+const HAPPY_CAP = 1
 const SUBSTEP = 1000 / 240
 
 export class Head {
@@ -299,25 +299,29 @@ export class Rig {
   }
 }
 
-/* Drawing: paths are functions of channel values (face units; eyes at ±7.5, mouth 8 below centre). */
+/* Drawing: paths are functions of channel values (face units; eyes at ±6.6, mouth 6.6 below the eye line).
+   Every shape is drawn a little smaller than it shows and outlined with a round stroke in the same colour
+   (character.css), so no corner is ever sharp: the outline is the illustration's soft edge. */
 
 const round = (n: number) => Math.round(n * 100) / 100
 
+/** An eye: a tall soft oval; `happy` lifts the lower lid until it is an upward arch. */
 export function eyePath(open: number, happy: number): string {
-  const w = 2.6
-  const h = 4 * 1.33 * Math.min(Math.max(open, 0.04), 1.2)
+  const w = 1.9
+  const h = 3.9 * Math.min(Math.max(open, 0.04), 1.2)
   const top = round(-h)
-  const bottom = round(h * (1 - 1.55 * Math.min(happy, HAPPY_CAP)))
+  const bottom = round(h * (1 - 1.55 * Math.min(Math.max(happy, 0), HAPPY_CAP)))
   return `M${-w} 0C${-w} ${top} ${w} ${top} ${w} 0C${w} ${bottom} ${-w} ${bottom} ${-w} 0Z`
 }
 
+/** The mouth: a small soft smile; `open` drops the lower lip into an open mouth. */
 export function mouthPath(curve: number, open: number): string {
-  const c = round(curve * 3.2)
-  const o = round(c + Math.max(0, open) * 4)
-  return `M-4 0Q0 ${c} 4 0Q0 ${o} -4 0Z`
+  const c = round(curve * 2.6)
+  const o = round(c + Math.max(0, open) * 3.4)
+  return `M-2.8 0Q0 ${c} 2.8 0Q0 ${o} -2.8 0Z`
 }
 
-/** A brow is a bracket corner, the brand's own mark. side 0 left, 1 right. */
-export function browPath(side: 0 | 1): string {
-  return side === 0 ? 'M2.6 0H-2.6V2.8' : 'M-2.6 0H2.6V2.8'
+/** A brow: a short soft arc. side 0 left, 1 right (the same arc; the rig tilts each side). */
+export function browPath(_side: 0 | 1): string {
+  return 'M-2.2 0.7Q0 -0.8 2.2 0.7'
 }
