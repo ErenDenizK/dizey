@@ -41,7 +41,7 @@ test('the tab bar is Bugün, Harita, Sen and a fresh start leads into the first 
   await expect(buttons).toHaveText(['Bugün', 'Harita', 'Sen'])
   await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText('Bugün')
   await expect(screen(page).getByTestId('today-state')).toHaveText('İlk derse başlayalım.')
-  await expect(screen(page).getByText('Vize tarihi belli değil')).toBeVisible()
+  await expect(screen(page).getByText('Vize tarihi belli değil')).toHaveCount(0)
   await expect(page.locator('.dz-icon-button--float')).toHaveCount(0)
   const next = screen(page).getByTestId('today-next')
   await expect(next).toContainText('Başla')
@@ -160,11 +160,11 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   const right = (await result.getAttribute('data-correct')) === 'true'
   await sheet.getByRole('button', { name: 'Tamam' }).click()
   await expect(sheet).toHaveCount(0)
-  await expect(card).toContainText('Yarın yeni soru')
+  await expect(card).toContainText('Yarın yenisi')
   await expect(card).toHaveAttribute('data-state', right ? 'right' : 'wrong')
   // Answered stays answered across a reload, and the day shows on the week strip.
   await page.reload()
-  await expect(screen(page).getByTestId('today-daily')).toContainText('Yarın yeni soru')
+  await expect(screen(page).getByTestId('today-daily')).toContainText('Yarın yenisi')
   await expect(screen(page).getByTestId('today-daily')).toHaveAttribute(
     'data-state',
     right ? 'right' : 'wrong',

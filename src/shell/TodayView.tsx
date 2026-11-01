@@ -16,7 +16,7 @@ import { answeredOn, dayKey, pickDaily } from '../progress/daily'
 import { saveDailyAnswer, useDailyAnswer } from '../progress/daily-store'
 import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
-import { Check, ChevronRight } from '../ui/icons'
+import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { CompanionSlot } from './CompanionSlot'
@@ -29,8 +29,10 @@ import './today.css'
 const EXAM_SOON_DAYS = 7
 
 /**
- * Bugün: what to do now. At most four blocks, none of them ever empty: the hero with the exam line,
- * the one next lesson, the mistakes to revisit, and the rehearsal when the exam is close (decision 0012).
+ * Bugün: what to do now. At most four blocks, none of them ever empty: the hero, the one next lesson, the
+ * mistakes to revisit, and the rehearsal when the exam is close (decision 0012). The duo and one line of state
+ * are the scene on top; the work (rows, then the next lesson with its button) sits at the bottom, in the
+ * thumb zone. The exam countdown lives only in the rehearsal row.
  */
 export function TodayView() {
   const records = useLessonRecords()
@@ -43,14 +45,6 @@ export function TodayView() {
   const now = new Date()
   const hero = strings.today.hero
   const examDays = examDate ? daysUntil(examDate, now) : null
-  const examLine =
-    examDays === null
-      ? hero.examUnknown
-      : examDays > 0
-        ? hero.examDays(examDays)
-        : examDays === 0
-          ? hero.examToday
-          : hero.examPast
   const examSoon = daysUntil(examDate ?? examWeek.iso, now) <= EXAM_SOON_DAYS
 
   const stored = useDailyAnswer()
@@ -80,6 +74,13 @@ export function TodayView() {
       : doneCount === 0
         ? hero.fresh
         : hero.next
+  // The rehearsal row's one fact: the countdown when the date is known, else its size.
+  const examValue =
+    examDays === null || examDays < 0
+      ? strings.today.examSub
+      : examDays === 0
+        ? strings.today.examToday
+        : strings.today.examDays(examDays)
   const duo = useRef<DuoHandle>(null)
   useEffect(() => {
     duo.current?.react('happy')
@@ -91,40 +92,39 @@ export function TodayView() {
         <header className="td-top">
           <div className="td-head">
             <CompanionSlot name="today" size="large" mood="happy" alive duo={duo} />
-            <div className="td-head__text">
-              <p className="td-head__state dz-title3" data-testid="today-state">
-                {stateLine}
-              </p>
-              <p className="td-head__exam dz-footnote">{examLine}</p>
-            </div>
+            <p className="td-head__state dz-title3" data-testid="today-state">
+              {stateLine}
+            </p>
           </div>
           {days.some((day) => day.active) ? <WeekStrip days={days} /> : null}
         </header>
-        {main ? <NextLesson lessonId={main.id} /> : <AllDone />}
-        <div className="td-rows">
-          {show('review') ? (
-            firstLesson ? (
-              <PressLink
-                to="/lesson/$id"
-                params={{ id: firstLesson.lessonId }}
-                search={{ step: firstLesson.stepId }}
-                className="td-row"
-                data-testid="today-review"
-              >
-                <RowFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+        <div className="td-work">
+          <div className="td-rows">
+            {show('review') ? (
+              firstLesson ? (
+                <PressLink
+                  to="/lesson/$id"
+                  params={{ id: firstLesson.lessonId }}
+                  search={{ step: firstLesson.stepId }}
+                  className="td-row"
+                  data-testid="today-review"
+                >
+                  <RowFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+                </PressLink>
+              ) : (
+                <PressLink to="/me" className="td-row" data-testid="today-review">
+                  <RowFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+                </PressLink>
+              )
+            ) : null}
+            {show('daily') && daily ? <DailyRow question={daily} answered={answered} /> : null}
+            {show('exam') ? (
+              <PressLink to="/exam" className="td-row" data-testid="today-exam">
+                <RowFace title={strings.today.exam} value={examValue} />
               </PressLink>
-            ) : (
-              <PressLink to="/me" className="td-row" data-testid="today-review">
-                <RowFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
-              </PressLink>
-            )
-          ) : null}
-          {show('daily') && daily ? <DailyRow question={daily} answered={answered} /> : null}
-          {show('exam') ? (
-            <PressLink to="/exam" className="td-row" data-testid="today-exam">
-              <RowFace title={strings.today.exam} value={strings.today.examSub} />
-            </PressLink>
-          ) : null}
+            ) : null}
+          </div>
+          {main ? <NextLesson lessonId={main.id} /> : <AllDone />}
         </div>
       </div>
     </Screen>
@@ -236,11 +236,6 @@ function DailyRow({
         onClick={() => setOpen(true)}
       >
         <span className="dz-row-main">{text.eyebrow}</span>
-        {answered ? (
-          <span className="td-row__done" aria-hidden="true">
-            <Check />
-          </span>
-        ) : null}
         <span className="dz-footnote sh-row-sub td-row__value">{answered ? text.next : text.solve}</span>
         <ChevronRight />
       </Pressable>
