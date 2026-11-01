@@ -72,4 +72,32 @@ describe('duo rig', () => {
     expect(eyePath(1, 1)).toContain('C1.9 -2.14')
     expect(mouthPath(0.6, 0)).toBe('M-2.8 0Q0 1.56 2.8 0Q0 1.56 -2.8 0Z')
   })
+
+  it('crouches, stretches in the air and lands with a squash that settles', () => {
+    const rig = new Rig()
+    rig.crouch('row')
+    run(rig, 300)
+    expect(rig.heads.row.value('sy')).toBeLessThan(0.97)
+    rig.stretch('row')
+    run(rig, 120)
+    expect(rig.heads.row.value('sy')).toBeGreaterThan(1.02)
+    rig.land('row')
+    let lowest = 1
+    for (let t = 0; t < 1500; t += 16) {
+      rig.step(16)
+      lowest = Math.min(lowest, rig.heads.row.value('sy'))
+    }
+    expect(lowest).toBeLessThan(0.99)
+    expect(rig.heads.row.value('sy')).toBeCloseTo(1, 2)
+    expect(rig.heads.row.value('y')).toBeCloseTo(0, 2)
+  })
+
+  it('wakes from asleep: the eyes shut, then open on neutral', () => {
+    const rig = new Rig()
+    rig.pose('asleep', true)
+    expect(rig.heads.row.value('openL')).toBeCloseTo(0.04, 2)
+    rig.pose('neutral')
+    run(rig, 600)
+    expect(rig.heads.row.value('openL')).toBeCloseTo(1, 2)
+  })
 })
