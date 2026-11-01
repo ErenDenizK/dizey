@@ -483,6 +483,9 @@ a.sh-node {
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
+.ls-scene[data-flow="column"] {
+  flex-direction: column;
+}
 .ls-item {
   display: flex;
   flex-wrap: nowrap;
@@ -494,10 +497,7 @@ a.sh-node {
 .ls-scene > .ls-item + .ls-item {
   margin-left: 0.8em;
 }
-.ls-scene[data-stack] {
-  flex-direction: column;
-}
-.ls-scene[data-stack] > .ls-item + .ls-item {
+.ls-scene[data-flow="column"] > .ls-item + .ls-item {
   margin-left: 0;
 }
 .ls-stage .ex-mat-wrap {
@@ -590,17 +590,19 @@ a.sh-node {
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+/* Work lines alone on the stage take their size from the fitted cell, like a scene. */
+.ls-stage[data-solo] .ls-work {
+  width: max-content;
+  max-width: none;
+  row-gap: calc(var(--cell) * 0.25);
+  font-size: calc(var(--cell) * 0.5);
+}
 /* A matrix written in a work line (a reveal written as a bmatrix) is displayed math: stage-like, not text-size. */
 .ls-work .dz-m .dz-m-mat {
   gap: 0.1em 0.95em;
   padding: 0.2em 0.5em;
   font-size: 1.4em;
   line-height: 1.5;
-}
-/* A beat that is only formulas (no matrix on the stage) is the stage's whole content: display size. */
-.ls-stage:not(:has(.ex-mat, .dz-m-mat)) .ls-work {
-  row-gap: var(--space-4);
-  font-size: calc(clamp(24px, 9cqw, 36px) * var(--work-fit, 1));
 }
 .ls-work .ls-line:has(.dz-m-mat) {
   justify-content: center;
@@ -614,14 +616,6 @@ a.sh-node {
   row-gap: var(--space-1);
   min-height: 34px;
   max-width: 100%;
-}
-.ls-stage:not(:has(.ex-mat, .dz-m-mat)) .ls-line {
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-/* Chromium breaks at <wbr> even under nowrap. */
-.ls-stage:not(:has(.ex-mat, .dz-m-mat)) .ls-line wbr {
-  display: none;
 }
 .ls-group {
   display: inline-flex;
@@ -646,10 +640,26 @@ a.sh-node {
   font-weight: var(--weight-bold);
 }
 .ls-area {
-  width: min(240px, 70vw);
-  max-height: 220px;
+  width: min(300px, 78vw);
+  max-height: 280px;
   height: auto;
   overflow: visible;
+}
+.ls-area__grid {
+  stroke: var(--sh-line);
+  stroke-width: 0.015;
+  opacity: 0.6;
+}
+.ls-area__label {
+  fill: var(--sh-muted);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  text-anchor: middle;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ls-area__label[data-tone="ok"] {
+  fill: var(--color-ok-ink);
 }
 .ls-area__axis {
   stroke: var(--sh-line);

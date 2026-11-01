@@ -18,6 +18,10 @@ export const d1Determinant: Lesson = {
       ['3', '1'],
       ['4', '2'],
     ]),
+    P: m('P =', [
+      ['2', '1'],
+      ['0', '1'],
+    ]),
     G: m('A =', [
       ['a', 'b'],
       ['c', 'd'],
@@ -38,7 +42,7 @@ export const d1Determinant: Lesson = {
       ],
       true,
     ),
-    T: m('T =', [
+    M: m('M =', [
       ['1', '2'],
       ['3', '6'],
     ]),
@@ -92,10 +96,10 @@ export const d1Determinant: Lesson = {
       kind: 'explain',
       eyebrow: 'Sezgi',
       title: 'Determinant alanın kaç katına çıktığını söyler',
-      body: '$A$ birim kareyi, sütunları $(3, 4)$ ve $(1, 2)$ olan bir paralelkenara taşır. Bu paralelkenarın alanı $2$: alan $2$ katına çıktı. $\\det(A)$’nın mutlak değeri tam olarak bu katsayıdır.',
-      scene: { items: ['A'] },
-      beat: { kind: 'area', matrix: 'A' },
-      claims: [{ kind: 'det', matrix: 'A', equals: '2' }],
+      body: '$P$ birim kareyi sütunlarına, $(2, 0)$ ve $(1, 1)$’e taşır. Alan $1$’den $2$’ye çıkar: {ok}|P| = 2{/ok}.',
+      scene: { items: ['P'] },
+      beat: { kind: 'area', matrix: 'P' },
+      claims: [{ kind: 'det', matrix: 'P', equals: '2' }],
     },
     {
       id: 'rule-2x2',
@@ -162,22 +166,22 @@ export const d1Determinant: Lesson = {
       eyebrow: 'Kural',
       title: '$|A| = 0$ ise $A$ singülerdir',
       body: 'Determinantı $0$ olan matris {ok}singüler{/ok}dir, tersi yoktur. Burada {ok}2. sütun{/ok}, {col}1. sütunun{/col} $2$ katı: kare düz bir çizgiye ezilir, alan $0$. Ezilen bilgi geri getirilemez.',
-      scene: { items: ['T', '=', 'result'], result: '?' },
+      scene: { items: ['M', '=', 'result'], result: '?' },
       beat: {
         kind: 'sequence',
         beats: [
-          { kind: 'det2', matrix: 'T' },
+          { kind: 'det2', matrix: 'M' },
           {
             kind: 'frames',
             frames: [
-              { clear: true, marks: [{ cell: ['T', '*', 0], tone: 'col' }] },
-              { marks: [{ cell: ['T', '*', 1], tone: 'ok' }], note: '2. sütun = 2 · (1. sütun)' },
+              { clear: true, marks: [{ cell: ['M', '*', 0], tone: 'col' }] },
+              { marks: [{ cell: ['M', '*', 1], tone: 'ok' }], note: '2. sütun = 2 · (1. sütun)' },
             ],
           },
-          { kind: 'area', matrix: 'T' },
+          { kind: 'area', matrix: 'M' },
         ],
       },
-      claims: [{ kind: 'det', matrix: 'T', equals: '0' }],
+      claims: [{ kind: 'det', matrix: 'M', equals: '0' }],
     },
     {
       id: 'try-k',

@@ -253,8 +253,11 @@ describe('sarrus', () => {
     expect(frames[0]?.extended).toBe('S')
     // 2·4·5 + 1·1·1 + 3·0·2 = 41; 3·4·1 + 2·1·2 + 1·0·5 = 16; 41 − 16 = 25
     expect(textOf(frames.at(-1))).toEqual([
-      '2 · 4 · 5 + 1 · 1 · 1 + 3 · 0 · 2 = 40 + 1 + 0 = 41',
-      '3 · 4 · 1 + 2 · 1 · 2 + 1 · 0 · 5 = 12 + 4 + 0 = 16',
+      // Products over their values: a side never wraps mid-sum.
+      '2 · 4 · 5 + 1 · 1 · 1 + 3 · 0 · 2',
+      '= 40 + 1 + 0 = 41',
+      '3 · 4 · 1 + 2 · 1 · 2 + 1 · 0 · 5',
+      '= 12 + 4 + 0 = 16',
       '41 − 16 = 25',
     ])
     expect(frames.at(-1)?.result).toBe('25')

@@ -60,6 +60,7 @@ function Area({
   }
   const [a, b, c, d] = [value(0, 0), value(0, 1), value(1, 0), value(1, 1)]
   const image = useRef<SVGPolygonElement>(null)
+  const imageLabel = useRef<SVGTextElement>(null)
   const unit = [
     [0, 0],
     [1, 0],
@@ -82,10 +83,13 @@ function Area({
     const svg = ref?.current
     const el = image.current
     if (!svg || !el || !points) return
+    const label = imageLabel.current
     if (!shown) {
       engine.set(svg, { opacity: 0 })
+      if (label) engine.set(label, { opacity: 0 })
       return
     }
+    if (label) engine.set(label, { opacity: 0, scale: 0.6 })
     const render = (values: Record<string, number>) => {
       const t = values.t ?? 1
       el.setAttribute(
@@ -101,7 +105,14 @@ function Area({
     engine.withChannel('lesson', () => {
       engine.bind(el, render, { t: 0 })
       engine.to(svg, { opacity: 1 }, 'enter')
-      engine.after(AREA_HOLD, () => engine.to(el, { t: 1 }, 'teach'))
+      // The new area lands on the image once it has formed: 1 became |det|.
+      engine.after(AREA_HOLD, () =>
+        engine.to(el, { t: 1 }, 'teach', {
+          onArrive: () => {
+            if (label) engine.to(label, { opacity: 1, scale: 1 }, 'land')
+          },
+        }),
+      )
     })
   }, [shown])
   if (!points) return null
@@ -110,6 +121,14 @@ function Area({
   const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
   const pad = 0.6
   const view = `${minX - pad} ${-(maxY + pad)} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad}`
+  // Integer grid: the unit square is one cell of it, so the image's area can be counted in cells.
+  const span = (from: number, to: number) =>
+    Array.from({ length: Math.floor(to) - Math.ceil(from) + 1 }, (_, i) => Math.ceil(from) + i)
+  const gridX = span(minX - pad, maxX + pad)
+  const gridY = span(minY - pad, maxY + pad)
+  const det = Math.abs((a as number) * (d as number) - (b as number) * (c as number))
+  const centre = [((a as number) + (b as number)) / 2, ((c as number) + (d as number)) / 2]
+  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1)).replace('-', '−')
   return (
     <svg
       ref={ref}
@@ -121,10 +140,30 @@ function Area({
       data-obj="area"
       data-pending={shown ? undefined : 'true'}
     >
+      {gridX.map((x) => (
+        <line key={`x${x}`} x1={x} y1={-(minY - pad)} x2={x} y2={-(maxY + pad)} className="ls-area__grid" />
+      ))}
+      {gridY.map((y) => (
+        <line key={`y${y}`} x1={minX - pad} y1={-y} x2={maxX + pad} y2={-y} className="ls-area__grid" />
+      ))}
       <line x1={minX - pad} y1={0} x2={maxX + pad} y2={0} className="ls-area__axis" />
       <line x1={0} y1={-(minY - pad)} x2={0} y2={-(maxY + pad)} className="ls-area__axis" />
-      <polygon points={poly(unit)} className="ls-area__unit" />
       <polygon ref={image} points={poly(shown ? points : unit)} className="ls-area__image" />
+      <polygon points={poly(unit)} className="ls-area__unit" />
+      <text x={0.32} y={-0.68} className="ls-area__label" fontSize={0.36} dominantBaseline="central">
+        1
+      </text>
+      <text
+        ref={imageLabel}
+        x={centre[0]}
+        y={-(centre[1] as number)}
+        className="ls-area__label"
+        data-tone="ok"
+        fontSize={0.56}
+        dominantBaseline="central"
+      >
+        {fmt(det)}
+      </text>
     </svg>
   )
 }
@@ -151,25 +190,25 @@ export type Fill = { key: string; rows: number; extraLines: number }
 /** Gap between the scene and the work lines, in px. */
 const NOTE_GAP = 12
 
+/**
+ * A stage with work lines and no scene (an equation beat on its own) sizes its lines from the same
+ * `--cell`, fitted to the stage like a scene, so a short rule fills the stage instead of sitting small in
+ * it. Bounds keep the text between today's work size (17 px) and a size that still reads as math, not a
+ * headline (32 px).
+ */
+export const SOLO = { min: 34, max: 64 } as const
+/** Another flow wins only when it gives cells at least this much larger (no flip-flop on near ties). */
+const FLOW_GAIN = 1.15
+
 export function fitCell(
   free: { width: number; height: number },
   natural: { width: number; height: number },
   probe: number = CELL.probe,
+  bounds: { min: number; max: number } = CELL,
 ): number {
-  if (natural.width <= 0 || natural.height <= 0) return CELL.max
+  if (natural.width <= 0 || natural.height <= 0) return bounds.max
   const scale = Math.min(free.width / natural.width, free.height / natural.height)
-  return Math.round(Math.min(CELL.max, Math.max(CELL.min, probe * scale)))
-}
-
-/** Stack a pair only when that makes its cells at least this much larger. */
-const STACK_GAIN = 1.2
-
-/** Two matrices with no operator between them, or only "∼". */
-function isPair(scene: HTMLElement): boolean {
-  const items = Array.from(scene.children)
-  const matrices = items.filter((el) => el.classList.contains('ls-item')).length
-  const ops = items.filter((el) => el.classList.contains('ls-op'))
-  return matrices === 2 && items.length <= 3 && ops.every((el) => el.textContent === '∼')
+  return Math.round(Math.min(bounds.max, Math.max(bounds.min, probe * scale)))
 }
 
 type Rest = { cx: number; cy: number; w: number; h: number; el: HTMLElement | SVGElement }
@@ -222,6 +261,21 @@ function useStageLayout(
       width.current = box.clientWidth
       // Fit the cell to the height the stage is going to.
       const content = scene.current
+      const solo = !content && !area.current && Boolean(work.current)
+      box.toggleAttribute('data-solo', solo)
+      if (solo && work.current) {
+        box.style.setProperty('--cell', `${CELL.probe}px`)
+        const style = getComputedStyle(box)
+        const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
+        const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+        const cell = fitCell(
+          { width: box.clientWidth - padX, height: next - padY },
+          { width: work.current.offsetWidth, height: work.current.offsetHeight },
+          CELL.probe,
+          SOLO,
+        )
+        box.style.setProperty('--cell', `${cell}px`)
+      }
       if (content) {
         box.style.setProperty('--cell', `${CELL.probe}px`)
         const style = getComputedStyle(box)
@@ -230,15 +284,19 @@ function useStageLayout(
         const areaHeight = area.current ? area.current.getBoundingClientRect().height + NOTE_GAP : 0
         const notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
         const free = { width: box.clientWidth - padX, height: next - padY - notes - areaHeight }
-        // A pair of matrices with nothing or only "∼" between them stacks when that shows them larger
-        // (a tall stage), and sits side by side otherwise.
-        content.removeAttribute('data-stack')
-        let cell = fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
-        if (isPair(content)) {
-          content.setAttribute('data-stack', '')
-          const stacked = fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
-          if (stacked >= cell * STACK_GAIN) cell = stacked
-          else content.removeAttribute('data-stack')
+        const measure = () => fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
+        // Matrices side by side with nothing (or only "∼") between them (A and B, compared) stack when the stage is tall
+        // enough that stacking makes every cell clearly larger; a row with operators always reads across.
+        delete content.dataset.flow
+        let cell = measure()
+        const stackable =
+          content.querySelectorAll(':scope > .ls-item').length >= 2 &&
+          !content.querySelector(':scope > .ls-op:not([data-op="~"]), :scope > .ls-result')
+        if (stackable) {
+          content.dataset.flow = 'column'
+          const stacked = measure()
+          if (stacked >= cell * FLOW_GAIN) cell = stacked
+          else delete content.dataset.flow
         }
         box.style.setProperty('--cell', `${cell}px`)
         // Height the fitted scene leaves unused (a wide, short scene) goes to the option rows, minus room
@@ -253,20 +311,6 @@ function useStageLayout(
             run.style.setProperty('--opt-grow', `${grow}px`)
             next = box.offsetHeight
           }
-        }
-      }
-      // A formula-only beat is shown at display size, one line per formula: the size shrinks to the
-      // widest line instead of a formula breaking in two.
-      box.style.removeProperty('--work-fit')
-      const formulas = !content && work.current?.querySelectorAll<HTMLElement>('.ls-line')
-      if (formulas && formulas.length > 0) {
-        const style = getComputedStyle(box)
-        const room =
-          box.clientWidth - Number.parseFloat(style.paddingLeft) - Number.parseFloat(style.paddingRight)
-        const widest = Math.max(...Array.from(formulas, (line) => line.scrollWidth))
-        if (widest > room) {
-          box.style.setProperty('--work-fit', (Math.floor((room / widest) * 100) / 100).toString())
-          next = box.offsetHeight
         }
       }
       // Where everything rests now, in stage coordinates (transforms taken out).
@@ -653,7 +697,7 @@ export function Stage({
             if (item === '=' || item === '·' || item === '+' || item === '~') {
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
-                <span key={index} className="ls-op" data-obj={`op${index}`}>
+                <span key={index} className="ls-op" data-obj={`op${index}`} data-op={item}>
                   {item === '~' ? '∼' : item}
                 </span>
               )
