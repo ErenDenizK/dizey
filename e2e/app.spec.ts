@@ -219,6 +219,7 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
   const log = screen(page).getByRole('region', { name: /Hata defteri/ })
+  await log.getByTestId('mistake-row').click()
   await expect(log).toContainText('İki çarpımı topladın')
   // Back to that step: a right first try on this visit clears it.
   await log.getByRole('link').first().click()
@@ -229,7 +230,41 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
     .filter({ hasText: /^b/ })
     .click()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
-  await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toContainText('Açık hata yok')
+  // An empty log is not shown at all.
+  await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toHaveCount(0)
+})
+
+test('Sen is a profile scene: duo, readiness map, badge wall, moments, mistakes and the gear', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './me')
+  const sen = screen(page)
+  await expect(sen.getByTestId('me-scene')).toBeVisible()
+  await expect(sen.getByTestId('me-scene')).toContainText(/dersin hepsi seni bekliyor/)
+  // Nothing settings-like lives here; the mistake row is hidden while the log is empty.
+  await expect(sen.getByRole('switch')).toHaveCount(0)
+  await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
+  await expect(sen.getByRole('heading', { name: /Rozetler/ })).toBeVisible()
+  await expect(sen.getByTestId('moments-album')).toBeVisible()
+  // A wrong first try in the first determinant lesson fills the log row and colours its map cell.
+  await openApp(page, './lesson/d1-determinant')
+  const player = page.getByTestId('lesson-player')
+  const next = player.getByRole('button', { name: 'İleri' })
+  while (!(await player.getByRole('group').count())) await next.click()
+  await player.getByRole('group').getByRole('button').filter({ hasText: '26' }).click()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await tab(page, 'Sen').click()
+  await expect(sen.locator('[data-lesson="d1-determinant"]')).toHaveAttribute('data-level', 'bad')
+  await expect(sen.getByTestId('mistake-row')).toContainText('1 açık hata')
+  // A map cell opens its lesson.
+  await sen.locator('[data-lesson="d1-determinant"]').click()
+  await expect(page.getByTestId('lesson-player')).toBeVisible()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await tab(page, 'Sen').click()
+  // The gear still opens Settings.
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByRole('heading', { name: 'Ayarlar', level: 1 })).toBeVisible()
 })
 
 test('the exam line counts down once a date is set', async ({ page }) => {

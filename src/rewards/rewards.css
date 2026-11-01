@@ -195,3 +195,14 @@
   margin: 0;
   color: var(--ink-2);
 }
+
+/* An unearned badge: the emblem as a dim silhouette, not tappable. */
+.badge-shelf__item--unearned {
+  opacity: 0.32;
+}
+.badge-shelf__item--unearned svg {
+  filter: brightness(0) invert(0.5);
+}
+.badge-shelf__item--unearned .badge-shelf__name {
+  color: var(--ink-2);
+}
