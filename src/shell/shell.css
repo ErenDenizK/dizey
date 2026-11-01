@@ -1079,8 +1079,9 @@ a.sh-node {
   display: grid;
   gap: var(--space-2);
 }
+/* Rows also take the height a question's scene leaves unused, set once per step (Stage.tsx FILL). */
 .ls-opts .ex-opt {
-  min-height: 52px;
+  min-height: calc(52px + var(--opt-grow, 0px));
   font-size: var(--type-body);
   font-weight: var(--weight-medium);
   line-height: var(--leading-body);

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -208,6 +208,18 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         : undefined
 
   const final = frames.at(-1) ?? emptyStage
+  // A question's option rows take what its scene leaves unused, keeping room for the reveal's extra lines.
+  const fill = useMemo(() => {
+    if (step.kind !== 'choice') return undefined
+    const wide = step.options.some((option) => option.content.some((block) => block.kind !== 'text'))
+    // The question itself shows no work lines; its reveal may add some.
+    const revealed = step.reveal ? (compile(lesson, step.reveal).at(-1)?.lines.length ?? 0) : 0
+    return {
+      key: step.id,
+      rows: wide ? Math.ceil(step.options.length / 2) : step.options.length,
+      extraLines: revealed,
+    }
+  }, [lesson, step])
   const hasStage = Boolean(step.scene || state.area || final.area || state.lines.length)
   const transport =
     frames.length > 0
@@ -223,19 +235,15 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       : undefined
 
   // A question whose options are the math (matrices, systems) has no picture of its own: the options become the stage.
-  const optionsAreStage =
-    !hasStage &&
+  const optionsWide =
     step.kind === 'choice' &&
     step.options.some((option) => option.content.some((block) => block.kind !== 'text'))
 
+  const optionsAreStage = !hasStage && optionsWide
+
   const options =
     step.kind === 'choice' ? (
-      <fieldset
-        className="ex-opts ls-opts"
-        data-wide={step.options.some((option) => option.content.some((block) => block.kind !== 'text'))}
-        aria-label={step.title}
-        data-sound="none"
-      >
+      <fieldset className="ex-opts ls-opts" data-wide={optionsWide} aria-label={step.title} data-sound="none">
         {step.options.map((option) => {
           const wrong = attempt.wrong.includes(option.key)
           const right = attempt.revealed && option.key === step.answer
@@ -312,6 +320,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
                 final={final}
                 stagger={CARRY.stagger}
                 transport={transport}
+                fill={fill}
               />
             ) : null}
 
