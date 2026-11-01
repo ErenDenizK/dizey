@@ -69,6 +69,7 @@ export function ExamHome() {
       title={strings.exam.title}
       back={() => void navigate({ to: '/map' })}
       backLabel={strings.exam.back}
+      parent={strings.tabs.map}
       pushed
     >
       <p className="dz-subhead sh-lead">{strings.exam.subtitle}</p>

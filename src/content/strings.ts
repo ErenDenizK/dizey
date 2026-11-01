@@ -8,10 +8,20 @@ export const strings = {
   notFound: 'Bu sayfa yok.',
   goHome: 'Ana sayfaya dön',
 
+  chrome: { done: 'Bitti', back: 'Geri' },
   tabs: { today: 'Bugün', map: 'Harita', me: 'Sen', label: 'Bölümler' },
 
   today: {
-    greeting: { morning: 'Günaydın', day: 'İyi günler', evening: 'İyi akşamlar', night: 'İyi geceler' },
+    hero: {
+      resume: (title: string) => `Kaldığımız yer: ${title}`,
+      fresh: 'İlk derse başlayalım.',
+      next: 'Sıradaki ders hazır.',
+      done: 'Bütün dersler bitti. Prova zamanı.',
+      examDays: (days: number) => `Vize’ye ${days} gün`,
+      examToday: 'Vize bugün',
+      examPast: 'Vize tarihi geçti',
+      examUnknown: 'Vize tarihi belli değil',
+    },
     start: 'Başla',
     resume: 'Devam et',
     stepOf: (step: number, total: number) => `${step} / ${total} adım`,

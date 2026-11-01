@@ -1,5 +1,5 @@
 /*
- * Bugün: the greeting, the one next lesson, mistakes to revisit, and the rehearsal when the exam is
+ * Bugün: the hero (duo and one sentence of state), the one next lesson, mistakes to revisit, and the rehearsal when the exam is
  * close (src/shell/TodayView.tsx). Tokens only; no transitions or keyframes (motion comes from the engine).
  */
 .td-root {
@@ -8,29 +8,18 @@
 }
 .td-head {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--gap-item);
-  margin-top: var(--space-6);
+  gap: var(--gap-block);
+  margin-top: var(--space-4);
 }
-/* The screen's own h1 stays for assistive tech; the greeting is drawn here, beside the duo. */
-.dz-screen:has(> .td-root) > .dz-large-title {
-  position: absolute;
-  width: 1px;
-  height: 1px;
+.td-head__state {
   margin: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
-.td-head__greeting {
-  margin: 0;
+  color: var(--ink-1);
 }
 .td-head__exam {
   margin: var(--space-1) 0 0;
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 
 .td-next {

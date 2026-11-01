@@ -13,7 +13,7 @@
   align-items: baseline;
   column-gap: var(--space-3);
   row-gap: var(--space-3);
-  margin-top: calc(var(--space-2) * -1);
+  margin-top: var(--space-4);
 }
 .pa-summary p {
   margin: 0;

@@ -1123,7 +1123,7 @@ a.sh-node {
   overscroll-behavior-y: contain;
 }
 .sh-lead {
-  margin: calc(-1 * var(--space-3)) var(--space-1) var(--space-5);
+  margin: calc(-1 * var(--space-3)) var(--card-pad) var(--space-5);
 }
 .sh-stack {
   display: grid;
@@ -1138,7 +1138,7 @@ a.sh-node {
   font-weight: var(--weight-regular);
 }
 .sh-hint {
-  margin: var(--space-2) var(--space-1) 0;
+  margin: var(--space-2) var(--card-pad) 0;
 }
 .sh-review {
   margin-top: var(--stack-gap);
