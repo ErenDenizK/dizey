@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DuoHandle } from '../character/Duo'
 import { lessons } from '../content/lessons'
-import { chapters, codeOfNode, pathCode, tileTitle } from '../content/path'
+import { chapters, codeOfNode, pathCode } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { RichText } from '../exam/Blocks'
@@ -11,7 +11,7 @@ import { stateOf } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
-import { hasNewProgress, moodOf, parseSeen, readinessOf } from '../progress/readiness'
+import { hasNewProgress, moodOf, parseSeen } from '../progress/readiness'
 import { BadgeShelf } from '../rewards/BadgeShelf'
 import { badgeOf } from '../rewards/badges'
 import { Emblem } from '../rewards/Emblem'
@@ -20,7 +20,6 @@ import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { CompanionSlot } from './CompanionSlot'
 import { PressLink } from './PressLink'
-import { morphFrom } from './stage'
 import { WeekStrip } from './WeekStrip'
 import './me.css'
 
@@ -41,7 +40,6 @@ export function MeView() {
       <MistakeLog />
       <BadgeShelf />
       <SecretMoments />
-      <ReadinessMap />
     </Screen>
   )
 }
@@ -80,66 +78,6 @@ function Scene() {
     <section ref={root} className="me-scene" aria-label={strings.me.companion} data-testid="me-scene">
       <CompanionSlot name="me" size="large" mood={mood} duo={duo} />
       <WeekStrip />
-    </section>
-  )
-}
-
-/**
- * Hazırlık haritası: a row per chapter, a cell per lesson, coloured by first-try accuracy. Not a number.
- * A tap opens the lesson the way the path does: the lesson grows out of the cell.
- */
-function ReadinessMap() {
-  const records = useLessonRecords()
-  const widest = Math.max(...chapters.map((chapter) => chapter.lessons.length))
-  return (
-    <section aria-labelledby="readiness" className="me-block">
-      <h2 id="readiness" className="dz-section-label">
-        {strings.me.readiness}
-      </h2>
-      <div className="me-map" style={{ '--cols': widest } as React.CSSProperties}>
-        {chapters.map((chapter) => {
-          const finished = chapter.lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
-          return (
-            <section
-              key={chapter.id}
-              className="me-map__chapter"
-              aria-label={strings.me.readinessChapter(chapter.label, finished, chapter.lessons.length)}
-            >
-              <p className="me-map__label">
-                <span className="me-map__name">{chapter.label}</span>
-                <span className="me-map__count num">
-                  {finished} / {chapter.lessons.length}
-                </span>
-              </p>
-              <div className="me-map__row">
-                {chapter.lessons.map((lesson) => {
-                  const level = readinessOf(lesson, records[lesson.id])
-                  return (
-                    <PressLink
-                      key={lesson.id}
-                      to="/lesson/$id"
-                      params={{ id: lesson.id }}
-                      className="me-map__cell"
-                      data-level={level}
-                      data-testid="map-cell"
-                      data-lesson={lesson.id}
-                      data-morph-key={lesson.id}
-                      aria-label={strings.me.readinessCell(
-                        pathCode(lesson),
-                        tileTitle(lesson),
-                        strings.me.level[level],
-                      )}
-                      onClick={(event) => {
-                        morphFrom.current = event.currentTarget
-                      }}
-                    />
-                  )
-                })}
-              </div>
-            </section>
-          )
-        })}
-      </div>
     </section>
   )
 }

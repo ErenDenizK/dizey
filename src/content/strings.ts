@@ -63,10 +63,19 @@ export const strings = {
     examLine: (days: number, date: string) =>
       days > 0 ? `Vize 1'e ${days} gün · ${date}` : `Vize 1 · ${date}`,
     examWeekLine: (date: string) => `Vize 1 · ${date} civarı`,
+    examDateLine: (date: string) => `Vize 1 · ${date}`,
+    chapterRow: (label: string, done: number, total: number) => `${label}, ${done} / ${total} ders tamam`,
+    readinessCell: (code: string, name: string, level: string) => `${code} ${name}: ${level}`,
+    level: {
+      none: 'başlanmadı',
+      ok: 'ilk denemeler çoğunlukla doğru',
+      mid: 'ilk denemeler karışık',
+      bad: 'ilk denemeler çoğunlukla yanlış',
+      done: 'tamam, soru yok',
+    },
     overallRest: (total: number) => `/ ${total} ders`,
     meterLabel: (done: number, total: number) => `${total} dersin ${done} tanesi tamam`,
     chapterCount: (done: number, total: number) => `${done} / ${total}`,
-    here: { start: 'Sıradaki', resume: 'Kaldığın yer' },
     start: 'Başla',
     resume: 'Devam et',
     stepCount: (step: number, total: number) => `${step}/${total}`,
@@ -121,17 +130,6 @@ export const strings = {
   me: {
     title: 'Sen',
     companion: 'Satır ve Sütun',
-    readiness: 'Hazırlık haritası',
-    readinessChapter: (label: string, done: number, total: number) =>
-      `${label}, ${done} / ${total} ders tamam`,
-    readinessCell: (code: string, name: string, level: string) => `${code} ${name}: ${level}`,
-    level: {
-      none: 'başlanmadı',
-      ok: 'ilk denemeler çoğunlukla doğru',
-      mid: 'ilk denemeler karışık',
-      bad: 'ilk denemeler çoğunlukla yanlış',
-      done: 'tamam, soru yok',
-    },
     moments: 'Gizli anlar',
     momentsCount: (found: number, total: number) => `${found} / ${total}`,
     momentFound: (code: string) => `${code}: gizli an bulundu`,

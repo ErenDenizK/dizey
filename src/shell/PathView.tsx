@@ -14,27 +14,26 @@ import { saveSession, useExam } from '../exam/store'
 import { type LessonRecord, resumeIndex } from '../lesson/progress'
 import { type LessonState, stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
+import { readinessOf } from '../progress/readiness'
 import { useSettings } from '../progress/settings'
+import { Expander } from '../ui/Expander'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Sheet } from '../ui/Sheet'
 import { burst, glow, ring } from '../ui/shine'
 import { LessonPeek, type Peek } from './LessonPeek'
-import { drawRing, fadeOutWas, holdInk, holdTag, inkOf, raiseTag } from './morph'
+import { fadeOutWas, holdInk, holdTag, inkOf, raiseTag } from './morph'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import './path.css'
 
-/** Tiles per matrix row. The path reads left to right, then right to left (boustrophedon). */
-const COLUMNS = 3
-
 type Records = Readonly<Record<string, LessonRecord>>
 
 /**
- * Dersler: today's next step and the whole map in one screen. The study order is drawn as a path through
- * a stack of matrices, one per chapter, whose entries are the lessons: the path snakes through each
- * matrix row by row, the walked part is solid, the part ahead is a quiet rail, and each matrix's brackets
- * fill as its chapter is finished. The lesson you are on is the one dark tile, and it opens in one tap. Any other tile opens its card, so every lesson stays open (no locks).
+ * Harita: the whole route on one screen. A summary line, then one compact row per chapter (its number, its
+ * name and one readiness square per lesson); exactly one chapter is open, as a vertical list of its
+ * lessons and its test. The lesson you are on is the one emphasised row and carries the screen's amber
+ * pill. Any other row opens its card, so every lesson stays open (no locks).
  */
 export function PathView() {
   const records = useLessonRecords()
@@ -44,8 +43,20 @@ export function PathView() {
   const [peek, setPeek] = useState<Peek | null>(null)
   const [note, setNote] = useState<TestNote | null>(null)
   const examLine = examDate
-    ? strings.path.examLine(daysUntil(examDate, new Date()), dayLabel(examDate))
+    ? strings.path.examDateLine(dayLabel(examDate))
     : strings.path.examWeekLine(examWeek.label)
+
+  // The chapter holding the next lesson is open; when the next lesson moves to another chapter, so does the open one.
+  const resumeId =
+    (main ? chapters.find((c) => c.lessons.some((l) => l.id === main.id)) : undefined)?.id ??
+    chapters[0]?.id ??
+    null
+  const [openId, setOpenId] = useState<string | null>(resumeId)
+  const [seenResume, setSeenResume] = useState(resumeId)
+  if (resumeId !== seenResume) {
+    setSeenResume(resumeId)
+    setOpenId(resumeId)
+  }
 
   const root = useRef<HTMLDivElement>(null)
   useCelebrations(root, records)
@@ -55,21 +66,24 @@ export function PathView() {
     <Screen title={strings.path.title}>
       <div ref={root} className="pa-root">
         <div className="pa-summary">
-          <p className="pa-summary__count">
-            <b className="num">{doneCount}</b>
-            <span>{strings.path.overallRest(lessons.length)}</span>
+          <p className="pa-summary__line">
+            <span className="pa-summary__count">
+              <b className="num">{doneCount}</b>
+              <span>{strings.path.overallRest(lessons.length)}</span>
+            </span>
+            <span className="pa-summary__exam">{examLine}</span>
           </p>
-          <p className="pa-summary__exam">{examLine}</p>
           <Meter records={records} done={doneCount} />
         </div>
         {chapters.map((chapter, index) => (
-          <ChapterMatrix
+          <ChapterRow
             key={chapter.id}
             chapter={chapter}
             number={index + 1}
             records={records}
             mainId={main?.id ?? null}
-            last={index === chapters.length - 1}
+            open={chapter.id === openId}
+            onToggle={() => setOpenId(chapter.id === openId ? null : chapter.id)}
             onPick={(lesson, tile) => setPeek({ lesson, tile })}
             onNote={setNote}
           />
@@ -112,14 +126,18 @@ function Meter({ records, done }: { records: Records; done: number }) {
   )
 }
 
-type Geometry = { width: number; height: number; centers: { x: number; y: number }[] }
-
-function ChapterMatrix({
+/**
+ * A chapter: one row (number, name, a square per lesson) that opens and closes the chapter, and under it,
+ * when open, its lessons and its test. The squares are links of their own (a tap opens that lesson); the rest
+ * of the row, 44 px or taller, is the toggle.
+ */
+function ChapterRow({
   chapter,
   number,
   records,
   mainId,
-  last,
+  open,
+  onToggle,
   onPick,
   onNote,
 }: {
@@ -127,83 +145,88 @@ function ChapterMatrix({
   number: number
   records: Records
   mainId: string | null
-  last: boolean
+  open: boolean
+  onToggle: () => void
   onPick: (lesson: Lesson, tile: HTMLElement) => void
   onNote: (note: TestNote) => void
 }) {
-  const box = useRef<HTMLDivElement>(null)
-  const [geometry, setGeometry] = useState<Geometry | null>(null)
   const states = chapter.lessons.map((lesson) => stateOf(records[lesson.id]))
   const done = states.filter((state) => state === 'done').length
   const total = chapter.lessons.length
-  const complete = done === total
-
-  // The path and the brackets are drawn in pixels from the tiles' real centres, so they follow any
-  // text size or screen width.
-  useLayoutEffect(() => {
-    const el = box.current
-    if (!el) return
-    // Layout offsets, not client rects: a tile's own press or settle motion must not move the path.
-    const measure = () => {
-      if (!el.offsetWidth) return
-      const tiles = [...el.querySelectorAll<HTMLElement>('.pa-tile')]
-      setGeometry({
-        width: el.offsetWidth,
-        height: el.offsetHeight,
-        centers: tiles.map((tile) => {
-          const at = offsetWithin(tile, el)
-          return { x: at.left + tile.offsetWidth / 2, y: at.top + tile.offsetHeight / 2 }
-        }),
-      })
-    }
-    measure()
-    const observer = new ResizeObserver(measure)
-    observer.observe(el)
-    return () => observer.disconnect()
-  }, [])
-
+  const body = `chapter-body-${chapter.id}`
   return (
     <section
       className="pa-chapter"
-      data-complete={complete || undefined}
-      data-last={last || undefined}
-      aria-labelledby={`chapter-${chapter.id}`}
+      data-open={open || undefined}
+      data-complete={done === total || undefined}
+      data-testid={`chapter-${chapter.id}`}
     >
-      <header className="pa-chapter__head">
-        <span className="pa-chapter__no num" aria-hidden="true">
-          {number}
-        </span>
-        <span className="pa-chapter__titles">
-          <h2 id={`chapter-${chapter.id}`} className="pa-chapter__title">
-            {chapter.label}
-          </h2>
-        </span>
-        <span className="pa-chapter__count num" data-complete={complete || undefined}>
-          {strings.path.chapterCount(done, total)}
-        </span>
-      </header>
-      <div ref={box} className="pa-matrix">
-        {geometry ? <Decoration geometry={geometry} states={states} progress={done / total} /> : null}
-        <ol className="pa-grid">
-          {chapter.lessons.map((lesson, index) => {
-            const row = Math.floor(index / COLUMNS)
-            const column = row % 2 === 0 ? index % COLUMNS : COLUMNS - 1 - (index % COLUMNS)
-            return (
-              <li key={lesson.id} style={{ gridRow: row + 1, gridColumn: column + 1 }}>
-                <Tile
-                  lesson={lesson}
-                  record={records[lesson.id]}
-                  state={states[index] ?? 'new'}
-                  main={lesson.id === mainId}
-                  onPick={onPick}
-                />
-              </li>
-            )
-          })}
-        </ol>
-        <ChapterTestCell chapter={chapter} onNote={onNote} />
+      <div className="pa-chapter__head">
+        <h2 className="pa-chapter__heading">
+          <Pressable
+            className="pa-chapter__toggle"
+            aria-expanded={open}
+            aria-controls={body}
+            data-testid={`chapter-toggle-${chapter.id}`}
+            onClick={onToggle}
+          >
+            <span className="pa-chapter__no num" aria-hidden="true">
+              {number}
+            </span>
+            <span className="pa-chapter__title">{chapter.label}</span>
+          </Pressable>
+        </h2>
+        <ul className="pa-cells" aria-label={strings.path.chapterRow(chapter.label, done, total)}>
+          {chapter.lessons.map((lesson) => (
+            <li key={lesson.id}>
+              <Cell lesson={lesson} record={records[lesson.id]} next={lesson.id === mainId} />
+            </li>
+          ))}
+        </ul>
       </div>
+      <Expander open={open} id={body}>
+        <ol className="pa-lessons">
+          {chapter.lessons.map((lesson, index) => (
+            <li key={lesson.id}>
+              <Tile
+                lesson={lesson}
+                record={records[lesson.id]}
+                state={states[index] ?? 'new'}
+                main={lesson.id === mainId}
+                onPick={onPick}
+              />
+            </li>
+          ))}
+          <li>
+            <ChapterTestCell chapter={chapter} onNote={onNote} />
+          </li>
+        </ol>
+      </Expander>
     </section>
+  )
+}
+
+/**
+ * A lesson's readiness square: coloured by first-try accuracy, not a number. A tap opens the lesson the way
+ * the rows do: the lesson grows out of the square.
+ */
+function Cell({ lesson, record, next }: { lesson: Lesson; record: LessonRecord | undefined; next: boolean }) {
+  const level = readinessOf(lesson, record)
+  return (
+    <PressLink
+      to="/lesson/$id"
+      params={{ id: lesson.id }}
+      className="pa-cell"
+      data-level={level}
+      data-next={next || undefined}
+      data-testid="map-cell"
+      data-lesson={lesson.id}
+      data-morph-key={lesson.id}
+      aria-label={strings.path.readinessCell(pathCode(lesson), tileTitle(lesson), strings.path.level[level])}
+      onClick={(event) => {
+        morphFrom.current = event.currentTarget
+      }}
+    />
   )
 }
 
@@ -212,9 +235,8 @@ type TestNote =
   | { kind: 'replaces'; chapter: Chapter }
 
 /**
- * The chapter's test, drawn as the augmented part of its matrix: a bar under the lessons, then one cell
- * inside the same brackets. Six questions from the bank, untimed, never locked. A chapter whose bank has
- * fewer than six is dimmed and says why on tap.
+ * The chapter's test, the last row of its open list. Six questions from the bank, untimed, never locked. A chapter
+ * whose bank has fewer than six is dimmed and says why on tap.
  */
 function ChapterTestCell({ chapter, onNote }: { chapter: Chapter; onNote: (note: TestNote) => void }) {
   const navigate = useNavigate()
@@ -249,32 +271,26 @@ function ChapterTestCell({ chapter, onNote }: { chapter: Chapter; onNote: (note:
   }
 
   return (
-    <div className="pa-aug">
-      <i className="pa-aug__bar" aria-hidden="true" />
-      <Pressable
-        className="pa-test"
-        data-state={ready ? (last ? 'done' : 'new') : 'preparing'}
-        data-chapter={chapter.id}
-        data-morph-key={chapter.id}
-        data-testid={`chapter-test-${chapter.id}`}
-        aria-label={label}
-        onClick={(event) =>
-          ready ? start(event.currentTarget) : onNote({ kind: 'preparing', chapter, available })
-        }
-      >
-        <span className="pa-wide__text">
-          <span className="pa-wide__title">{strings.path.chapterTest.title}</span>
-          <span className="pa-wide__sub">
-            {ready ? strings.path.chapterTest.size(CHAPTER_TEST_SIZE) : strings.path.chapterTest.preparing}
-          </span>
-        </span>
-        {ready && last ? (
-          <span className="pa-wide__value num">
-            {strings.path.chapterTest.score(last.correct, last.total)}
-          </span>
-        ) : null}
-      </Pressable>
-    </div>
+    <Pressable
+      className="pa-test"
+      data-state={ready ? (last ? 'done' : 'new') : 'preparing'}
+      data-chapter={chapter.id}
+      data-morph-key={chapter.id}
+      data-testid={`chapter-test-${chapter.id}`}
+      aria-label={label}
+      onClick={(event) =>
+        ready ? start(event.currentTarget) : onNote({ kind: 'preparing', chapter, available })
+      }
+    >
+      <span className="pa-test__title">{strings.path.chapterTest.title}</span>
+      <span className="pa-test__value num">
+        {!ready
+          ? strings.path.chapterTest.preparing
+          : last
+            ? strings.path.chapterTest.score(last.correct, last.total)
+            : strings.path.chapterTest.size(CHAPTER_TEST_SIZE)}
+      </span>
+    </Pressable>
   )
 }
 
@@ -351,54 +367,6 @@ function Gate() {
   )
 }
 
-/** Bracket arm length and stroke inset, in px. */
-const BRACKET = { arm: 12, inset: 1.5 } as const
-
-/** Brackets and path, behind the tiles. */
-function Decoration({
-  geometry,
-  states,
-  progress,
-}: {
-  geometry: Geometry
-  states: LessonState[]
-  progress: number
-}) {
-  const { width, height, centers } = geometry
-  const { arm, inset } = BRACKET
-  const left = `M${inset + arm} ${inset} H${inset} V${height - inset} H${inset + arm}`
-  const right = `M${width - inset - arm} ${inset} H${width - inset} V${height - inset} H${width - inset - arm}`
-  const segments = centers.slice(1).map((to, index) => {
-    const from = centers[index] as { x: number; y: number }
-    return { from, to, walked: states[index] === 'done' }
-  })
-  return (
-    <svg className="pa-deco" width={width} height={height} aria-hidden="true">
-      {segments.map(({ from, to, walked }, index) => (
-        <line
-          // biome-ignore lint/suspicious/noArrayIndexKey: segments follow the fixed lesson order
-          key={index}
-          className="pa-link"
-          data-walked={walked || undefined}
-          data-segment={index}
-          x1={from.x}
-          y1={from.y}
-          x2={to.x}
-          y2={to.y}
-        />
-      ))}
-      <path className="pa-bracket" d={left} />
-      <path className="pa-bracket" d={right} />
-      {progress > 0 ? (
-        <>
-          <path className="pa-bracket-fill" d={left} pathLength={1} strokeDasharray={`${progress} 1`} />
-          <path className="pa-bracket-fill" d={right} pathLength={1} strokeDasharray={`${progress} 1`} />
-        </>
-      ) : null}
-    </svg>
-  )
-}
-
 function Tile({
   lesson,
   record,
@@ -412,90 +380,57 @@ function Tile({
   main: boolean
   onPick: (lesson: Lesson, tile: HTMLElement) => void
 }) {
-  useStateChange(lesson.id, `${state}${main ? '+main' : ''}`)
+  useStateChange(lesson.id, `${state}${main ? '+next' : ''}`)
   const resuming = main && state === 'current' && record
-  const step = resuming ? resumeIndex(lesson, record) + 1 : 0
   const face = (
     <>
       <span className="pa-tile__code num">{pathCode(lesson)}</span>
       <span className="pa-tile__title">{tileTitle(lesson)}</span>
       {state === 'done' ? <Check /> : null}
-      {resuming ? (
-        <span className="pa-tile__bar" aria-hidden="true">
-          <i style={{ width: `${(step / lesson.steps.length) * 100}%` }} />
-        </span>
+      {main ? (
+        <span className="pa-tile__go">{resuming ? strings.path.resume : strings.path.start}</span>
       ) : null}
     </>
   )
-  return (
-    <>
-      {main ? (
-        // The lesson you are on opens in one tap and grows out of its tile; the others show their card.
-        <PressLink
-          to="/lesson/$id"
-          params={{ id: lesson.id }}
-          className="pa-tile"
-          data-state={state}
-          data-main=""
-          data-lesson={lesson.id}
-          data-morph-key={lesson.id}
-          data-testid="continue-card"
-          onClick={(event) => {
-            morphFrom.current = event.currentTarget
-          }}
-          aria-label={
-            resuming
-              ? strings.path.continueAction(pathCode(lesson), lesson.title)
-              : strings.path.startAction(pathCode(lesson), lesson.title)
-          }
-        >
-          {face}
-        </PressLink>
-      ) : (
-        <Pressable
-          className="pa-tile"
-          data-state={state}
-          data-lesson={lesson.id}
-          data-morph-key={lesson.id}
-          aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
-          onClick={(event) => onPick(lesson, event.currentTarget)}
-        >
-          {face}
-        </Pressable>
-      )}
-      {main ? (
-        <Tag lesson={lesson.id}>
-          {state === 'current' ? strings.path.here.resume : strings.path.here.start}
-        </Tag>
-      ) : null}
-    </>
-  )
-}
-
-/**
- * The marker over the lesson you are on. It enters on `ui` (a few px low, transparent, then up) instead of
- * appearing; when the tile is still out of sight (a lesson folding into it) it waits for the tile's aftermath.
- */
-function Tag({ lesson, children }: { lesson: string; children: string }) {
-  const ref = useRef<HTMLSpanElement>(null)
-  useLayoutEffect(() => {
-    const tag = ref.current
-    if (!tag) return
-    holdTag(tag)
-    const tile = tag.parentElement?.querySelector<HTMLElement>('.pa-tile')
-    if (tile?.style.visibility === 'hidden') return
-    raiseTag(tag)
-  }, [])
-  return (
-    <span ref={ref} className="pa-here" data-tag="" data-lesson-tag={lesson} aria-hidden="true">
-      {children}
-    </span>
+  // The lesson you are on opens in one tap and grows out of its row; the others show their card.
+  return main ? (
+    <PressLink
+      to="/lesson/$id"
+      params={{ id: lesson.id }}
+      className="pa-tile"
+      data-state={state}
+      data-next=""
+      data-lesson={lesson.id}
+      data-morph-key={lesson.id}
+      data-testid="continue-card"
+      onClick={(event) => {
+        morphFrom.current = event.currentTarget
+      }}
+      aria-label={
+        resuming
+          ? strings.path.continueAction(pathCode(lesson), lesson.title)
+          : strings.path.startAction(pathCode(lesson), lesson.title)
+      }
+    >
+      {face}
+    </PressLink>
+  ) : (
+    <Pressable
+      className="pa-tile"
+      data-state={state}
+      data-lesson={lesson.id}
+      data-morph-key={lesson.id}
+      aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
+      onClick={(event) => onPick(lesson, event.currentTarget)}
+    >
+      {face}
+    </Pressable>
   )
 }
 
 /**
  * A tile whose state changes while it is on screen (becomes current, done, or loses the ring) does not swap:
- * the old fill crossfades out, the new ring draws itself in, and a new check or progress mark fades in. While
+ * the old fill crossfades out, and a new check or pill fades in. While
  * the tile is hidden (a lesson folding into it) the same parts wait for the aftermath in morph.ts.
  */
 function useStateChange(id: string, key: string) {
@@ -513,22 +448,21 @@ function useStateChange(id: string, key: string) {
     tile.prepend(was)
     holdInk(tile, before.ink)
     for (const part of tile.querySelectorAll<HTMLElement>(
-      ':scope > .pa-tile__check, :scope > .pa-tile__bar',
+      ':scope > .pa-tile__check, :scope > .pa-tile__go',
     )) {
       holdTag(part)
       if (!hidden) raiseTag(part)
     }
     if (hidden) return
     fadeOutWas(tile)
-    if (key.endsWith('+main')) drawRing(tile)
   }, [id, key])
 }
 
+/** The one quiet mark of a finished lesson. */
 function Check() {
   return (
     <svg className="pa-tile__check" viewBox="0 0 20 20" aria-hidden="true">
-      <circle cx="10" cy="10" r="10" />
-      <path d="M5.8 10.3 8.6 13l5.6-6" />
+      <path d="M4.5 10.5 8.4 14.4 15.5 6" />
     </svg>
   )
 }
@@ -542,7 +476,6 @@ function AllDone() {
   )
 }
 
-/** Opens the path where you are: the current tile sits in the upper half of the screen. */
 /** An element's layout position inside one of its ancestors, ignoring transforms. */
 function offsetWithin(el: HTMLElement, ancestor: HTMLElement): { left: number; top: number } {
   let left = 0
@@ -559,8 +492,8 @@ function offsetWithin(el: HTMLElement, ancestor: HTMLElement): { left: number; t
 }
 
 /**
- * Opening the app: the screen starts at the top (title, where you stand), the tiles rise in from the
- * lesson you are on outward, and if that lesson is below the fold the view glides down to it, like a
+ * Opening the app: the screen starts at the top (title, where you stand), the open chapter's rows rise in from
+ * the lesson you are on outward, and if that lesson is below the fold the view glides down to it, like a
  * camera finding your place on a map. A touch stops the glide at once.
  */
 function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string | null) {
@@ -578,8 +511,8 @@ function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string
     tiles.forEach((tile, index) => {
       const order = Math.abs(index - from)
       if (order > 9) return
-      engine.set(tile, { opacity: 0, scale: 0.9, y: 14 })
-      engine.after(40 + order * 28, () => engine.to(tile, { opacity: 1, scale: 1, y: 0 }, 'enter'))
+      engine.set(tile, { opacity: 0, y: 10 })
+      engine.after(40 + order * 28, () => engine.to(tile, { opacity: 1, y: 0 }, 'enter'))
     })
 
     const tile = tiles[from]
@@ -609,8 +542,8 @@ function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string
 }
 
 /**
- * A lesson finished while the path was hidden behind it: once you are back on the path, its tile lands
- * with a small settle and the segment it opens draws itself in.
+ * A lesson finished while the path was hidden behind it: once you are back on the path, its row lands
+ * with a small settle and its tick draws itself in.
  */
 function useCelebrations(root: React.RefObject<HTMLDivElement | null>, records: Records) {
   const pathname = useRouterState({ select: (state) => state.location.pathname })
@@ -632,37 +565,34 @@ function useCelebrations(root: React.RefObject<HTMLDivElement | null>, records: 
     const now = new Set(seen.current)
     // The new ticks stay hidden while the lesson closes, so the first one seen is the one that lands.
     for (const id of ids) {
-      const check = root.current?.querySelector<SVGSVGElement>(`[data-lesson="${id}"] .pa-tile__check`)
+      const check = root.current?.querySelector<SVGSVGElement>(
+        `.pa-tile[data-lesson="${id}"] .pa-tile__check`,
+      )
       if (check) engine.set(check, { scale: 0.3, opacity: 0 })
     }
     // Wait for the lesson to finish closing.
     engine.withChannel('chrome', () =>
       engine.after(420, () => {
         for (const id of ids) {
-          const tile = root.current?.querySelector<HTMLElement>(`[data-lesson="${id}"]`)
+          const tile = root.current?.querySelector<HTMLElement>(`.pa-tile[data-lesson="${id}"]`)
           if (!tile) continue
           const chapter = chapters.find((c) => c.lessons.some((lesson) => lesson.id === id))
           const complete = Boolean(chapter?.lessons.every((lesson) => now.has(lesson.id)))
           lightTick(tile, complete)
           engine.set(tile, { scale: 0.86 })
           engine.to(tile, { scale: 1 }, 'settle')
-          const local = chapter?.lessons.findIndex((lesson) => lesson.id === id) ?? -1
-          const section = tile.closest('.pa-chapter')
-          const link = section?.querySelector<SVGLineElement>(`[data-segment="${local}"]`)
-          if (link) drawIn(link)
         }
       }),
     )
   }, [onPath, root])
 }
 
-/** Check pop delay after the tile starts settling, and the tick's draw delay after the disc lands (ms). */
+/** Check pop delay after the row starts settling, and the tick's draw delay after the mark lands (ms). */
 const TICK_MS = { pop: 140, draw: 60 } as const
 
 /**
- * The lesson's tick lands on the path: the disc pops, the tick draws itself in, and as it closes a ring of light
- * leaves it and the tile glows green once. The tick that finishes a chapter also lights the chapter's brackets and
- * throws a few sparks from the tile (src/ui/shine.ts).
+ * The lesson's tick lands on its row: the tick draws itself in, and as it closes a ring of light
+ * leaves it and the row glows green once. The tick that finishes a chapter also throws a few sparks from the row (src/ui/shine.ts).
  */
 function lightTick(tile: HTMLElement, chapterDone: boolean) {
   const check = tile.querySelector<SVGSVGElement>('.pa-tile__check')
@@ -693,9 +623,7 @@ function lightTick(tile: HTMLElement, chapterDone: boolean) {
       ring(tile, center.x, center.y)
       glow(tile, 1)
       if (!chapterDone) return
-      const matrix = tile.closest<HTMLElement>('.pa-matrix')
-      const deco = matrix?.querySelector<HTMLElement>('.pa-deco')
-      if (deco) glow(deco, 1, 0.35)
+      const matrix = tile.closest<HTMLElement>('.pa-chapter')
       if (matrix) {
         const box = matrix.getBoundingClientRect()
         const at = tile.getBoundingClientRect()
@@ -707,23 +635,5 @@ function lightTick(tile: HTMLElement, chapterDone: boolean) {
         })
       }
     })
-  })
-}
-
-function drawIn(link: SVGLineElement) {
-  const length = Math.hypot(
-    link.x2.baseVal.value - link.x1.baseVal.value,
-    link.y2.baseVal.value - link.y1.baseVal.value,
-  )
-  link.style.strokeDasharray = `${length} ${length}`
-  engine.bind(link, (v) => {
-    link.style.strokeDashoffset = `${(v.offset ?? 0).toFixed(2)}`
-  })
-  engine.set(link, { offset: length })
-  engine.to(link, { offset: 0 }, 'draw', {
-    onArrive: () => {
-      link.style.strokeDasharray = ''
-      link.style.strokeDashoffset = ''
-    },
   })
 }
