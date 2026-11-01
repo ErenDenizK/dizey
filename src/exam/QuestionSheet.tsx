@@ -2,6 +2,7 @@ import { type RefObject, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Question } from '../content/questions'
 import { strings } from '../content/strings'
+import { engine } from '../engine/driver'
 import { useAnswerMotion } from '../lesson/motion'
 import { haptic } from '../sound/haptics'
 import { playSound } from '../sound/player'
@@ -139,9 +140,19 @@ export function QuestionSheet({
   )
 }
 
-/** On a short phone the verdict lands below the options: bring it into view once it appears. */
+/** On a short phone the verdict lands below the options: the sheet's scroller springs it into view. */
 function revealVerdict(el: HTMLParagraphElement | null) {
-  if (!el) return
-  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-  requestAnimationFrame(() => el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }))
+  const scroller = el?.closest<HTMLElement>('.td-q__scroll')
+  if (!el || !scroller) return
+  const box = el.getBoundingClientRect()
+  const view = scroller.getBoundingClientRect()
+  const overshoot = box.bottom - view.bottom + 16
+  if (overshoot <= 0) return
+  const goal = Math.min(scroller.scrollTop + overshoot, scroller.scrollHeight - scroller.clientHeight)
+  const camera = {}
+  engine.bind(camera, (v) => {
+    scroller.scrollTop = v.top ?? 0
+  })
+  engine.set(camera, { top: scroller.scrollTop })
+  engine.to(camera, { top: goal }, 'page')
 }
