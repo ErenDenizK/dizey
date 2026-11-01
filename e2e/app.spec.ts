@@ -26,7 +26,7 @@ test('Harita offers the first lesson on the path', async ({ page }) => {
 test('the path groups lessons into chapters and Sen shows version and commit', async ({ page }) => {
   await openApp(page, './map')
   await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
-  await expect(screen(page).getByText(/sınavda 13 \/ 34 soru/)).toBeVisible()
+  await expect(screen(page).locator('.pa-chapter__count').first()).toHaveText('0 / 10')
   await tab(page, 'Sen').click()
   await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
@@ -327,6 +327,72 @@ test('every path tile shows its whole title at phone width', async ({ page }) =>
       titles.filter((t) => t.scrollHeight > t.clientHeight + 1).map((t) => t.textContent),
     )
   expect(clipped).toEqual([])
+})
+
+test('Harita edges: even progress strip, a clear resume marker, one tile language', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 })
+  await openApp(page, './map')
+  await page.waitForTimeout(1200)
+  const pane = screen(page)
+  // (a) No chapter segment of the progress strip is a sliver.
+  const widths = await pane
+    .locator('.pa-meter__track')
+    .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().width))
+  expect(widths.length).toBeGreaterThan(0)
+  for (const w of widths) expect(w).toBeGreaterThanOrEqual(12)
+  // (b) The marker sits inside its tile and overlaps none of the tile's text or marks.
+  const clash = await pane.locator('.pa-tile[data-main]').evaluate((tile) => {
+    const tag = tile.parentElement?.querySelector<HTMLElement>('.pa-here')
+    if (!tag) return ['no marker']
+    const mark = tag.getBoundingClientRect()
+    const box = tile.getBoundingClientRect()
+    const problems: string[] = []
+    if (mark.left < box.left || mark.right > box.right || mark.top < box.top || mark.bottom > box.bottom)
+      problems.push('marker leaves the tile')
+    const hits = (r: DOMRect) =>
+      mark.left < r.right && mark.right > r.left && mark.top < r.bottom && mark.bottom > r.top
+    for (const el of tile.querySelectorAll<HTMLElement>('.pa-tile__code, .pa-tile__bar, .pa-tile__check')) {
+      if (hits(el.getBoundingClientRect())) problems.push(el.className.toString())
+    }
+    const title = tile.querySelector<HTMLElement>('.pa-tile__title')
+    if (title) {
+      const range = document.createRange()
+      range.selectNodeContents(title)
+      if (hits(range.getBoundingClientRect())) problems.push('title')
+    }
+    return problems
+  })
+  expect(clash).toEqual([])
+  // (c) Tiles in one row are equally tall.
+  const rows = await pane.locator('.pa-grid').evaluateAll((grids) =>
+    grids.flatMap((grid) => {
+      const byTop = new Map<number, number[]>()
+      for (const tile of grid.querySelectorAll<HTMLElement>('.pa-tile')) {
+        const li = tile.parentElement as HTMLElement
+        const heights = byTop.get(li.offsetTop) ?? []
+        heights.push(tile.offsetHeight)
+        byTop.set(li.offsetTop, heights)
+      }
+      return [...byTop.values()].filter((heights) => new Set(heights).size > 1)
+    }),
+  )
+  expect(rows).toEqual([])
+  // (d) The chapter test cell and the gate speak the tile's language: same radius and outline.
+  const look = (sel: string) =>
+    pane
+      .locator(sel)
+      .first()
+      .evaluate((el) => {
+        const style = getComputedStyle(el)
+        return { radius: style.borderRadius, border: style.borderWidth, shadow: style.boxShadow }
+      })
+  const tileLook = await look('.pa-tile:not([data-main]):not([data-state="done"])')
+  const gateLook = await look('[data-testid="vize-gate"]')
+  expect(gateLook).toEqual(tileLook)
+  const testLook = await look('.pa-test[data-state="new"]')
+  expect(testLook.radius).toBe(tileLook.radius)
+  // Nothing spills sideways.
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true)
 })
 
 test('scrolling Harita moves the path as one flat page', async ({ page }) => {
