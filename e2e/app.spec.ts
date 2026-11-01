@@ -132,6 +132,55 @@ test('finishing a lesson shows its answers seal and offers the next lesson', asy
   )
 })
 
+test('the question of the day is answered in a sheet, stays answered and a wrong one joins Tekrar', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page)
+  const card = screen(page).getByTestId('today-daily')
+  await expect(card).toContainText('Günün sorusu')
+  await card.click()
+  const sheet = page.getByTestId('question-sheet')
+  await expect(sheet).toBeVisible()
+  await expect(page.getByTestId('question-check')).toBeDisabled()
+  await sheet.getByTestId('question-option-a').click()
+  await page.getByTestId('question-check').click()
+  const result = sheet.getByTestId('question-result')
+  await expect(result).toContainText('Çözüm')
+  const right = (await result.getAttribute('data-correct')) === 'true'
+  await sheet.getByRole('button', { name: 'Tamam' }).click()
+  await expect(sheet).toHaveCount(0)
+  const verdict = right ? 'Bugünkü soru: doğru' : 'Bugünkü soru: yanlış'
+  await expect(card).toContainText(verdict)
+  // Answered stays answered across a reload, and the day shows on the week strip.
+  await page.reload()
+  await expect(screen(page).getByTestId('today-daily')).toContainText(verdict)
+  await expect(screen(page).getByTestId('today-week')).toBeVisible()
+  await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
+})
+
+test('Bugün shows no week strip before any study', async ({ page }) => {
+  await openApp(page)
+  await expect(screen(page).getByTestId('today-next')).toBeVisible()
+  await expect(screen(page).getByTestId('today-week')).toHaveCount(0)
+})
+
+test('a lesson end offers one exam question on its topic', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './lesson/r2-echelon-forms?step=summary')
+  await page.getByTestId('lesson-player').getByRole('button', { name: 'Dersi bitir' }).click()
+  const asked = page.getByTestId('lesson-exam-asked')
+  await expect(asked).toContainText('Sınavda böyle sorulur')
+  await asked.click()
+  const sheet = page.getByTestId('question-sheet')
+  await expect(sheet).toBeVisible()
+  await sheet.getByTestId('question-option-a').click()
+  await page.getByTestId('question-check').click()
+  await expect(sheet.getByTestId('question-result')).toContainText('Çözüm')
+  await sheet.getByRole('button', { name: 'Tamam' }).click()
+  await expect(sheet).toHaveCount(0)
+})
+
 test('the gizli an follows Bitir: a wrong pick is neutral, the right one earns the sezgi mührü', async ({
   page,
 }) => {

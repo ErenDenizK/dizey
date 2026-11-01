@@ -14,6 +14,7 @@ import { returnTab } from '../shell/stage'
 import type { SoundEvent } from '../sound/score'
 import { Check, Close } from '../ui/icons'
 import { burst, glow, lightScore, pointIn, SHINE_CHANNEL, type SparkTone, sweep } from '../ui/shine'
+import { ExamAsked, examQuestionFor } from './ExamAsked'
 import { endResults, nextLesson, type Result, sealColumns } from './end'
 import { useMoments } from './moments'
 import { recordOf, useLessonRecords } from './store'
@@ -56,6 +57,7 @@ export function LessonEnd({
   const correct = results.filter((result) => result === 'right').length
   const perfect = results.length > 0 && correct === results.length
   const cols = sealColumns(results.length)
+  const asked = examQuestionFor(lesson.node)
 
   const root = useRef<HTMLDivElement>(null)
   const duo = useRef<DuoHandle>(null)
@@ -179,6 +181,7 @@ export function LessonEnd({
           {results.length ? strings.lessonEnd.score(correct, results.length) : strings.lessonEnd.noQuestions}
           {chapterDone && chapter?.examItems ? ` ${strings.lessonEnd.chapterWeight(chapter.examItems)}` : ''}
         </p>
+        {asked ? <ExamAsked question={asked} /> : null}
       </div>
 
       <div className="ls-dock ls-end__dock" data-enter="">
