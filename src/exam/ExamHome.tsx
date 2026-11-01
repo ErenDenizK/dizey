@@ -1,10 +1,9 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { PressLink } from '../shell/PressLink'
-import { overlayHostRef, stageRef } from '../shell/stage'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
@@ -40,6 +39,14 @@ export function ExamHome() {
     return () => window.clearInterval(timer)
   }, [running])
 
+  // The hub is a pushed route above the shell, so its start sheet mounts inside that route (the shared
+  // sheet host sits below it) and the route content is what recedes behind the sheet.
+  const [host, setHost] = useState<HTMLElement | null>(null)
+  const content = useRef<HTMLElement | null>(null)
+  const mounted = useCallback((el: HTMLElement | null) => {
+    content.current = el?.closest<HTMLElement>('.sh-overlay__content') ?? null
+    setHost(el?.closest<HTMLElement>('.sh-overlay') ?? null)
+  }, [])
   const [picked, setPicked] = useState<ExamSet | null>(null)
   const [open, setOpen] = useState(false)
   const best = bestBySet(history)
@@ -54,9 +61,14 @@ export function ExamHome() {
   }
 
   return (
-    <Screen title={strings.exam.title}>
+    <Screen
+      title={strings.exam.title}
+      back={() => void navigate({ to: '/map' })}
+      backLabel={strings.exam.back}
+      pushed
+    >
       <p className="dz-subhead sh-lead">{strings.exam.subtitle}</p>
-      <div className="exh">
+      <div className="exh" ref={mounted}>
         {running ? <ResumeCard session={session} now={now} /> : null}
 
         <section className="exh-group">
@@ -136,12 +148,12 @@ export function ExamHome() {
         ) : null}
       </div>
 
-      {overlayHostRef.current
+      {host
         ? createPortal(
             <Sheet
               open={open}
               onClose={() => setOpen(false)}
-              stage={stageRef}
+              stage={content}
               label={picked ? strings.exam.setTitle[picked.id] : ''}
             >
               {picked ? (
@@ -173,7 +185,7 @@ export function ExamHome() {
                 </div>
               ) : null}
             </Sheet>,
-            overlayHostRef.current,
+            host,
           )
         : null}
     </Screen>
