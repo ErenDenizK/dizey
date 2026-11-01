@@ -5,16 +5,12 @@ import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
 import { type Chapter, chapters, examItemTotal, pathCode, tileTitle } from '../content/path'
-import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { useExam } from '../exam/store'
 import { type LessonRecord, resumeIndex } from '../lesson/progress'
 import { type LessonState, stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
-import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
-import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { burst, glow, ring } from '../ui/shine'
@@ -36,10 +32,8 @@ type Records = Readonly<Record<string, LessonRecord>>
  */
 export function PathView() {
   const records = useLessonRecords()
-  const { outcomes } = useExam()
   const { examDate } = useSettings()
   const { main } = upNext(lessons, records, 0)
-  const mistakes = openMistakes(lessons, records, questions, outcomes).length
   const doneCount = lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
   const [peek, setPeek] = useState<Peek | null>(null)
   const examLine = examDate
@@ -60,13 +54,6 @@ export function PathView() {
           </p>
           <p className="pa-summary__exam">{examLine}</p>
           <Meter records={records} done={doneCount} />
-          {mistakes ? (
-            <PressLink to="/me" className="pa-mistakes" pressClass="dz-pressable">
-              <span className="pa-mistakes__dot" aria-hidden="true" />
-              <span className="dz-row-main">{strings.path.mistakes(mistakes)}</span>
-              <ChevronRight />
-            </PressLink>
-          ) : null}
         </div>
         {chapters.map((chapter, index) => (
           <ChapterMatrix
@@ -423,7 +410,7 @@ function useCelebrations(root: React.RefObject<HTMLDivElement | null>, records: 
     seen.current = now
   }, [doneKey])
 
-  const onPath = (pathname.replace(/\/$/, '') || '/') === '/'
+  const onPath = (pathname.replace(/\/$/, '') || '/') === '/map'
   useEffect(() => {
     if (!onPath || !pending.current.length) return
     const ids = pending.current.splice(0)

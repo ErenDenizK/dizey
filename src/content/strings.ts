@@ -8,10 +8,24 @@ export const strings = {
   notFound: 'Bu sayfa yok.',
   goHome: 'Ana sayfaya dön',
 
-  tabs: { path: 'Dersler', exam: 'Sınav', me: 'Profil', label: 'Bölümler' },
+  tabs: { today: 'Bugün', map: 'Harita', me: 'Sen', label: 'Bölümler' },
+
+  today: {
+    greeting: { morning: 'Günaydın', day: 'İyi günler', evening: 'İyi akşamlar', night: 'İyi geceler' },
+    start: 'Başla',
+    resume: 'Devam et',
+    stepOf: (step: number, total: number) => `${step} / ${total} adım`,
+    allDone: 'Bütün dersler tamam',
+    allDoneAction: 'Vize provasına geç',
+    review: (count: number) => `Tekrar · ${count} hata`,
+    reviewHint: 'Yanlış yaptığın sorulara dön',
+    exam: 'Vize provası',
+    examSub: '15 soru · gerçek sınav gibi',
+    companion: 'Satır ve Sütun',
+  },
 
   path: {
-    title: 'Dersler',
+    title: 'Harita',
     examLine: (days: number, date: string) =>
       days > 0 ? `Vize 1'e ${days} gün · ${date}` : `Vize 1 · ${date}`,
     examWeekLine: (date: string) => `Vize 1 · ${date} civarı`,
@@ -31,7 +45,6 @@ export const strings = {
     weightValue: (items: number, total: number) => `${items} / ${total} soru`,
     allDone: 'Bütün dersler tamam. Sırada gerçek sınav koşullarında prova var.',
     allDoneAction: 'Sınav provasına geç',
-    mistakes: (count: number) => `Hata defterinde ${count} açık hata`,
     continueAction: (code: string, name: string) => `Devam et: ${code} ${name}`,
     startAction: (code: string, name: string) => `Başla: ${code} ${name}`,
     state: { new: 'başlanmadı', current: 'kaldığın yer', done: 'tamamlandı' },
@@ -51,7 +64,7 @@ export const strings = {
   },
 
   me: {
-    title: 'Profil',
+    title: 'Sen',
     matrix: 'Ders matrisi',
     statLessons: 'ders tamam',
     statMistakes: 'açık hata',
@@ -69,7 +82,7 @@ export const strings = {
   settings: {
     title: 'Ayarlar',
     open: 'Ayarlar',
-    back: 'Profile dön',
+    back: 'Sen’e dön',
     appearance: 'Görünüm',
     audio: 'Ses ve müzik',
     exam: 'Sınav',
@@ -106,6 +119,7 @@ export const strings = {
 
   exam: {
     title: 'Sınav',
+    back: 'Haritaya dön',
     subtitle: 'Vize 1 biçiminde, süreli, 5 şıklı. Puan ve cevaplar prova bitince açılır.',
     setTitle: { 'summer-2024': '2024 Yaz Okulu Vizesi', mixed: 'Karışık deneme' },
     setBody: {

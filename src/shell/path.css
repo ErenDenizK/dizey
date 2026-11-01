@@ -83,28 +83,6 @@
   background: var(--ok-fill);
   box-shadow: none;
 }
-.pa-mistakes {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: var(--target);
-  margin-top: var(--space-2);
-  padding: 0 var(--space-4);
-  border-radius: var(--corner-inner);
-  background: var(--bad-tint);
-  color: var(--bad-ink);
-  font-size: var(--type-subhead);
-  font-weight: var(--weight-medium);
-  text-decoration: none;
-  line-height: var(--leading-subhead);
-}
-.pa-mistakes__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: var(--corner-pill);
-  background: var(--bad-fill);
-}
-
 /* ---- Chapter ---------------------------------------------------------------- */
 .pa-chapter {
   margin-top: var(--space-8);

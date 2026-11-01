@@ -3,8 +3,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO } from '../engine/tokens'
-import { ExamHome } from '../exam/ExamHome'
-import { ExamIcon, MeIcon, PathIcon } from '../ui/icons'
+import { MeIcon, PathIcon, TodayIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
 import { MeView } from './MeView'
 import { clipWith, faceOf, insets } from './morph'
@@ -12,20 +11,21 @@ import { Onboarding } from './Onboarding'
 import { PathView } from './PathView'
 import { installPressFeedback } from './press'
 import { morphFrom, overlayHostRef, returnTab, stageRef } from './stage'
+import { TodayView } from './TodayView'
 import '../ui/ui.css'
 import './shell.css'
 
-type TabPath = '/' | '/exam' | '/me'
+type TabPath = '/' | '/map' | '/me'
 
 const tabs = [
-  { id: '/', label: strings.tabs.path, Icon: PathIcon },
-  { id: '/exam', label: strings.tabs.exam, Icon: ExamIcon },
+  { id: '/', label: strings.tabs.today, Icon: TodayIcon },
+  { id: '/map', label: strings.tabs.map, Icon: PathIcon },
   { id: '/me', label: strings.tabs.me, Icon: MeIcon },
 ] as const
 
 const views: Record<TabPath, () => React.ReactNode> = {
-  '/': PathView,
-  '/exam': ExamHome,
+  '/': TodayView,
+  '/map': PathView,
   '/me': MeView,
 }
 
@@ -46,8 +46,8 @@ export function Shell() {
   const routeTab = tabOf(pathname)
   const overlay = routeTab === null
   // Under a full-screen route the tab it came from stays where it was. Opened straight onto one (a
-  // reload, the home-screen app coming back), the route's own section is home: a rehearsal is Sınav's.
-  const [tab, setTab] = useState<TabPath>(routeTab ?? (pathname.startsWith('/exam') ? '/exam' : '/'))
+  // reload, the home-screen app coming back), the route's own section is home: a rehearsal is the map's.
+  const [tab, setTab] = useState<TabPath>(routeTab ?? (pathname.startsWith('/exam') ? '/map' : '/'))
   if (routeTab && routeTab !== tab) setTab(routeTab)
   returnTab.current = tab
 

@@ -13,34 +13,51 @@ async function openApp(page: Page, path = './') {
 
 /** The tab screen on show (the other tab panes stay mounted but inert). */
 const screen = (page: Page) => page.locator('.sh-pane:not([inert])')
+const pushed = (page: Page) => page.locator('.sh-overlay')
 const tab = (page: Page, name: string) => page.getByRole('navigation').getByRole('button', { name })
 
-test('Dersler offers the first lesson on the path', async ({ page }) => {
-  await openApp(page)
-  await expect(screen(page).getByRole('heading', { name: 'Dersler', level: 1 })).toBeVisible()
+test('Harita offers the first lesson on the path', async ({ page }) => {
+  await openApp(page, './map')
+  await expect(screen(page).getByRole('heading', { name: 'Harita', level: 1 })).toBeVisible()
   await expect(screen(page).getByTestId('continue-card')).toHaveAttribute('aria-label', /^Başla: 1\.1 /)
   await expect(screen(page).getByText('Vize 1 · 15 Kasım civarı')).toBeVisible()
 })
 
-test('the path groups lessons into chapters and Profil shows version and commit', async ({ page }) => {
-  await openApp(page)
+test('the path groups lessons into chapters and Sen shows version and commit', async ({ page }) => {
+  await openApp(page, './map')
   await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
   await expect(screen(page).getByText(/sınavda 13 \/ 34 soru/)).toBeVisible()
-  await tab(page, 'Profil').click()
+  await tab(page, 'Sen').click()
   await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
   if (channel !== 'production') await expect(page.getByTestId('app-version')).toContainText(channel)
 })
 
-test('the old map address lands on the path', async ({ page }) => {
-  await openApp(page, './map')
-  await expect(screen(page).getByRole('heading', { name: 'Dersler', level: 1 })).toBeVisible()
+test('the tab bar is Bugün, Harita, Sen and a fresh start leads into the first lesson and back', async ({
+  page,
+}) => {
+  await openApp(page)
+  const buttons = page.getByRole('navigation', { name: 'Bölümler' }).getByRole('button')
+  await expect(buttons).toHaveText(['Bugün', 'Harita', 'Sen'])
+  await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText(
+    /^(Günaydın|İyi günler|İyi akşamlar|İyi geceler)$/,
+  )
+  const next = screen(page).getByTestId('today-next')
+  await expect(next).toContainText('Başla')
+  await expect(next).toContainText('1.1')
+  await next.click()
+  await expect(page).toHaveURL(/\/lesson\//)
+  await expect(page.getByTestId('lesson-player')).toBeVisible()
+  await page.getByRole('link', { name: 'Dersten çık' }).click()
+  await expect(page.getByTestId('lesson-player')).toHaveCount(0)
+  await expect(page).not.toHaveURL(/\/lesson\//)
+  await expect(screen(page).getByTestId('today-next')).toBeVisible()
 })
 
 test('a tile opens its card, a tap outside folds it back, and the lesson grows out of the card and returns', async ({
   page,
 }) => {
-  await openApp(page)
+  await openApp(page, './map')
   // By data attribute: a tile hidden while its card is open leaves the accessibility tree, and it becomes the continue card once its lesson is opened.
   const tile = screen(page).locator('.pa-tile[data-lesson="m3-trace"]')
   const card = page.getByTestId('lesson-peek')
@@ -64,7 +81,7 @@ test('a tile opens its card, a tap outside folds it back, and the lesson grows o
 })
 
 test('a lesson opens from its tile card and hides the tab bar', async ({ page }) => {
-  await openApp(page)
+  await openApp(page, './map')
   await screen(page)
     .getByRole('button', { name: /^3\.1 / })
     .click()
@@ -96,7 +113,8 @@ test('a lesson plays, checks answers and resumes where it was left', async ({ pa
     step ?? '',
   )
   await page.getByRole('link', { name: 'Dersten çık' }).click()
-  await expect(screen(page).getByTestId('continue-card')).toHaveAttribute('aria-label', /^Devam et: 3\.1 /)
+  await expect(screen(page).getByTestId('today-next')).toContainText('Devam et')
+  await expect(screen(page).getByTestId('today-next')).toContainText('3.1')
 })
 
 test('finishing a lesson shows its answers seal and offers the next lesson', async ({ page }) => {
@@ -150,7 +168,7 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
   while (!(await player.getByRole('group').count())) await next.click()
   await player.getByRole('group').getByRole('button').filter({ hasText: '26' }).click()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
-  await tab(page, 'Profil').click()
+  await tab(page, 'Sen').click()
   const log = screen(page).getByRole('region', { name: /Hata defteri/ })
   await expect(log).toContainText('İki çarpımı topladın')
   // Back to that step: a right first try on this visit clears it.
@@ -168,13 +186,13 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
 test('the exam line counts down once a date is set', async ({ page }) => {
   await openApp(page, './settings')
   await page.getByLabel('Vize 1 tarihi').fill('2026-11-19')
-  await page.getByRole('button', { name: 'Profile dön' }).click()
-  await tab(page, 'Dersler').click()
+  await page.getByRole('button', { name: 'Sen’e dön' }).click()
+  await tab(page, 'Harita').click()
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
 })
 
 test('every path tile shows its whole title at phone width', async ({ page }) => {
-  await openApp(page)
+  await openApp(page, './map')
   const clipped = await screen(page)
     .locator('.pa-tile__title')
     .evaluateAll((titles) =>
@@ -183,8 +201,8 @@ test('every path tile shows its whole title at phone width', async ({ page }) =>
   expect(clipped).toEqual([])
 })
 
-test('scrolling Dersler moves the path as one flat page', async ({ page }) => {
-  await openApp(page)
+test('scrolling Harita moves the path as one flat page', async ({ page }) => {
+  await openApp(page, './map')
   const scroller = screen(page).locator('.dz-screen')
   await page.waitForTimeout(1500)
   const moved = await scroller.evaluate(async (s) => {
@@ -216,7 +234,7 @@ test('the tab bar lens is a true pill, concentric with the bar', async ({ page }
   expect(style.w).toBeGreaterThan(style.h)
 })
 
-test('settings live behind the gear in Profil: palette, back, and labs behind a long press', async ({
+test('settings live behind the gear in Sen: palette, back, and labs behind a long press', async ({
   page,
 }) => {
   await openApp(page, './me')
@@ -241,9 +259,9 @@ test('settings live behind the gear in Profil: palette, back, and labs behind a 
   await page.mouse.up()
   await expect(page.getByTestId('labs')).toBeVisible()
   await expect(page.getByRole('link', { name: 'Ses laboratuvarı' })).toBeVisible()
-  await page.getByRole('button', { name: 'Profile dön' }).click()
+  await page.getByRole('button', { name: 'Sen’e dön' }).click()
   await expect(page).toHaveURL(/\/me$/)
-  await expect(screen(page).getByRole('heading', { name: 'Profil', level: 1 })).toBeVisible()
+  await expect(screen(page).getByRole('heading', { name: 'Sen', level: 1 })).toBeVisible()
 })
 
 test('the app is dark even when the phone is in light mode', async ({ page }) => {
@@ -256,7 +274,7 @@ test('the app is dark even when the phone is in light mode', async ({ page }) =>
 
 test('an exam rehearsal runs, survives a reload and shows its result', async ({ page }) => {
   await openApp(page, './exam')
-  await screen(page).getByTestId('exam-set-summer-2024').click()
+  await pushed(page).getByTestId('exam-set-summer-2024').click()
   await page.getByTestId('exam-start').click()
   const run = page.getByTestId('exam-run')
   await expect(run.getByText(/^Soru 1 \/ \d+$/)).toBeVisible()
@@ -272,8 +290,8 @@ test('an exam rehearsal runs, survives a reload and shows its result', async ({ 
   await expect(page.getByTestId('exam-run').getByText(/^Soru 2 \/ \d+$/)).toBeVisible()
   // Leaving keeps the attempt: the hub offers it back.
   await page.getByRole('link', { name: 'Provadan çık, sonra devam et' }).click()
-  await expect(screen(page).getByText('1 / 15 cevaplı', { exact: false })).toBeVisible()
-  await screen(page).getByRole('link', { name: 'Devam et' }).click()
+  await expect(pushed(page).getByText('1 / 15 cevaplı', { exact: false })).toBeVisible()
+  await pushed(page).getByRole('link', { name: 'Devam et' }).click()
   await expect(page.getByTestId('exam-run').getByText(/^Soru 2 \/ \d+$/)).toBeVisible()
   // Ending goes through the question map, which shows the blanks first.
   await page.getByRole('button', { name: /^Soru haritası/ }).click()
@@ -282,8 +300,8 @@ test('an exam rehearsal runs, survives a reload and shows its result', async ({ 
   await expect(page.getByTestId('exam-score')).toContainText(/\d+ \/ \d+ doğru/)
   await expect(page.getByTestId('exam-score')).toContainText(/1 yanlış|0 yanlış/)
   await page.getByRole('button', { name: 'Bitti' }).click()
-  await expect(screen(page).getByRole('heading', { name: 'Geçmiş' })).toBeVisible()
-  await screen(page).getByRole('link', { name: 'Son prova sonucu' }).click()
+  await expect(pushed(page).getByRole('heading', { name: 'Geçmiş' })).toBeVisible()
+  await pushed(page).getByRole('link', { name: 'Son prova sonucu' }).click()
   await expect(page.getByTestId('exam-score')).toBeVisible()
 })
 
@@ -296,7 +314,7 @@ test('first launch in iPhone Safari asks to install first', async ({ page, isMob
   await guide.getByRole('button', { name: /Safari'de dene/ }).click()
   await expect(guide).toBeHidden()
   await page.reload()
-  await expect(screen(page).getByTestId('continue-card')).toBeVisible()
+  await expect(screen(page).getByTestId('today-next')).toBeVisible()
   await expect(guide).toBeHidden()
 })
 
@@ -336,7 +354,7 @@ test('a file that is not a backup is refused', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText('Bu dosya bir Dizey yedeği değil.')
 })
 
-for (const path of ['./', './exam', './me', './settings']) {
+for (const path of ['./', './map', './exam', './me', './settings']) {
   test(`no critical accessibility violations on ${path}`, async ({ page }) => {
     await openApp(page, path)
     const results = await new AxeBuilder({ page }).analyze()
@@ -349,7 +367,8 @@ for (const colorScheme of ['dark'] as const) {
   test(`phone screenshots, ${colorScheme}`, async ({ page }, testInfo) => {
     await page.emulateMedia({ colorScheme })
     for (const [name, path] of [
-      ['path', './'],
+      ['today', './'],
+      ['path', './map'],
       ['exam', './exam'],
       ['me', './me'],
       ['settings', './settings'],
