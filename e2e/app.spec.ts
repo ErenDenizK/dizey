@@ -994,12 +994,22 @@ test.describe('standard phone (390 x 844) reach', () => {
   }
 })
 
-test('Settings opens as a sheet over the dimmed tab and a drag down closes it', async ({ page }) => {
+test('Settings opens as a plain push page, not a sheet', async ({ page }) => {
   await openApp(page, './me')
   await page.getByTestId('open-settings').click()
+  await expect(page.getByTestId('app-version')).toBeVisible()
+  await expect(pushed(page)).toHaveAttribute('data-present', 'push')
+  await page.getByRole('button', { name: 'Bitti', exact: true }).click()
+  await expect(pushed(page)).toHaveCount(0)
+  await expect(page.getByTestId('open-settings')).toBeVisible()
+})
+
+test('Sınav opens as a sheet over the dimmed tab and a drag down closes it', async ({ page }) => {
+  await openApp(page, './map')
+  await screen(page).getByTestId('vize-gate').click()
   const sheet = pushed(page)
   await expect(sheet).toHaveAttribute('data-present', 'sheet')
-  await expect(page.getByTestId('app-version')).toBeVisible()
+  await expect(sheet.getByTestId('exam-set-summer-2024')).toBeVisible()
   // The tab stays visible above the sheet's top edge (receded and dimmed), not hidden under a full screen.
   const stage = page.locator('.dz-stage')
   await expect
@@ -1014,14 +1024,17 @@ test('Settings opens as a sheet over the dimmed tab and a drag down closes it', 
   for (let y = 300; y <= 480; y += 20) await page.mouse.move(195, y)
   await page.mouse.up()
   await expect(sheet).toHaveCount(0)
-  await expect(page.getByTestId('open-settings')).toBeVisible()
+  await expect(screen(page).getByTestId('vize-gate')).toBeVisible()
 })
 
 test('a sheet keeps its title row and Bitti in view while its list scrolls', async ({ page }) => {
-  await openApp(page, './me')
-  await page.getByTestId('open-settings').click()
-  await expect(page.getByTestId('app-version')).toBeVisible()
+  await page.setViewportSize({ width: 375, height: 667 })
+  await openApp(page, './map')
+  await screen(page).getByTestId('vize-gate').click()
   const sheet = pushed(page)
+  // An expanded paper makes the sheet taller than the screen.
+  await sheet.getByTestId('exam-set-summer-2024').click()
+  await expect(sheet.getByTestId('exam-start')).toBeVisible()
   await sheet.locator('.dz-screen').evaluate((el) => el.scrollTo(0, 600))
   const done = page.getByRole('button', { name: 'Bitti', exact: true })
   const top = (await sheet.boundingBox())?.y ?? 0
@@ -1036,9 +1049,9 @@ test('a sheet keeps its title row and Bitti in view while its list scrolls', asy
 })
 
 test('a tap on the dimmed tab above a sheet closes it', async ({ page }) => {
-  await openApp(page, './me')
-  await page.getByTestId('open-settings').click()
-  await expect(page.getByTestId('app-version')).toBeVisible()
+  await openApp(page, './map')
+  await screen(page).getByTestId('vize-gate').click()
+  await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
   await page.mouse.click(195, 8)
   await expect(pushed(page)).toHaveCount(0)
 })

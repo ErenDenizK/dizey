@@ -31,15 +31,7 @@ export function MeView() {
     <Screen
       title={strings.me.title}
       action={
-        <PressLink
-          to="/settings"
-          className="dz-text-button"
-          data-testid="open-settings"
-          data-sound="open"
-          onClick={(event) => {
-            morphFrom.current = event.currentTarget
-          }}
-        >
+        <PressLink to="/settings" className="dz-text-button" data-testid="open-settings" data-sound="open">
           {strings.settings.open}
         </PressLink>
       }

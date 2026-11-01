@@ -2,10 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { presentationOf, SHEET_ROUTES, SHEETS_ON } from './presentation'
 
 describe('presentationOf', () => {
-  it('shows settings and the exam as sheets', () => {
+  it('shows the exam as a sheet and settings as a push', () => {
     expect(SHEETS_ON).toBe(true)
-    expect(presentationOf('/settings')).toBe('sheet')
-    expect(presentationOf('/settings/')).toBe('sheet')
+    expect(presentationOf('/settings')).toBe('push')
+    expect(presentationOf('/settings/')).toBe('push')
     expect(presentationOf('/exam')).toBe('sheet')
     expect(presentationOf('/exam/summer-2024')).toBe('sheet')
   })
@@ -19,6 +19,6 @@ describe('presentationOf', () => {
   })
 
   it('lists the routes in one constant', () => {
-    expect(SHEET_ROUTES).toEqual(['/settings', '/exam'])
+    expect(SHEET_ROUTES).toEqual(['/exam'])
   })
 })
