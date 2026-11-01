@@ -87,6 +87,34 @@ test('finishing a lesson shows its answers seal and offers the next lesson', asy
   )
 })
 
+test('the gizli an follows Bitir: a wrong pick is neutral, the right one earns the sezgi mührü', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './lesson/d1-determinant?step=summary')
+  const player = page.getByTestId('lesson-player')
+  await player.getByRole('button', { name: 'Dersi bitir' }).click()
+  await expect(page.getByTestId('lesson-end')).toHaveCount(0)
+  await expect(player).toContainText('Gizli an · not tutulmaz')
+  await expect(player.getByRole('button', { name: 'Gizli soruyu geç' })).toBeVisible()
+  // A wrong pick is struck out and disabled, says why, and does not end anything.
+  const options = player.getByRole('group').getByRole('button')
+  await options.filter({ hasText: '28' }).click()
+  await expect(options.filter({ hasText: '28' })).toBeDisabled()
+  await expect(options.filter({ hasText: '28' })).toHaveAttribute('data-state', 'miss')
+  await expect(player).toContainText('Yalnız sağa inenleri topladın')
+  await expect(page.getByTestId('lesson-end')).toHaveCount(0)
+  await options.filter({ hasText: /^b/ }).click()
+  await expect(player.getByRole('status')).toContainText('Doğru')
+  await player.getByRole('button', { name: 'İleri' }).click()
+  const end = page.getByTestId('lesson-end')
+  await expect(end).toContainText('Gizli anı çözdün: sezgi mührü senin.')
+  // The solved moment is stored and the badge follows.
+  expect(await page.evaluate((k) => localStorage.getItem(k), `${prefix}dizey.moments`)).toBe(
+    '{"d1-determinant":"solved"}',
+  )
+})
+
 test('a wrong first try lands in the mistake log and leaves it when fixed', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await openApp(page, './lesson/d1-determinant')
