@@ -65,19 +65,22 @@ export function ExamHome() {
     >
       <div className="exh">
         {running ? <ResumePaper session={session} now={now} /> : null}
-        {sets.map((set) => (
-          <SetPaper
-            key={set.id}
-            set={set}
-            best={best[set.id]}
-            recent={recentOf(history, set.id)}
-            open={picked === set.id}
-            replaces={running}
-            reviewable={reviewable && session.set === set.id}
-            onToggle={() => setPicked(picked === set.id ? null : set.id)}
-            onStart={() => start(set)}
-          />
-        ))}
+        {/* The running set is the in-progress paper above; it is not drawn twice. */}
+        {sets
+          .filter((set) => !(running && session.set === set.id))
+          .map((set) => (
+            <SetPaper
+              key={set.id}
+              set={set}
+              best={best[set.id]}
+              recent={recentOf(history, set.id)}
+              open={picked === set.id}
+              replaces={running}
+              reviewable={reviewable && session.set === set.id}
+              onToggle={() => setPicked(picked === set.id ? null : set.id)}
+              onStart={() => start(set)}
+            />
+          ))}
       </div>
     </Screen>
   )
