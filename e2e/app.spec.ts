@@ -27,6 +27,7 @@ test('the path groups lessons into chapters and Profil shows version and commit'
   await expect(screen(page).getByRole('heading', { name: 'Determinant', exact: true })).toBeVisible()
   await expect(screen(page).getByText(/sınavda 13 \/ 34 soru/)).toBeVisible()
   await tab(page, 'Profil').click()
+  await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
   if (channel !== 'production') await expect(page.getByTestId('app-version')).toContainText(channel)
 })
@@ -165,8 +166,9 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
 })
 
 test('the exam line counts down once a date is set', async ({ page }) => {
-  await openApp(page, './me')
-  await screen(page).getByLabel('Vize 1 tarihi').fill('2026-11-19')
+  await openApp(page, './settings')
+  await page.getByLabel('Vize 1 tarihi').fill('2026-11-19')
+  await page.getByRole('button', { name: 'Profile dön' }).click()
   await tab(page, 'Dersler').click()
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
 })
@@ -212,6 +214,36 @@ test('the tab bar lens is a true pill, concentric with the bar', async ({ page }
   expect(m[0]).toBeCloseTo(1, 3)
   expect(m[3]).toBeCloseTo(1, 3)
   expect(style.w).toBeGreaterThan(style.h)
+})
+
+test('settings live behind the gear in Profil: palette, back, and labs behind a long press', async ({
+  page,
+}) => {
+  await openApp(page, './me')
+  await expect(screen(page).getByRole('switch', { name: 'Sesler' })).toHaveCount(0)
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByRole('heading', { name: 'Ayarlar', level: 1 })).toBeVisible()
+  await expect(page.getByText('Görünüm', { exact: true })).toBeVisible()
+  const before = await page.evaluate(() => document.documentElement.dataset.palette)
+  const other = page.locator('[data-palette-preview="tahta"]')
+  await other.click()
+  await expect(other).toHaveAttribute('aria-pressed', 'true')
+  expect(await page.evaluate(() => document.documentElement.dataset.palette)).not.toBe(before)
+  // Labs stay hidden until the version line is held.
+  await expect(page.getByTestId('labs')).toHaveCount(0)
+  const foot = page.getByTestId('version-foot')
+  await foot.scrollIntoViewIfNeeded()
+  const box = await foot.boundingBox()
+  if (!box) throw new Error('no footer')
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2)
+  await page.mouse.down()
+  await page.waitForTimeout(800)
+  await page.mouse.up()
+  await expect(page.getByTestId('labs')).toBeVisible()
+  await expect(page.getByRole('link', { name: 'Ses laboratuvarı' })).toBeVisible()
+  await page.getByRole('button', { name: 'Profile dön' }).click()
+  await expect(page).toHaveURL(/\/me$/)
+  await expect(screen(page).getByRole('heading', { name: 'Profil', level: 1 })).toBeVisible()
 })
 
 test('the app is dark even when the phone is in light mode', async ({ page }) => {
@@ -269,7 +301,7 @@ test('first launch in iPhone Safari asks to install first', async ({ page, isMob
 })
 
 test('backup round-trips progress', async ({ page }) => {
-  await openApp(page, './me')
+  await openApp(page, './settings')
   const key = `${prefix}dizey.lessons`
   await page.evaluate((k) => localStorage.setItem(k, '{}'), key)
   const backup = {
@@ -295,7 +327,7 @@ test('backup round-trips progress', async ({ page }) => {
 })
 
 test('a file that is not a backup is refused', async ({ page }) => {
-  await openApp(page, './me')
+  await openApp(page, './settings')
   await page.getByTestId('restore-file').setInputFiles({
     name: 'notes.json',
     mimeType: 'application/json',
@@ -304,7 +336,7 @@ test('a file that is not a backup is refused', async ({ page }) => {
   await expect(page.getByRole('alert')).toHaveText('Bu dosya bir Dizey yedeği değil.')
 })
 
-for (const path of ['./', './exam', './me']) {
+for (const path of ['./', './exam', './me', './settings']) {
   test(`no critical accessibility violations on ${path}`, async ({ page }) => {
     await openApp(page, path)
     const results = await new AxeBuilder({ page }).analyze()
@@ -320,6 +352,7 @@ for (const colorScheme of ['dark'] as const) {
       ['path', './'],
       ['exam', './exam'],
       ['me', './me'],
+      ['settings', './settings'],
     ] as const) {
       await openApp(page, path)
       await page.waitForTimeout(400)
