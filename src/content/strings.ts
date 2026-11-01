@@ -36,6 +36,7 @@ export const strings = {
       eyebrow: 'Günün sorusu',
       solve: 'Çöz',
       next: 'Yarın yeni soru',
+      wrongNote: 'Yarın yeni bir soru var.',
     },
     week: {
       label: 'Bu hafta',
@@ -51,10 +52,8 @@ export const strings = {
   question: {
     check: 'Kontrol et',
     done: 'Tamam',
-    right: 'Doğru',
-    wrong: 'Yanlış',
-    rightAnswer: (key: string) => `Doğru cevap ${key}`,
-    yourAnswer: (key: string) => `Senin cevabın (${key})`,
+    right: 'Doğru.',
+    wrong: (key: string) => `Doğrusu ${key}.`,
     solution: 'Çözüm',
     options: 'Şıklar',
   },
