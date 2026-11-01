@@ -144,7 +144,7 @@ export const CHOREO_MS = {
 } as const
 
 /** Entrance travel (px) per part of the screen, from the old app. */
-export const SHIFT = { enter: 12, narr: 14, scene: 10, dock: 16, tiles: 36, count: 6 } as const
+export const SHIFT = { enter: 12, narr: 14, scene: 10, dock: 16, tiles: 36 } as const
 
 /** Narration and dock enter from this opacity, so a step change never shows an empty frame. */
 export const ENTER_FLOOR = 0.35
