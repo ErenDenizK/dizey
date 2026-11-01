@@ -13,6 +13,7 @@ import { GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { PressLink } from './PressLink'
+import { morphFrom } from './stage'
 import './me.css'
 
 export function MeView() {
@@ -26,6 +27,9 @@ export function MeView() {
           aria-label={strings.settings.open}
           data-testid="open-settings"
           data-sound="open"
+          onClick={(event) => {
+            morphFrom.current = event.currentTarget
+          }}
         >
           <GearIcon />
         </PressLink>

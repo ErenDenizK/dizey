@@ -150,6 +150,33 @@ const scenarios = {
       await frames(60)
     },
   },
+  // The gear in Me opens Settings out of its circle, and back.
+  'settings-open': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+    },
+    run: async ({ tap, frames }) => {
+      await tap('[data-testid="open-settings"]')
+      await frames(60)
+    },
+  },
+  'settings-close': {
+    region: 'body',
+    scale: 2,
+    prep: async ({ page, settle }) => {
+      await page.locator('.dz-tab').nth(2).click()
+      await settle()
+      await page.locator('[data-testid="open-settings"]').click()
+      await settle()
+    },
+    run: async ({ page, frames, tap }) => {
+      await tap(page.locator('.sh-overlay .dz-icon-button--float').first())
+      await frames(60)
+    },
+  },
   // The same two with the matrix-cell reveal switched on (settings are read from storage before load).
   'lesson-open-cells': {
     region: 'body',
