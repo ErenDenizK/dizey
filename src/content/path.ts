@@ -94,6 +94,7 @@ const tileTitles: Readonly<Record<string, string>> = {
   'm4-matrix-arithmetic': 'Matris işlemleri',
   'm8-power-classes': 'Kuvvet sınıfları',
   'r2-echelon-forms': 'Eşelon formlar',
+  'm11-regular-singular': 'Regüler ve singüler',
   'r4-inverse': 'Gauss-Jordan ile ters',
   'd1-determinant': 'Determinant ve Sarrus',
   'd2-cofactor-expansion': 'Laplace açılımı',
