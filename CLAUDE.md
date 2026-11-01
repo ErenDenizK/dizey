@@ -39,7 +39,7 @@ Run `.claude/skills/ledger-capture`: split the message into ledger items, route 
 - GitHub Pages deploys through a GitHub Actions workflow (Pages source: GitHub Actions), never from a branch.
 - Commits: Conventional Commits, small, each one builds. Author is Eren (`ErenDenizK <109629701+ErenDenizK@users.noreply.github.com>`); every commit ends with the Claude co-author trailer. Never hide or remove the trailer.
 - PRs follow `.github/pull_request_template.md`, in English, with phone-width screenshots for anything visual.
-- Versions: `0.MINOR.PATCH` during development (MINOR = a capability Eren will notice, PATCH = a fix); `1.0.0` = complete for Midterm 1. The app shows its version and short commit hash.
+- Versions: `0.MINOR.PATCH` during development (MINOR = a capability Eren will notice, PATCH = a fix); `1.0.0` = complete for Midterm 1. The app shows its version and short commit hash. Feature branches never touch the version; bump it in the last commit right before merge, after rebasing on `main` (PR-14).
 - Never commit the old project, secrets, or raw course material.
 
 ## Models and cost
@@ -50,7 +50,8 @@ Run `.claude/skills/ledger-capture`: split the message into ledger items, route 
 
 ## Quality
 
-- Each task states its done condition and evidence up front: test output, 390 px screenshots in light and dark, automated recomputation of every number and claim in math content.
+- Each task states its done condition and evidence up front: test output, 375 and 390 px screenshots of the dark app on settled frames, automated recomputation of every number and claim in math content.
+- Close an item only when it is live and checked the way Eren will check it, on the phone; every defect class fixed once gets a guard (test or scripted walk) so it cannot return (PR-12).
 - Important outputs (design direction, architecture, first lesson) get a review from someone who did not build them.
 - Before handing anything over, ask "where does this break?" and put the answer in the handoff note.
 - Mistakes become entries in `docs/lessons.md`; a repeated root cause becomes a principle candidate.
