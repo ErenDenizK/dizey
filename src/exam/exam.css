@@ -489,8 +489,10 @@ button.exs-seal__cell {
 }
 .exs-score__verdict {
   margin: 0;
-  font-size: var(--type-callout);
-  line-height: var(--leading-callout);
+  /* Body size: the result already uses footnote, subhead, body, title2, title1 and the score; callout made a seventh. */
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
   color: var(--ink-2);
 }
 .exs-sr {
