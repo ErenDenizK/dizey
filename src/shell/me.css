@@ -168,3 +168,87 @@
   opacity: 0;
   cursor: pointer;
 }
+
+/* Colour palettes: four tiles, each drawn in its own palette (data-palette-preview sets its tokens). */
+.me-palettes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.me-palette {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--corner-card);
+  background: var(--bg);
+  color: var(--ink-1);
+  text-align: start;
+  box-shadow:
+    var(--shadow-1),
+    var(--edge-light),
+    0 0 0 1px var(--hairline-strong);
+}
+.me-palette[aria-pressed="true"] {
+  box-shadow:
+    var(--shadow-1),
+    0 0 0 2px var(--action);
+}
+.me-palette__card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--corner-inner);
+  background: var(--surface);
+  box-shadow: var(--edge-light);
+}
+.me-palette__line {
+  display: block;
+  height: 6px;
+  border-radius: var(--corner-pill);
+  background: var(--ink-1);
+}
+.me-palette__line--short {
+  width: 60%;
+  background: var(--ink-3);
+}
+.me-palette__roles {
+  display: flex;
+  gap: var(--space-1);
+  margin-top: var(--space-1);
+}
+.me-palette__roles i {
+  width: 16px;
+  height: 16px;
+  border-radius: var(--corner-chip);
+}
+.me-palette__roles [data-role="row"] {
+  background: var(--row-fill);
+}
+.me-palette__roles [data-role="col"] {
+  background: var(--col-fill);
+}
+.me-palette__roles [data-role="ok"] {
+  background: var(--ok-fill);
+}
+.me-palette__roles [data-role="bad"] {
+  background: var(--bad-fill);
+}
+.me-palette__foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  padding: 0 var(--space-1);
+}
+.me-palette__name {
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  font-weight: var(--weight-semibold);
+}
+.me-palette__action {
+  flex: none;
+  width: 28px;
+  height: 16px;
+  border-radius: var(--corner-pill);
+  background: var(--action);
+}

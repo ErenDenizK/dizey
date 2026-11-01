@@ -1,5 +1,6 @@
 import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import { baseColourTokens, PALETTES, paletteCss, withPalettes } from './palettes'
 
 const css = readFileSync(new URL('./tokens.css', import.meta.url), 'utf8')
 
@@ -57,62 +58,75 @@ function contrast(theme: Record<string, string>, fg: string, bg: string): number
 const grounds = ['--bg', '--surface', '--surface-raised', '--surface-sunk']
 const text = ['--ink-1', '--ink-2', '--ok-ink', '--bad-ink', '--row-ink', '--col-ink']
 
-describe.each([['dark', dark]])('%s theme', (_name, theme) => {
-  it.each(text.flatMap((fg) => grounds.map((bg) => [fg, bg])))('%s on %s reads at 4.5:1', (fg, bg) => {
-    expect(contrast(theme, fg, bg)).toBeGreaterThanOrEqual(4.5)
-  })
+// Every colour palette is the base with its own block laid over it (src/styles/palettes.ts).
+const palettes: [string, Record<string, string>][] = Object.keys(PALETTES).map((id) => [
+  id,
+  { ...dark, ...vars(block(`:root[data-palette="${id}"]`)) },
+])
 
-  it.each(['ok', 'bad', 'row', 'col'])('%s ink reads on its own tint', (role) => {
-    expect(contrast(theme, `--${role}-ink`, `--${role}-tint`)).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it('a switch knob stands out on its on track at 3:1', () => {
-    expect(contrast(theme, '--switch-knob', '--switch-on')).toBeGreaterThanOrEqual(3)
-  })
-
-  it('an off switch track still shows on a card', () => {
-    expect(contrast(theme, '--switch-off', '--surface')).toBeGreaterThanOrEqual(1.4)
-  })
-
-  it('a soft button label reads at 4.5:1', () => {
-    expect(contrast(theme, '--ink-1', '--control-soft')).toBeGreaterThanOrEqual(4.5)
-  })
-
-  it.each(grounds)('tertiary ink stays a 3:1 UI colour on %s', (bg) => {
-    expect(contrast(theme, '--ink-3', bg)).toBeGreaterThanOrEqual(3)
-  })
-
-  it('row and column inks are told apart at a glance (OKLab distance >= 0.1)', () => {
-    const lab = (value: string) => {
-      const m = value.match(/^oklch\(([\d.]+) ([\d.]+) ([\d.]+)\)$/)
-      if (!m) throw new Error(`not an opaque oklch colour: ${value}`)
-      const [L, C, H] = [Number(m[1]), Number(m[2]), (Number(m[3]) * Math.PI) / 180]
-      return [L, C * Math.cos(H), C * Math.sin(H)]
-    }
-    const [r, c] = [lab(theme['--row-ink'] as string), lab(theme['--col-ink'] as string)]
-    const distance = Math.hypot(...r.map((v, i) => v - (c[i] as number)))
-    expect(distance, `${theme['--row-ink']} vs ${theme['--col-ink']}`).toBeGreaterThanOrEqual(0.1)
-  })
-
-  it('primary action label reads at 7:1', () => {
-    expect(contrast(theme, '--on-action', '--action')).toBeGreaterThanOrEqual(7)
-  })
-
-  it.each([
-    ['--on-bad', '--bad-fill'],
-    ['--on-ok', '--ok-fill'],
-    ['--on-row', '--row-fill'],
-  ])('%s on %s marks read at 3:1 (icons and key letters)', (ink, fill) => {
-    expect(contrast(theme, ink, fill)).toBeGreaterThanOrEqual(3)
-  })
-
-  it.each(['--ok-fill', '--bad-fill', '--row-fill'])(
-    '%s is visible as a UI part (3:1 on surface)',
-    (fill) => {
-      expect(contrast(theme, fill, '--surface')).toBeGreaterThanOrEqual(3)
-    },
-  )
+it('the palette blocks in tokens.css are current (run node scripts/write-palettes.mjs)', () => {
+  expect(withPalettes(css, paletteCss(baseColourTokens(css)))).toBe(css)
 })
+
+describe.each<[string, Record<string, string>]>([['kehribar', dark], ...palettes])(
+  '%s palette',
+  (_name, theme) => {
+    it.each(text.flatMap((fg) => grounds.map((bg) => [fg, bg])))('%s on %s reads at 4.5:1', (fg, bg) => {
+      expect(contrast(theme, fg, bg)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it.each(['ok', 'bad', 'row', 'col'])('%s ink reads on its own tint', (role) => {
+      expect(contrast(theme, `--${role}-ink`, `--${role}-tint`)).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it('a switch knob stands out on its on track at 3:1', () => {
+      expect(contrast(theme, '--switch-knob', '--switch-on')).toBeGreaterThanOrEqual(3)
+    })
+
+    it('an off switch track still shows on a card', () => {
+      expect(contrast(theme, '--switch-off', '--surface')).toBeGreaterThanOrEqual(1.4)
+    })
+
+    it('a soft button label reads at 4.5:1', () => {
+      expect(contrast(theme, '--ink-1', '--control-soft')).toBeGreaterThanOrEqual(4.5)
+    })
+
+    it.each(grounds)('tertiary ink stays a 3:1 UI colour on %s', (bg) => {
+      expect(contrast(theme, '--ink-3', bg)).toBeGreaterThanOrEqual(3)
+    })
+
+    it('row and column inks are told apart at a glance (OKLab distance >= 0.1)', () => {
+      const lab = (value: string) => {
+        const m = value.match(/^oklch\(([\d.]+) ([\d.]+) ([\d.]+)\)$/)
+        if (!m) throw new Error(`not an opaque oklch colour: ${value}`)
+        const [L, C, H] = [Number(m[1]), Number(m[2]), (Number(m[3]) * Math.PI) / 180]
+        return [L, C * Math.cos(H), C * Math.sin(H)]
+      }
+      const [r, c] = [lab(theme['--row-ink'] as string), lab(theme['--col-ink'] as string)]
+      const distance = Math.hypot(...r.map((v, i) => v - (c[i] as number)))
+      expect(distance, `${theme['--row-ink']} vs ${theme['--col-ink']}`).toBeGreaterThanOrEqual(0.1)
+    })
+
+    it('primary action label reads at 7:1', () => {
+      expect(contrast(theme, '--on-action', '--action')).toBeGreaterThanOrEqual(7)
+    })
+
+    it.each([
+      ['--on-bad', '--bad-fill'],
+      ['--on-ok', '--ok-fill'],
+      ['--on-row', '--row-fill'],
+    ])('%s on %s marks read at 3:1 (icons and key letters)', (ink, fill) => {
+      expect(contrast(theme, ink, fill)).toBeGreaterThanOrEqual(3)
+    })
+
+    it.each(['--ok-fill', '--bad-fill', '--row-fill'])(
+      '%s is visible as a UI part (3:1 on surface)',
+      (fill) => {
+        expect(contrast(theme, fill, '--surface')).toBeGreaterThanOrEqual(3)
+      },
+    )
+  },
+)
 
 it('the app is dark only: no light theme and no theme switch', () => {
   expect(css).toContain('color-scheme: dark;')
