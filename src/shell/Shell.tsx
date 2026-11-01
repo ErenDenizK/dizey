@@ -196,9 +196,18 @@ let finishExit: (() => void) | null = null
 function visibleCard() {
   let card = morphFrom.current
   // A tile that became the continue card was replaced by a new element: find its successor by lesson.
+  // Any source may carry a stable `data-morph-key` (lesson id, chapter id, "gate"): its successor is the
+  // element of the same base class with that key. Lesson tiles are also found by `data-lesson`.
+  const key = card?.dataset.morphKey
   const lesson = card?.dataset.lesson
-  if (card && !card.isConnected && lesson)
-    card = document.querySelector<HTMLElement>(`.pa-tile[data-lesson="${lesson}"]`)
+  if (card && !card.isConnected) {
+    const base = card.classList[0]
+    if (key && base)
+      card = document.querySelector<HTMLElement>(
+        `.${CSS.escape(base)}[data-morph-key="${CSS.escape(key)}"]:not([data-face])`,
+      )
+    else if (lesson) card = document.querySelector<HTMLElement>(`.pa-tile[data-lesson="${lesson}"]`)
+  }
   if (!card?.isConnected) return null
   morphFrom.current = card
   const rect = card.getBoundingClientRect()
@@ -422,7 +431,8 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     el.remove()
     if (card) {
       card.style.visibility = ''
-      if (card.classList.contains('pa-tile')) {
+      // Every rectangular source gets its aftermath; round ones (the gear) have no outline to draw.
+      if (card.hasAttribute('data-morph-key') || card.classList.contains('pa-tile')) {
         if (turn === mine) aftermath(card)
         else release(card)
       }

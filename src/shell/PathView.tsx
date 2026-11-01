@@ -255,6 +255,7 @@ function ChapterTestCell({ chapter, onNote }: { chapter: Chapter; onNote: (note:
         className="pa-test"
         data-state={ready ? (last ? 'done' : 'new') : 'preparing'}
         data-chapter={chapter.id}
+        data-morph-key={chapter.id}
         data-testid={`chapter-test-${chapter.id}`}
         aria-label={label}
         onClick={(event) =>
@@ -337,6 +338,7 @@ function Gate() {
     <PressLink
       to="/exam"
       className="pa-gate"
+      data-morph-key="gate"
       data-testid="vize-gate"
       aria-label={strings.path.gate.label}
       onClick={(event) => {
@@ -439,6 +441,7 @@ function Tile({
           data-state={state}
           data-main=""
           data-lesson={lesson.id}
+          data-morph-key={lesson.id}
           data-testid="continue-card"
           onClick={(event) => {
             morphFrom.current = event.currentTarget
@@ -456,6 +459,7 @@ function Tile({
           className="pa-tile"
           data-state={state}
           data-lesson={lesson.id}
+          data-morph-key={lesson.id}
           aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
           onClick={(event) => onPick(lesson, event.currentTarget)}
         >
