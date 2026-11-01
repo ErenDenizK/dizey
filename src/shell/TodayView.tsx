@@ -46,18 +46,24 @@ export function TodayView() {
     : strings.path.examWeekLine(examWeek.label)
   const examSoon = daysUntil(examDate ?? examWeek.iso, now) <= EXAM_SOON_DAYS
 
+  const greeting = greetingOf(now.getHours())
   const duo = useRef<DuoHandle>(null)
   useEffect(() => {
     duo.current?.react('happy')
   }, [])
 
   return (
-    <Screen title={greetingOf(now.getHours())}>
+    <Screen title={greeting}>
       <div className="td-root">
-        <div className="td-head">
-          <p className="td-head__exam">{examLine}</p>
-          <CompanionSlot name="today" size="small" mood="happy" alive duo={duo} />
-        </div>
+        <header className="td-head">
+          <div className="td-head__text">
+            <p className="td-head__greeting dz-large-title" aria-hidden="true">
+              {greeting}
+            </p>
+            <p className="td-head__exam">{examLine}</p>
+          </div>
+          <CompanionSlot name="today" size="medium" mood="happy" alive duo={duo} />
+        </header>
         {main ? <NextLesson lessonId={main.id} /> : <AllDone />}
         {open.length ? (
           firstLesson ? (
