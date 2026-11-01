@@ -206,31 +206,36 @@
     var(--edge-light),
     inset 0 0 0 0.5px var(--hairline);
 }
-/* A lesson coming home: the outline draws itself in from the top-left corner (--trace 0..1, driven by the
-   `draw` spring), then fades back to the resting border (src/shell/morph.ts, aftermath). */
-.pa-tile[data-trace]::before {
-  content: "";
+/* A lesson coming home: the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
+.pa-tile {
+  isolation: isolate;
+}
+.pa-tile__trace {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+.pa-tile__trace rect {
+  fill: none;
+  stroke: var(--ink-3);
+  stroke-linecap: butt;
+}
+.pa-tile[data-main] .pa-tile__trace rect {
+  stroke: var(--action);
+}
+/* While the stroke draws it is the ring, so the resting ring waits for it. */
+.pa-tile[data-main][data-trace] {
+  box-shadow: 0 12px 24px -10px var(--shadow-color);
+}
+/* The old fill, crossfading out when a tile's state changes on screen (PathView, useStateChange). */
+.pa-tile__was {
   position: absolute;
   inset: 0;
-  padding: var(--space-0-5);
+  z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  background: conic-gradient(
-    from var(--trace-from, 0deg),
-    var(--trace-colour, var(--ink-3)) calc(var(--trace, 0) * 360deg),
-    transparent 0
-  );
-  opacity: var(--trace-ink, 1);
-  -webkit-mask:
-    linear-gradient(var(--scrim) 0 0) content-box,
-    linear-gradient(var(--scrim) 0 0);
-  -webkit-mask-composite: xor;
-  mask:
-    linear-gradient(var(--scrim) 0 0) content-box exclude,
-    linear-gradient(var(--scrim) 0 0);
-}
-.pa-tile[data-main] {
-  --trace-colour: var(--on-action);
 }
 .pa-tile__code {
   font-size: var(--type-title2);

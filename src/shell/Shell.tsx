@@ -7,7 +7,17 @@ import { readSettings } from '../progress/settings'
 import { MeIcon, PathIcon, TodayIcon } from '../ui/icons'
 import { TabBar } from '../ui/TabBar'
 import { MeView } from './MeView'
-import { aftermath, cellField, clipWith, faceOf, insets, lastThird, reach, spreadDelay } from './morph'
+import {
+  aftermath,
+  cellField,
+  clipWith,
+  faceOf,
+  holdTagsOf,
+  insets,
+  lastThird,
+  reach,
+  spreadDelay,
+} from './morph'
 import { Onboarding } from './Onboarding'
 import { PathView } from './PathView'
 import { installPressFeedback } from './press'
@@ -375,6 +385,7 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     const face = atRest(() => faceOf(el, card))
     engine.set(face, { opacity: 0 })
     card.style.visibility = 'hidden'
+    holdTagsOf(card)
     // The lesson's own ink goes first and fast.
     if (content) engine.to(content, { opacity: 0 }, 'leave')
     if (readSettings().cellReveal === true) {

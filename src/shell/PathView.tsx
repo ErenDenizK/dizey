@@ -15,6 +15,7 @@ import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { burst, glow, ring } from '../ui/shine'
 import { LessonPeek, type Peek } from './LessonPeek'
+import { drawRing, fadeOutWas, holdTag, raiseTag } from './morph'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef } from './stage'
 import './path.css'
@@ -249,6 +250,7 @@ function Tile({
   main: boolean
   onPick: (lesson: Lesson, tile: HTMLElement) => void
 }) {
+  useStateChange(lesson.id, `${state}${main ? '+main' : ''}`)
   const resuming = main && state === 'current' && record
   const step = resuming ? resumeIndex(lesson, record) + 1 : 0
   const face = (
@@ -298,12 +300,63 @@ function Tile({
         </Pressable>
       )}
       {main ? (
-        <span className="pa-here" aria-hidden="true">
+        <Tag lesson={lesson.id}>
           {state === 'current' ? strings.path.here.resume : strings.path.here.start}
-        </span>
+        </Tag>
       ) : null}
     </>
   )
+}
+
+/**
+ * The marker over the lesson you are on. It enters on `ui` (a few px low, transparent, then up) instead of
+ * appearing; when the tile is still out of sight (a lesson folding into it) it waits for the tile's aftermath.
+ */
+function Tag({ lesson, children }: { lesson: string; children: string }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const tag = ref.current
+    if (!tag) return
+    holdTag(tag)
+    const tile = tag.parentElement?.querySelector<HTMLElement>('.pa-tile')
+    if (tile?.style.visibility === 'hidden') return
+    raiseTag(tag)
+  }, [])
+  return (
+    <span ref={ref} className="pa-here" data-tag="" data-lesson-tag={lesson} aria-hidden="true">
+      {children}
+    </span>
+  )
+}
+
+/**
+ * A tile whose state changes while it is on screen (becomes current, done, or loses the ring) does not swap:
+ * the old fill crossfades out, the new ring draws itself in, and a new check or progress mark fades in. While
+ * the tile is hidden (a lesson folding into it) the same parts wait for the aftermath in morph.ts.
+ */
+function useStateChange(id: string, key: string) {
+  const last = useRef<{ key: string; fill: string } | null>(null)
+  useLayoutEffect(() => {
+    const tile = document.querySelector<HTMLElement>(`.pa-tile[data-lesson="${id}"]`)
+    if (!tile) return
+    const before = last.current
+    last.current = { key, fill: getComputedStyle(tile).backgroundColor }
+    if (!before || before.key === key) return
+    const hidden = tile.style.visibility === 'hidden'
+    const was = document.createElement('span')
+    was.className = 'pa-tile__was'
+    was.style.background = before.fill
+    tile.prepend(was)
+    for (const part of tile.querySelectorAll<HTMLElement>(
+      ':scope > .pa-tile__check, :scope > .pa-tile__bar',
+    )) {
+      holdTag(part)
+      if (!hidden) raiseTag(part)
+    }
+    if (hidden) return
+    fadeOutWas(tile)
+    if (key.endsWith('+main')) drawRing(tile)
+  }, [id, key])
 }
 
 function Check() {
