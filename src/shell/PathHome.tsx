@@ -42,6 +42,7 @@ export function PathHome() {
     duo.current?.react('happy')
   }, [])
   useCelebrations(root, records)
+  useWalked(root, reached)
   useOpening(root, main?.id ?? null)
   const chapterIndex = useChapterInView(root, head, mainNode?.chapter ?? chapters.length - 1)
   const chapter = chapters[chapterIndex]
@@ -66,6 +67,7 @@ export function PathHome() {
                 key={`${seg.to}`}
                 className="ph-wire"
                 data-axis={seg.axis}
+                data-to={seg.to}
                 data-faint={seg.to > reached || undefined}
                 x1={`${COL_X[seg.x1]}%`}
                 x2={`${COL_X[seg.x2]}%`}
@@ -220,4 +222,20 @@ function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string
       if (!stopped) engine.to(camera, { top: goal }, 'page')
     })
   }, [root, mainId])
+}
+
+/** What is ahead of you is faint. A run that becomes walked (or not) fades to its new strength, never in one frame. */
+const FAINT = 0.25
+function useWalked(root: React.RefObject<HTMLElement | null>, reached: number) {
+  const before = useRef<number | null>(null)
+  useLayoutEffect(() => {
+    const lines = root.current?.querySelectorAll<SVGLineElement>('.ph-wire') ?? []
+    for (const line of lines) {
+      const to = Number(line.dataset.to)
+      const target = to > reached ? FAINT : 1
+      if (before.current === null) engine.set(line, { opacity: target })
+      else if (to > before.current !== to > reached) engine.to(line, { opacity: target }, 'fade')
+    }
+    before.current = reached
+  }, [root, reached])
 }

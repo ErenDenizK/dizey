@@ -398,9 +398,10 @@ test('Yol edges: one amber lesson node, equal nodes, one language of corners, no
     .locator('.pa-tile:not([data-next])')
     .evaluateAll((tiles) => [...new Set(tiles.map((tile) => (tile as HTMLElement).offsetHeight))])
   expect(heights).toHaveLength(1)
+  // Drawn larger by the engine's scale (the layout box stays the same), so it is measured as drawn.
   const main = await pane
     .locator('.pa-tile[data-next]')
-    .evaluate((tile) => (tile as HTMLElement).offsetHeight)
+    .evaluate((tile) => tile.getBoundingClientRect().height)
   expect(main).toBeGreaterThan(heights[0] ?? 0)
   // (b) The chapter test and the gate speak the node's language: the same corner radius.
   const radius = (sel: string) =>

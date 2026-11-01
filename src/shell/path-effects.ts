@@ -10,23 +10,40 @@ import { fadeOutWas, holdInk, holdTag, inkOf, raiseTag } from './morph'
 
 type Records = Readonly<Record<string, LessonRecord>>
 
+/** How much larger the lesson you are on is drawn than the other nodes. */
+export const GROW = 1.2
+
 /**
  * A node whose state changes while it is on screen (becomes current, done, or loses the ring) does not swap:
  * the old fill crossfades out, and a new check fades in. While the node is hidden (a lesson folding into it)
  * the same parts wait for the aftermath in morph.ts.
  */
-export function useStateChange(id: string, key: string) {
-  const last = useRef<{ key: string; fill: string; ink: ReturnType<typeof inkOf> } | null>(null)
+export function useStateChange(id: string, key: string, grow: boolean) {
+  const last = useRef<{
+    key: string
+    grow: boolean
+    fill: string
+    ring: string
+    ink: ReturnType<typeof inkOf>
+  } | null>(null)
   useLayoutEffect(() => {
     const tile = document.querySelector<HTMLElement>(`.pa-tile[data-lesson="${id}"]`)
     if (!tile) return
     const before = last.current
-    last.current = { key, fill: getComputedStyle(tile).backgroundColor, ink: inkOf(tile) }
+    const style = getComputedStyle(tile)
+    last.current = { key, grow, fill: style.backgroundColor, ring: style.boxShadow, ink: inkOf(tile) }
+    // The lesson you are on is drawn larger by the engine's own scale (it composes with the press), so
+    // becoming or leaving that place grows or shrinks the node instead of swapping its size in one frame.
+    const from = before?.grow ? GROW : 1
+    const to = grow ? GROW : 1
+    engine.set(tile, { scaleX: before ? from : to, scaleY: before ? from : to })
+    if (before && from !== to) engine.to(tile, { scaleX: to, scaleY: to }, 'settle')
     if (!before || before.key === key) return
     const hidden = tile.style.visibility === 'hidden'
     const was = document.createElement('span')
     was.className = 'pa-tile__was'
     was.style.background = before.fill
+    was.style.boxShadow = before.ring
     tile.prepend(was)
     holdInk(tile, before.ink)
     for (const part of tile.querySelectorAll<HTMLElement>(':scope > .pa-tile__check')) {
@@ -35,7 +52,7 @@ export function useStateChange(id: string, key: string) {
     }
     if (hidden) return
     fadeOutWas(tile)
-  }, [id, key])
+  }, [id, key, grow])
 }
 
 /**
