@@ -66,6 +66,15 @@ test('a tile opens its card, a tap outside folds it back, and the lesson grows o
   await expect(card).toBeVisible()
   await expect(card.getByRole('link', { name: /^Derse gir/ })).toBeVisible()
   await expect(tile).toHaveCSS('visibility', 'hidden')
+  // The card floats above the tab bar, and its heading and state pill share one row.
+  await page.waitForTimeout(1200)
+  const cardBox = await card.boundingBox()
+  const barBox = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
+  expect(cardBox && barBox && cardBox.y + cardBox.height <= barBox.y).toBe(true)
+  const headingBox = await card.getByRole('heading', { level: 2 }).boundingBox()
+  const pillBox = await card.locator('.lp__state').boundingBox()
+  expect(headingBox && pillBox && Math.abs(pillBox.y - headingBox.y) < 12).toBe(true)
+  await expect(card.locator('.lp__code')).toHaveText('1.5')
   // Tap outside (the scrim above the card): the card folds into its tile.
   await page.mouse.click(195, 60)
   await expect(card).toHaveCount(0)
