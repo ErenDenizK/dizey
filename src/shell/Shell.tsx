@@ -10,10 +10,13 @@ import { MeView } from './MeView'
 import {
   aftermath,
   cellField,
+  circleOf,
+  clipCircle,
   clipWith,
   faceOf,
   holdTagsOf,
   insets,
+  isRound,
   lastThird,
   reach,
   release,
@@ -290,6 +293,10 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
   if (card.classList.contains('lp')) standIn(el)
   engine.withChannel('chrome', () => {
     recede()
+    if (isRound(card)) {
+      growCircle(el, card, face, current)
+      return
+    }
     if (readSettings().cellReveal === true) {
       spreadCells(el, source, face, card, current)
       return
@@ -326,6 +333,37 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
         card.style.visibility = ''
       },
     })
+  })
+}
+
+/** A round source grows as a circle out of its centre until the surface is covered. */
+function growCircle(el: HTMLElement, card: HTMLElement, face: HTMLElement, current: () => boolean) {
+  const { cx, cy, r0, far } = circleOf(el, card)
+  const span = Math.max(1, far - r0)
+  engine.to(face, { opacity: 0 }, 'leave', { onArrive: () => face.remove() })
+  const tone = getComputedStyle(card).backgroundColor
+  let arrived = false
+  const paint = (open: number) => {
+    el.style.background = `color-mix(in oklch, var(--bg) ${(lastThird(open) * 100).toFixed(1)}%, ${tone})`
+  }
+  paint(0)
+  engine.set(el, { cr: r0 })
+  clipCircle(el, { cx, cy }, (v) => {
+    if (!current()) return
+    const open = ((v.cr ?? r0) - r0) / span
+    paint(open)
+    if (!arrived && open >= ARRIVAL_AT) {
+      arrived = true
+      arrive(el, current)
+    }
+  })
+  engine.to(el, { cr: far }, 'page', {
+    launch: 0.4,
+    onArrive: () => {
+      el.style.clipPath = ''
+      el.style.background = ''
+      card.style.visibility = ''
+    },
   })
 }
 
@@ -412,6 +450,22 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null) {
     holdTagsOf(card)
     // The lesson's own ink goes first and fast.
     if (content) engine.to(content, { opacity: 0 }, 'leave')
+    if (isRound(card)) {
+      const { cx, cy, r0, far } = circleOf(el, card)
+      const span = Math.max(1, far - r0)
+      let faceIn = false
+      engine.set(el, { cr: far })
+      clipCircle(el, { cx, cy }, (v) => {
+        const closed = 1 - ((v.cr ?? far) - r0) / span
+        if (!faceIn && closed >= 2 / 3) {
+          faceIn = true
+          engine.to(face, { opacity: 1 }, 'fade')
+        }
+        if ((v.cr ?? far) - r0 < 0.5) done()
+      })
+      engine.to(el, { cr: r0 }, 'page', { onArrive: done })
+      return
+    }
     if (readSettings().cellReveal === true) {
       retreatCells(el, rect, face, done)
       return

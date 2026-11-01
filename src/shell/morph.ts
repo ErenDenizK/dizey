@@ -30,6 +30,35 @@ export const reach = (v: { t?: number; l?: number; r?: number; b?: number }) =>
 /** 0 until the last third of a travel, then 0..1 linearly to its end: where radius and the resting look arrive. */
 export const lastThird = (progress: number) => Math.min(1, Math.max(0, (progress - 2 / 3) * 3))
 
+/** A small or round source (a 44 px icon button) grows as a circle, not as a stretching pill. */
+export function isRound(card: HTMLElement) {
+  const { width, height } = card.getBoundingClientRect()
+  const radius = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0
+  return (width < 64 && height < 64) || radius >= Math.min(width, height) / 2 - 0.5
+}
+
+/** The source's circle in the surface's own coordinates, and the radius that covers the whole surface. */
+export function circleOf(surface: HTMLElement, card: HTMLElement) {
+  const outer = surface.getBoundingClientRect()
+  const inner = card.getBoundingClientRect()
+  const cx = inner.left + inner.width / 2 - outer.left
+  const cy = inner.top + inner.height / 2 - outer.top
+  const far = Math.hypot(Math.max(cx, outer.width - cx), Math.max(cy, outer.height - cy))
+  return { cx, cy, r0: Math.min(inner.width, inner.height) / 2, far }
+}
+
+/** Clips a surface to a circle around (cx, cy) whose radius is the engine's own `cr`. */
+export function clipCircle(
+  el: HTMLElement,
+  at: { cx: number; cy: number },
+  watch?: (v: Record<string, number>) => void,
+) {
+  engine.bind(el, (v) => {
+    el.style.clipPath = `circle(${px(v.cr)} at ${px(at.cx)} ${px(at.cy)})`
+    watch?.(v)
+  })
+}
+
 export type ClipHooks = {
   /** The corner radius for the live values; by default the engine's own `rad`. */
   rad?: (v: Record<string, number>) => number
