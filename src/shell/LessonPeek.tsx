@@ -86,8 +86,9 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
       if (scrim.current) engine.to(scrim.current, { opacity: 0 }, 'fade')
       engine.to(el, { ...target, y: 0 }, 'page', {
         onArrive: () => {
+          // A card opened again while this one was still folding must not be taken down with it.
           tile.style.visibility = ''
-          setShown(null)
+          setShown((current) => (current === shown ? null : current))
         },
       })
       engine.to(face, { y: 0 }, 'page')
