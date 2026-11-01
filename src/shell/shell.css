@@ -638,6 +638,8 @@ a.sh-node {
 }
 .ls-body {
   margin: 0;
+  /* Exam statements I., II., III. sit one per line (\n in the content). */
+  white-space: pre-line;
   font-size: 1rem;
   line-height: 1.5;
 }
