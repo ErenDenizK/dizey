@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
+import { chapters } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { PressLink } from '../shell/PressLink'
@@ -8,6 +9,7 @@ import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Sheet } from '../ui/Sheet'
+import { isChapterSet, setTitle } from './chapter-test'
 import { clock } from './format'
 import {
   bestBySet,
@@ -31,7 +33,9 @@ export function ExamHome() {
   const { session, history } = useExam()
   const navigate = useNavigate()
   const [now, setNow] = useState(() => Date.now())
-  const running = session !== null && session.finishedAt === null && remainingMs(session, now) > 0
+  // A chapter test belongs to the map: the hub neither resumes nor reviews it.
+  const rehearsal = session !== null && !isChapterSet(session.set)
+  const running = rehearsal && session.finishedAt === null && remainingMs(session, now) > 0
   // The resume card's clock keeps moving while it is on screen.
   useEffect(() => {
     if (!running) return
@@ -51,7 +55,7 @@ export function ExamHome() {
   const [open, setOpen] = useState(false)
   const best = bestBySet(history)
   const sets = examSets(questions)
-  const reviewable = session?.finishedAt != null
+  const reviewable = rehearsal && session.finishedAt !== null
 
   const start = (set: ExamSet) => {
     const at = Date.now()
@@ -117,7 +121,7 @@ export function ExamHome() {
                     <span className="dz-row-main">
                       {strings.exam.historyRow(entry.correct, entry.total)}
                       <small className="dz-footnote sh-row-sub">
-                        {strings.exam.setTitle[entry.set]} ·{' '}
+                        {setTitle(entry.set, chapters)} ·{' '}
                         {new Date(entry.finishedAt).toLocaleDateString('tr-TR', {
                           day: 'numeric',
                           month: 'long',
@@ -198,7 +202,7 @@ function ResumeCard({ session, now }: { session: ExamSession; now: number }) {
   return (
     <section className="dz-card exh-resume" aria-label={strings.exam.inProgress}>
       <span className="dz-footnote exh-eyebrow">{strings.exam.inProgress}</span>
-      <b className="dz-title3">{strings.exam.setTitle[session.set]}</b>
+      <b className="dz-title3">{setTitle(session.set, chapters)}</b>
       <span className="exh-strip" aria-hidden="true">
         {session.questionIds.map((id) => (
           <i key={id} data-done={Boolean(session.answers[id])} />

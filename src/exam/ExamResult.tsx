@@ -1,7 +1,7 @@
 import { Link, Navigate, useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
 import { lessons } from '../content/lessons'
-import { pathCode, tileTitle } from '../content/path'
+import { chapters, pathCode, tileTitle } from '../content/path'
 import type { Question } from '../content/questions'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
@@ -11,6 +11,7 @@ import { playSound } from '../sound/player'
 import { Check, ChevronRight, Close } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Blocks, RichText } from './Blocks'
+import { isChapterSet, setTitle } from './chapter-test'
 import {
   type ExamSession,
   type QuestionStatus,
@@ -47,6 +48,8 @@ export function ExamResult() {
 
 function Result({ session }: { session: ExamSession }) {
   const navigate = useNavigate()
+  // A chapter test returns to the map; a rehearsal to the exam hub.
+  const home = isChapterSet(session.set) ? '/map' : '/exam'
   const result = score(session, questions)
   const finishedAt = session.finishedAt ?? session.startedAt
   const used = Math.max(1, Math.round((finishedAt - session.startedAt) / 60_000))
@@ -114,10 +117,10 @@ function Result({ session }: { session: ExamSession }) {
   return (
     <div ref={root} className="exs" data-testid="exam-result">
       <header className="exs-top">
-        <Link to="/exam" className="ls-top__btn" aria-label={strings.exam.close}>
+        <Link to={home} className="ls-top__btn" aria-label={strings.exam.close}>
           <Close />
         </Link>
-        <span className="dz-footnote exs-top__title">{strings.exam.setTitle[session.set]}</span>
+        <span className="dz-footnote exs-top__title">{setTitle(session.set, chapters)}</span>
         <span />
       </header>
 
@@ -171,7 +174,9 @@ function Result({ session }: { session: ExamSession }) {
           </div>
         </dl>
         <p className="dz-footnote exs-time num" data-enter="">
-          {strings.exam.resultTime(result.percent, used, allowed)}
+          {isChapterSet(session.set)
+            ? strings.exam.chapterTimeNote(result.percent)
+            : strings.exam.resultTime(result.percent, used, allowed)}
         </p>
       </section>
 
@@ -250,9 +255,9 @@ function Result({ session }: { session: ExamSession }) {
           data-kind="primary"
           data-wide=""
           data-sound="close"
-          onClick={() => void navigate({ to: '/exam' })}
+          onClick={() => void navigate({ to: home })}
         >
-          {strings.exam.done}
+          {home === '/map' ? strings.exam.backToMap : strings.exam.done}
         </Pressable>
       </div>
     </div>
