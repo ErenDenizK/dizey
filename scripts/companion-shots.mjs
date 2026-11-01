@@ -47,7 +47,21 @@ for (const [w, h] of [
     await page.waitForTimeout(500)
   }
   await shot('3-lesson-question')
-  console.log(w, 'options', await page.locator('.ex-opt').count())
+  const options = page.locator('.ex-opt')
+  for (let i = 0; i < (await options.count()); i++) {
+    await options.nth(i).click()
+    await page.waitForTimeout(300)
+    if (await page.getByRole('status').filter({ hasText: 'Doğru' }).count()) break
+  }
+  await shot('4-lesson-right')
+  // The end screen: straight to the summary step (the e2e walks the whole lesson).
+  await page.goto(`${base}lesson/r2-echelon-forms?step=summary`)
+  await page.waitForSelector('[data-testid="lesson-player"]')
+  const finish = page.getByRole('button', { name: 'Dersi bitir' })
+  await finish.click()
+  await page.waitForSelector('[data-testid="lesson-end"]')
+  await page.waitForTimeout(2500)
+  await shot('5-lesson-end')
   await context.close()
 }
 await browser.close()
