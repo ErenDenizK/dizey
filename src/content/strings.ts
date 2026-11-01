@@ -106,7 +106,7 @@ export const strings = {
     cellRevealHint: 'Ders, kutucuğundan hücre hücre yayılarak açılır.',
     examDate: 'Vize 1 tarihi',
     examDateHint: 'Belli olunca gir.',
-    examDateSet: 'Geri sayım Dersler’de.',
+    examDateSet: 'Geri sayım Bugün’de.',
     examDatePick: 'Tarih seç',
     backup: 'Yedek al',
     backupHint: 'İlerlemeni bir dosyaya kaydet.',
