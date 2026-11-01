@@ -1102,6 +1102,18 @@ a.sh-node {
   z-index: 30;
   background: var(--bg);
 }
+/* The matrix-cell reveal: opaque cells in the page colour, under the route's content (src/shell/morph.ts). */
+.sh-cells {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.sh-cell {
+  position: absolute;
+  background: var(--bg);
+  will-change: transform, opacity;
+}
 .sh-overlay__content {
   position: absolute;
   inset: 0;

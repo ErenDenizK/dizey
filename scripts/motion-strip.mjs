@@ -5,7 +5,9 @@
 //
 // Usage: pnpm build && pnpm preview --port 4173 &
 //        node scripts/motion-strip.mjs <scenario> <outDir>
-// Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one).
+// Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
+// tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
+// lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
 // Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390).
 import { execFileSync } from 'node:child_process'
@@ -17,6 +19,17 @@ const base = process.env.REVIEW_URL ?? 'http://localhost:4173/dizey/'
 const [scenario = 'count', out = join('motion-strip', scenario)] = process.argv.slice(2)
 const width = Number(process.env.W ?? 390)
 const FRAME = 1000 / 60
+
+const PEEK_ENTER = '[data-testid="lesson-peek"] .dz-button[data-kind="primary"]'
+const LESSON_CLOSE = '[data-testid="lesson-player"] [aria-label="Dersten çık"]'
+/** Opens a tile's card, enters its lesson and lets everything come to rest. */
+async function enterLesson({ page, settle }) {
+  await page.locator('.pa-tile:not([data-main])').first().click()
+  await settle()
+  await page.locator(PEEK_ENTER).click()
+  await page.waitForSelector('[data-testid="lesson-player"]')
+  await settle()
+}
 
 const scenarios = {
   count: {
@@ -120,9 +133,41 @@ const scenarios = {
     scale: 2,
     run: async ({ tap, frames }) => {
       await tap('.pa-tile:not([data-main])')
-      await frames(50)
-      await tap('.dz-sheet .dz-button[data-kind="primary"]')
-      await frames(50)
+      await frames(30)
+      await tap(PEEK_ENTER)
+      await frames(60)
+    },
+  },
+  // Open a tile, enter the lesson, let it settle, then close it: the lesson folds back into its tile.
+  'lesson-close': {
+    region: 'body',
+    scale: 2,
+    prep: enterLesson,
+    run: async ({ tap, frames }) => {
+      await tap(LESSON_CLOSE)
+      await frames(60)
+    },
+  },
+  // The same two with the matrix-cell reveal switched on (settings are read from storage before load).
+  'lesson-open-cells': {
+    region: 'body',
+    scale: 2,
+    settings: { cellReveal: true },
+    run: async ({ tap, frames }) => {
+      await tap('.pa-tile:not([data-main])')
+      await frames(30)
+      await tap(PEEK_ENTER)
+      await frames(60)
+    },
+  },
+  'lesson-close-cells': {
+    region: 'body',
+    scale: 2,
+    settings: { cellReveal: true },
+    prep: enterLesson,
+    run: async ({ tap, frames }) => {
+      await tap(LESSON_CLOSE)
+      await frames(60)
     },
   },
 }
@@ -152,6 +197,11 @@ await context.addInitScript(() => {
     },
   })
 })
+if (plan.settings)
+  await context.addInitScript(
+    (value) => localStorage.setItem('dizey.settings', JSON.stringify(value)),
+    plan.settings,
+  )
 const page = await context.newPage()
 let n = 0
 const step = () => page.evaluate((ms) => window.__dzReview.review.step(ms), FRAME)
