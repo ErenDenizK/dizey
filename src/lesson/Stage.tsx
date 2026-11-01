@@ -268,6 +268,7 @@ function useStageLayout(
       box.style.height = ''
       box.style.flex = ''
       box.style.minHeight = ''
+      box.style.removeProperty('--stage-floor')
       // A question's option rows are sized once, when its step enters, and then hold for the whole step.
       const run = box.closest<HTMLElement>('.ls-run')
       const refill = fill?.key !== filled.current
@@ -347,6 +348,24 @@ function useStageLayout(
           else delete content.dataset.flow
         }
         box.style.setProperty('--cell', `${cell}px`)
+        // Even at its smallest cell the scene does not fit (a short screen after an answer, when the verdict
+        // takes the dock): the stage claims the height it needs and the narration above the dock gives way
+        // (it scrolls), so nothing on the stage is ever cut.
+        if (cell < CELL.min) {
+          // Claim the height the scene needs at its normal smallest cell, then fit again to what was given.
+          const want = Math.ceil((content.offsetHeight * CELL.min) / cell + padY + notes + areaHeight)
+          box.style.setProperty('--stage-floor', `${want}px`)
+          next = box.offsetHeight
+          free.height = next - padY - notes - areaHeight
+          box.style.setProperty('--cell', `${CELL.probe}px`)
+          cell = measure()
+          box.style.setProperty('--cell', `${cell}px`)
+        }
+        const needed = Math.ceil(content.offsetHeight + padY + notes + areaHeight)
+        if (needed > next + 0.5) {
+          box.style.setProperty('--stage-floor', `${needed}px`)
+          next = box.offsetHeight
+        }
         // Height the fitted scene leaves unused (a wide, short scene) goes to the option rows, minus room
         // for the tallest wrong-try hint, so the stage never re-fits smaller during the step.
         if (refill && fill && run) {
