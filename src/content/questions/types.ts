@@ -81,3 +81,8 @@ export interface Question {
   /** Turkish worked solution, shortest exam-time route first. */
   readonly explanation: string
 }
+
+/** `source.exam` of every item the question engine generates (see `engine/`). It is not a real exam. */
+export const GENERATED_EXAM = 'dizey-generated'
+
+export const isGenerated = (question: Question): boolean => question.source.exam === GENERATED_EXAM
