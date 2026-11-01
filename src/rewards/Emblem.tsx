@@ -200,6 +200,33 @@ function Scene({ id }: { id: BadgeId }) {
           ))}
         </g>
       )
+    case 'insight': {
+      // Seeing without computing: a 3×3 of dots whose third column is joined to the first two by thin lines,
+      // under an eye-like arc.
+      const xs = [18, 38, 58]
+      const ys = [34, 48, 62]
+      return (
+        <g>
+          <path className="emblem__stroke" d="M10 22Q38 2 66 22" />
+          <circle className="emblem__ink" cx="38" cy="14" r="3.4" />
+          <path
+            className="emblem__stroke emblem__faint-stroke emblem__thin"
+            d="M18 34Q38 26 58 34M38 34Q48 28 58 34"
+          />
+          {ys.map((y) =>
+            xs.map((x, i) => (
+              <circle
+                key={`${x}-${y}`}
+                className={i === 2 ? 'emblem__ink' : 'emblem__faint'}
+                cx={x}
+                cy={y}
+                r="4.2"
+              />
+            )),
+          )}
+        </g>
+      )
+    }
     case 'rehearsal':
       // An exam paper: options, one chosen, and the clock that ran beside it.
       return (
