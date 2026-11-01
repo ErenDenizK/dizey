@@ -44,7 +44,7 @@ Run `.claude/skills/ledger-capture`: split the message into ledger items, route 
 
 ## Models and cost
 
-- Model per work type (PR-09): Opus for design, decisions, plans, hard edge cases and the final visual judgment; Sonnet subagents for implementing planned changes and repeating loops; Haiku or Sonnet subagents for reading screenshots, videos and keyframes (code detectors first). Opus never loops on its own review. First move of a task type to a smaller model: compare one small sample with Opus and record it.
+- Model per work type (PR-09): Opus for design, decisions, plans, hard edge cases and the final visual judgment; Sonnet subagents for implementing planned changes and repeating loops; Haiku or Sonnet subagents for reading screenshots, videos and keyframes (code detectors first). Implementation goes to Sonnet by default, with no prior comparison; only a tiny fix of a few tool calls may stay on Opus when spawning a subagent would cost more. Opus never loops on its own review. When a judgment task (review, reading frames) first moves to a smaller model, spot-check one sample against Opus and record it; this never blocks the move.
 - Parallel threads and subagents only under PR-15 (judged by total tokens against the weekly limit: overhead about 1.1x or less, disjoint surfaces, Eren waiting or critical path, at most 3 building threads); within it no extra OK. Deep research or workflows: announce the rough size first. Report heavy spend briefly at the end of each plan step (as an estimate; exact token counts are not visible).
 - Briefs for threads and subagents: `.claude/skills/brief-writing`.
 
