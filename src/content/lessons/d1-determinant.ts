@@ -42,7 +42,7 @@ export const d1Determinant: Lesson = {
       ],
       true,
     ),
-    T: m('T =', [
+    M: m('M =', [
       ['1', '2'],
       ['3', '6'],
     ]),
@@ -166,22 +166,22 @@ export const d1Determinant: Lesson = {
       eyebrow: 'Kural',
       title: '$|A| = 0$ ise $A$ singülerdir',
       body: 'Determinantı $0$ olan matris {ok}singüler{/ok}dir, tersi yoktur. Burada {ok}2. sütun{/ok}, {col}1. sütunun{/col} $2$ katı: kare düz bir çizgiye ezilir, alan $0$. Ezilen bilgi geri getirilemez.',
-      scene: { items: ['T', '=', 'result'], result: '?' },
+      scene: { items: ['M', '=', 'result'], result: '?' },
       beat: {
         kind: 'sequence',
         beats: [
-          { kind: 'det2', matrix: 'T' },
+          { kind: 'det2', matrix: 'M' },
           {
             kind: 'frames',
             frames: [
-              { clear: true, marks: [{ cell: ['T', '*', 0], tone: 'col' }] },
-              { marks: [{ cell: ['T', '*', 1], tone: 'ok' }], note: '2. sütun = 2 · (1. sütun)' },
+              { clear: true, marks: [{ cell: ['M', '*', 0], tone: 'col' }] },
+              { marks: [{ cell: ['M', '*', 1], tone: 'ok' }], note: '2. sütun = 2 · (1. sütun)' },
             ],
           },
-          { kind: 'area', matrix: 'T' },
+          { kind: 'area', matrix: 'M' },
         ],
       },
-      claims: [{ kind: 'det', matrix: 'T', equals: '0' }],
+      claims: [{ kind: 'det', matrix: 'M', equals: '0' }],
     },
     {
       id: 'try-k',

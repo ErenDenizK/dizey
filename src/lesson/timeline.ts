@@ -405,25 +405,37 @@ function sarrus(lesson: Lesson, name: string, b: Builder, diagonalsOnly = false)
     let total: Rational | null = null
     const valueKeys: string[] = []
     let sumKey: string | null = null
+    // The products and their values sit on two lines of their own ("1·0·4 + …" over "= 0 + 2 + 6 = 8"),
+    // so a 3×3 never wraps mid-sum on a phone (QA 9.9).
     if (terms.every((t) => t.value)) {
+      const v = lineOf(`${key}v`)
       total = terms.reduce<Rational>((acc, t) => add(acc, t.value as Rational), { num: 0n, den: 1n })
-      l.group()
       terms.forEach((t, index) => {
-        if (index) valueKeys.push(l.op('+'))
-        else valueKeys.push(l.op('='))
-        valueKeys.push(l.num(factor(format(t.value as Rational)), role))
+        if (index) valueKeys.push(v.op('+'))
+        else valueKeys.push(v.op('='))
+        valueKeys.push(v.num(factor(format(t.value as Rational)), role))
       })
-      l.group()
-      const eq = l.op('=')
-      sumKey = l.num(show(total), role)
-      return { line: l.line(), terms, plusOps, valueKeys, sum: [eq, sumKey], sumKey, total, role, repeat }
+      v.group()
+      const eq = v.op('=')
+      sumKey = v.num(show(total), role)
+      return {
+        lines: [l.line(), v.line()],
+        terms,
+        plusOps,
+        valueKeys,
+        sum: [eq, sumKey],
+        sumKey,
+        total,
+        role,
+        repeat,
+      }
     }
-    return { line: l.line(), terms, plusOps, valueKeys, sum: [] as string[], sumKey, total, role, repeat }
+    return { lines: [l.line()], terms, plusOps, valueKeys, sum: [] as string[], sumKey, total, role, repeat }
   }
 
   const play = (p: ReturnType<typeof side>) => {
     const factorOf = (later: boolean) => (p.repeat || later ? REPEAT_DWELL : 1)
-    b.push('line', (s) => ({ ...s, lines: [...s.lines, p.line] }), table.line * factorOf(false))
+    b.push('line', (s) => ({ ...s, lines: [...s.lines, ...p.lines] }), table.line * factorOf(false))
     p.terms.forEach((t, index) => {
       const marks = t.cells.map((c) => markOf(c, p.role))
       const shown = index ? [p.plusOps[index - 1] as string, ...t.keys] : t.keys
