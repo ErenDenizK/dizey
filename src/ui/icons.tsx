@@ -29,6 +29,17 @@ export function PathIcon({ active }: IconProps) {
   )
 }
 
+/** Today: a sun rising over a line. */
+export function TodayIcon({ active }: IconProps) {
+  return (
+    <svg viewBox="0 0 26 26" aria-hidden="true">
+      <path d="M13 3.5v2.2M5.2 7.2l1.5 1.5M20.8 7.2l-1.5 1.5M3.5 15h2.2M20.3 15h2.2" {...stroke} />
+      <path d="M7.6 17.5a5.4 5.4 0 0 1 10.8 0Z" {...stroke} {...softFill(active)} />
+      <path d="M4 21h18" {...stroke} />
+    </svg>
+  )
+}
+
 /** Exam: a paper with options, one marked. */
 export function ExamIcon({ active }: IconProps) {
   return (
