@@ -485,6 +485,8 @@ test('the exam hub shows at most one primary button while nothing is expanded', 
   await page.goto('./exam')
   await expect(pushed(page).getByLabel('Yarım kalan prova')).toBeVisible()
   await expect(primary).toHaveCount(1)
+  // The running set is drawn once, as the in-progress paper.
+  await expect(pushed(page).getByTestId('exam-set-summer-2024')).toHaveCount(0)
 })
 
 test('the exam hub does not overflow sideways on a small phone', async ({ page }) => {

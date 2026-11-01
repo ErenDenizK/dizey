@@ -63,6 +63,7 @@
 }
 .exh-paper__result {
   justify-self: start;
+  margin-left: calc(var(--space-2) * -1);
   color: var(--action);
 }
 /* The answer boxes of a printed sheet: one small square per question. */
@@ -79,7 +80,8 @@
   box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
 }
 .exh-grid i[data-done="true"] {
-  background: var(--action);
+  /* Answered boxes are inked, not amber: amber belongs to the one primary action. */
+  background: var(--ink-3);
   box-shadow: none;
 }
 .exh-paper[data-live="true"] .dz-button {
