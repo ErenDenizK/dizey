@@ -33,6 +33,7 @@ export function SettingsView() {
       title={strings.settings.title}
       back={() => void navigate({ to: '/me' })}
       backLabel={strings.settings.back}
+      parent={strings.me.title}
       pushed
     >
       <PaletteSetting />
