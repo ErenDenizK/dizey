@@ -4,13 +4,12 @@ import { createPortal } from 'react-dom'
 import { dayLabel, daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
-import { type Chapter, chapterOf, chapters, examItemTotal, pathCode, tileTitle } from '../content/path'
+import { type Chapter, chapters, examItemTotal, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
-import { RichText } from '../exam/Blocks'
 import { useExam } from '../exam/store'
-import { isQuestion, type LessonRecord, resumeIndex } from '../lesson/progress'
+import { type LessonRecord, resumeIndex } from '../lesson/progress'
 import { type LessonState, stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { openMistakes } from '../progress/mistakes'
@@ -18,11 +17,11 @@ import { useSettings } from '../progress/settings'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
-import { Sheet } from '../ui/Sheet'
 import { burst, glow, ring } from '../ui/shine'
+import { LessonPeek, type Peek } from './LessonPeek'
 import { drum } from './lens'
 import { PressLink } from './PressLink'
-import { morphFrom, overlayHostRef, stageRef } from './stage'
+import { morphFrom, overlayHostRef } from './stage'
 import './path.css'
 
 /** Tiles per matrix row. The path reads left to right, then right to left (boustrophedon). */
@@ -43,8 +42,7 @@ export function PathView() {
   const { main } = upNext(lessons, records, 0)
   const mistakes = openMistakes(lessons, records, questions, outcomes).length
   const doneCount = lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
-  const [picked, setPicked] = useState<Lesson | null>(null)
-  const [open, setOpen] = useState(false)
+  const [peek, setPeek] = useState<Peek | null>(null)
   const examLine = examDate
     ? strings.path.examLine(daysUntil(examDate, new Date()), dayLabel(examDate))
     : strings.path.examWeekLine(examWeek.label)
@@ -80,21 +78,13 @@ export function PathView() {
             records={records}
             mainId={main?.id ?? null}
             last={index === chapters.length - 1}
-            onPick={(lesson) => {
-              setPicked(lesson)
-              setOpen(true)
-            }}
+            onPick={(lesson, tile) => setPeek({ lesson, tile })}
           />
         ))}
         {main ? null : <AllDone />}
       </div>
       {overlayHostRef.current
-        ? createPortal(
-            <Sheet open={open} onClose={() => setOpen(false)} stage={stageRef} label={picked?.title ?? ''}>
-              {picked ? <LessonCard lesson={picked} /> : null}
-            </Sheet>,
-            overlayHostRef.current,
-          )
+        ? createPortal(<LessonPeek peek={peek} onClose={() => setPeek(null)} />, overlayHostRef.current)
         : null}
     </Screen>
   )
@@ -135,7 +125,7 @@ function ChapterMatrix({
   records: Records
   mainId: string | null
   last: boolean
-  onPick: (lesson: Lesson) => void
+  onPick: (lesson: Lesson, tile: HTMLElement) => void
 }) {
   const box = useRef<HTMLDivElement>(null)
   const [geometry, setGeometry] = useState<Geometry | null>(null)
@@ -289,7 +279,7 @@ function Tile({
   record: LessonRecord | undefined
   state: LessonState
   main: boolean
-  onPick: (lesson: Lesson) => void
+  onPick: (lesson: Lesson, tile: HTMLElement) => void
 }) {
   const resuming = main && state === 'current' && record
   const step = resuming ? resumeIndex(lesson, record) + 1 : 0
@@ -334,7 +324,7 @@ function Tile({
           data-state={state}
           data-lesson={lesson.id}
           aria-label={`${pathCode(lesson)} ${lesson.title}, ${strings.path.state[state]}`}
-          onClick={() => onPick(lesson)}
+          onClick={(event) => onPick(lesson, event.currentTarget)}
         >
           {face}
         </Pressable>
@@ -364,70 +354,6 @@ function AllDone() {
       <p className="dz-subhead">{strings.path.allDone}</p>
       <PressLink to="/exam" className="dz-button" data-kind="primary" data-wide="">
         {strings.path.allDoneAction}
-      </PressLink>
-    </div>
-  )
-}
-
-function LessonCard({ lesson }: { lesson: Lesson }) {
-  const records = useLessonRecords()
-  const record = records[lesson.id]
-  const state = stateOf(record)
-  const total = lesson.steps.length
-  const asks = lesson.steps.filter(isQuestion).length
-  const chapter = chapterOf(lesson)
-  const first = lesson.steps[0]
-  const opening = first && 'title' in first ? first.title : null
-  const status =
-    state === 'current' && record
-      ? strings.sheet.resumeAt(resumeIndex(lesson, record) + 1, total)
-      : strings.path.state[state]
-  const action =
-    state === 'done'
-      ? strings.sheet.review(lesson.title)
-      : state === 'current'
-        ? strings.sheet.resume(lesson.title)
-        : strings.sheet.enter(lesson.title)
-  return (
-    <div className="sh-sheet-body">
-      <span className="dz-footnote sh-code">
-        {pathCode(lesson)}
-        {chapter ? ` · ${chapter.label}` : ''}
-      </span>
-      <h2 className="dz-title2">{lesson.title}</h2>
-      {opening ? (
-        <p className="pa-opens">
-          <span className="dz-footnote">{strings.path.opensWith}</span>
-          <span className="pa-opens__line">
-            <RichText text={opening} />
-          </span>
-        </p>
-      ) : null}
-      <dl className="sh-facts pa-facts">
-        <div>
-          <dt className="dz-footnote">{strings.sheet.status}</dt>
-          <dd>{status}</dd>
-        </div>
-        <div>
-          <dt className="dz-footnote">{strings.sheet.length}</dt>
-          <dd>{strings.path.lessonSize(total, asks)}</dd>
-        </div>
-        {chapter?.examItems ? (
-          <div>
-            <dt className="dz-footnote">{strings.path.weight}</dt>
-            <dd>{strings.path.weightValue(chapter.examItems, examItemTotal)}</dd>
-          </div>
-        ) : null}
-      </dl>
-      <PressLink
-        to="/lesson/$id"
-        params={{ id: lesson.id }}
-        className="dz-button"
-        data-kind="primary"
-        data-wide=""
-        aria-label={action}
-      >
-        {action.split(':')[0]}
       </PressLink>
     </div>
   )
