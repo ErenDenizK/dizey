@@ -6,9 +6,14 @@ import './character.css'
 /** What a parent can ask of the duo. */
 export type DuoHandle = {
   react(mood: Mood): void
-  pose(mood: Mood): void
+  /** `instant` draws it at once (no blend). */
+  pose(mood: Mood, instant?: boolean): void
   look(x: number, y: number): void
   blink(): void
+  /** A companion about to travel: the heads sink, stretch in the air, and squash on landing. */
+  crouch(): void
+  stretch(): void
+  land(): void
   /** Lands every running gesture now. */
   finish(): void
 }
@@ -115,8 +120,9 @@ export function Duo({
       rig.current.react(next)
       wake()
     },
-    pose: (next) => {
-      rig.current.pose(next)
+    pose: (next, instant = false) => {
+      rig.current.reduced = engine.reducedMotion
+      rig.current.pose(next, instant)
       wake()
     },
     look: (x, y) => {
@@ -125,6 +131,24 @@ export function Duo({
     },
     blink: () => {
       rig.current.blinkBoth()
+      wake()
+    },
+    crouch: () => {
+      rig.current.reduced = engine.reducedMotion
+      rig.current.crouch('row')
+      rig.current.crouch('col', 40)
+      wake()
+    },
+    stretch: () => {
+      rig.current.reduced = engine.reducedMotion
+      rig.current.stretch('row')
+      rig.current.stretch('col', 40)
+      wake()
+    },
+    land: () => {
+      rig.current.reduced = engine.reducedMotion
+      rig.current.land('row')
+      rig.current.land('col', 60)
       wake()
     },
     finish: () => {
