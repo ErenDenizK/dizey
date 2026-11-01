@@ -81,7 +81,7 @@ without overshoot. Gesture-ended motion uses the finger's real velocity instead.
 | Sheet drag | 1:1 on y, rubber band above the large detent (c = 0.55) | Detent nearest to the projected landing (deceleration 0.998 / ms) | `glide` to a detent or `page` to close, with the finger's velocity |
 | Back swipe | Starts within 24 px of the left edge, horizontal only; 1:1 on x | Pop if the projected landing passes half the width | `page` with the finger's velocity |
 | Tab bar scrub | Slide along the bar: the lens follows 1:1, rubber band at the ends | Slot under the finger plus 80 ms of glide | `snap` with the finger's velocity |
-| Dersler scroll (drum) | Everything on the path screen lies on one drum (`src/shell/lens.ts`, radius 3.2 and eye 2.2 half-screens, focus at 46 % of the height). Headings, tiles, gaps, path and brackets go through the same projection: flat and 1:1 at the focus, narrowing toward the centre line and flattening toward the edges (about 0.9 wide and 0.67 tall at the bottom edge); headings fade up to 50 % with depth. Reduced motion: flat | Native scroll momentum | n/a |
+| Dersler scroll | Plain native scroll: nothing on the path scales, fades or moves on its own while scrolling (Eren 2026-11-01 rejected both the per-tile focus lens and the drum: separate pieces turning on their own never read as one surface) | Native scroll momentum | n/a |
 
 Velocity is a least-squares slope over the last 100 ms of samples; a finger that stopped for 50 ms before lifting
 has no momentum.

@@ -181,69 +181,37 @@ test('every path tile shows its whole title at phone width', async ({ page }) =>
   expect(clipped).toEqual([])
 })
 
-test('the Dersler path recedes as one surface: tiles, path and headings move together', async ({ page }) => {
+test('scrolling Dersler moves the path as one flat page', async ({ page }) => {
   await openApp(page)
   const scroller = screen(page).locator('.dz-screen')
   await page.waitForTimeout(1500)
-  await scroller.evaluate((s) => {
+  const moved = await scroller.evaluate(async (s) => {
     s.scrollTop = 520
     s.dispatchEvent(new Event('scroll'))
+    await new Promise((done) => setTimeout(done, 200))
+    const pieces = [...s.querySelectorAll<HTMLElement>('.pa-summary, .pa-chapter__head, .pa-grid > li')]
+    return pieces.filter(
+      (el) => getComputedStyle(el).transform !== 'none' || getComputedStyle(el).opacity !== '1',
+    ).length
   })
-  await page.waitForTimeout(200)
-  const report = await scroller.evaluate((s) => {
-    const centre = (r: DOMRect) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })
-    // Every path segment on screen ends on the drawn centres of its two tiles.
-    let worst = 0
-    for (const matrix of s.querySelectorAll<HTMLElement>('.pa-matrix')) {
-      const rect = matrix.getBoundingClientRect()
-      if (rect.bottom < 0 || rect.top > s.clientHeight) continue
-      const svg = matrix.querySelector('svg')
-      const tiles = [...matrix.querySelectorAll<HTMLElement>('.pa-tile')].map((t) =>
-        centre(t.getBoundingClientRect()),
-      )
-      if (!svg) continue
-      const box = svg.getBoundingClientRect()
-      matrix.querySelectorAll<SVGLineElement>('.pa-link').forEach((line, i) => {
-        const a = tiles[i]
-        const b = tiles[i + 1]
-        if (!a || !b) return
-        const ends = [
-          [line.x1.baseVal.value + box.left - a.x, line.y1.baseVal.value + box.top - a.y],
-          [line.x2.baseVal.value + box.left - b.x, line.y2.baseVal.value + box.top - b.y],
-        ]
-        for (const [dx, dy] of ends) worst = Math.max(worst, Math.hypot(dx ?? 0, dy ?? 0))
-      })
-    }
-    // Scale depends on screen height only: a heading and a tile at the same height recede alike.
-    const scaled = [...s.querySelectorAll<HTMLElement>('[data-focus]')].map((el) => ({
-      y: centre(el.getBoundingClientRect()).y,
-      scale: new DOMMatrix(getComputedStyle(el).transform).a,
-    }))
-    let mismatch = 0
-    for (const a of scaled)
-      for (const b of scaled)
-        if (Math.abs(a.y - b.y) < 8) mismatch = Math.max(mismatch, Math.abs(a.scale - b.scale))
-    const smallest = Math.min(...scaled.filter((e) => e.y > 0 && e.y < s.clientHeight).map((e) => e.scale))
-    // Gaps recede with the tiles: two tiles side by side get closer exactly as much as they shrink.
-    let gap = 0
-    const cells = [...s.querySelectorAll<HTMLElement>('.pa-grid > li')]
-    for (const a of cells)
-      for (const b of cells) {
-        if (a === b || a.offsetTop !== b.offsetTop || a.parentElement !== b.parentElement) continue
-        const ra = a.getBoundingClientRect()
-        if (ra.bottom < 0 || ra.top > s.clientHeight) continue
-        const drawn = centre(b.getBoundingClientRect()).x - centre(ra).x
-        const laid = b.offsetLeft - a.offsetLeft
-        const scale = new DOMMatrix(getComputedStyle(a).transform).a
-        gap = Math.max(gap, Math.abs(drawn / laid - scale))
-      }
-    return { worst, mismatch, smallest, gap }
-  })
-  expect(report.worst).toBeLessThan(2.5)
-  expect(report.mismatch).toBeLessThan(0.01)
-  expect(report.gap).toBeLessThan(0.01)
-  // Something on screen visibly recedes.
-  expect(report.smallest).toBeLessThan(0.97)
+  // No piece of the path scales, shifts or fades on its own with the scroll.
+  expect(moved).toBe(0)
+})
+
+test('the tab bar lens is a true pill, concentric with the bar', async ({ page }) => {
+  await openApp(page)
+  const lens = page.locator('.dz-tabbar-lens')
+  await page.waitForTimeout(600)
+  const style = await lens.evaluate((el: HTMLElement) => ({
+    transform: getComputedStyle(el).transform,
+    h: el.offsetHeight,
+    w: el.offsetWidth,
+  }))
+  // Moved and sized without scaling, so its round ends stay circles.
+  const m = style.transform === 'none' ? [1, 0, 0, 1] : style.transform.slice(7, -1).split(',').map(Number)
+  expect(m[0]).toBeCloseTo(1, 3)
+  expect(m[3]).toBeCloseTo(1, 3)
+  expect(style.w).toBeGreaterThan(style.h)
 })
 
 test('the app is dark even when the phone is in light mode', async ({ page }) => {
