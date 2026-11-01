@@ -1,9 +1,10 @@
-import { type RefObject, useState } from 'react'
+import { type RefObject, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import type { Question } from '../content/questions'
 import { strings } from '../content/strings'
+import { useAnswerMotion } from '../lesson/motion'
+import { haptic } from '../sound/haptics'
 import { playSound } from '../sound/player'
-import { Check, Close } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Sheet } from '../ui/Sheet'
 import { Blocks, RichText } from './Blocks'
@@ -23,6 +24,7 @@ export function QuestionSheet({
   given,
   onAnswer,
   eyebrow,
+  wrongNote,
 }: {
   question: Question
   open: boolean
@@ -34,24 +36,33 @@ export function QuestionSheet({
   given: string | null
   onAnswer: (key: string, correct: boolean) => void
   eyebrow: string
+  /** A gentle line after a wrong answer's verdict (the daily question promises tomorrow's). */
+  wrongNote?: string
 }) {
   const [picked, setPicked] = useState<string | null>(null)
   const checked = given !== null
   const chosen = given ?? picked
   const wide = question.options.some((option) => option.content.some((block) => block.kind !== 'text'))
   const correct = chosen === question.answer
-  const option = question.options.find((candidate) => candidate.key === chosen)
+  const root = useRef<HTMLDivElement>(null)
+  // The same spring as in a lesson: a wrong pick shakes, the right one swells once.
+  const wrongPicks = useMemo(
+    () => (checked && !correct && chosen ? [chosen] : []),
+    [checked, correct, chosen],
+  )
+  useAnswerMotion(root, wrongPicks, checked && correct)
 
   const check = () => {
     if (!picked || checked) return
     const right = picked === question.answer
     playSound(right ? 'correct' : 'wrong')
+    haptic(right ? 14 : [10, 60, 10])
     onAnswer(picked, right)
   }
 
   return createPortal(
     <Sheet open={open} onClose={onClose} stage={stage} label={eyebrow} detent="large">
-      <div className="sh-sheet-body td-q" data-testid="question-sheet">
+      <div ref={root} className="sh-sheet-body td-q" data-testid="question-sheet">
         <div className="td-q__scroll">
           <span className="dz-footnote sh-code">{eyebrow}</span>
           <div className="dz-card td-q__stem">
@@ -83,9 +94,7 @@ export function QuestionSheet({
                     if (!checked) setPicked(candidate.key)
                   }}
                 >
-                  <span className="ex-opt__key">
-                    {state === 'right' ? <Check /> : state === 'wrong' ? <Close /> : candidate.key}
-                  </span>
+                  <span className="ex-opt__key">{candidate.key}</span>
                   <span className="ex-opt__body">
                     <Blocks blocks={candidate.content} />
                   </span>
@@ -96,20 +105,13 @@ export function QuestionSheet({
           {checked ? (
             <div className="td-q__result" data-testid="question-result" data-correct={correct}>
               <p className="td-q__verdict">
-                <b>{correct ? strings.question.right : strings.question.wrong}</b>
-                {correct ? null : ` · ${strings.question.rightAnswer(question.answer)}`}
+                <b>{correct ? strings.question.right : strings.question.wrong(question.answer)}</b>
+                {correct || !wrongNote ? null : ` ${wrongNote}`}
               </p>
-              {!correct && option?.feedback ? (
-                <p className="exs-why">
-                  <b>{strings.question.yourAnswer(option.key)}.</b> <RichText text={option.feedback} />
-                </p>
-              ) : null}
-              <div className="exs-solution">
-                <h3 className="exs-solution__label">{strings.question.solution}</h3>
-                <p>
-                  <RichText text={question.explanation} />
-                </p>
-              </div>
+              <h3 className="td-q__label">{strings.question.solution}</h3>
+              <p className="td-q__why">
+                <RichText text={question.explanation} />
+              </p>
             </div>
           ) : null}
         </div>

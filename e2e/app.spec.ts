@@ -164,6 +164,22 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
 })
 
+test('after checking, every option of the daily question still shows its letter', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page)
+  await screen(page).getByTestId('today-daily').click()
+  const sheet = page.getByTestId('question-sheet')
+  await sheet.getByTestId('question-option-a').click()
+  await page.getByTestId('question-check').click()
+  await expect(sheet.getByTestId('question-result')).toBeVisible()
+  for (const key of ['a', 'b', 'c', 'd']) {
+    const option = sheet.getByTestId(`question-option-${key}`)
+    if ((await option.count()) === 0) continue
+    await expect(option.locator('.ex-opt__key')).toHaveText(key)
+    await expect(option.locator('.ex-opt__key svg')).toHaveCount(0)
+  }
+})
+
 test('Bugün has one primary action and the question row opens its sheet from anywhere on the row', async ({
   page,
 }) => {
@@ -419,9 +435,14 @@ test('all four palette swatches fit the phone width without scrolling sideways',
   await openApp(page, './settings')
   const swatches = page.locator('[data-palette-preview]')
   await expect(swatches).toHaveCount(4)
+  // The sheet slides in first: poll until the swatches have settled.
   for (let i = 0; i < 4; i++) {
-    const box = await swatches.nth(i).boundingBox()
-    expect(box !== null && box.x >= 0 && box.x + box.width <= 375).toBe(true)
+    await expect
+      .poll(async () => {
+        const box = await swatches.nth(i).boundingBox()
+        return box !== null && box.x >= 0 && box.x + box.width <= 375
+      })
+      .toBe(true)
   }
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
 })

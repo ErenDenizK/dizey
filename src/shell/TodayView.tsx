@@ -252,6 +252,7 @@ function DailyRow({
           host={host}
           stage={stageRef}
           eyebrow={text.eyebrow}
+          wrongNote={text.wrongNote}
           given={answered?.given ?? null}
           onAnswer={(key, correct) => {
             const at = new Date()

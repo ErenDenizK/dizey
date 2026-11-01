@@ -216,13 +216,61 @@
 .td-q__stem {
   padding: var(--card-pad);
 }
-.td-q__verdict {
-  margin: 0 0 var(--space-2);
+/* The answered options keep their letters; only the tile and the border carry the state. */
+.td-q .exs-opts .ex-opt {
+  box-shadow: inset 0 0 0 1px var(--hairline);
+  background: transparent;
+  color: var(--ink-2);
+}
+.td-q .exs-opts .ex-opt[data-state="right"] {
+  background: var(--ok-tint);
+  box-shadow: inset 0 0 0 2px var(--ok-edge);
   color: var(--ink-1);
+}
+.td-q .exs-opts .ex-opt[data-state="wrong"] {
+  background: var(--bad-tint);
+  box-shadow: inset 0 0 0 2px var(--bad-edge);
+  color: var(--ink-1);
+}
+.td-q .exs-opts .ex-opt[data-state="right"] .ex-opt__key {
+  background: var(--ok-fill);
+  box-shadow: none;
+  color: var(--on-ok);
+}
+.td-q .exs-opts .ex-opt[data-state="wrong"] .ex-opt__key {
+  background: var(--bad-fill);
+  box-shadow: none;
+  color: var(--on-bad);
+}
+/* The result: one verdict line, then the explanation in body ink. */
+.td-q__result {
+  display: grid;
+  gap: var(--space-2);
+  color: var(--ink-1);
+}
+.td-q__verdict {
+  margin: 0;
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  color: var(--ink-1);
+}
+.td-q__verdict b {
+  font-weight: var(--weight-semibold);
 }
 .td-q__result[data-correct="true"] .td-q__verdict b {
   color: var(--ok-ink);
 }
-.td-q__result[data-correct="false"] .td-q__verdict b {
-  color: var(--bad-ink);
+.td-q__label {
+  margin: 0;
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.td-q__why {
+  margin: 0;
+  line-height: var(--leading-read);
+  color: var(--ink-1);
 }
