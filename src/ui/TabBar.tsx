@@ -11,7 +11,8 @@ export interface Tab<Id extends string> {
   Icon: ComponentType<{ active?: boolean }>
 }
 
-const PAD = 6
+/** The bar's inner padding (.dz-tabbar padding, --space-1): the lens and the slots start this far in. */
+const PAD = 4
 const LENS_BASE = 100
 
 /**
