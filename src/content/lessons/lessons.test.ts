@@ -451,6 +451,10 @@ function texts(step: Step): string[] {
   return out
 }
 
+/** The steps plus the gizli an, which is held to the same rules as a choice step. */
+const stepsOf = (lesson: Lesson): readonly Step[] =>
+  lesson.moment ? [...lesson.steps, lesson.moment] : lesson.steps
+
 describe('lessons', () => {
   it('have unique ids', () => {
     const ids = lessons.map((l) => l.id)
@@ -460,13 +464,13 @@ describe('lessons', () => {
   for (const lesson of lessons) {
     describe(lesson.id, () => {
       it('has unique, well-formed step ids', () => {
-        const ids = lesson.steps.map((s) => s.id)
+        const ids = stepsOf(lesson).map((s) => s.id)
         expect(new Set(ids).size).toBe(ids.length)
         for (const id of ids) expect(id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/)
       })
 
       it('refers only to its own matrices, with cells in range', () => {
-        for (const step of lesson.steps) {
+        for (const step of stepsOf(lesson)) {
           for (const item of step.scene?.items ?? []) {
             if (!['=', '·', '+', '~', 'result'].includes(item)) matrixOf(lesson, item)
           }
@@ -498,7 +502,7 @@ describe('lessons', () => {
       })
 
       it('has balanced math and highlight markup', () => {
-        for (const step of lesson.steps) {
+        for (const step of stepsOf(lesson)) {
           for (const t of texts(step)) {
             expect((t.match(/\$/g) ?? []).length % 2, `${step.id}: ${t}`).toBe(0)
             for (const tag of ['row', 'col', 'ok']) {
@@ -509,7 +513,7 @@ describe('lessons', () => {
       })
 
       it('gives choice steps 2 to 5 distinct options with feedback on every distractor', () => {
-        for (const step of lesson.steps) {
+        for (const step of stepsOf(lesson)) {
           if (step.kind !== 'choice') continue
           expect(step.options.length).toBeGreaterThanOrEqual(2)
           expect(step.options.length).toBeLessThanOrEqual(5)
@@ -525,18 +529,18 @@ describe('lessons', () => {
       })
 
       it('recomputes every claim', () => {
-        for (const step of lesson.steps) for (const claim of step.claims ?? []) checkClaim(lesson, claim)
+        for (const step of stepsOf(lesson)) for (const claim of step.claims ?? []) checkClaim(lesson, claim)
       })
 
       it('replays every row operation to its stated result', () => {
-        for (const step of lesson.steps) {
+        for (const step of stepsOf(lesson)) {
           if (step.kind === 'explain' && step.beat) checkBeat(lesson, step.beat)
           if ('reveal' in step && step.reveal) checkBeat(lesson, step.reveal)
         }
       })
 
       it('keys every exercise to its claim', () => {
-        for (const step of lesson.steps) {
+        for (const step of stepsOf(lesson)) {
           const numericClaims = (step.claims ?? []).filter(
             (c) =>
               (c.kind === 'det' && !c.at) ||
@@ -689,6 +693,41 @@ describe('lessons', () => {
           }
         }
       })
+    })
+  }
+})
+
+describe('gizli an', () => {
+  const holders = lessons.filter((lesson) => lesson.moment)
+
+  it('exists in d1-determinant', () => {
+    expect(holders.map((lesson) => lesson.id)).toContain('d1-determinant')
+  })
+
+  for (const lesson of holders) {
+    const moment = lesson.moment as NonNullable<Lesson['moment']>
+    it(`${lesson.id}: its options are the true value and the two named slips`, () => {
+      const a = numeric(matrixOf(lesson, 'Z'))
+      const det = M.determinant(a)
+      const [plus, minus] = sarrusSums(a)
+      const value = (key: string) => {
+        const first = moment.options.find((o) => o.key === key)?.content[0]
+        return first?.kind === 'text' ? first.text.replaceAll('$', '') : ''
+      }
+      // 3rd column = 1st + 2nd.
+      for (let r = 0; r < 3; r++) {
+        expect(Q.format(M.at(a, r, 2))).toBe(Q.format(Q.add(M.at(a, r, 0), M.at(a, r, 1))))
+      }
+      expect(value(moment.answer)).toBe(Q.format(det))
+      expect(Q.format(det)).toBe('0')
+      expect(value('a')).toBe(Q.format(plus)) // only the down diagonals
+      expect(value('c')).toBe(Q.format(Q.add(plus, minus))) // both sums added
+    })
+
+    it(`${lesson.id}: its id does not clash with a step and its claims hold`, () => {
+      expect(lesson.steps.map((s) => s.id)).not.toContain(moment.id)
+      expect(moment.claims?.length ?? 0).toBeGreaterThan(0)
+      for (const claim of moment.claims ?? []) checkClaim(lesson, claim)
     })
   }
 })
