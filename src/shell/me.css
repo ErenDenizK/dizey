@@ -1,22 +1,19 @@
 /* Profil (src/shell/MeView.tsx). Tokens only; no transitions or keyframes. */
-/* Scene: the duo, large and centred, with one line of state under it. */
+/* Scene: the duo, large and centred, with the week under it. */
 .me-scene {
   display: grid;
   justify-items: center;
-  gap: var(--gap-related);
+  gap: var(--gap-block);
   margin-top: var(--space-2);
   padding: 0;
 }
 .me-scene .companion-slot--large {
   width: 168px;
 }
-.me-scene__state {
-  margin: 0;
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  letter-spacing: var(--tracking-body);
-  font-weight: var(--weight-medium);
-  color: var(--ink-2);
+@media (max-height: 700px) {
+  .me-scene .companion-slot--large {
+    width: 120px;
+  }
 }
 
 /* Hazırlık haritası: a label row and a row of squares per chapter. One square is one lesson. */
@@ -85,58 +82,40 @@
   box-shadow: none;
 }
 
-/* Gizli anlar: one compact row; found moments in full under it, the rest as one silhouette. */
-.me-moments {
-  margin-top: var(--gap-group);
-  border-radius: var(--corner-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
-}
+/* Gizli anlar: one slot per hidden moment in a single row. A labelled group, not a card, and nothing presses. */
 .me-moments__list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--gap-item);
+  display: grid;
+  grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+  gap: var(--space-1);
   margin: 0;
-  padding: 0 var(--card-pad) var(--card-pad);
+  padding: 0;
   list-style: none;
 }
 .me-moments__slot {
-  display: grid;
-  align-content: start;
-  justify-items: center;
-  gap: var(--space-0-5);
-  width: 64px;
+  position: relative;
 }
 .me-moments__slot svg {
   display: block;
   width: 100%;
   height: auto;
 }
-.me-moments__slot--more {
-  width: 88px;
-}
-.me-moments__slot--more .me-moments__code {
-  white-space: nowrap;
-}
-.me-moments__slot--more svg {
-  width: 64px;
+.me-moments__slot--hidden svg {
   opacity: 0.45;
   filter: brightness(0) invert(0.5);
 }
-.me-moments__code {
-  display: block;
-  text-align: center;
-  font-size: var(--type-caption);
-  line-height: var(--leading-caption);
+.me-moments__mark {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  letter-spacing: var(--tracking-body);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-caption);
-  color: var(--ink-1);
-}
-.me-moments__slot--more .me-moments__code {
   color: var(--ink-2);
 }
 
-/* The shared section row: title left, count right, an optional chevron. */
+/* The Hata defteri row: the count, then the chevron. Its label sits above, outside the block. */
 .me-row {
   display: flex;
   align-items: center;
@@ -153,18 +132,8 @@
   font-weight: var(--weight-semibold);
   color: var(--ink-1);
 }
-.me-row__count {
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  letter-spacing: var(--tracking-body);
-  font-weight: var(--weight-regular);
-  color: var(--ink-2);
-}
 
 /* Hata defteri: a compact entry row; the list opens under it. */
-.me-mistakes {
-  margin-top: var(--gap-group);
-}
 .me-mistakes__row {
   width: 100%;
   border-radius: var(--corner-card);
