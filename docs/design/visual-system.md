@@ -4,6 +4,8 @@
 > from it (`src/styles/tokens.css`: warm paper palette, Onest with the Dizey Math and Dizey Ident faces, 13-30 px
 > type, 16 px gutter, 56 px primary button, concentric radii). Rules below that conflict with the old system,
 > such as monochrome chrome with no navy action, no longer bind; this page is rewritten in plan step 2.
+> Type and spacing: superseded by [`type-and-space.md`](type-and-space.md) (decision 0009); the Type and Layout
+> sections below are history.
 
 How every Dizey screen outside the lesson stage looks: layout, density, colour, type, depth. Motion is in
 [`motion-system.md`](motion-system.md). Research and sources: [`docs/research/motion-and-visual-system.md`](../research/motion-and-visual-system.md).
@@ -32,7 +34,7 @@ not decoration. Five rules carry it:
 
 | Token | Value | Use |
 | --- | --- | --- |
-| `--page-gutter` | 20 px | Screen edge to content, all screens |
+| `--page-gutter` | 16 px | Screen edge to content, all screens |
 | `--card-pad` | 16 px | Inside cards and list rows |
 | `--stack-gap` | 12 px | Between items of one group |
 | `--group-gap` | 32 px | Between unrelated groups (section label sits in this gap) |

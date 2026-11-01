@@ -72,13 +72,19 @@
   opacity: 0.92;
 }
 
-/* ---- Type roles ------------------------------------------------------------ */
+/* ---- Type roles: one class per role in tokens.css; every text in the app is one of these ---- */
 .dz-large-title {
   font-size: var(--type-large);
   line-height: var(--leading-large);
   letter-spacing: var(--tracking-large);
   font-weight: var(--weight-bold);
   margin: var(--space-6) 0 var(--space-5);
+}
+.dz-title1 {
+  font-size: var(--type-title1);
+  line-height: var(--leading-title1);
+  letter-spacing: var(--tracking-title1);
+  font-weight: var(--weight-bold);
 }
 .dz-title2 {
   font-size: var(--type-title2);
@@ -89,37 +95,54 @@
 .dz-title3 {
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
-  letter-spacing: var(--tracking-title);
+  letter-spacing: var(--tracking-title3);
   font-weight: var(--weight-semibold);
 }
 .dz-headline {
   font-size: var(--type-body);
-  line-height: var(--leading-body);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
   font-weight: var(--weight-semibold);
 }
 .dz-callout {
   font-size: var(--type-callout);
   line-height: var(--leading-callout);
-  letter-spacing: var(--tracking-small);
+  letter-spacing: var(--tracking-body);
 }
 .dz-subhead {
   font-size: var(--type-subhead);
   line-height: var(--leading-subhead);
-  letter-spacing: var(--tracking-small);
+  letter-spacing: var(--tracking-body);
   color: var(--ink-2);
 }
 .dz-footnote {
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+.dz-caption {
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  font-weight: var(--weight-medium);
+}
+.dz-eyebrow {
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-eyebrow);
+  font-weight: var(--weight-semibold);
+  text-transform: uppercase;
   color: var(--ink-2);
 }
 .dz-section-label {
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
-  /* Aligned with the text inside the cards below it, not with the card edge. */
-  margin: var(--group-gap) var(--space-4) var(--space-2);
+  /* Inside the group gap, 8 above its card; aligned with the text inside the card, not its edge. */
+  margin: var(--gap-group) var(--card-pad) var(--gap-related);
 }
 .dz-read {
   line-height: var(--leading-read);
@@ -227,9 +250,10 @@
   min-height: var(--button-height);
   padding: 0 var(--space-6);
   border-radius: var(--corner-button);
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
   font-weight: var(--weight-semibold);
-  font-size: var(--type-body);
-  letter-spacing: var(--tracking-body);
 }
 .dz-button[data-kind="primary"] {
   background: var(--action);
@@ -314,7 +338,7 @@
   border-radius: var(--corner-pill);
   display: grid;
   grid-template-columns: repeat(var(--tabs), 1fr);
-  padding: 6px;
+  padding: var(--space-1);
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
@@ -330,8 +354,8 @@
 }
 .dz-tabbar-lens {
   position: absolute;
-  top: 6px;
-  bottom: 6px;
+  top: var(--space-1);
+  bottom: var(--space-1);
   left: 0;
   width: 100px;
   border-radius: var(--corner-pill);
@@ -346,13 +370,13 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: var(--space-0-5);
   min-width: var(--target);
   color: var(--ink-2);
-  font-size: 12px;
-  line-height: 14px;
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
   font-weight: var(--weight-medium);
-  letter-spacing: 0.01em;
+  letter-spacing: var(--tracking-caption);
   border-radius: var(--corner-pill);
 }
 .dz-tab[aria-current="page"] {
