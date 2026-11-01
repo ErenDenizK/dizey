@@ -678,3 +678,34 @@ test.describe('small phone (375 x 667) reach', () => {
       .toBe(true)
   })
 })
+
+test('Settings opens as a sheet over the dimmed tab and a drag down closes it', async ({ page }) => {
+  await openApp(page, './me')
+  await page.getByTestId('open-settings').click()
+  const sheet = pushed(page)
+  await expect(sheet).toHaveAttribute('data-present', 'sheet')
+  await expect(page.getByTestId('app-version')).toBeVisible()
+  // The tab stays visible above the sheet's top edge (receded and dimmed), not hidden under a full screen.
+  const stage = page.locator('.dz-stage')
+  await expect
+    .poll(async () => Number(await stage.evaluate((el) => getComputedStyle(el).opacity)))
+    .toBeLessThan(1)
+  const sheetTop = (await sheet.boundingBox())?.y ?? 0
+  const stageTop = (await stage.boundingBox())?.y ?? 0
+  expect(sheetTop).toBeGreaterThan(stageTop)
+  // A drag down past the dismiss distance closes it and the tab comes back.
+  await page.mouse.move(195, 300)
+  await page.mouse.down()
+  for (let y = 300; y <= 480; y += 20) await page.mouse.move(195, y)
+  await page.mouse.up()
+  await expect(sheet).toHaveCount(0)
+  await expect(page.getByTestId('open-settings')).toBeVisible()
+})
+
+test('a tap on the dimmed tab above a sheet closes it', async ({ page }) => {
+  await openApp(page, './me')
+  await page.getByTestId('open-settings').click()
+  await expect(page.getByTestId('app-version')).toBeVisible()
+  await page.mouse.click(195, 8)
+  await expect(pushed(page)).toHaveCount(0)
+})
