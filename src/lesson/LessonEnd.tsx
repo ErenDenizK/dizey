@@ -1,22 +1,32 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
+import { Duo, type DuoHandle } from '../character/Duo'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
 import { chapterOf, chapters, pathCode } from '../content/path'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
+import { useExam } from '../exam/store'
+import { BadgeReveal, landReveal } from '../rewards/BadgeReveal'
+import { type Badge, earnedBadges } from '../rewards/badges'
+import { markShown, unshown } from '../rewards/store'
 import { returnTab } from '../shell/stage'
 import type { SoundEvent } from '../sound/score'
 import { Check, Close } from '../ui/icons'
 import { burst, glow, lightScore, pointIn, SHINE_CHANNEL, type SparkTone, sweep } from '../ui/shine'
 import { endResults, nextLesson, type Result, sealColumns } from './end'
-import { recordOf } from './store'
+import { recordOf, useLessonRecords } from './store'
 
 const END_CHANNEL = 'lesson-end'
 /** Old lesson-end timing (inventory 8.4): cells from 210 ms, one every 80 ms; brackets close 105 ms later. */
-const END_MS = { cellsFrom: 210, cellStagger: 80, closeAfter: 105, duoLead: 90 } as const
+const END_MS = { cellsFrom: 210, cellStagger: 80, closeAfter: 105 } as const
 /** Brackets start this far open (old --seal-gap). */
 const SEAL_GAP = 14
+/** New rozetler wait this long after the seal closes (the duo's cheer plays out), then one every BADGE_EVERY. */
+const BADGE_AFTER = 1100
+const BADGE_EVERY = 2600
+/** At most this many rozet moments at one lesson end; the rest wait on Profil with their spark dot. */
+const BADGE_MAX = 3
 
 /**
  * The lesson end (old feel-layer end screen, inventory 8): the Satır and Sütun duo above a "Cevapların" seal, one
@@ -44,13 +54,19 @@ export function LessonEnd({
   const cols = sealColumns(results.length)
 
   const root = useRef<HTMLDivElement>(null)
+  const duo = useRef<DuoHandle>(null)
+  const records = useLessonRecords()
+  const { history } = useExam()
+  // Rozetler this lesson end will show, fixed when the screen opens.
+  const [fresh] = useState<Badge[]>(() => unshown(earnedBadges({ records, history })).slice(0, BADGE_MAX))
+  const [badge, setBadge] = useState<Badge | null>(null)
+  const proud = chapterDone || perfect
   // biome-ignore lint/correctness/useExhaustiveDependencies: the ceremony plays once, when the screen opens
   useLayoutEffect(() => {
     const el = root.current
     if (!el) return
     const cells = [...el.querySelectorAll<HTMLElement>('.ls-seal__cell')]
     const [left, right] = [...el.querySelectorAll<HTMLElement>('.ls-seal__br')]
-    const heads = [...el.querySelectorAll<SVGGElement>('.ls-duo__head')]
     const enter = [...el.querySelectorAll<HTMLElement>('[data-enter]')]
     for (const cell of cells) engine.set(cell, { scale: 0.55, opacity: 0 })
     if (left && right) {
@@ -63,14 +79,19 @@ export function LessonEnd({
       hop()
       celebrate(el, reward, perfect)
     }
+    // The duo watches the cells fill, then cheers when the brackets close.
     const hop = () => {
-      for (const [at, head] of heads.entries()) {
-        engine.after(at * END_MS.duoLead, () => {
-          engine.set(head, { y: -7 })
-          engine.to(head, { y: 0 }, 'land')
+      duo.current?.look(0, 0)
+      duo.current?.react(proud ? 'proud' : 'happy')
+      // Then each new rozet takes the seal's place; it counts as shown once it is on screen.
+      for (const [at, next] of fresh.entries()) {
+        engine.after(BADGE_AFTER + at * BADGE_EVERY, () => {
+          markShown([next.id], Date.now())
+          setBadge(next)
         })
       }
     }
+    if (cells.length) duo.current?.look(0, 1.6)
     engine.withChannel(END_CHANNEL, () => {
       for (const [at, item] of enter.entries()) {
         engine.after(at * 35, () => engine.to(item, { y: 0, opacity: 1 }, 'move'))
@@ -100,6 +121,7 @@ export function LessonEnd({
 
   // A tap on the scene lands the whole ceremony at once (old 8603).
   const land = () => {
+    landReveal()
     engine.finishChannel(END_CHANNEL)
   }
 
@@ -109,9 +131,12 @@ export function LessonEnd({
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: as above */}
       <div className="ls-end__stage" onClick={land}>
         <i className="ls-end__halo" aria-hidden="true" />
-        <Duo />
+        <Duo ref={duo} mood="neutral" className="ls-duo" />
+        {badge ? (
+          <BadgeReveal key={badge.id} badge={badge} onClosed={() => duo.current?.react('wow')} />
+        ) : null}
         {results.length ? (
-          <div className="ls-seal" style={{ '--cols': cols } as React.CSSProperties}>
+          <div className="ls-seal" hidden={Boolean(badge)} style={{ '--cols': cols } as React.CSSProperties}>
             <span className="ls-seal__name">{strings.lessonEnd.sealName}</span>
             <div
               className="ls-seal__grid"
@@ -270,35 +295,4 @@ function ResultGlyph({ result }: { result: Result }) {
   if (result === 'right') return <Check />
   if (result === 'miss') return <Close />
   return <span aria-hidden="true">–</span>
-}
-
-/*
- * The Satır and Sütun duo (old geometry, inventory 3.1): two round heads, Sütun upper right drawn first, Satır in
- * front lower left, both with the happy face at rest (arched eyes, open smile).
- */
-const EYE = 'M-2.6 0C-2.6 -5.32 2.6 -5.32 2.6 0C2.6 -0.04 -2.6 -0.04 -2.6 0Z'
-const MOUTH = 'M-4 0Q0 3.04 4 0Q0 5.04 -4 0Z'
-
-function Head({ who, dx, dy }: { who: 'row' | 'col'; dx: number; dy: number }) {
-  return (
-    <g transform={`translate(${dx} ${dy})`}>
-      <g className={`ls-duo__head ls-duo__head--${who}`}>
-        <circle cx="22" cy="26" r="22" />
-        <g className="ls-duo__face" transform="translate(22 26)">
-          <path d={EYE} transform="translate(-7.5 -3)" />
-          <path d={EYE} transform="translate(7.5 -3)" />
-          <path className="ls-duo__mouth" d={MOUTH} transform="translate(0 8)" />
-        </g>
-      </g>
-    </g>
-  )
-}
-
-function Duo() {
-  return (
-    <svg className="ls-duo" viewBox="0 0 78 66" aria-hidden="true">
-      <Head who="col" dx={34} dy={-4} />
-      <Head who="row" dx={0} dy={18} />
-    </svg>
-  )
 }

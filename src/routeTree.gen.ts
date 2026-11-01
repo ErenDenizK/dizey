@@ -16,6 +16,7 @@ import { Route as MeRouteImport } from './routes/me'
 import { Route as ExamIndexRouteImport } from './routes/exam.index'
 import { Route as ExamResultRouteImport } from './routes/exam.result'
 import { Route as ExamRunRouteImport } from './routes/exam.run'
+import { Route as LabCharacterRouteImport } from './routes/lab_.character'
 import { Route as LabSoundsRouteImport } from './routes/lab_.sounds'
 import { Route as LessonIdRouteImport } from './routes/lesson.$id'
 
@@ -54,6 +55,11 @@ const ExamRunRoute = ExamRunRouteImport.update({
   path: '/exam/run',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LabCharacterRoute = LabCharacterRouteImport.update({
+  id: '/lab_/character',
+  path: '/lab/character',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LabSoundsRoute = LabSoundsRouteImport.update({
   id: '/lab_/sounds',
   path: '/lab/sounds',
@@ -72,6 +78,7 @@ export interface FileRoutesByFullPath {
   '/me': typeof MeRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
+  '/lab/character': typeof LabCharacterRoute
   '/lab/sounds': typeof LabSoundsRoute
   '/lesson/$id': typeof LessonIdRoute
   '/exam/': typeof ExamIndexRoute
@@ -83,6 +90,7 @@ export interface FileRoutesByTo {
   '/me': typeof MeRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
+  '/lab/character': typeof LabCharacterRoute
   '/lab/sounds': typeof LabSoundsRoute
   '/lesson/$id': typeof LessonIdRoute
   '/exam': typeof ExamIndexRoute
@@ -95,6 +103,7 @@ export interface FileRoutesById {
   '/me': typeof MeRoute
   '/exam/result': typeof ExamResultRoute
   '/exam/run': typeof ExamRunRoute
+  '/lab_/character': typeof LabCharacterRoute
   '/lab_/sounds': typeof LabSoundsRoute
   '/lesson/$id': typeof LessonIdRoute
   '/exam/': typeof ExamIndexRoute
@@ -108,6 +117,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/exam/result'
     | '/exam/run'
+    | '/lab/character'
     | '/lab/sounds'
     | '/lesson/$id'
     | '/exam/'
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/exam/result'
     | '/exam/run'
+    | '/lab/character'
     | '/lab/sounds'
     | '/lesson/$id'
     | '/exam'
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/me'
     | '/exam/result'
     | '/exam/run'
+    | '/lab_/character'
     | '/lab_/sounds'
     | '/lesson/$id'
     | '/exam/'
@@ -142,6 +154,7 @@ export interface RootRouteChildren {
   MeRoute: typeof MeRoute
   ExamResultRoute: typeof ExamResultRoute
   ExamRunRoute: typeof ExamRunRoute
+  LabCharacterRoute: typeof LabCharacterRoute
   LabSoundsRoute: typeof LabSoundsRoute
   LessonIdRoute: typeof LessonIdRoute
   ExamIndexRoute: typeof ExamIndexRoute
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ExamRunRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lab_/character': {
+      id: '/lab_/character'
+      path: '/lab/character'
+      fullPath: '/lab/character'
+      preLoaderRoute: typeof LabCharacterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/lab_/sounds': {
       id: '/lab_/sounds'
       path: '/lab/sounds'
@@ -222,6 +242,7 @@ const rootRouteChildren: RootRouteChildren = {
   MeRoute: MeRoute,
   ExamResultRoute: ExamResultRoute,
   ExamRunRoute: ExamRunRoute,
+  LabCharacterRoute: LabCharacterRoute,
   LabSoundsRoute: LabSoundsRoute,
   LessonIdRoute: LessonIdRoute,
   ExamIndexRoute: ExamIndexRoute,

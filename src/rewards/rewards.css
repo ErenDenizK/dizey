@@ -1,0 +1,197 @@
+/* Rozet emblems (src/rewards/Emblem.tsx). One rule per hue binds the enamel tokens; the scene only names roles. */
+.emblem {
+  display: block;
+  overflow: visible;
+}
+.emblem--row {
+  --b-top: var(--badge-row-top);
+  --b-bottom: var(--badge-row-bottom);
+  --b-ink: var(--badge-row-ink);
+  --b-deep: var(--badge-row-deep);
+}
+.emblem--col {
+  --b-top: var(--badge-col-top);
+  --b-bottom: var(--badge-col-bottom);
+  --b-ink: var(--badge-col-ink);
+  --b-deep: var(--badge-col-deep);
+}
+.emblem--ok {
+  --b-top: var(--badge-ok-top);
+  --b-bottom: var(--badge-ok-bottom);
+  --b-ink: var(--badge-ok-ink);
+  --b-deep: var(--badge-ok-deep);
+}
+.emblem--spark {
+  --b-top: var(--badge-spark-top);
+  --b-bottom: var(--badge-spark-bottom);
+  --b-ink: var(--badge-spark-ink);
+  --b-deep: var(--badge-spark-deep);
+}
+.emblem--action {
+  --b-top: var(--badge-action-top);
+  --b-bottom: var(--badge-action-bottom);
+  --b-ink: var(--badge-action-ink);
+  --b-deep: var(--badge-action-deep);
+}
+.emblem__enamel-top {
+  stop-color: var(--b-top);
+}
+.emblem__enamel-bottom {
+  stop-color: var(--b-bottom);
+}
+.emblem__gloss-in {
+  stop-color: var(--badge-gloss);
+}
+.emblem__gloss-out {
+  stop-color: var(--badge-gloss-out);
+}
+.emblem__rim {
+  fill: none;
+  stroke: var(--badge-rim);
+  stroke-width: 1.5;
+}
+.emblem__ground {
+  fill: var(--badge-ground);
+}
+.emblem__tile {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.emblem__br {
+  fill: none;
+  stroke: var(--ink-1);
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.emblem__ink {
+  fill: var(--b-ink);
+}
+.emblem__faint {
+  fill: var(--b-ink);
+  opacity: 0.38;
+}
+.emblem__disc {
+  fill: var(--b-ink);
+}
+.emblem__line {
+  fill: none;
+  stroke: var(--b-ink);
+  stroke-width: 2.4;
+  opacity: 0.5;
+}
+.emblem__stroke,
+.emblem__deep-stroke {
+  fill: none;
+  stroke: var(--b-ink);
+  stroke-width: 4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.emblem__deep-stroke {
+  stroke: var(--b-deep);
+}
+.emblem__faint-stroke {
+  opacity: 0.4;
+}
+.emblem__thin {
+  stroke-width: 2.6;
+}
+.emblem__bold {
+  stroke-width: 6;
+}
+.emblem__br {
+  transform-box: fill-box;
+  will-change: transform;
+}
+
+/* The earning moment: emblem, then a kicker and the can-do sentence. */
+.badge-reveal {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-2);
+  text-align: center;
+}
+.badge-reveal__emblem {
+  width: clamp(96px, 18vh, 160px);
+  height: auto;
+}
+.badge-reveal__kicker {
+  margin: 0;
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.badge-reveal__line {
+  margin: 0;
+  max-width: 28ch;
+  font-size: var(--type-callout);
+  line-height: var(--leading-callout);
+  font-weight: var(--weight-medium);
+  color: var(--ink-1);
+  text-wrap: balance;
+}
+
+/* Profil shelf. */
+.badge-shelf {
+  padding: var(--card-pad);
+  border-radius: var(--corner-card);
+  background: var(--surface);
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.badge-shelf__stage {
+  display: grid;
+  place-items: center;
+  padding: var(--space-2) 0 var(--space-5);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--hairline);
+}
+.badge-shelf__grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4) var(--space-1);
+}
+.badge-shelf__item {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-0-5);
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink-1);
+}
+.badge-shelf__item svg {
+  width: 100%;
+  max-width: 84px;
+  height: auto;
+}
+.badge-shelf__item[data-new]::after {
+  content: "";
+  position: absolute;
+  top: var(--space-1);
+  right: var(--space-2);
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--corner-pill);
+  background: var(--spark);
+  box-shadow: 0 0 0 var(--space-0-5) var(--surface);
+}
+.badge-shelf__name {
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-caption);
+  text-align: center;
+}
+.badge-shelf__hint {
+  margin: var(--space-4) 0 0;
+  color: var(--ink-3);
+}
+.badge-shelf__empty {
+  margin: 0;
+  color: var(--ink-2);
+}
