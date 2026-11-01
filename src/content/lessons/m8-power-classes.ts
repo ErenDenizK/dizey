@@ -222,7 +222,7 @@ export const m8PowerClasses: Lesson = {
       title: '$N^2$’nin 2. satır 3. sütunu kaç?',
       body: '$N$’nin 2. satırı ile 3. sütunu.',
       skill: 'matrix-power-entry',
-      scene: { items: ['N', '·', 'N', '=', 'N2'], marks: [{ cell: ['N2', 1, 2], tone: 'ok' }] },
+      scene: { items: ['N', 'N2'], marks: [{ cell: ['N2', 1, 2], tone: 'ok' }] },
       reveal: { kind: 'product', left: 'N', right: 'N', into: 'N2', cells: [[1, 2]] },
       answer: '9',
       feedbackWrong:
@@ -281,7 +281,7 @@ export const m8PowerClasses: Lesson = {
       kind: 'choice',
       eyebrow: 'Sınav tipi',
       title: '$A$ nilpotent bir kare matris olsun. Hangileri her zaman doğrudur?',
-      body: 'I. $|A| = 0$  II. $I + A$ tersinirdir  III. $A^2 = 0$',
+      body: 'I. $|A| = 0$\nII. $I + A$ tersinirdir\nIII. $A^2 = 0$',
       skill: 'power-class-statements',
       options: [
         {
