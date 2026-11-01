@@ -21,6 +21,7 @@ import { Screen } from '../ui/Screen'
 import { CompanionSlot } from './CompanionSlot'
 import { PressLink } from './PressLink'
 import { morphFrom } from './stage'
+import { WeekStrip } from './WeekStrip'
 import './me.css'
 
 /** Lessons done when Sen was last on show; the duo reacts when there are more now. */
@@ -37,15 +38,15 @@ export function MeView() {
       }
     >
       <Scene />
-      <ReadinessMap />
+      <MistakeLog />
       <BadgeShelf />
       <SecretMoments />
-      <MistakeLog />
+      <ReadinessMap />
     </Screen>
   )
 }
 
-/** The profile's head: the duo in a mood that follows progress, and one line of state under it. */
+/** The profile's head: the duo in a mood that follows progress, and your week under it. */
 function Scene() {
   const records = useLessonRecords()
   const done = lessons.filter((lesson) => stateOf(records[lesson.id]) === 'done').length
@@ -78,9 +79,7 @@ function Scene() {
   return (
     <section ref={root} className="me-scene" aria-label={strings.me.companion} data-testid="me-scene">
       <CompanionSlot name="me" size="large" mood={mood} duo={duo} />
-      <p className="me-scene__state num">
-        {done ? strings.me.state(done, lessons.length, chaptersDone) : strings.me.stateFresh(lessons.length)}
-      </p>
+      <WeekStrip />
     </section>
   )
 }
@@ -145,24 +144,24 @@ function ReadinessMap() {
   )
 }
 
-/** Gizli anlar: one compact row; the moments found so far in full, then one silhouette for all the rest. */
+/**
+ * Gizli anlar: a labelled group of one slot per hidden moment, in a single row. Found ones show their emblem, the
+ * rest are dim with a "?". Nothing here presses.
+ */
 function SecretMoments() {
   const moments = useMoments()
   const withMoment = lessons.filter((lesson) => lesson.moment)
   if (!withMoment.length) return null
-  const foundLessons = withMoment.filter((lesson) => moments[lesson.id] === 'solved')
-  const left = withMoment.length - foundLessons.length
+  const found = withMoment.filter((lesson) => moments[lesson.id] === 'solved').length
   return (
     <section aria-labelledby="moments" className="me-moments" data-testid="moments-album">
-      <h2 id="moments" className="me-row">
-        <span className="me-row__title">{strings.me.moments}</span>
-        <span className="me-row__count num">
-          {strings.me.momentsCount(foundLessons.length, withMoment.length)}
-        </span>
+      <h2 id="moments" className="dz-section-label">
+        {strings.me.moments}
+        {` · ${strings.me.momentsCount(found, withMoment.length)}`}
       </h2>
-      {foundLessons.length ? (
-        <ul className="me-moments__list">
-          {foundLessons.map((lesson) => (
+      <ul className="me-moments__list" style={{ '--slots': withMoment.length } as React.CSSProperties}>
+        {withMoment.map((lesson) =>
+          moments[lesson.id] === 'solved' ? (
             <li
               key={lesson.id}
               className="me-moments__slot"
@@ -170,21 +169,22 @@ function SecretMoments() {
               aria-label={strings.me.momentFound(pathCode(lesson))}
             >
               <Emblem badge={badgeOf('insight')} />
-              <span className="num me-moments__code">{pathCode(lesson)}</span>
             </li>
-          ))}
-          {left ? (
+          ) : (
             <li
-              className="me-moments__slot me-moments__slot--more"
+              key={lesson.id}
+              className="me-moments__slot me-moments__slot--hidden"
               role="img"
               aria-label={strings.me.momentHidden}
             >
               <Emblem badge={badgeOf('insight')} />
-              <span className="num me-moments__code">{strings.me.more(left)}</span>
+              <span className="me-moments__mark" aria-hidden="true">
+                ?
+              </span>
             </li>
-          ) : null}
-        </ul>
-      ) : null}
+          ),
+        )}
+      </ul>
     </section>
   )
 }
@@ -200,7 +200,10 @@ function MistakeLog() {
   const shown = all ? list : list.slice(0, MISTAKES_SHOWN)
   if (!list.length) return null
   return (
-    <section aria-label={strings.me.mistakes} className="me-mistakes">
+    <section aria-labelledby="mistakes" className="me-mistakes">
+      <h2 id="mistakes" className="dz-section-label">
+        {strings.me.mistakes}
+      </h2>
       <Pressable
         className="me-row me-mistakes__row"
         aria-expanded={open}
@@ -208,8 +211,7 @@ function MistakeLog() {
         data-testid="mistake-row"
         onClick={() => setOpen(!open)}
       >
-        <span className="me-row__title">{strings.me.mistakes}</span>
-        <span className="me-row__count num">{strings.me.mistakesRow(list.length)}</span>
+        <span className="me-row__title num">{strings.me.mistakesRow(list.length)}</span>
         <span className="me-mistakes__chevron" data-open={open || undefined}>
           <ChevronRight />
         </span>

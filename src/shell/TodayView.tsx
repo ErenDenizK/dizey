@@ -10,8 +10,6 @@ import { recordOutcome, useExam } from '../exam/store'
 import { resumeIndex } from '../lesson/progress'
 import { stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
-import { activityDays, type StripDay, weekStrip } from '../progress/activity'
-import { useActivityDays } from '../progress/activity-store'
 import { answeredOn, dayKey, pickDaily } from '../progress/daily'
 import { saveDailyAnswer, useDailyAnswer } from '../progress/daily-store'
 import { openMistakes } from '../progress/mistakes'
@@ -36,8 +34,7 @@ const EXAM_SOON_DAYS = 7
  */
 export function TodayView() {
   const records = useLessonRecords()
-  const { outcomes, history, chapters: chapterResults } = useExam()
-  const recorded = useActivityDays()
+  const { outcomes } = useExam()
   const { examDate } = useSettings()
   const { main } = upNext(lessons, records, 0)
   const open = openMistakes(lessons, records, questions, outcomes)
@@ -60,10 +57,6 @@ export function TodayView() {
     exam: Boolean(main && examSoon),
   })
   const show = (block: TodayBlock) => blocks.includes(block)
-  const days = weekStrip(
-    now,
-    activityDays({ recorded, records, history, outcomes, chapters: chapterResults }),
-  )
 
   const doneCount = lessons.filter((l) => records[l.id]?.doneAt != null).length
   // One sentence of state, by priority: a lesson in progress, nothing started, all done.
@@ -96,7 +89,6 @@ export function TodayView() {
               {stateLine}
             </p>
           </div>
-          {days.some((day) => day.active) ? <WeekStrip days={days} /> : null}
         </header>
         <div className="td-work">
           <div className="td-rows">
@@ -185,34 +177,6 @@ function RowFace({ title, value }: { title: string; value: string }) {
       <span className="dz-footnote sh-row-sub td-row__value">{value}</span>
       <ChevronRight />
     </>
-  )
-}
-
-/** Monday to Sunday of this week: a dot per day that had study. No counts, nothing to lose. */
-function WeekStrip({ days }: { days: StripDay[] }) {
-  const text = strings.today.week
-  const studied = days.filter((day) => day.active).length
-  return (
-    <ol className="td-week" data-testid="today-week" aria-label={`${text.label}: ${text.summary(studied)}`}>
-      {days.map((day) => (
-        <li
-          key={day.key}
-          className="td-week__day"
-          data-active={day.active}
-          data-today={day.today}
-          data-future={day.future}
-        >
-          <span className="td-week__initial" aria-hidden="true">
-            {text.initials[day.weekday]}
-          </span>
-          <i className="td-week__dot" aria-hidden="true" />
-          <span className="td-sr">
-            {text.names[day.weekday]}
-            {day.today ? ` (${text.today})` : ''}: {day.active ? text.studied : text.rest}
-          </span>
-        </li>
-      ))}
-    </ol>
   )
 }
 

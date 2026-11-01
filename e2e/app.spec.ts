@@ -160,7 +160,11 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
     'data-state',
     right ? 'right' : 'wrong',
   )
-  await expect(screen(page).getByTestId('today-week')).toBeVisible()
+  await expect(screen(page).getByTestId('today-week')).toHaveCount(0)
+  await tab(page, 'Sen').click()
+  await expect(screen(page).locator('[data-testid="week-strip"] [data-active="true"]')).toHaveCount(1)
+  await expect(screen(page).getByTestId('week-summary')).toHaveText('Bu hafta 1 gün çalıştın')
+  await tab(page, 'Bugün').click()
   await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
 })
 
@@ -194,10 +198,10 @@ test('Bugün has one primary action and the question row opens its sheet from an
   await expect(page.getByTestId('question-sheet')).toBeVisible()
 })
 
-test('Bugün shows no week strip before any study', async ({ page }) => {
+test('the week strip lives on Sen, not on Bugün', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByTestId('today-next')).toBeVisible()
-  await expect(screen(page).getByTestId('today-week')).toHaveCount(0)
+  await expect(screen(page).getByTestId('week-strip')).toHaveCount(0)
 })
 
 test('a lesson end offers one exam question on its topic', async ({ page }) => {
@@ -269,24 +273,28 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
   await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toHaveCount(0)
 })
 
-test('Sen is a profile scene: duo, readiness map, badge wall, moments, mistakes and the gear', async ({
+test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments, readiness map and the gear', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await openApp(page, './me')
   const sen = screen(page)
   await expect(sen.getByTestId('me-scene')).toBeVisible()
-  await expect(sen.getByTestId('me-scene')).toContainText(/dersin hepsi seni bekliyor/)
+  // The week is always there; with no study it invites instead of counting zero.
+  await expect(sen.getByTestId('me-scene').getByTestId('week-strip')).toBeVisible()
+  await expect(sen.getByTestId('week-summary')).toHaveText('Bu hafta ilk gün seni bekliyor')
+  await expect(sen.getByTestId('me-scene')).not.toContainText(/\/ \d+ ders/)
   // Nothing settings-like lives here; the mistake row is hidden while the log is empty.
   await expect(sen.getByRole('switch')).toHaveCount(0)
   await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
   await expect(sen.getByRole('heading', { name: /Rozetler/ })).toBeVisible()
   await expect(sen.getByTestId('moments-album')).toBeVisible()
-  // No explanatory caption under the map, and the unearned badges are one tile, not a wall.
+  // No explanatory caption under the map, and the shelf shows every badge: none lit, all ten dim and inert.
   await expect(sen.getByText(/Her kare bir ders/)).toHaveCount(0)
   await expect(sen.getByText(/Çalıştıkça gelir/)).toHaveCount(0)
-  await expect(sen.getByTestId('badges-more')).toHaveCount(1)
-  await expect(sen.getByTestId('badges-more')).toContainText('10 tane daha')
+  await expect(sen.getByTestId('badge-locked')).toHaveCount(10)
+  await expect(sen.getByTestId('badge-earned')).toHaveCount(0)
+  await expect(sen.getByTestId('moments-album').getByRole('img')).toHaveCount(6)
   // A wrong first try in the first determinant lesson fills the log row and colours its map cell.
   await openApp(page, './lesson/d1-determinant')
   const player = page.getByTestId('lesson-player')
@@ -302,7 +310,8 @@ test('Sen is a profile scene: duo, readiness map, badge wall, moments, mistakes 
   await expect(page.getByTestId('lesson-player')).toBeVisible()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
-  // The text button still opens Settings.
+  // The text button still opens Settings (the map sits low now, so the page was scrolled to reach its cell).
+  await sen.locator('.dz-screen').evaluate((screen) => screen.scrollTo(0, 0))
   await page.getByTestId('open-settings').click()
   await expect(page.getByRole('heading', { name: 'Ayarlar', level: 1 })).toBeVisible()
 })
@@ -808,7 +817,7 @@ test.describe('small phone (375 x 667) reach', () => {
     await openApp(page, './me')
     const sen = screen(page)
     await expect(sen.getByTestId('me-scene')).toBeVisible()
-    await expect(sen.getByTestId('badges-more')).toBeVisible()
+    await expect(sen.getByTestId('badge-locked').first()).toBeVisible()
     await expect(sen.locator('.me-map')).toBeVisible()
     await page.evaluate(() => {
       const pane = document.querySelector('.sh-pane:not([inert])')
@@ -816,7 +825,7 @@ test.describe('small phone (375 x 667) reach', () => {
         if (el.scrollHeight > el.clientHeight + 1) el.scrollTop = 1e6
     })
     const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
-    const last = await sen.getByTestId('moments-album').boundingBox()
+    const last = await sen.locator('.me-map').boundingBox()
     expect(last && bar && last.y + last.height <= bar.y).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   })

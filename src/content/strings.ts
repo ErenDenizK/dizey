@@ -36,15 +36,17 @@ export const strings = {
       next: 'Yarın yenisi',
       wrongNote: 'Yarın yeni bir soru var.',
     },
-    week: {
-      label: 'Bu hafta',
-      initials: ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'],
-      names: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
-      studied: 'çalıştın',
-      rest: 'çalışılmadı',
-      today: 'bugün',
-      summary: (count: number) => `Bu hafta ${count} gün çalıştın`,
-    },
+  },
+
+  week: {
+    label: 'Bu hafta',
+    initials: ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'],
+    names: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
+    studied: 'çalıştın',
+    rest: 'çalışılmadı',
+    today: 'bugün',
+    summary: (count: number) => `Bu hafta ${count} gün çalıştın`,
+    none: 'Bu hafta ilk gün seni bekliyor',
   },
 
   question: {
@@ -119,9 +121,6 @@ export const strings = {
   me: {
     title: 'Sen',
     companion: 'Satır ve Sütun',
-    state: (done: number, total: number, chapters: number) =>
-      chapters > 0 ? `${done} / ${total} ders · ${chapters} bölüm bitti` : `${done} / ${total} ders`,
-    stateFresh: (total: number) => `${total} dersin hepsi seni bekliyor`,
     readiness: 'Hazırlık haritası',
     readinessChapter: (label: string, done: number, total: number) =>
       `${label}, ${done} / ${total} ders tamam`,
@@ -138,7 +137,6 @@ export const strings = {
     momentFound: (code: string) => `${code}: gizli an bulundu`,
     momentHidden: 'Henüz bulunmadı',
     badgeHidden: 'henüz kazanılmadı',
-    more: (count: number) => `${count} tane daha`,
     mistakes: 'Hata defteri',
     mistakesRow: (count: number) => `${count} açık hata`,
     mistakesMore: (count: number) => `${count} hata daha göster`,

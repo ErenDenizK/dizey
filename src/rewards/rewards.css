@@ -151,66 +151,42 @@
 }
 .badge-shelf__grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-5) var(--space-3);
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: var(--space-2) var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.badge-shelf__cell {
+  display: grid;
 }
 .badge-shelf__item {
   position: relative;
-  display: grid;
-  justify-items: center;
-  gap: var(--space-0-5);
+  display: block;
+  min-height: var(--target);
   padding: 0;
   border: 0;
   background: none;
   color: var(--ink-1);
 }
 .badge-shelf__item svg {
+  display: block;
   width: 100%;
-  max-width: 112px;
   height: auto;
 }
 .badge-shelf__item[data-new]::after {
   content: "";
   position: absolute;
-  top: var(--space-1);
-  right: calc(50% - 56px);
+  top: 12%;
+  right: 12%;
   width: var(--space-2);
   height: var(--space-2);
   border-radius: var(--corner-pill);
   background: var(--spark);
   box-shadow: 0 0 0 var(--space-0-5) var(--surface);
 }
-.badge-shelf__name {
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-body);
-  text-align: center;
-}
-.badge-shelf__empty {
-  margin: 0;
-  color: var(--ink-2);
-}
-
-/* Every badge not earned yet: one dim silhouette tile across the shelf. */
-.badge-shelf__more {
-  grid-column: 1 / -1;
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  min-height: var(--target);
-}
-.badge-shelf__more svg {
-  flex: none;
-  width: 44px;
-  height: auto;
+/* Not earned yet: a dim silhouette in the same bracket frame. Not a control, so nothing about it invites a tap. */
+.badge-shelf__item--locked svg {
   opacity: 0.45;
   filter: brightness(0) invert(0.5);
-}
-.badge-shelf__more-text {
-  font-size: var(--type-body);
-  line-height: var(--leading-body);
-  letter-spacing: var(--tracking-body);
-  font-weight: var(--weight-medium);
-  color: var(--ink-2);
 }

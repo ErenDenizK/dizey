@@ -5,12 +5,13 @@ import { useMoments } from '../lesson/moments'
 import { useLessonRecords } from '../lesson/store'
 import { Pressable } from '../ui/Pressable'
 import { BadgeReveal } from './BadgeReveal'
-import { BADGES, type Badge, type BadgeId, earnedBadges } from './badges'
+import { BADGES, type BadgeId, earnedBadges } from './badges'
 import { Emblem } from './Emblem'
 import { markShown, useShown } from './store'
 
 /**
- * Sen's rozet shelf: earned badges large with their names; every badge not earned yet folds into one silhouette tile ("N tane daha").
+ * Sen's rozet shelf: every badge in a five-column grid of equal emblems. Earned ones are lit and press; the rest are
+ * dim silhouettes in the same frame (no name, no press). The label sits outside the block with the count after it.
  * A badge not shown yet carries a spark dot; a tap plays its moment above the shelf (and marks it shown). A tap on a shown badge replays it.
  */
 export function BadgeShelf() {
@@ -19,7 +20,6 @@ export function BadgeShelf() {
   const moments = useMoments()
   const shown = useShown()
   const earned = earnedBadges({ records, history, moments })
-  const unearned = BADGES.filter((badge) => !earned.some((item) => item.id === badge.id))
   const [open, setOpen] = useState<{ id: BadgeId; n: number } | null>(null)
   const current = earned.find((badge) => badge.id === open?.id)
   return (
@@ -34,38 +34,40 @@ export function BadgeShelf() {
             <BadgeReveal key={`${open.id}-${open.n}`} badge={current} kicker={strings.badges.one} />
           </div>
         ) : null}
-        <div className="badge-shelf__grid">
-          {earned.map((badge) => {
-            const name = strings.badges.items[badge.id].name
+        <ul className="badge-shelf__grid">
+          {BADGES.map((badge) => {
+            const got = earned.some((item) => item.id === badge.id)
+            if (!got)
+              return (
+                <li
+                  key={badge.id}
+                  className="badge-shelf__item badge-shelf__item--locked"
+                  data-testid="badge-locked"
+                  role="img"
+                  aria-label={strings.me.badgeHidden}
+                >
+                  <Emblem badge={badge} />
+                </li>
+              )
             return (
-              <Pressable
-                key={badge.id}
-                className="badge-shelf__item"
-                data-new={shown[badge.id] === undefined || undefined}
-                aria-pressed={open?.id === badge.id}
-                aria-label={name}
-                onClick={() => {
-                  setOpen((was) => ({ id: badge.id, n: (was?.n ?? 0) + 1 }))
-                  markShown([badge.id], Date.now())
-                }}
-              >
-                <Emblem badge={badge} />
-                <span className="badge-shelf__name">{name}</span>
-              </Pressable>
+              <li key={badge.id} className="badge-shelf__cell">
+                <Pressable
+                  className="badge-shelf__item"
+                  data-testid="badge-earned"
+                  data-new={shown[badge.id] === undefined || undefined}
+                  aria-pressed={open?.id === badge.id}
+                  aria-label={strings.badges.items[badge.id].name}
+                  onClick={() => {
+                    setOpen((was) => ({ id: badge.id, n: (was?.n ?? 0) + 1 }))
+                    markShown([badge.id], Date.now())
+                  }}
+                >
+                  <Emblem badge={badge} />
+                </Pressable>
+              </li>
             )
           })}
-          {unearned.length ? (
-            <div
-              className="badge-shelf__more"
-              data-testid="badges-more"
-              role="img"
-              aria-label={`${strings.me.more(unearned.length)}, ${strings.me.badgeHidden}`}
-            >
-              <Emblem badge={unearned[0] as Badge} />
-              <span className="badge-shelf__more-text num">{strings.me.more(unearned.length)}</span>
-            </div>
-          ) : null}
-        </div>
+        </ul>
       </div>
     </section>
   )
