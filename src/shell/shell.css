@@ -768,6 +768,17 @@ a.sh-node {
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+/* A matrix written in a work line (a reveal written as a bmatrix) is displayed math: stage-like, not text-size. */
+.ls-work .dz-m .dz-m-mat {
+  gap: 0.1em 0.95em;
+  padding: 0.2em 0.5em;
+  font-size: 1.4em;
+  line-height: 1.5;
+}
+.ls-work .ls-line:has(.dz-m-mat) {
+  justify-content: center;
+  justify-self: center;
+}
 .ls-line {
   display: flex;
   flex-wrap: wrap;
@@ -1520,4 +1531,16 @@ a.dz-button[data-kind="primary"] {
 }
 .ls-stage .ls-copy .ex-cell:not([data-tone]) {
   color: var(--sh-muted);
+}
+
+/*
+ * A question whose options are matrices or systems and that has no picture of its own: the question keeps the
+ * stage card, and the options carry the math at near-stage size in taller cards, so the screen reads as one
+ * picture to choose from instead of a large empty card over small print.
+ */
+.ls-run[data-options-stage] .ls-opts {
+  grid-auto-rows: minmax(128px, auto);
+}
+.ls-run[data-options-stage] .ls-opts .ex-mat {
+  font-size: var(--type-title2);
 }

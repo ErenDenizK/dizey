@@ -222,6 +222,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         }
       : undefined
 
+  // A question whose options are the math (matrices, systems) has no picture of its own: the options become the stage.
+  const optionsAreStage =
+    !hasStage &&
+    step.kind === 'choice' &&
+    step.options.some((option) => option.content.some((block) => block.kind !== 'text'))
+
   const options =
     step.kind === 'choice' ? (
       <fieldset
@@ -253,7 +259,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     ) : null
 
   return (
-    <div ref={root} className="ls-run" data-testid="lesson-player">
+    <div
+      ref={root}
+      className="ls-run"
+      data-testid="lesson-player"
+      data-options-stage={optionsAreStage || undefined}
+    >
       <div className="ls-top">
         <Link
           to={returnTab.current}
