@@ -115,6 +115,7 @@ export function LessonNode({
   useStateChange(
     lesson.id,
     `${state}${main ? '+next' : ''}${state === 'done' && level === 'bad' ? '+weak' : ''}`,
+    main,
   )
   const resuming = main && state === 'current' && record
   const face = (

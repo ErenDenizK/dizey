@@ -197,20 +197,12 @@
 .pa-tile[data-state="done"][data-level="bad"] {
   --node-ring: inset 0 0 0 2.5px var(--bad-ink);
 }
-/* The lesson you are on: larger, amber-tinted with an amber outline (the one filled amber is the dock's button). */
+/* The lesson you are on: drawn 1.2 times larger (path-effects.ts), amber-tinted with an amber outline (the one filled amber is the dock's button). */
 .pa-tile[data-next] {
-  width: 68px;
-  height: 68px;
   background: color-mix(in oklch, var(--action) 24%, var(--surface));
   color: var(--action);
   --node-ring: inset 0 0 0 2.5px var(--action);
   --press-strength: 0.1;
-}
-.pa-tile[data-next] .pa-tile__code {
-  font-size: var(--type-title3);
-  line-height: var(--leading-title3);
-  letter-spacing: var(--tracking-title3);
-  font-weight: var(--weight-bold);
 }
 
 /* The chapter's test: a bracketed node [ ] that ends its chapter, never locked. */
