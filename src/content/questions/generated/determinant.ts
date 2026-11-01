@@ -226,7 +226,7 @@ export const d4Adjugate: Family = {
       mistake(
         'reciprocal-slip',
         Q.mul(kn, pow(a, -truthExp)),
-        'Üslerin işaretini ters aldın, sonuç tersine döndü: tersi alınan çarpanın determinantı $\\frac{1}{\\cdot}$ olur, ama diğerleri olduğu gibi kalır.',
+        'Sonuç ters dönmüş: $|\\text{Ek}(A)| = |A|^{n-1}$ olur. $\\frac{1}{|M|}$ yalnızca tersi alınmış bir çarpanın, yani $|M^{-1}|$’in determinantıdır.',
       ),
     ]
     if (k !== 1) {
