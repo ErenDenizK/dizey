@@ -707,6 +707,9 @@ a.sh-node {
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
+.ls-scene[data-flow="column"] {
+  flex-direction: column;
+}
 .ls-item {
   display: flex;
   flex-wrap: nowrap;
@@ -803,6 +806,13 @@ a.sh-node {
   font-weight: var(--weight-medium);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+/* Work lines alone on the stage take their size from the fitted cell, like a scene. */
+.ls-stage[data-solo] .ls-work {
+  width: max-content;
+  max-width: none;
+  row-gap: calc(var(--cell) * 0.25);
+  font-size: calc(var(--cell) * 0.5);
 }
 /* A matrix written in a work line (a reveal written as a bmatrix) is displayed math: stage-like, not text-size. */
 .ls-work .dz-m .dz-m-mat {

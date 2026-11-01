@@ -151,14 +151,25 @@ export type Fill = { key: string; rows: number; extraLines: number }
 /** Gap between the scene and the work lines, in px. */
 const NOTE_GAP = 12
 
+/**
+ * A stage with work lines and no scene (an equation beat on its own) sizes its lines from the same
+ * `--cell`, fitted to the stage like a scene, so a short rule fills the stage instead of sitting small in
+ * it. Bounds keep the text between today's work size (17 px) and a size that still reads as math, not a
+ * headline (32 px).
+ */
+export const SOLO = { min: 34, max: 64 } as const
+/** Another flow wins only when it gives cells at least this much larger (no flip-flop on near ties). */
+const FLOW_GAIN = 1.15
+
 export function fitCell(
   free: { width: number; height: number },
   natural: { width: number; height: number },
   probe: number = CELL.probe,
+  bounds: { min: number; max: number } = CELL,
 ): number {
-  if (natural.width <= 0 || natural.height <= 0) return CELL.max
+  if (natural.width <= 0 || natural.height <= 0) return bounds.max
   const scale = Math.min(free.width / natural.width, free.height / natural.height)
-  return Math.round(Math.min(CELL.max, Math.max(CELL.min, probe * scale)))
+  return Math.round(Math.min(bounds.max, Math.max(bounds.min, probe * scale)))
 }
 
 type Rest = { cx: number; cy: number; w: number; h: number; el: HTMLElement | SVGElement }
@@ -211,6 +222,21 @@ function useStageLayout(
       width.current = box.clientWidth
       // Fit the cell to the height the stage is going to.
       const content = scene.current
+      const solo = !content && !area.current && Boolean(work.current)
+      box.toggleAttribute('data-solo', solo)
+      if (solo && work.current) {
+        box.style.setProperty('--cell', `${CELL.probe}px`)
+        const style = getComputedStyle(box)
+        const padX = Number.parseFloat(style.paddingLeft) + Number.parseFloat(style.paddingRight)
+        const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+        const cell = fitCell(
+          { width: box.clientWidth - padX, height: next - padY },
+          { width: work.current.offsetWidth, height: work.current.offsetHeight },
+          CELL.probe,
+          SOLO,
+        )
+        box.style.setProperty('--cell', `${cell}px`)
+      }
       if (content) {
         box.style.setProperty('--cell', `${CELL.probe}px`)
         const style = getComputedStyle(box)
@@ -218,10 +244,21 @@ function useStageLayout(
         const padY = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
         const areaHeight = area.current ? area.current.getBoundingClientRect().height + NOTE_GAP : 0
         const notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
-        const cell = fitCell(
-          { width: box.clientWidth - padX, height: next - padY - notes - areaHeight },
-          { width: content.offsetWidth, height: content.offsetHeight },
-        )
+        const free = { width: box.clientWidth - padX, height: next - padY - notes - areaHeight }
+        const measure = () => fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
+        // Matrices side by side with nothing between them (A and B, compared) stack when the stage is tall
+        // enough that stacking makes every cell clearly larger; a row with operators always reads across.
+        delete content.dataset.flow
+        let cell = measure()
+        const stackable =
+          content.querySelectorAll(':scope > .ls-item').length >= 2 &&
+          !content.querySelector(':scope > .ls-op, :scope > .ls-result')
+        if (stackable) {
+          content.dataset.flow = 'column'
+          const stacked = measure()
+          if (stacked >= cell * FLOW_GAIN) cell = stacked
+          else delete content.dataset.flow
+        }
         box.style.setProperty('--cell', `${cell}px`)
         // Height the fitted scene leaves unused (a wide, short scene) goes to the option rows, minus room
         // for the tallest wrong-try hint, so the stage never re-fits smaller during the step.

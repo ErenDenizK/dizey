@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { CELL, fitCell } from './Stage'
+import { CELL, fitCell, SOLO } from './Stage'
 
 describe('fitCell', () => {
   it('caps a small scene so a 2×2 never shouts', () => {
@@ -14,5 +14,11 @@ describe('fitCell', () => {
   })
   it('falls back to the cap before anything is laid out', () => {
     expect(fitCell({ width: 358, height: 500 }, { width: 0, height: 0 })).toBe(CELL.max)
+  })
+  it('sizes work lines alone on the stage within their own bounds', () => {
+    // A short rule in a tall stage stops at the solo cap, not the matrix cap.
+    expect(fitCell({ width: 358, height: 500 }, { width: 100, height: 60 }, CELL.probe, SOLO)).toBe(SOLO.max)
+    // A long line never drops below today's work size.
+    expect(fitCell({ width: 100, height: 500 }, { width: 1000, height: 60 }, CELL.probe, SOLO)).toBe(SOLO.min)
   })
 })
