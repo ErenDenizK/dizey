@@ -408,8 +408,11 @@ test('an exam rehearsal runs, survives a reload and shows its result', async ({ 
   await expect(page.getByTestId('exam-score')).toContainText(/\d+ \/ \d+ doğru/)
   await expect(page.getByTestId('exam-score')).toContainText(/1 yanlış|0 yanlış/)
   await page.getByRole('button', { name: 'Bitti' }).click()
-  await expect(pushed(page).getByRole('heading', { name: 'Geçmiş' })).toBeVisible()
-  await pushed(page).getByRole('link', { name: 'Son prova sonucu' }).click()
+  const paper = pushed(page)
+    .locator('.exh-paper')
+    .filter({ has: page.getByTestId('exam-set-summer-2024') })
+  await expect(paper).toContainText(/%\d+/)
+  await paper.getByRole('link', { name: 'Son prova sonucu' }).click()
   await expect(page.getByTestId('exam-score')).toBeVisible()
 })
 
@@ -456,6 +459,50 @@ test('the Vize provası gate at the end of the map opens the exam hub', async ({
   await screen(page).getByTestId('vize-gate').click()
   await expect(pushed(page).getByRole('heading', { name: 'Sınav', level: 1 })).toBeVisible()
   await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
+})
+
+test('a rehearsal paper expands in place instead of opening a sheet', async ({ page }) => {
+  await openApp(page, './exam')
+  const hub = pushed(page)
+  const paper = hub.locator('.exh-paper').filter({ has: page.getByTestId('exam-set-summer-2024') })
+  await expect(paper.getByTestId('exam-start')).toHaveCount(0)
+  await paper.getByTestId('exam-set-summer-2024').click()
+  await expect(paper.getByTestId('exam-start')).toBeVisible()
+  await expect(paper.getByTestId('exam-set-summer-2024')).toHaveAttribute('aria-expanded', 'true')
+  await expect(page.locator('.dz-sheet, [role="dialog"]')).toHaveCount(0)
+  await paper.getByTestId('exam-set-summer-2024').click()
+  await expect(paper.getByTestId('exam-start')).toHaveCount(0)
+})
+
+test('the exam hub shows at most one primary button while nothing is expanded', async ({ page }) => {
+  await openApp(page, './exam')
+  const primary = pushed(page).locator('[data-kind="primary"]:visible')
+  await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
+  await expect(primary).toHaveCount(0)
+  await pushed(page).getByTestId('exam-set-summer-2024').click()
+  await pushed(page).getByTestId('exam-start').click()
+  await expect(page.getByTestId('exam-run')).toBeVisible()
+  await page.goto('./exam')
+  await expect(pushed(page).getByLabel('Yarım kalan prova')).toBeVisible()
+  await expect(primary).toHaveCount(1)
+})
+
+test('the exam hub does not overflow sideways on a small phone', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 })
+  await openApp(page, './exam')
+  await expect(pushed(page).getByTestId('exam-set-summer-2024')).toBeVisible()
+  await pushed(page).getByTestId('exam-set-summer-2024').click()
+  await expect(pushed(page).getByTestId('exam-start')).toBeVisible()
+  const overflow = await page.evaluate(() => {
+    const root = document.documentElement
+    const hub = document.querySelector('.sh-overlay .exh')?.closest('.sh-overlay') as HTMLElement | null
+    return {
+      page: root.scrollWidth - root.clientWidth,
+      hub: hub ? hub.scrollWidth - hub.clientWidth : 0,
+    }
+  })
+  expect(overflow.page).toBeLessThanOrEqual(0)
+  expect(overflow.hub).toBeLessThanOrEqual(0)
 })
 
 test('first launch in iPhone Safari asks to install first', async ({ page, isMobile }, testInfo) => {
