@@ -1,4 +1,4 @@
-// Type audit: measures every visible text element on the main screens at 390x844 (dark and light screenshots,
+// Type audit: measures every visible text element on the main screens at 390x844 (dark screenshots,
 // computed size, weight, line height and tracking per element) and prints the distinct combinations per screen,
 // so drift off the type scale shows as extra rows. Usage: pnpm build && pnpm preview --port 4173 &
 //   node scripts/type-audit.mjs [outDir]   (env PLAYWRIGHT_CHROMIUM_PATH as in lesson-review.mjs)
@@ -13,7 +13,7 @@ const browser = await chromium.launch(
   process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {},
 )
 const result = {}
-for (const theme of ['dark', 'light']) {
+for (const theme of ['dark']) {
   const ctx = await browser.newContext({
     viewport: { width: 390, height: 844 },
     deviceScaleFactor: 2,
@@ -28,6 +28,7 @@ for (const theme of ['dark', 'light']) {
     ['me', 'me'],
     ['exam', 'exam'],
     ['lesson', 'lesson/d1-determinant'],
+    ['sounds', 'lab/sounds'],
   ]
   for (const [name, path] of screens) {
     await page.goto(base + path)
@@ -59,6 +60,7 @@ for (const theme of ['dark', 'light']) {
             weight: s.fontWeight,
             lh: s.lineHeight,
             ls: s.letterSpacing,
+            color: s.color,
             fam: s.fontFamily.split(',')[0],
             y: Math.round(r.top),
           })
@@ -74,7 +76,7 @@ for (const [k, rows] of Object.entries(result)) {
   console.log(`\n## ${k}`)
   const combos = {}
   for (const r of rows) {
-    const key = `${r.size} w${r.weight} lh${r.lh} ls${r.ls}`
+    const key = `${r.size} w${r.weight} lh${r.lh} ls${r.ls} ${r.color}`
     if (!combos[key]) combos[key] = []
     combos[key].push(`${r.sel} "${r.text}"`)
   }

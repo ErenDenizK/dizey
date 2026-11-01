@@ -43,6 +43,7 @@
   padding: var(--space-2) var(--space-4);
   border-inline-width: 2px;
   line-height: var(--leading-title2);
+  letter-spacing: var(--tracking-title);
 }
 .lab-matrix-row {
   display: grid;

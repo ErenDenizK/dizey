@@ -133,6 +133,7 @@
   font-weight: var(--weight-regular);
   color: var(--ink-3);
   line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .me-foot__mark b {
   padding-inline: var(--space-0-5);
