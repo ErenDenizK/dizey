@@ -184,7 +184,7 @@ function Lead({ children }: { children: React.ReactNode }) {
 function ExamDateSetting() {
   const settings = useSettings()
   return (
-    <label className="dz-row">
+    <label className="dz-row me-date-row">
       <Lead>
         <rect x="3" y="4.5" width="14" height="12.5" rx="3" />
         <path d="M3 8.5h14M7 2.5v4M13 2.5v4" />
@@ -195,26 +195,27 @@ function ExamDateSetting() {
           {settings.examDate ? strings.me.examDateSet : strings.me.examDateHint}
         </small>
       </span>
-      {/* The native picker opens from an invisible input laid over our own Turkish face, so no locale
-          placeholder (mm/dd/yyyy) ever shows. */}
-      <span className="me-date">
-        <span className="me-date__face" aria-hidden="true">
-          {settings.examDate ? dayLabel(settings.examDate) : strings.me.examDatePick}
+      {/* Trailing value and chevron, like every other row that opens something. The native picker opens
+          from an invisible input laid over the whole row, so no locale placeholder (mm/dd/yyyy) shows. */}
+      <span className="me-date" data-set={settings.examDate ? '' : undefined} aria-hidden="true">
+        {settings.examDate ? dayLabel(settings.examDate) : strings.me.examDatePick}
+        <span className="dz-chevron">
+          <ChevronRight />
         </span>
-        <input
-          type="date"
-          className="me-date__input"
-          min="2026-11-01"
-          max="2026-12-31"
-          value={settings.examDate ?? ''}
-          aria-label={strings.me.examDate}
-          onChange={(event) => {
-            const value = event.currentTarget.value
-            const { examDate: _cleared, ...rest } = settings
-            saveSettings(value ? { ...rest, examDate: value } : rest)
-          }}
-        />
       </span>
+      <input
+        type="date"
+        className="me-date__input"
+        min="2026-11-01"
+        max="2026-12-31"
+        value={settings.examDate ?? ''}
+        aria-label={strings.me.examDate}
+        onChange={(event) => {
+          const value = event.currentTarget.value
+          const { examDate: _cleared, ...rest } = settings
+          saveSettings(value ? { ...rest, examDate: value } : rest)
+        }}
+      />
     </label>
   )
 }
