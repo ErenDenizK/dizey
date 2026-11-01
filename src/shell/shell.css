@@ -586,7 +586,7 @@ a.sh-node {
   max-width: 100%;
   padding: 7px 0;
   font-family: var(--font-math);
-  font-size: clamp(17px, 6cqw, 24px);
+  font-size: calc(clamp(17px, 6cqw, 24px) * var(--work-scale, 1));
   font-weight: var(--weight-medium);
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -615,7 +615,7 @@ a.sh-node {
   align-items: center;
   column-gap: 0.34em;
   row-gap: var(--space-1);
-  min-height: 34px;
+  min-height: calc(34px * var(--work-scale, 1) * var(--work-scale, 1));
   max-width: 100%;
 }
 .ls-group {
@@ -642,7 +642,7 @@ a.sh-node {
 }
 .ls-area {
   width: min(300px, 78vw);
-  max-height: 280px;
+  max-height: min(280px, var(--area-max, 280px));
   height: auto;
   overflow: visible;
 }
@@ -988,6 +988,16 @@ a.sh-node {
   line-height: var(--leading-none);
   letter-spacing: var(--tracking-title);
 }
+.ls-key__glyph {
+  display: block;
+  width: 1em;
+  height: 1em;
+  margin-inline: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.4;
+  stroke-linecap: round;
+}
 .ls-key[data-fn="true"] {
   background: var(--surface);
 }
@@ -1002,6 +1012,16 @@ a.sh-node {
 }
 .ls-key--go[data-wide="true"] {
   grid-column: span 4;
+}
+/* A short screen (iPhone SE class) gives the stage the height a full-size pad would take. */
+@media (max-height: 720px) {
+  .ls-answer {
+    min-height: 44px;
+    padding-block: var(--space-2);
+  }
+  .ls-key {
+    min-height: 40px;
+  }
 }
 .ls-key:disabled {
   opacity: 0.45;
