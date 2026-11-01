@@ -4,30 +4,35 @@
  * keyframes (motion comes from the engine).
  */
 .td-root {
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: var(--gap-block);
+  /* Fills the scroller's content box, so the work group can rest on the thumb zone. */
+  min-height: 100%;
 }
 .td-head {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
+  justify-items: center;
   gap: var(--gap-block);
+  text-align: center;
   margin-top: var(--space-4);
 }
 .td-head__state {
   margin: 0;
   color: var(--ink-1);
+  text-wrap: balance;
 }
-.td-head__exam {
-  margin: var(--space-1) 0 0;
-  color: var(--ink-3);
+/* The work: rows first, the next lesson (and its button) last, closest to the thumb. */
+.td-work {
+  display: grid;
+  gap: var(--gap-block);
+  margin-top: auto;
 }
 
 .dz-card.td-next {
   display: grid;
   gap: var(--gap-item);
   padding: var(--space-6) var(--space-5);
-  margin-top: var(--space-2);
   text-decoration: none;
   color: var(--ink-1);
 }
@@ -91,15 +96,6 @@
   color: var(--ink-2);
   white-space: nowrap;
 }
-.td-row__done {
-  flex: none;
-  display: grid;
-  color: var(--ink-3);
-}
-.td-row__done svg {
-  width: 14px;
-  height: 14px;
-}
 
 /* ---- Companion slot ---------------------------------------------------------- */
 .companion-slot {
@@ -119,10 +115,16 @@
 .companion-slot--large {
   width: 108px;
 }
+.td-head .companion-slot--large {
+  width: 168px;
+}
 
 @media (max-height: 700px) {
   .companion-slot--large {
     width: 84px;
+  }
+  .td-head .companion-slot--large {
+    width: 120px;
   }
 }
 
