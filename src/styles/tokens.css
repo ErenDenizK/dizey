@@ -136,6 +136,7 @@
   --font-text: "Dizey Math", "Onest", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-math: "Dizey Ident", var(--font-text);
   --font-features: normal;
+  --type-score: 3.529rem; /* 60: the one score numeral on the exam result */
   --type-large: 1.882rem; /* 32 */
   --type-title1: 1.529rem; /* 26 */
   --type-title2: 1.294rem; /* 22 */

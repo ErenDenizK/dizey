@@ -98,9 +98,10 @@ test('the sound lab plays every sound without an error', async ({ page }) => {
 
 test('the exam rehearsal stays silent', async ({ page }) => {
   await openApp(page, './exam')
-  await page.getByRole('button', { name: 'Başlat' }).first().click()
-  await page.locator('.ex-run').waitFor()
-  const options = page.locator('.ex-run .ex-opt')
+  await page.getByTestId('exam-set-summer-2024').click()
+  await page.getByTestId('exam-start').click()
+  await page.getByTestId('exam-run').waitFor()
+  const options = page.getByTestId('exam-run').locator('.ex-opt')
   // The first tap unlocks audio; neither it nor the next answer may sound.
   await options.nth(0).click()
   const before = await oscillators(page)
