@@ -972,6 +972,28 @@ test.describe('small phone (375 x 667) reach', () => {
   })
 })
 
+test.describe('standard phone (390 x 844) reach', () => {
+  test.use({ viewport: { width: 390, height: 844 } })
+
+  for (const [name, path] of [
+    ['Bugün', './'],
+    ['Harita', './map'],
+    ['Sen', './me'],
+  ] as const) {
+    test(`${name} scrolls its last element clear of the tab bar`, async ({ page }) => {
+      await openApp(page, path)
+      const scroller = screen(page).locator('.dz-screen')
+      const bottom = await scroller.evaluate((el) => {
+        el.scrollTop = el.scrollHeight
+        const kids = [...el.children].filter((kid) => kid.getBoundingClientRect().height > 0)
+        return kids[kids.length - 1]?.getBoundingClientRect().bottom ?? 0
+      })
+      const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
+      expect(bar && bottom <= bar.y).toBe(true)
+    })
+  }
+})
+
 test('Settings opens as a sheet over the dimmed tab and a drag down closes it', async ({ page }) => {
   await openApp(page, './me')
   await page.getByTestId('open-settings').click()
