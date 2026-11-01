@@ -129,37 +129,130 @@ const RIPPLE_NEIGHBOURS = 8
 /** The farthest a neighbouring tile is nudged (px). */
 const RIPPLE_PX = 3
 
+const SVG = 'http://www.w3.org/2000/svg'
+/** The persistent ring of the current tile sits this far outside it (path.css: 3px gap, 2.5px ring). */
+const MAIN_RING = { offset: 4.25, width: 2.5 }
+const QUIET_RING = { offset: -0.75, width: 1.5 }
+/** How far (px) a held tag waits below its place. */
+const TAG_DROP = 6
+
 /**
- * Aftermath of a lesson coming home: the tile's outline draws itself in from its top-left corner and fades
- * back to the resting border, and the nearest tiles settle one after another, nearest first. Under reduced
- * motion there is nothing to see and nothing is done.
+ * Draws a tile's outline: an SVG rounded-rect stroke (`pathLength` 1, dash offset 1 to 0 on the `draw`
+ * spring) laid exactly on the tile's ring. A tile with a persistent ring (`data-main`) hides that ring while
+ * the stroke draws and shows it again on the frame the stroke completes, so the stroke becomes the ring with
+ * no visible change. A tile without one draws and then fades the stroke out.
+ */
+export function drawRing(tile: HTMLElement) {
+  if (engine.reducedMotion || !tile.isConnected || tile.querySelector(':scope > .pa-tile__trace')) return
+  const main = tile.hasAttribute('data-main')
+  const { offset, width } = main ? MAIN_RING : QUIET_RING
+  const w = tile.offsetWidth
+  const h = tile.offsetHeight
+  const radius = (Number.parseFloat(getComputedStyle(tile).borderTopLeftRadius) || 0) + offset
+  const svg = document.createElementNS(SVG, 'svg')
+  svg.setAttribute('class', 'pa-tile__trace')
+  svg.setAttribute('aria-hidden', 'true')
+  svg.setAttribute('width', String(w))
+  svg.setAttribute('height', String(h))
+  const path = document.createElementNS(SVG, 'rect')
+  path.setAttribute('x', String(-offset))
+  path.setAttribute('y', String(-offset))
+  path.setAttribute('width', String(w + 2 * offset))
+  path.setAttribute('height', String(h + 2 * offset))
+  path.setAttribute('rx', String(radius))
+  path.setAttribute('pathLength', '1')
+  path.setAttribute('stroke-width', String(width))
+  path.setAttribute('stroke-dasharray', '1 1')
+  svg.append(path)
+  tile.append(svg)
+  tile.setAttribute('data-trace', '')
+  const finish = () => {
+    ring.isConnected = false
+    svg.remove()
+    tile.removeAttribute('data-trace')
+  }
+  const ring: Target = { style: path.style as unknown as NonNullable<Target['style']>, isConnected: true }
+  let fading = false
+  engine.bind(
+    ring,
+    (v) => {
+      path.setAttribute('stroke-dashoffset', String(v.draw ?? 1))
+      path.style.opacity = String(v.ink ?? 1)
+    },
+    { draw: 1, ink: 1 },
+  )
+  engine.withChannel('chrome', () => {
+    engine.to(ring, { draw: 0 }, 'draw', {
+      onArrive: () => {
+        if (main) finish()
+        else if (!fading) {
+          fading = true
+          engine.to(ring, { ink: 0 }, 'fade', { onArrive: finish })
+        }
+      },
+    })
+  })
+}
+
+/** Holds a tag out of sight (transparent, a few px low) until `raiseTag`. */
+export function holdTag(tag: HTMLElement) {
+  tag.setAttribute('data-held', '')
+  engine.set(tag, { opacity: 0, y: TAG_DROP })
+}
+
+/** Raises a held tag into place on `ui`, `delay` ms from now. Under reduced motion it only fades. */
+export function raiseTag(tag: HTMLElement, delay = 0) {
+  if (!tag.hasAttribute('data-held')) return
+  tag.removeAttribute('data-held')
+  engine.withChannel('chrome', () => {
+    engine.after(delay, () => {
+      if (!tag.isConnected) return
+      engine.to(tag, { opacity: 1, y: 0 }, engine.reducedMotion ? 'fade' : 'ui')
+    })
+  })
+}
+
+/** Fades out the old fills left over a tile whose state just changed (see `useStateChange` in PathView). */
+export function fadeOutWas(tile: HTMLElement) {
+  for (const was of tile.querySelectorAll<HTMLElement>(':scope > .pa-tile__was')) {
+    engine.withChannel('chrome', () =>
+      engine.to(was, { opacity: 0 }, 'fade', { onArrive: () => was.remove() }),
+    )
+  }
+}
+
+/** Parts that appeared while the tile was out of sight wait (data-held) and are raised with its aftermath. */
+const heldIn = (tile: HTMLElement) => [...tile.querySelectorAll<HTMLElement>(':scope > [data-held]')]
+
+/** Tags of a tile: the markers in its grid cell that are not part of it (the "you are here" pill). */
+const tagsOf = (tile: HTMLElement) => [
+  ...(tile.parentElement?.querySelectorAll<HTMLElement>('[data-tag]') ?? []),
+]
+
+/** A tile that is about to be revealed keeps its tags back until its aftermath. */
+export function holdTagsOf(tile: HTMLElement) {
+  for (const tag of tagsOf(tile)) holdTag(tag)
+}
+
+/**
+ * Aftermath of a lesson coming home: the tile's outline draws itself in from its top-left corner (and becomes
+ * its ring, or fades), its tag rises in after the stroke starts, and the nearest tiles settle one after
+ * another, nearest first. Under reduced motion the tag only fades in.
  */
 export function aftermath(tile: HTMLElement) {
-  if (engine.reducedMotion || !tile.isConnected) return
+  const raiseAll = (delay: number) => {
+    for (const tag of tagsOf(tile)) raiseTag(tag, delay)
+    for (const part of heldIn(tile)) raiseTag(part, 0)
+    fadeOutWas(tile)
+  }
+  if (engine.reducedMotion || !tile.isConnected) {
+    raiseAll(0)
+    return
+  }
   engine.withChannel('chrome', () => {
     const rect = tile.getBoundingClientRect()
-    // A conic sweep starts on the vertical; the corner is atan(w/h) to its left.
-    tile.style.setProperty('--trace-from', `${(-Math.atan2(rect.width, rect.height) * 180) / Math.PI}deg`)
-    tile.setAttribute('data-trace', '')
-    // The ring is its own motion target so drawing it never touches the tile's press state.
-    const ring: Target = { style: tile.style, isConnected: true }
-    let fading = false
-    engine.bind(
-      ring,
-      (v) => {
-        if (fading || (v['--trace'] ?? 0) < 0.8) return
-        fading = true
-        engine.to(ring, { '--trace-ink': 0 }, 'fade', {
-          onArrive: () => {
-            ring.isConnected = false
-            tile.removeAttribute('data-trace')
-            for (const name of ['--trace', '--trace-ink', '--trace-from']) tile.style.removeProperty(name)
-          },
-        })
-      },
-      { '--trace': 0, '--trace-ink': 1 },
-    )
-    engine.to(ring, { '--trace': 1 }, 'draw')
+    drawRing(tile)
+    raiseAll(CHOREO_MS.stagger)
 
     const origin = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }
     const near = [...document.querySelectorAll<HTMLElement>('.pa-tile')]
