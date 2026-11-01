@@ -14,6 +14,7 @@ import { versionLine } from '../lib/build-line'
 import { appStorage } from '../lib/storage/app-storage'
 import { openMistakes } from '../progress/mistakes'
 import { readSettings, saveSettings, useSettings } from '../progress/settings'
+import { BadgeShelf } from '../rewards/BadgeShelf'
 import { haptic } from '../sound/haptics'
 import { setMusicOn, setSoundInSilent, setSoundOn } from '../sound/player'
 import { ChevronRight } from '../ui/icons'
@@ -27,9 +28,20 @@ export function MeView() {
   return (
     <Screen title={strings.me.title}>
       <CourseMatrix />
+      <BadgeShelf />
       <MistakeLog />
       <h2 className="dz-section-label">{strings.me.settings}</h2>
       <div className="dz-list">
+        <PressLink to="/lab/character" className="dz-row" data-sound="open">
+          <Lead>
+            <circle cx="7.5" cy="11.5" r="4" />
+            <circle cx="12.5" cy="7.5" r="4" />
+          </Lead>
+          <span className="dz-row-main">{strings.me.characterLab}</span>
+          <span className="dz-chevron">
+            <ChevronRight />
+          </span>
+        </PressLink>
         <SoundSetting />
         <ExamDateSetting />
       </div>

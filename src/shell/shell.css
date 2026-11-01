@@ -1313,28 +1313,6 @@ a.dz-button[data-kind="primary"] {
   overflow: visible;
   filter: drop-shadow(0 0 calc(var(--glow, 0) * 16px) var(--glow-spark));
 }
-.ls-duo__head {
-  transform-box: fill-box;
-  transform-origin: 50% 100%;
-}
-.ls-duo__head--row {
-  fill: var(--row-fill);
-  color: var(--on-row);
-}
-.ls-duo__head--col {
-  fill: var(--col-fill);
-  color: var(--on-col);
-}
-.ls-duo__face path {
-  fill: currentColor;
-  stroke: currentColor;
-  stroke-width: 0.6;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-.ls-duo__face .ls-duo__mouth {
-  stroke-width: 2.4;
-}
 .ls-seal {
   display: grid;
   justify-items: center;
@@ -1507,4 +1485,7 @@ a.dz-button[data-kind="primary"] {
 }
 .ls-count {
   color: var(--ink-1);
+}
+.ls-seal[hidden] {
+  display: none;
 }

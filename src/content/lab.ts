@@ -47,6 +47,20 @@ export const lab = {
     springs: 'Yay laboratuvarı',
     type: 'Yazı ve renk',
   },
+  character: {
+    title: 'Karakter ve rozetler',
+    lead: 'Satır ile Sütun’un yüzü her karede yaylarla çizilir. Bir hâle dokun.',
+    moods: {
+      happy: 'Sevinç',
+      proud: 'Gurur',
+      wow: 'Vay',
+      curious: 'Merak',
+      console: 'Teselli',
+      neutral: 'Sakin',
+    },
+    badgesLead: 'Hepsi burada görünür; Profil’de yalnızca kazandıkların durur.',
+    tapBadge: 'Kazanma anını görmek için bir rozete dokun.',
+  },
   sounds: {
     title: 'Ses laboratuvarı',
     intro: 'Her ses ve müzik, dersin o anki akorundan kodla üretilir.',

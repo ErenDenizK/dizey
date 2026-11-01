@@ -61,6 +61,7 @@ export const strings = {
     soundInSilent: 'Sessiz modda da çal',
     soundInSilentHint: 'Diğer müzik durabilir.',
     soundLab: 'Ses laboratuvarı',
+    characterLab: 'Karakter ve rozetler',
     music: 'Arka plan müziği',
     musicHint: 'Sakin, kısık; sınavda susar.',
     haptics: 'Titreşim',
@@ -206,6 +207,28 @@ export const strings = {
     sealLabel: (correct: number, total: number) => `${total} sorunun cevapları, ${correct} doğru`,
     next: (code: string) => `Sıradaki · ${code}`,
     back: 'Derslere dön',
+  },
+
+  badges: {
+    shelf: 'Rozetler',
+    shelfHint: 'Çalıştıkça gelir; puanın değil, yaptığın iş.',
+    empty: 'İlk dersini bitirince ilk rozetin burada olur.',
+    newOne: 'Yeni rozet',
+    one: 'Rozet',
+    count: (n: number) => `${n} rozet`,
+    earned: 'Kazandın',
+    close: 'Kapat',
+    items: {
+      'first-lesson': { name: 'İlk adım', line: 'İlk dersini bitirdin. Yol buradan başlıyor.' },
+      sarrus: { name: 'Sarrus', line: '3×3 determinantı Sarrus ile açabiliyorsun.' },
+      laplace: { name: 'Laplace', line: 'Bir determinantı bir satır ya da sütun boyunca açabiliyorsun.' },
+      gauss: { name: 'Gauss', line: 'Bir matrisi satır işlemleriyle eşelon forma indirebiliyorsun.' },
+      inverse: { name: 'Ters', line: 'Bir matrisin tersini bulabiliyorsun.' },
+      cramer: { name: 'Cramer', line: 'Bir sistemi determinantlarla çözebiliyorsun.' },
+      fixed: { name: 'Düzelttin', line: 'Bir hatana geri dönüp doğrusunu buldun.' },
+      'clean-notebook': { name: 'Temiz defter', line: 'Beş hatanı düzelttin; hata defterin işini yapıyor.' },
+      rehearsal: { name: 'Prova', line: 'İlk sınav provanı baştan sona bitirdin.' },
+    },
   },
 
   onboarding: {
