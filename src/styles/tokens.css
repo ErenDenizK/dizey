@@ -293,6 +293,39 @@
   --on-ok: oklch(0.183 0.009 268.6);
   --on-bad: oklch(1 0 0);
   --backdrop: oklch(0 0 0);
+  /* The duo's light: a soft top-left gloss, a rim shade, warm cheeks and a contact shadow on the ground. */
+  --duo-gloss: oklch(1 0 0 / 0.34);
+  --duo-gloss-out: oklch(1 0 0 / 0);
+  --duo-shade: oklch(0 0 0 / 0);
+  --duo-shade-out: oklch(0 0 0 / 0.26);
+  --duo-blush-row: oklch(0.72 0.11 15 / 0.75);
+  --duo-blush-col: oklch(0.66 0.12 5 / 0.6);
+  --duo-ground: oklch(0 0 0 / 0.38);
+  /* Rozet enamels: a lit top, a deep bottom, the ink drawn on it, and the deep mark on an inked cell. */
+  --badge-row-top: oklch(0.63 0.11 246);
+  --badge-row-bottom: oklch(0.41 0.09 254);
+  --badge-row-ink: oklch(0.97 0.018 246);
+  --badge-row-deep: oklch(0.38 0.09 254);
+  --badge-col-top: oklch(0.68 0.09 322);
+  --badge-col-bottom: oklch(0.43 0.08 316);
+  --badge-col-ink: oklch(0.97 0.018 322);
+  --badge-col-deep: oklch(0.38 0.08 316);
+  --badge-ok-top: oklch(0.68 0.1 165);
+  --badge-ok-bottom: oklch(0.43 0.08 172);
+  --badge-ok-ink: oklch(0.97 0.02 165);
+  --badge-ok-deep: oklch(0.36 0.07 172);
+  --badge-spark-top: oklch(0.88 0.1 94);
+  --badge-spark-bottom: oklch(0.7 0.13 72);
+  --badge-spark-ink: oklch(0.27 0.045 68);
+  --badge-spark-deep: oklch(0.96 0.04 92);
+  --badge-action-top: oklch(0.85 0.08 78);
+  --badge-action-bottom: oklch(0.63 0.1 60);
+  --badge-action-ink: oklch(0.25 0.035 60);
+  --badge-action-deep: oklch(0.95 0.03 80);
+  --badge-gloss: oklch(1 0 0 / 0.32);
+  --badge-gloss-out: oklch(1 0 0 / 0);
+  --badge-rim: oklch(1 0 0 / 0.22);
+  --badge-ground: oklch(0 0 0 / 0.45);
 }
 
 /* Increase Contrast: glass turns solid and secondary ink matches primary. */
