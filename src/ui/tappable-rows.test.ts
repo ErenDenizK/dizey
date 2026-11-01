@@ -18,12 +18,16 @@ function files(dir: string): string[] {
   })
 }
 
-/** The JSX of each pressable that ends in a chevron, from its opening tag to the chevron. */
+/** The JSX of each pressable (or label row) that ends in a chevron, from its opening tag to the chevron. */
 function tappableItems(source: string): string[] {
   const items: string[] = []
   for (const chevron of source.matchAll(/<ChevronRight\b/g)) {
     const before = source.slice(0, chevron.index)
-    const open = Math.max(before.lastIndexOf('<Pressable'), before.lastIndexOf('<PressLink'))
+    const open = Math.max(
+      before.lastIndexOf('<Pressable'),
+      before.lastIndexOf('<PressLink'),
+      before.lastIndexOf('<label'),
+    )
     if (open >= 0) items.push(before.slice(open))
   }
   return items

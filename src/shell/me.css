@@ -220,9 +220,9 @@
   -webkit-user-select: none;
   -webkit-touch-callout: none;
   touch-action: manipulation;
-  justify-items: center;
+  justify-items: start;
   gap: var(--space-1);
-  margin-top: var(--space-10);
+  margin: var(--space-10) var(--card-pad) 0;
 }
 .me-foot__mark {
   font-size: var(--type-title3);
@@ -247,7 +247,7 @@
   flex: none;
   display: flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   font-size: var(--type-subhead);
   line-height: var(--leading-subhead);
   color: var(--ink-2);
@@ -265,41 +265,43 @@
   cursor: pointer;
 }
 
-/* Colour palettes: four tiles, each drawn in its own palette (data-palette-preview sets its tokens). */
+/* Colour palettes: one row of four swatches. The button carries data-palette-preview (the chip is drawn in that
+   palette's tokens); the name reads in the page's own ink. The chosen swatch wears a ring. */
 .me-palettes {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-2);
 }
 .me-palette {
   display: grid;
-  gap: var(--space-3);
-  padding: var(--space-3);
-  border-radius: var(--corner-card);
+  align-content: start;
+  justify-items: center;
+  gap: var(--space-2);
+  min-height: var(--target);
+  padding: 0;
+  background: none;
+  color: inherit;
+  text-align: center;
+}
+.me-palette__chip {
+  display: grid;
+  align-content: center;
+  gap: var(--space-1);
+  width: 100%;
+  aspect-ratio: 1 / 0.9;
+  padding: var(--space-2);
+  border-radius: var(--corner-inner);
   background: var(--bg);
   color: var(--ink-1);
-  text-align: start;
-  box-shadow:
-    var(--shadow-1),
-    var(--edge-light),
-    0 0 0 1px var(--hairline-strong);
+  box-shadow: inset 0 0 0 1px var(--hairline-strong);
 }
-.me-palette[aria-pressed="true"] {
-  box-shadow:
-    var(--shadow-1),
-    0 0 0 2px var(--action);
-}
-.me-palette__card {
-  display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border-radius: var(--corner-inner);
-  background: var(--surface);
-  box-shadow: var(--edge-light);
+.me-palette[aria-pressed="true"] .me-palette__chip {
+  outline: 2px solid var(--ink-1);
+  outline-offset: 2px;
 }
 .me-palette__line {
   display: block;
-  height: 6px;
+  height: 5px;
   border-radius: var(--corner-pill);
   background: var(--ink-1);
 }
@@ -313,15 +315,9 @@
   margin-top: var(--space-1);
 }
 .me-palette__roles i {
-  width: 16px;
-  height: 16px;
-  border-radius: var(--corner-chip);
-}
-.me-palette__roles [data-role="row"] {
-  background: var(--row-fill);
-}
-.me-palette__roles [data-role="col"] {
-  background: var(--col-fill);
+  width: 10px;
+  height: 10px;
+  border-radius: var(--corner-pill);
 }
 .me-palette__roles [data-role="ok"] {
   background: var(--ok-fill);
@@ -329,22 +325,13 @@
 .me-palette__roles [data-role="bad"] {
   background: var(--bad-fill);
 }
-.me-palette__foot {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-2);
-  padding: 0 var(--space-1);
+.me-palette__roles [data-role="action"] {
+  background: var(--action);
 }
 .me-palette__name {
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  font-weight: var(--weight-semibold);
-}
-.me-palette__action {
-  flex: none;
-  width: 28px;
-  height: 16px;
-  border-radius: var(--corner-pill);
-  background: var(--action);
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-medium);
+  overflow-wrap: anywhere;
 }

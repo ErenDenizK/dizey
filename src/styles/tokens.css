@@ -244,7 +244,7 @@
   --surface-sunk: oklch(0.17 0.006 84.6);
   --control-soft: oklch(0.3 0.008 84.6);
   --control-selected: oklch(0.42 0.008 84.6);
-  --switch-on: oklch(0.6 0.11 66);
+  --switch-on: oklch(0.9 0.007 80);
   --switch-knob: oklch(0.97 0.004 80);
   --switch-off: oklch(0.36 0.008 84.6);
   --ink-1: oklch(0.9 0.007 80);
@@ -345,7 +345,7 @@
   --surface-sunk: oklch(0.17 0.006 84.6);
   --control-soft: oklch(0.3 0.008 84.6);
   --control-selected: oklch(0.42 0.008 84.6);
-  --switch-on: oklch(0.6 0.11 66);
+  --switch-on: oklch(0.9 0.007 80);
   --switch-knob: oklch(0.97 0.004 80);
   --switch-off: oklch(0.36 0.008 84.6);
   --ink-1: oklch(0.9 0.007 80);
@@ -433,7 +433,7 @@
   --surface-sunk: oklch(0.17 0.015 172);
   --control-soft: oklch(0.3 0.02 172);
   --control-selected: oklch(0.42 0.02 172);
-  --switch-on: oklch(0.6 0.16 90);
+  --switch-on: oklch(0.9 0.012 105);
   --switch-knob: oklch(0.97 0.007 105);
   --switch-off: oklch(0.36 0.02 172);
   --ink-1: oklch(0.9 0.012 105);
@@ -521,7 +521,7 @@
   --surface-sunk: oklch(0.158 0.024 272);
   --control-soft: oklch(0.288 0.032 272);
   --control-selected: oklch(0.408 0.032 272);
-  --switch-on: oklch(0.6 0.143 186);
+  --switch-on: oklch(0.9 0.014 255);
   --switch-knob: oklch(0.97 0.008 255);
   --switch-off: oklch(0.348 0.032 272);
   --ink-1: oklch(0.9 0.014 255);
@@ -609,7 +609,7 @@
   --surface-sunk: oklch(0.164 0.022 336);
   --control-soft: oklch(0.294 0.03 336);
   --control-selected: oklch(0.414 0.03 336);
-  --switch-on: oklch(0.6 0.187 114);
+  --switch-on: oklch(0.9 0.012 340);
   --switch-knob: oklch(0.97 0.007 340);
   --switch-off: oklch(0.354 0.03 336);
   --ink-1: oklch(0.9 0.012 340);

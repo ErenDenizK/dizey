@@ -84,9 +84,9 @@ function family(name: string): keyof typeof BASE | 'ground' | 'ink' | null {
   if (/^--(badge-)?col-/.test(name)) return 'col'
   if (/^--(badge-)?ok-|^--glow-ok/.test(name)) return 'ok'
   if (/^--(badge-)?bad-/.test(name)) return 'bad'
-  if (/^--(badge-)?action|^--switch-on/.test(name)) return 'action'
+  if (/^--(badge-)?action/.test(name)) return 'action'
   if (/^--(badge-)?spark|^--glow-spark/.test(name)) return 'spark'
-  if (/^--ink-|^--hairline|^--press-overlay|^--glass-edge|^--switch-knob/.test(name)) return 'ink'
+  if (/^--ink-|^--hairline|^--press-overlay|^--glass-edge|^--switch-(on|knob)/.test(name)) return 'ink'
   if (/^--duo-blush|^--on-row|^--on-bad|^--scrim|^--backdrop/.test(name)) return null
   return 'ground'
 }

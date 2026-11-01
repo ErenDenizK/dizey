@@ -395,6 +395,37 @@ test('settings live behind the Ayarlar button in Sen: palette, back, and labs be
   await expect(screen(page).getByRole('heading', { name: 'Sen', level: 1 })).toBeVisible()
 })
 
+test('no switch in the on state wears the action colour', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await openApp(page, './settings')
+  const colours = await page.evaluate(() => {
+    const probe = document.createElement('i')
+    probe.style.background = 'var(--action)'
+    document.body.append(probe)
+    const action = getComputedStyle(probe).backgroundColor
+    probe.remove()
+    const on = [...document.querySelectorAll<HTMLInputElement>('input[role="switch"]:checked')].map(
+      (input) =>
+        getComputedStyle(input.parentElement?.querySelector('.dz-switch-track') as Element).backgroundColor,
+    )
+    return { action, on }
+  })
+  expect(colours.on.length).toBeGreaterThan(0)
+  for (const colour of colours.on) expect(colour).not.toBe(colours.action)
+})
+
+test('all four palette swatches fit the phone width without scrolling sideways', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 667 })
+  await openApp(page, './settings')
+  const swatches = page.locator('[data-palette-preview]')
+  await expect(swatches).toHaveCount(4)
+  for (let i = 0; i < 4; i++) {
+    const box = await swatches.nth(i).boundingBox()
+    expect(box !== null && box.x >= 0 && box.x + box.width <= 375).toBe(true)
+  }
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+})
+
 test('the app is dark even when the phone is in light mode', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await openApp(page, './me')

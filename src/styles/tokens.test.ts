@@ -79,8 +79,8 @@ describe.each<[string, Record<string, string>]>([['kehribar', dark], ...palettes
       expect(contrast(theme, `--${role}-ink`, `--${role}-tint`)).toBeGreaterThanOrEqual(4.5)
     })
 
-    it('a switch knob stands out on its on track at 3:1', () => {
-      expect(contrast(theme, '--switch-knob', '--switch-on')).toBeGreaterThanOrEqual(3)
+    it('a switch knob (the ground colour) stands out on its neutral on track at 3:1', () => {
+      expect(contrast(theme, '--bg', '--switch-on')).toBeGreaterThanOrEqual(3)
     })
 
     it('an off switch track still shows on a card', () => {
