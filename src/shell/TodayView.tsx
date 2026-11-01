@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import type { DuoHandle } from '../character/Duo'
-import { dayLabel, daysUntil, examWeek } from '../content/exam'
+import { daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import { chapterOf, chapters, pathCode } from '../content/path'
 import { type Question, questions } from '../content/questions'
@@ -29,16 +29,8 @@ import './today.css'
 /** Days before the exam from which the rehearsal gets its own card. */
 const EXAM_SOON_DAYS = 7
 
-function greetingOf(hour: number): string {
-  const g = strings.today.greeting
-  if (hour >= 5 && hour <= 11) return g.morning
-  if (hour >= 12 && hour <= 17) return g.day
-  if (hour >= 18 && hour <= 22) return g.evening
-  return g.night
-}
-
 /**
- * Bugün: what to do now. At most four blocks, none of them ever empty: the greeting with the exam line,
+ * Bugün: what to do now. At most four blocks, none of them ever empty: the hero with the exam line,
  * the one next lesson, the mistakes to revisit, and the rehearsal when the exam is close (decision 0012).
  */
 export function TodayView() {
@@ -50,9 +42,16 @@ export function TodayView() {
   const open = openMistakes(lessons, records, questions, outcomes)
   const firstLesson = open.find((mistake) => mistake.source === 'lesson')
   const now = new Date()
-  const examLine = examDate
-    ? strings.path.examLine(daysUntil(examDate, now), dayLabel(examDate))
-    : strings.path.examWeekLine(examWeek.label)
+  const hero = strings.today.hero
+  const examDays = examDate ? daysUntil(examDate, now) : null
+  const examLine =
+    examDays === null
+      ? hero.examUnknown
+      : examDays > 0
+        ? hero.examDays(examDays)
+        : examDays === 0
+          ? hero.examToday
+          : hero.examPast
   const examSoon = daysUntil(examDate ?? examWeek.iso, now) <= EXAM_SOON_DAYS
 
   const stored = useDailyAnswer()
@@ -73,24 +72,32 @@ export function TodayView() {
     activityDays({ recorded, records, history, outcomes, chapters: chapterResults }),
   )
 
-  const greeting = greetingOf(now.getHours())
+  const doneCount = lessons.filter((l) => records[l.id]?.doneAt != null).length
+  // One sentence of state, by priority: a lesson in progress, nothing started, all done.
+  const stateLine = !main
+    ? hero.done
+    : stateOf(records[main.id]) === 'current'
+      ? hero.resume(main.title)
+      : doneCount === 0
+        ? hero.fresh
+        : hero.next
   const duo = useRef<DuoHandle>(null)
   useEffect(() => {
     duo.current?.react('happy')
   }, [])
 
   return (
-    <Screen title={greeting}>
+    <Screen title={strings.tabs.today}>
       <div className="td-root">
         <header className="td-top">
           <div className="td-head">
-            <div className="td-head__text">
-              <p className="td-head__greeting dz-large-title" aria-hidden="true">
-                {greeting}
-              </p>
-              <p className="td-head__exam">{examLine}</p>
-            </div>
             <CompanionSlot name="today" size="medium" mood="happy" alive duo={duo} />
+            <div className="td-head__text">
+              <p className="td-head__state dz-title3" data-testid="today-state">
+                {stateLine}
+              </p>
+              <p className="td-head__exam dz-footnote">{examLine}</p>
+            </div>
           </div>
           {days.some((day) => day.active) ? <WeekStrip days={days} /> : null}
         </header>

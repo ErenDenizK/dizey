@@ -4,7 +4,7 @@
   display: grid;
   justify-items: center;
   gap: var(--gap-related);
-  margin-top: calc(var(--space-6) * -1);
+  margin-top: var(--space-2);
   padding: 0;
 }
 .me-scene__state {

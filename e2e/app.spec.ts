@@ -39,9 +39,10 @@ test('the tab bar is Bugün, Harita, Sen and a fresh start leads into the first 
   await openApp(page)
   const buttons = page.getByRole('navigation', { name: 'Bölümler' }).getByRole('button')
   await expect(buttons).toHaveText(['Bugün', 'Harita', 'Sen'])
-  await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText(
-    /^(Günaydın|İyi günler|İyi akşamlar|İyi geceler)$/,
-  )
+  await expect(screen(page).getByRole('heading', { level: 1 })).toHaveText('Bugün')
+  await expect(screen(page).getByTestId('today-state')).toHaveText('İlk derse başlayalım.')
+  await expect(screen(page).getByText('Vize tarihi belli değil')).toBeVisible()
+  await expect(page.locator('.dz-icon-button--float')).toHaveCount(0)
   const next = screen(page).getByTestId('today-next')
   await expect(next).toContainText('Başla')
   await expect(next).toContainText('1.1')
@@ -262,7 +263,7 @@ test('Sen is a profile scene: duo, readiness map, badge wall, moments, mistakes 
   await expect(page.getByTestId('lesson-player')).toBeVisible()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
-  // The gear still opens Settings.
+  // The text button still opens Settings.
   await page.getByTestId('open-settings').click()
   await expect(page.getByRole('heading', { name: 'Ayarlar', level: 1 })).toBeVisible()
 })
@@ -270,11 +271,11 @@ test('Sen is a profile scene: duo, readiness map, badge wall, moments, mistakes 
 test('the exam line counts down once a date is set', async ({ page }) => {
   await openApp(page, './settings')
   await page.getByLabel('Vize 1 tarihi').fill('2026-11-19')
-  // Reaching the field scrolled the page, which tucks the back button away; scrolling up brings it back.
+  // Reaching the field scrolled the page; the header row with Bitti scrolls with it, so go back to the top.
   await pushed(page)
     .locator('.dz-screen')
     .evaluate((s) => s.scrollTo(0, 0))
-  await page.getByRole('button', { name: 'Sen’e dön' }).click()
+  await page.getByRole('button', { name: 'Bitti', exact: true }).click()
   await tab(page, 'Harita').click()
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
 })
@@ -322,7 +323,7 @@ test('the tab bar lens is a true pill, concentric with the bar', async ({ page }
   expect(style.w).toBeGreaterThan(style.h)
 })
 
-test('settings live behind the gear in Sen: palette, back, and labs behind a long press', async ({
+test('settings live behind the Ayarlar button in Sen: palette, back, and labs behind a long press', async ({
   page,
 }) => {
   await openApp(page, './me')
@@ -366,7 +367,7 @@ test('settings live behind the gear in Sen: palette, back, and labs behind a lon
   await pushed(page)
     .locator('.dz-screen')
     .evaluate((s) => s.scrollTo(0, 0))
-  await page.getByRole('button', { name: 'Sen’e dön' }).click()
+  await page.getByRole('button', { name: 'Bitti', exact: true }).click()
   await expect(page).toHaveURL(/\/me$/)
   await expect(screen(page).getByRole('heading', { name: 'Sen', level: 1 })).toBeVisible()
 })
@@ -665,16 +666,20 @@ test.describe('small phone (375 x 667) reach', () => {
     })
   }
 
-  test('a pushed screen floats its back button above the title without overlap', async ({ page }) => {
+  test('a second-level screen has its title and Bitti in a header row, with no floating circle', async ({
+    page,
+  }) => {
     await openApp(page, './settings')
     const title = page.getByRole('heading', { name: 'Ayarlar', level: 1 })
+    const done = page.getByRole('button', { name: 'Bitti', exact: true })
     // The screen arrives with motion: read the boxes once it has settled.
     await expect
       .poll(async () => {
-        const back = await page.locator('.dz-float-back').boundingBox()
-        const box = await title.boundingBox()
-        return Boolean(back && box && back.y >= 8 && back.y + back.height <= box.y)
+        const t = await title.boundingBox()
+        const d = await done.boundingBox()
+        return Boolean(t && d && d.x > t.x + t.width - 1 && d.width >= 44 && d.height >= 44 && d.y >= 0)
       })
       .toBe(true)
+    await expect(page.locator('.dz-icon-button--float, .dz-float-back')).toHaveCount(0)
   })
 })
