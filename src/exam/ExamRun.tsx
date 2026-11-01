@@ -21,6 +21,18 @@ const SWIPE = 56
 /** Under five minutes the clock turns red. */
 const LOW_MS = 5 * 60_000
 
+/** The widest matrix (in em) a half-width option card holds with real column spacing. */
+const FIT_EM = 9.2
+/** Rough width of a matrix in em: columns as wide as their longest entry (min 1.6em), gaps and brackets. */
+function matrixWidth(rows: readonly (readonly string[])[]): number {
+  const columns = rows[0]?.length ?? 0
+  let width = 1.5 + 1.5 + 0.75 * Math.max(columns - 1, 0)
+  for (let c = 0; c < columns; c++) {
+    width += Math.max(1.6, 0.62 * Math.max(...rows.map((row) => (row[c] ?? '').length)))
+  }
+  return width
+}
+
 /**
  * The rehearsal: an exam hall in the lesson's own frame. The top bar holds the way out (the attempt is
  * kept), the paper as one segment per question (tap: the question map) and the clock. The dock holds
@@ -86,6 +98,12 @@ export function ExamRun() {
   const flagged = session.flagged.includes(id)
   const counts = tally(session)
   const wide = question.options.some((option) => option.content.some((block) => block.kind !== 'text'))
+  // Two columns only when the widest matrix still fits one with real column spacing at 390 px.
+  const stacked = question.options.some((option) =>
+    option.content.some(
+      (block) => block.kind !== 'text' && (block.kind !== 'matrix' || matrixWidth(block.rows) > FIT_EM),
+    ),
+  )
   const go = (index: number) => saveSession(goTo(session, index))
   const end = () => {
     setMapOpen(false)
@@ -174,6 +192,7 @@ export function ExamRun() {
               className="ex-opts exr-opts"
               aria-label={strings.exam.counter(session.current + 1, total)}
               data-wide={wide}
+              data-stacked={stacked}
             >
               {question.options.map((option) => (
                 <button
@@ -206,7 +225,6 @@ export function ExamRun() {
             className="exr-icon"
             aria-label={flagged ? strings.exam.unflag : strings.exam.flag}
             aria-pressed={flagged}
-            data-on={flagged}
             onClick={() => saveSession(toggleFlag(session, id))}
           >
             <Flag active={flagged} />
@@ -221,7 +239,7 @@ export function ExamRun() {
         </div>
       </div>
 
-      <Sheet open={mapOpen} onClose={() => setMapOpen(false)} stage={frame} label={strings.exam.map}>
+      <Sheet open={mapOpen} onClose={() => setMapOpen(false)} stage={frame} label={strings.exam.map} fit>
         <div className="sh-sheet-body exr-map">
           <div className="exr-map__head">
             <h2 className="dz-title2">{strings.exam.map}</h2>
@@ -229,7 +247,10 @@ export function ExamRun() {
               {strings.exam.mapTally(counts.answered, counts.blank, counts.flagged)}
             </span>
           </div>
-          <div className="exr-map__grid" style={{ '--cols': total > 15 ? 6 : 5 } as React.CSSProperties}>
+          <div
+            className="exr-map__grid"
+            style={{ '--cols': Math.ceil(total / Math.ceil(total / 6)) } as React.CSSProperties}
+          >
             {session.questionIds.map((qid, index) => (
               <button
                 key={qid}

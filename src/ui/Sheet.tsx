@@ -15,7 +15,22 @@ import { safeTop } from './safe-area'
  */
 function geometry(sheet: HTMLElement | null) {
   const height = sheet?.parentElement?.clientHeight ?? window.innerHeight
-  return { height, medium: Math.round(height * 0.48), large: safeTop() + 24, closed: height }
+  const large = safeTop() + 24
+  let medium = Math.round(height * 0.48)
+  // A fitting sheet rises exactly as far as its content needs, never past the large detent.
+  if (sheet?.dataset.fit !== undefined) {
+    const style = getComputedStyle(sheet)
+    let content = Number.parseFloat(style.paddingTop) + Number.parseFloat(style.paddingBottom)
+    for (const child of Array.from(sheet.children)) {
+      const box = getComputedStyle(child)
+      content +=
+        (child as HTMLElement).offsetHeight +
+        Number.parseFloat(box.marginTop) +
+        Number.parseFloat(box.marginBottom)
+    }
+    medium = Math.max(large, Math.round(height - content))
+  }
+  return { height, medium, large, closed: height }
 }
 
 export function Sheet({
@@ -24,6 +39,7 @@ export function Sheet({
   stage,
   label,
   detent = 'medium',
+  fit = false,
   children,
 }: {
   open: boolean
@@ -33,6 +49,8 @@ export function Sheet({
   label: string
   /** Where it rises to: tall content opens at the large detent. */
   detent?: 'medium' | 'large'
+  /** Rise only as far as the content needs, so no dead space is left under it. */
+  fit?: boolean
   children: ReactNode
 }) {
   const sheet = useRef<HTMLDivElement>(null)
@@ -169,7 +187,15 @@ export function Sheet({
   return (
     <>
       <div ref={scrim} className="dz-scrim" onClick={onClose} aria-hidden="true" />
-      <div ref={sheet} className="dz-sheet" role="dialog" aria-modal="true" aria-label={label} tabIndex={-1}>
+      <div
+        ref={sheet}
+        className="dz-sheet"
+        data-fit={fit ? '' : undefined}
+        role="dialog"
+        aria-modal="true"
+        aria-label={label}
+        tabIndex={-1}
+      >
         <button type="button" className="dz-grabber-hit" onClick={cycle} aria-label={label}>
           <span className="dz-grabber" />
         </button>
