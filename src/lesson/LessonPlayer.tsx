@@ -330,8 +330,13 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
 
               {isQuestion(step) && wrongFeedback && !attempt.revealed ? (
                 <div className="ls-feedback" role="status" data-tone="wrong">
-                  <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
-                  <RichText text={wrongFeedback} />
+                  <span className="ls-feedback__mark" aria-hidden="true">
+                    <Close />
+                  </span>
+                  <p className="ls-feedback__text">
+                    <b className="ls-feedback__lead">{strings.lesson.wrong} </b>
+                    <RichText text={wrongFeedback} />
+                  </p>
                 </div>
               ) : null}
             </div>

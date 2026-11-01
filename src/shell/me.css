@@ -73,7 +73,7 @@
   flex: none;
   width: 32px;
   height: 32px;
-  border-radius: 10px;
+  border-radius: var(--corner-inner);
   background: var(--control-soft);
   color: var(--ink-1);
   box-shadow: inset 0 0 0 0.5px var(--hairline);
