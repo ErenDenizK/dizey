@@ -15,7 +15,7 @@ import { hasNewProgress, moodOf, parseSeen } from '../progress/readiness'
 import { BadgeShelf } from '../rewards/BadgeShelf'
 import { badgeOf } from '../rewards/badges'
 import { Emblem } from '../rewards/Emblem'
-import { ChevronRight } from '../ui/icons'
+import { ChevronRight, GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { CompanionSlot } from './CompanionSlot'
@@ -31,8 +31,14 @@ export function MeView() {
     <Screen
       title={strings.me.title}
       action={
-        <PressLink to="/settings" className="dz-text-button" data-testid="open-settings" data-sound="open">
-          {strings.settings.open}
+        <PressLink
+          to="/settings"
+          className="me-gear"
+          aria-label={strings.settings.open}
+          data-testid="open-settings"
+          data-sound="open"
+        >
+          <GearIcon />
         </PressLink>
       }
     >

@@ -49,7 +49,7 @@ export function ExamResult() {
 function Result({ session }: { session: ExamSession }) {
   const navigate = useNavigate()
   // A chapter test returns to the map; a rehearsal to the exam hub.
-  const home = isChapterSet(session.set) ? '/map' : '/exam'
+  const home = isChapterSet(session.set) ? '/' : '/exam'
   const result = score(session, questions)
   const paper = session.questionIds
     .map((id) => byId.get(id))
@@ -250,7 +250,7 @@ function Result({ session }: { session: ExamSession }) {
           data-sound="close"
           onClick={() => void navigate({ to: home })}
         >
-          {home === '/map' ? strings.exam.backToMap : strings.exam.done}
+          {home === '/' ? strings.exam.backToMap : strings.exam.done}
         </Pressable>
       </div>
     </div>

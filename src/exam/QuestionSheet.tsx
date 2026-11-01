@@ -10,6 +10,7 @@ import { Pressable } from '../ui/Pressable'
 import { Sheet } from '../ui/Sheet'
 import { Blocks, RichText } from './Blocks'
 import './exam.css'
+import './question-sheet.css'
 
 /**
  * One bank question in a sheet, answered on the spot: pick an option, check it, read the worked solution.

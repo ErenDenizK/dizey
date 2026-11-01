@@ -238,3 +238,19 @@
   font-weight: var(--weight-medium);
   overflow-wrap: anywhere;
 }
+
+/* Ayarlar: a solid round button, 44 px, on the surface with a hairline edge (a plain push, it does not grow). */
+.me-gear {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-right: var(--space-2);
+  border-radius: var(--corner-pill);
+  background: var(--surface-raised);
+  box-shadow:
+    inset 0 0 0 1px var(--hairline-strong),
+    var(--shadow-1);
+  color: var(--ink-1);
+  text-decoration: none;
+}

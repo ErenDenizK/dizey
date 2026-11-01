@@ -117,7 +117,7 @@ export function ExamRun() {
       <div ref={frame} className="exr-frame">
         <header className="exr-top">
           <Link
-            to={chapterTest ? '/map' : '/exam'}
+            to={chapterTest ? '/' : '/exam'}
             className="ls-top__btn"
             aria-label={chapterTest ? strings.exam.leaveChapterTest : strings.exam.leave}
           >
