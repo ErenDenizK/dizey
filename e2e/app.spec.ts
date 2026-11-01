@@ -117,6 +117,16 @@ test('the exam line counts down once a date is set', async ({ page }) => {
   await expect(screen(page).getByText(/19 Kasım/)).toBeVisible()
 })
 
+test('every path tile shows its whole title at phone width', async ({ page }) => {
+  await openApp(page)
+  const clipped = await screen(page)
+    .locator('.pa-tile__title')
+    .evaluateAll((titles) =>
+      titles.filter((t) => t.scrollHeight > t.clientHeight + 1).map((t) => t.textContent),
+    )
+  expect(clipped).toEqual([])
+})
+
 test('the app is dark even when the phone is in light mode', async ({ page }) => {
   await page.emulateMedia({ colorScheme: 'light' })
   await openApp(page, './me')
