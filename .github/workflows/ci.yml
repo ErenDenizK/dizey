@@ -1,11 +1,19 @@
 name: CI
 
+# Actions minutes are limited (3,000 a month on the free plan), so CI is split by cost:
+# - every PR push: typecheck, lint, unit tests and the chromium e2e suite on the production channel;
+# - the full matrix (iPhone WebKit plus the preview channel): only on a PR labelled "full-e2e",
+#   or by hand from the Actions tab. Claude runs the full suite in its own session before merging.
+# Pushes to main run nothing here: main only receives PRs that passed, and Pages builds main itself.
 on:
   pull_request:
     # "closed" runs no checks; its completion lets the Pages workflow drop the preview.
-    types: [opened, synchronize, reopened, closed]
-  push:
-    branches: [main]
+    types: [opened, synchronize, reopened, labeled, closed]
+    paths-ignore:
+      - 'docs/**'
+      - '**/*.md'
+      - '.claude/**'
+  workflow_dispatch:
 
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
@@ -16,9 +24,14 @@ permissions:
 
 jobs:
   checks:
-    if: github.event.action != 'closed'
+    # A label event only reruns when the label is the one that asks for the full matrix.
+    if: >-
+      github.event.action != 'closed' &&
+      (github.event.action != 'labeled' || github.event.label.name == 'full-e2e')
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 20
+    env:
+      FULL: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'full-e2e') }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -30,20 +43,40 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm test
-      - run: pnpm exec playwright install --with-deps webkit chromium
-      - name: E2E (production channel)
+      - name: Playwright version
+        id: pw
+        run: echo "version=$(pnpm exec playwright --version | awk '{print $2}')" >> "$GITHUB_OUTPUT"
+      - name: Cache Playwright browsers
+        id: pw-cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: pw-${{ runner.os }}-${{ steps.pw.outputs.version }}-${{ env.FULL == 'true' && 'full' || 'chromium' }}
+      - name: Install browsers
+        if: steps.pw-cache.outputs.cache-hit != 'true'
+        run: pnpm exec playwright install ${{ env.FULL == 'true' && 'webkit chromium' || 'chromium' }}
+      - name: Install browser system libraries
+        run: pnpm exec playwright install-deps ${{ env.FULL == 'true' && 'webkit chromium' || 'chromium' }}
+      - name: E2E (production channel, chromium)
+        if: env.FULL != 'true'
+        run: pnpm e2e --project=chromium
+        env:
+          E2E_CHANNEL: production
+      - name: E2E (production channel, full)
+        if: env.FULL == 'true'
         run: pnpm e2e
         env:
           E2E_CHANNEL: production
-      - name: E2E (preview channel)
+      - name: E2E (preview channel, full)
+        if: env.FULL == 'true'
         run: pnpm e2e
         env:
           E2E_CHANNEL: pr-0
       - uses: actions/upload-artifact@v7
-        if: always()
+        if: failure()
         with:
           name: playwright-report
           path: |
             playwright-report/
             test-results/
-          retention-days: 14
+          retention-days: 7
