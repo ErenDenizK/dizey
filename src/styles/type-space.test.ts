@@ -20,7 +20,7 @@ function files(dir: string): string[] {
 }
 
 /** Files owed a move onto the scale by another workstream. Remove an entry once its file is clean. */
-const PENDING = new Set<string>(['lab/sound-lab.css'])
+const PENDING = new Set<string>()
 
 const sheets = files(root)
   .filter((path) => path.endsWith('.css') && !path.endsWith('tokens.css'))
