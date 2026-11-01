@@ -24,4 +24,13 @@ describe('parseSettings', () => {
     expect(parseSettings('not json')).toEqual({})
     expect(parseSettings('[1]')).toEqual({})
   })
+
+  it('keeps a known colour palette and drops unknown ones', () => {
+    expect(parseSettings('{"colours":"tahta"}')).toEqual({ colours: 'tahta' })
+    expect(parseSettings('{"colours":"patlican","sound":false}')).toEqual({
+      colours: 'patlican',
+      sound: false,
+    })
+    expect(parseSettings('{"colours":"neon"}')).toEqual({})
+  })
 })

@@ -17,6 +17,8 @@ import { readSettings, saveSettings, useSettings } from '../progress/settings'
 import { BadgeShelf } from '../rewards/BadgeShelf'
 import { haptic } from '../sound/haptics'
 import { setMusicOn, setSoundInSilent, setSoundOn } from '../sound/player'
+import { choosePalette, paletteOf } from '../styles/apply-palette'
+import { PALETTE_IDS } from '../styles/palettes'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
@@ -30,6 +32,7 @@ export function MeView() {
       <CourseMatrix />
       <BadgeShelf />
       <MistakeLog />
+      <PaletteSetting />
       <h2 className="dz-section-label">{strings.me.settings}</h2>
       <div className="dz-list">
         <PressLink to="/lab/character" className="dz-row" data-sound="open">
@@ -229,6 +232,49 @@ function ExamDateSetting() {
         }}
       />
     </label>
+  )
+}
+
+/**
+ * The colour palettes side by side. Every tile is drawn in its own palette's tokens (data-palette-preview), so
+ * the learner sees all four at once and the choice applies to the whole app the moment it is tapped.
+ */
+function PaletteSetting() {
+  const current = paletteOf(useSettings())
+  return (
+    <section aria-labelledby="palette">
+      <h2 id="palette" className="dz-section-label">
+        {strings.me.palette}
+      </h2>
+      <div className="me-palettes">
+        {PALETTE_IDS.map((id) => (
+          <Pressable
+            key={id}
+            className="me-palette"
+            data-palette-preview={id}
+            data-sound="select"
+            aria-pressed={id === current}
+            onClick={() => choosePalette(id)}
+          >
+            <span className="me-palette__card" aria-hidden="true">
+              <i className="me-palette__line" />
+              <i className="me-palette__line me-palette__line--short" />
+              <span className="me-palette__roles">
+                <i data-role="row" />
+                <i data-role="col" />
+                <i data-role="ok" />
+                <i data-role="bad" />
+              </span>
+            </span>
+            <span className="me-palette__foot">
+              <span className="me-palette__name">{strings.me.palettes[id]}</span>
+              <i className="me-palette__action" aria-hidden="true" />
+            </span>
+          </Pressable>
+        ))}
+      </div>
+      <p className="dz-footnote sh-hint">{strings.me.paletteHint}</p>
+    </section>
   )
 }
 

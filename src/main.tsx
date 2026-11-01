@@ -5,6 +5,7 @@ import { engine, review, startAppDriver } from './engine/driver'
 import { requestPersistentStorage } from './lib/storage/db'
 import { routeTree } from './routeTree.gen'
 import { installSound } from './sound/player'
+import { installPalette } from './styles/apply-palette'
 import './styles/app.css'
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
@@ -15,6 +16,7 @@ declare module '@tanstack/react-router' {
   }
 }
 
+installPalette()
 startAppDriver()
 // Frame-by-frame review hook for scripts/lesson-review.mjs (pause and step the one clock).
 ;(window as unknown as { __dzReview?: unknown }).__dzReview = { engine, review }
