@@ -107,7 +107,7 @@ export const d1Determinant: Lesson = {
       eyebrow: 'Kural',
       title: '2×2 kuralı: $|A| = ad - bc$',
       body: '{row}Ana köşegen{/row} sol üstten sağ alta iner, çarpımı $ad$. {col}Diğer köşegen{/col} sağ üstten sol alta iner, çarpımı $bc$. Determinant: ana köşegen eksi diğer köşegen.',
-      scene: { items: ['G', '=', 'result'], result: 'ad − bc' },
+      scene: { items: ['G'] },
       beat: { kind: 'det2', matrix: 'G' },
     },
     {

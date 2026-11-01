@@ -113,7 +113,7 @@ export type Beat =
   | { readonly kind: 'equation'; readonly lines: readonly string[] }
   | { readonly kind: 'sequence'; readonly beats: readonly Beat[] }
 
-/** What is on the stage: matrix names from `Lesson.matrices`, `=`, `·` (product), `+`, and `result` (the answer slot). */
+/** What is on the stage: matrix names from `Lesson.matrices`, `=`, `·` (product), `+`, `~` (equivalent), and `result` (the answer slot). */
 export interface Scene {
   readonly items: readonly string[]
   /** Text shown in the result slot before it is computed, e.g. "?" or "0". */

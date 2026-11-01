@@ -285,13 +285,13 @@ function useStageLayout(
         const notes = work.current ? work.current.getBoundingClientRect().height + NOTE_GAP : 0
         const free = { width: box.clientWidth - padX, height: next - padY - notes - areaHeight }
         const measure = () => fitCell(free, { width: content.offsetWidth, height: content.offsetHeight })
-        // Matrices side by side with nothing between them (A and B, compared) stack when the stage is tall
+        // Matrices side by side with nothing (or only "∼") between them (A and B, compared) stack when the stage is tall
         // enough that stacking makes every cell clearly larger; a row with operators always reads across.
         delete content.dataset.flow
         let cell = measure()
         const stackable =
           content.querySelectorAll(':scope > .ls-item').length >= 2 &&
-          !content.querySelector(':scope > .ls-op, :scope > .ls-result')
+          !content.querySelector(':scope > .ls-op:not([data-op="~"]), :scope > .ls-result')
         if (stackable) {
           content.dataset.flow = 'column'
           const stacked = measure()
@@ -694,11 +694,11 @@ export function Stage({
       {scene ? (
         <div ref={sceneBox} className="ls-scene">
           {scene.items.map((item, index) => {
-            if (item === '=' || item === '·' || item === '+') {
+            if (item === '=' || item === '·' || item === '+' || item === '~') {
               return (
                 // biome-ignore lint/suspicious/noArrayIndexKey: scene items never reorder
-                <span key={index} className="ls-op" data-obj={`op${index}`}>
-                  {item}
+                <span key={index} className="ls-op" data-obj={`op${index}`} data-op={item}>
+                  {item === '~' ? '∼' : item}
                 </span>
               )
             }

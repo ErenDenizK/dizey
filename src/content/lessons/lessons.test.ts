@@ -468,7 +468,7 @@ describe('lessons', () => {
       it('refers only to its own matrices, with cells in range', () => {
         for (const step of lesson.steps) {
           for (const item of step.scene?.items ?? []) {
-            if (!['=', '·', '+', 'result'].includes(item)) matrixOf(lesson, item)
+            if (!['=', '·', '+', '~', 'result'].includes(item)) matrixOf(lesson, item)
           }
           const beats = [
             step.kind === 'explain' ? step.beat : undefined,

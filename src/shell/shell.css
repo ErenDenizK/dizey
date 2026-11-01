@@ -253,6 +253,10 @@
 .ex-frac > span + span {
   border-top: 1.25px solid currentColor;
 }
+/* In an option matrix the fraction is the whole entry the learner compares: near full size. */
+.ls-opts .ex-frac {
+  font-size: 0.95em;
+}
 .ex-cell[data-bar="before"] {
   position: relative;
   margin-left: 10px;
@@ -489,6 +493,13 @@ a.sh-node {
   align-items: center;
   justify-content: center;
   gap: 0.4em;
+}
+/* Two matrices side by side never touch: a real gap, so their brackets cannot read as "][". */
+.ls-scene > .ls-item + .ls-item {
+  margin-left: 0.8em;
+}
+.ls-scene[data-flow="column"] > .ls-item + .ls-item {
+  margin-left: 0;
 }
 .ls-stage .ex-mat-wrap {
   gap: 0.3em;
@@ -943,14 +954,20 @@ a.sh-node {
   min-height: 52px;
   padding: var(--space-3) var(--card-pad);
   border-radius: var(--corner-button);
-  background: var(--sh-surface);
-  box-shadow: inset 0 0 0 1.5px var(--sh-line);
+  /* A filled well in the control family, a step darker than the keys: no outline anywhere in the app. */
+  background: var(--surface);
   font-family: var(--font-ui);
   font-size: var(--type-title1);
   font-variant-numeric: tabular-nums;
   text-align: center;
   line-height: var(--leading-title1);
   letter-spacing: var(--tracking-title1);
+}
+.ls-answer__hint {
+  color: var(--ink-3);
+  font-size: var(--type-body);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-title1);
 }
 .ls-keypad {
   display: grid;
@@ -982,6 +999,9 @@ a.sh-node {
   font-weight: var(--weight-semibold);
   line-height: var(--leading-title3);
   letter-spacing: var(--tracking-title3);
+}
+.ls-key--go[data-wide="true"] {
+  grid-column: span 4;
 }
 .ls-key:disabled {
   opacity: 0.45;
