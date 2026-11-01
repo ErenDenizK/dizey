@@ -43,22 +43,48 @@ jobs:
           pnpm install --frozen-lockfile
           DIZEY_CHANNEL=production DIZEY_BASE=/${{ github.event.repository.name }}/ GITHUB_SHA=$(git rev-parse HEAD) pnpm build
           mkdir -p _site && cp -r dist/. _site/
-      - name: Build open PR previews
+      # Only the PR whose CI just passed is rebuilt. Every other open preview is copied from the
+      # live site when its recorded commit still matches, and rebuilt only when it does not.
+      # (Actions minutes are limited: rebuilding every preview on every run cost minutes per PR.)
+      - name: Build or reuse open PR previews
         id: previews
         env:
           GH_TOKEN: ${{ github.token }}
           REPO: ${{ github.repository }}
           NAME: ${{ github.event.repository.name }}
+          OWNER: ${{ github.repository_owner }}
+          TRIGGER: ${{ github.event.workflow_run.pull_requests[0].number || '' }}
         run: |
+          live="https://${OWNER,,}.github.io/$NAME/pr-preview"
+          reuse() { # number sha dir: copies a live preview built from this exact commit
+            local number=$1 sha=$2 dir=$3 file
+            [ "$(curl -fsS "$live/pr-$number/_preview-sha.txt" 2>/dev/null)" = "$sha" ] || return 1
+            curl -fsS "$live/pr-$number/_preview-files.txt" -o /tmp/files.txt || return 1
+            while read -r file; do
+              [ -n "$file" ] || continue
+              mkdir -p "$dir/$(dirname "$file")"
+              curl -fsS "$live/pr-$number/$file" -o "$dir/$file" || return 1
+            done < /tmp/files.txt
+            cp /tmp/files.txt "$dir/_preview-files.txt"
+            echo "$sha" > "$dir/_preview-sha.txt"
+          }
           list=""
           for row in $(gh pr list --repo "$REPO" --state open --json number,headRefOid,isCrossRepository \
               --jq '.[] | select(.isCrossRepository | not) | "\(.number):\(.headRefOid)"'); do
             number=${row%%:*}; sha=${row#*:}
+            dir="_site/pr-preview/pr-$number"
+            if [ "$number" != "$TRIGGER" ] && reuse "$number" "$sha" "$dir"; then
+              echo "Reused the live preview of PR #$number"
+              list="$list $number"
+              continue
+            fi
+            rm -rf "$dir"
             git fetch --no-tags origin "pull/$number/head"
             rm -rf "../pr-$number" && git worktree add --detach "../pr-$number" "$sha"
             if (cd "../pr-$number" && test -f package.json && pnpm install --frozen-lockfile \
                 && DIZEY_CHANNEL="pr-$number" DIZEY_BASE="/$NAME/pr-preview/pr-$number/" GITHUB_SHA="$sha" pnpm build); then
-              mkdir -p "_site/pr-preview/pr-$number" && cp -r "../pr-$number/dist/." "_site/pr-preview/pr-$number/"
+              mkdir -p "$dir" && cp -r "../pr-$number/dist/." "$dir/"
+              (cd "$dir" && find . -type f | sed 's|^\./||' | grep -v '^_preview-' | sort > /tmp/list.txt && mv /tmp/list.txt _preview-files.txt && echo "$sha" > _preview-sha.txt)
               list="$list $number"
             else
               echo "::warning::Preview build failed for PR #$number"
