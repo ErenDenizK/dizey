@@ -211,6 +211,11 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         : undefined
 
   const final = frames.at(-1) ?? emptyStage
+  // The keypad offers the fraction key for the whole lesson when any of its answers is a fraction.
+  const fractionPad = useMemo(
+    () => lesson.steps.some((s) => s.kind === 'keypad' && s.answer.includes('/')),
+    [lesson],
+  )
   // A question's option rows take what its scene leaves unused, keeping room for the reveal's extra lines.
   const fill = useMemo(() => {
     if (step.kind !== 'choice') return undefined
@@ -383,6 +388,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             {step.kind === 'keypad' && !attempt.revealed ? (
               <Keypad
                 sound="none"
+                fraction={fractionPad}
                 value={typed}
                 onChange={(value) => {
                   setTyped(value)
