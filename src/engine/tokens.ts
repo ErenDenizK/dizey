@@ -47,8 +47,22 @@ const OLD = {
   carrySide: fromStiffness(300, 1),
 } as const satisfies Record<string, SpringSpec>
 
+/**
+ * Light: the celebration layer (src/ui/shine.ts). Light has no mass, so both are critically damped: a glow
+ * swells in about a third of a second and dies away like an ember, several times slower than it came.
+ */
+const LIGHT = {
+  /** A glow swelling toward its peak. */
+  bloom: fromStiffness(320, 1),
+  /** A glow dying away after its peak. */
+  ember: fromStiffness(22, 1),
+  /** A ring of light or a sheen travelling across a surface. */
+  sheen: fromStiffness(60, 1),
+} as const satisfies Record<string, SpringSpec>
+
 export const SPRINGS = {
   ...OLD,
+  ...LIGHT,
   // Names the current components use, bound to the old preset that does the same job.
   /** = press */
   tap: OLD.press,
