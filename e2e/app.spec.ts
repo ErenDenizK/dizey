@@ -266,6 +266,11 @@ test('Sen is a profile scene: duo, readiness map, badge wall, moments, mistakes 
   await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
   await expect(sen.getByRole('heading', { name: /Rozetler/ })).toBeVisible()
   await expect(sen.getByTestId('moments-album')).toBeVisible()
+  // No explanatory caption under the map, and the unearned badges are one tile, not a wall.
+  await expect(sen.getByText(/Her kare bir ders/)).toHaveCount(0)
+  await expect(sen.getByText(/Çalıştıkça gelir/)).toHaveCount(0)
+  await expect(sen.getByTestId('badges-more')).toHaveCount(1)
+  await expect(sen.getByTestId('badges-more')).toContainText('10 tane daha')
   // A wrong first try in the first determinant lesson fills the log row and colours its map cell.
   await openApp(page, './lesson/d1-determinant')
   const player = page.getByTestId('lesson-player')
@@ -663,6 +668,40 @@ test.describe('motion and visual system lab', () => {
 
 test.describe('small phone (375 x 667) reach', () => {
   test.use({ viewport: { width: 375, height: 667 } })
+
+  test('Sen scrolls its last row clear of the tab bar with progress seeded', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    const done = (n: number, ok: boolean) => ({
+      at: null,
+      doneAt: 1700000000000 + n,
+      answers: { 'try-size': { given: 'x', correct: ok } },
+    })
+    await page.addInitScript(
+      ([key, value]) => localStorage.setItem(key as string, value as string),
+      [
+        `${prefix}dizey.lessons`,
+        JSON.stringify({
+          'm1-reading-a-matrix': done(1, true),
+          'm2-matrix-types': done(2, false),
+          'd1-determinant': { at: null, doneAt: null, answers: { x: { given: 'x', correct: false } } },
+        }),
+      ],
+    )
+    await openApp(page, './me')
+    const sen = screen(page)
+    await expect(sen.getByTestId('me-scene')).toBeVisible()
+    await expect(sen.getByTestId('badges-more')).toBeVisible()
+    await expect(sen.locator('.me-map')).toBeVisible()
+    await page.evaluate(() => {
+      const pane = document.querySelector('.sh-pane:not([inert])')
+      for (const el of pane?.querySelectorAll('*') ?? [])
+        if (el.scrollHeight > el.clientHeight + 1) el.scrollTop = 1e6
+    })
+    const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
+    const last = await sen.getByTestId('moments-album').boundingBox()
+    expect(last && bar && last.y + last.height <= bar.y).toBe(true)
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  })
 
   test('the daily question sheet keeps its action in view and the solution scrolls', async ({ page }) => {
     await page.emulateMedia({ reducedMotion: 'reduce' })
