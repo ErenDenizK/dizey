@@ -700,29 +700,39 @@ describe('lessons', () => {
 describe('gizli an', () => {
   const holders = lessons.filter((lesson) => lesson.moment)
 
-  it('exists in d1-determinant', () => {
-    expect(holders.map((lesson) => lesson.id)).toContain('d1-determinant')
+  it('exists in the lessons that have one', () => {
+    expect(holders.map((lesson) => lesson.id)).toEqual(
+      expect.arrayContaining([
+        'd1-determinant',
+        'd2-cofactor-expansion',
+        'd3-determinant-properties',
+        'r3-rank',
+        'r4-inverse',
+        's3-homogeneous-systems',
+      ]),
+    )
   })
 
   for (const lesson of holders) {
     const moment = lesson.moment as NonNullable<Lesson['moment']>
-    it(`${lesson.id}: its options are the true value and the two named slips`, () => {
-      const a = numeric(matrixOf(lesson, 'Z'))
-      const det = M.determinant(a)
-      const [plus, minus] = sarrusSums(a)
-      const value = (key: string) => {
-        const first = moment.options.find((o) => o.key === key)?.content[0]
-        return first?.kind === 'text' ? first.text.replaceAll('$', '') : ''
-      }
-      // 3rd column = 1st + 2nd.
-      for (let r = 0; r < 3; r++) {
-        expect(Q.format(M.at(a, r, 2))).toBe(Q.format(Q.add(M.at(a, r, 0), M.at(a, r, 1))))
-      }
-      expect(value(moment.answer)).toBe(Q.format(det))
-      expect(Q.format(det)).toBe('0')
-      expect(value('a')).toBe(Q.format(plus)) // only the down diagonals
-      expect(value('c')).toBe(Q.format(Q.add(plus, minus))) // both sums added
-    })
+    if (lesson.id === 'd1-determinant')
+      it(`${lesson.id}: its options are the true value and the two named slips`, () => {
+        const a = numeric(matrixOf(lesson, 'Z'))
+        const det = M.determinant(a)
+        const [plus, minus] = sarrusSums(a)
+        const value = (key: string) => {
+          const first = moment.options.find((o) => o.key === key)?.content[0]
+          return first?.kind === 'text' ? first.text.replaceAll('$', '') : ''
+        }
+        // 3rd column = 1st + 2nd.
+        for (let r = 0; r < 3; r++) {
+          expect(Q.format(M.at(a, r, 2))).toBe(Q.format(Q.add(M.at(a, r, 0), M.at(a, r, 1))))
+        }
+        expect(value(moment.answer)).toBe(Q.format(det))
+        expect(Q.format(det)).toBe('0')
+        expect(value('a')).toBe(Q.format(plus)) // only the down diagonals
+        expect(value('c')).toBe(Q.format(Q.add(plus, minus))) // both sums added
+      })
 
     it(`${lesson.id}: its id does not clash with a step and its claims hold`, () => {
       expect(lesson.steps.map((s) => s.id)).not.toContain(moment.id)

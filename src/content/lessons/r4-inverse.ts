@@ -22,6 +22,11 @@ export const r4Inverse: Lesson = {
   node: 'R4',
   title: 'Ters matris: Gauss-Jordan ve özdeşlikler',
   matrices: {
+    D: m('D =', [
+      ['2', '0', '0'],
+      ['0', '-1', '0'],
+      ['0', '0', '4'],
+    ]),
     A: m('A =', [
       ['1', '2', '0'],
       ['0', '1', '1'],
@@ -391,4 +396,58 @@ export const r4Inverse: Lesson = {
       ],
     },
   ],
+  moment: {
+    id: 'moment-diagonal',
+    kind: 'choice',
+    eyebrow: 'Gizli an',
+    title: 'Hesaplamadan söyle: $D^{-1}$’in köşegeni ne?',
+    body: '$[D \\mid I]$ yazmana gerek yok.',
+    skill: 'inverse-diagonal',
+    scene: { items: ['D'] },
+    options: [
+      {
+        key: 'a',
+        content: [text('$(-2,\\ 1,\\ -4)$')],
+        errorType: 'negated',
+        feedback:
+          'Ters, işaret çevirmek değil: $D \\cdot D^{-1} = I$ olmalı. $2 \\cdot (-2) = -4$, $1$ değil.',
+      },
+      { key: 'b', content: [text('$(\\tfrac{1}{2},\\ -1,\\ \\tfrac{1}{4})$')] },
+      {
+        key: 'c',
+        content: [text('$(\\tfrac{1}{2},\\ 1,\\ \\tfrac{1}{4})$')],
+        errorType: 'dropped-sign',
+        feedback: '$-1$’in tersi yine $-1$: $(-1)(-1) = 1$.',
+      },
+    ],
+    answer: 'b',
+    reveal: {
+      kind: 'frames',
+      frames: [
+        {
+          clear: true,
+          marks: [
+            { cell: ['D', 0, 0], tone: 'ok' },
+            { cell: ['D', 1, 1], tone: 'ok' },
+            { cell: ['D', 2, 2], tone: 'ok' },
+          ],
+          note: 'Her köşegen elemanının tersi: 1/2, −1, 1/4',
+        },
+      ],
+    },
+    solution:
+      'Köşegen matrisi çarpmak her satırı kendi köşegen elemanıyla çarpmaktır. Geri almak için her elemanın tersiyle çarparsın: $D^{-1}$ köşegeni $\\frac{1}{2}, -1, \\frac{1}{4}$ olan köşegen matris.',
+    claims: [
+      {
+        kind: 'derived',
+        of: 'inverse',
+        matrix: 'D',
+        equals: [
+          ['1/2', '0', '0'],
+          ['0', '-1', '0'],
+          ['0', '0', '1/4'],
+        ],
+      },
+    ],
+  },
 }

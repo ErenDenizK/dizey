@@ -18,6 +18,15 @@ export const d3DeterminantProperties: Lesson = {
   node: 'D3',
   title: 'Determinant özellikleri: hesaplamadan bulmak',
   matrices: {
+    W: m(
+      '$|W|$ =',
+      [
+        ['0', '0', '3'],
+        ['0', '2', '0'],
+        ['1', '0', '0'],
+      ],
+      true,
+    ),
     A: m(
       '$|A|$ =',
       [
@@ -422,4 +431,53 @@ export const d3DeterminantProperties: Lesson = {
       ],
     },
   ],
+  moment: {
+    id: 'moment-swap',
+    kind: 'choice',
+    eyebrow: 'Gizli an',
+    title: 'Hesaplamadan söyle: $|W|$ kaç?',
+    body: 'Bir takas uzakta bir köşegen var.',
+    skill: 'det-row-swap',
+    scene: { items: ['W', '=', 'result'], result: '?' },
+    options: [
+      {
+        key: 'a',
+        content: [text('$6$')],
+        errorType: 'forgot-swap-sign',
+        feedback: 'Köşegene getirmek için 1. ve 3. satırı takas ettin; her takas işareti çevirir.',
+      },
+      { key: 'b', content: [text('$-6$')] },
+      {
+        key: 'c',
+        content: [text('$0$')],
+        errorType: 'zeros-mean-zero',
+        feedback: 'Sıfır çok ama sıfır satır da orantılı satır da yok.',
+      },
+    ],
+    answer: 'b',
+    reveal: {
+      kind: 'frames',
+      frames: [
+        {
+          clear: true,
+          marks: [
+            { cell: ['W', 0, '*'], tone: 'row' },
+            { cell: ['W', 2, '*'], tone: 'row' },
+          ],
+          note: '$R_1 \\leftrightarrow R_3$: işaret değişir',
+        },
+        {
+          marks: [
+            { cell: ['W', 0, 2], tone: 'ok' },
+            { cell: ['W', 1, 1], tone: 'ok' },
+            { cell: ['W', 2, 0], tone: 'ok' },
+          ],
+          note: '−(1 · 2 · 3) = −6',
+        },
+      ],
+    },
+    solution:
+      '1. ve 3. satır takas edilince köşegeni $1, 2, 3$ olan bir köşegen matris çıkar: determinantı $6$. Bir takas işareti çevirir: $|W| = -6$.',
+    claims: [{ kind: 'det', matrix: 'W', equals: '-6', answer: true }],
+  },
 }

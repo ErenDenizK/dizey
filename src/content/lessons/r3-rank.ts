@@ -14,6 +14,11 @@ export const r3Rank: Lesson = {
   node: 'R3',
   title: 'Rank',
   matrices: {
+    Y: m('A =', [
+      ['1', '2', '0', '1'],
+      ['0', '1', '1', '2'],
+      ['1', '4', '2', '5'],
+    ]),
     F: m('A =', [
       ['1', '2', '0', '3'],
       ['2', '4', '1', '8'],
@@ -192,4 +197,46 @@ export const r3Rank: Lesson = {
       ],
     },
   ],
+  moment: {
+    id: 'moment-hidden-row',
+    kind: 'choice',
+    eyebrow: 'Gizli an',
+    title: 'Hesaplamadan söyle: $\\text{rank}(A)$ kaç?',
+    body: 'Üçüncü satır gerçekten yeni mi?',
+    skill: 'rank-dependent-rows',
+    scene: { items: ['Y'] },
+    options: [
+      {
+        key: 'a',
+        content: [text('$1$')],
+        errorType: 'over-reduced',
+        feedback: 'İlk iki satır birbirinin katı değil; en az iki pivot var.',
+      },
+      { key: 'b', content: [text('$2$')] },
+      {
+        key: 'c',
+        content: [text('$3$')],
+        errorType: 'counted-rows',
+        feedback: 'Satır saydın. 3. satır ilk ikisinden üretiliyor.',
+      },
+    ],
+    answer: 'b',
+    reveal: {
+      kind: 'frames',
+      frames: [
+        {
+          clear: true,
+          marks: [
+            { cell: ['Y', 0, '*'], tone: 'row' },
+            { cell: ['Y', 1, '*'], tone: 'row' },
+          ],
+          note: '$R_1$ ve $R_2$',
+        },
+        { marks: [{ cell: ['Y', 2, '*'], tone: 'ok' }], note: '$R_3 = R_1 + 2R_2$ ⇒ rank 2' },
+      ],
+    },
+    solution:
+      '$(1, 4, 2, 5) = (1, 2, 0, 1) + 2 \\cdot (0, 1, 1, 2)$. Üçüncü satır yeni bilgi taşımıyor, ilk ikisi bağımsız: rank $2$.',
+    claims: [{ kind: 'rank', matrix: 'Y', equals: '2', answer: true }],
+  },
 }

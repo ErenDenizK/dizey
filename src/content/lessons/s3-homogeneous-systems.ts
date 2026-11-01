@@ -14,6 +14,17 @@ export const s3HomogeneousSystems: Lesson = {
   node: 'S3',
   title: 'Homojen sistemler',
   matrices: {
+    HZ: {
+      kind: 'matrix',
+      delimiter: 'brackets',
+      rows: [
+        ['1', '2', '-1', '0'],
+        ['2', '-1', '3', '0'],
+        ['1', '2', '-1', '0'],
+      ],
+      label: '$[A \\mid 0]$ =',
+      augmentedAt: 3,
+    },
     H: m('A =', [
       ['1', '2', '-1'],
       ['2', '5', '1'],
@@ -172,4 +183,49 @@ export const s3HomogeneousSystems: Lesson = {
       ],
     },
   ],
+  moment: {
+    id: 'moment-twin-equations',
+    kind: 'choice',
+    eyebrow: 'Gizli an',
+    title: 'Hesaplamadan söyle: bu sistemin kaç çözümü var?',
+    body: 'Denklemlere tek tek bak.',
+    skill: 'homogeneous-repeated-equation',
+    scene: { items: ['HZ'] },
+    options: [
+      {
+        key: 'a',
+        content: [text('Tek çözüm')],
+        errorType: 'square-means-unique',
+        feedback: 'Kare olması yetmez. 1. ve 3. denklem aynı; geriye 3 bilinmeyene 2 denklem kalır.',
+      },
+      { key: 'b', content: [text('Sonsuz çözüm')] },
+      {
+        key: 'c',
+        content: [text('Çözüm yok')],
+        errorType: 'homogeneous-no-solution',
+        feedback: 'Homojen sistemde $x = 0$ her zaman çözüm; "çözüm yok" olamaz.',
+      },
+    ],
+    answer: 'b',
+    reveal: {
+      kind: 'frames',
+      frames: [
+        {
+          clear: true,
+          marks: [
+            { cell: ['HZ', 0, '*'], tone: 'row' },
+            { cell: ['HZ', 2, '*'], tone: 'row' },
+          ],
+          note: '1. ve 3. denklem aynı',
+        },
+        { marks: [{ cell: ['HZ', 1, '*'], tone: 'ok' }], note: '$r_A = 2 < 3$ ⇒ sonsuz çözüm' },
+      ],
+    },
+    solution:
+      '1. ve 3. denklem aynı, 1. ve 2. orantılı değil: $r_A = 2 < 3$ bilinmeyen. Bir serbest değişken kalır, sonsuz çözüm.',
+    claims: [
+      { kind: 'rank', matrix: 'HZ', columns: 3, equals: '2' },
+      { kind: 'system', matrix: 'HZ', is: 'infinite', answer: true },
+    ],
+  },
 }
