@@ -629,10 +629,26 @@ a.sh-node {
   font-weight: var(--weight-bold);
 }
 .ls-area {
-  width: min(240px, 70vw);
-  max-height: 220px;
+  width: min(300px, 78vw);
+  max-height: 280px;
   height: auto;
   overflow: visible;
+}
+.ls-area__grid {
+  stroke: var(--sh-line);
+  stroke-width: 0.015;
+  opacity: 0.6;
+}
+.ls-area__label {
+  fill: var(--sh-muted);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  text-anchor: middle;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ls-area__label[data-tone="ok"] {
+  fill: var(--color-ok-ink);
 }
 .ls-area__axis {
   stroke: var(--sh-line);

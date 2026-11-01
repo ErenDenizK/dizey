@@ -18,6 +18,10 @@ export const d1Determinant: Lesson = {
       ['3', '1'],
       ['4', '2'],
     ]),
+    P: m('P =', [
+      ['2', '1'],
+      ['0', '1'],
+    ]),
     G: m('A =', [
       ['a', 'b'],
       ['c', 'd'],
@@ -92,10 +96,10 @@ export const d1Determinant: Lesson = {
       kind: 'explain',
       eyebrow: 'Sezgi',
       title: 'Determinant alanın kaç katına çıktığını söyler',
-      body: '$A$ birim kareyi, sütunları $(3, 4)$ ve $(1, 2)$ olan bir paralelkenara taşır. Bu paralelkenarın alanı $2$: alan $2$ katına çıktı. $\\det(A)$’nın mutlak değeri tam olarak bu katsayıdır.',
-      scene: { items: ['A'] },
-      beat: { kind: 'area', matrix: 'A' },
-      claims: [{ kind: 'det', matrix: 'A', equals: '2' }],
+      body: '$P$ birim kareyi sütunlarına, $(2, 0)$ ve $(1, 1)$’e taşır. Alan $1$’den $2$’ye çıkar: {ok}|P| = 2{/ok}.',
+      scene: { items: ['P'] },
+      beat: { kind: 'area', matrix: 'P' },
+      claims: [{ kind: 'det', matrix: 'P', equals: '2' }],
     },
     {
       id: 'rule-2x2',

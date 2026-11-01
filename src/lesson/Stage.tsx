@@ -60,6 +60,7 @@ function Area({
   }
   const [a, b, c, d] = [value(0, 0), value(0, 1), value(1, 0), value(1, 1)]
   const image = useRef<SVGPolygonElement>(null)
+  const imageLabel = useRef<SVGTextElement>(null)
   const unit = [
     [0, 0],
     [1, 0],
@@ -82,10 +83,13 @@ function Area({
     const svg = ref?.current
     const el = image.current
     if (!svg || !el || !points) return
+    const label = imageLabel.current
     if (!shown) {
       engine.set(svg, { opacity: 0 })
+      if (label) engine.set(label, { opacity: 0 })
       return
     }
+    if (label) engine.set(label, { opacity: 0, scale: 0.6 })
     const render = (values: Record<string, number>) => {
       const t = values.t ?? 1
       el.setAttribute(
@@ -101,7 +105,14 @@ function Area({
     engine.withChannel('lesson', () => {
       engine.bind(el, render, { t: 0 })
       engine.to(svg, { opacity: 1 }, 'enter')
-      engine.after(AREA_HOLD, () => engine.to(el, { t: 1 }, 'teach'))
+      // The new area lands on the image once it has formed: 1 became |det|.
+      engine.after(AREA_HOLD, () =>
+        engine.to(el, { t: 1 }, 'teach', {
+          onArrive: () => {
+            if (label) engine.to(label, { opacity: 1, scale: 1 }, 'land')
+          },
+        }),
+      )
     })
   }, [shown])
   if (!points) return null
@@ -110,6 +121,14 @@ function Area({
   const [minX, maxX, minY, maxY] = [Math.min(...xs), Math.max(...xs), Math.min(...ys), Math.max(...ys)]
   const pad = 0.6
   const view = `${minX - pad} ${-(maxY + pad)} ${maxX - minX + 2 * pad} ${maxY - minY + 2 * pad}`
+  // Integer grid: the unit square is one cell of it, so the image's area can be counted in cells.
+  const span = (from: number, to: number) =>
+    Array.from({ length: Math.floor(to) - Math.ceil(from) + 1 }, (_, i) => Math.ceil(from) + i)
+  const gridX = span(minX - pad, maxX + pad)
+  const gridY = span(minY - pad, maxY + pad)
+  const det = Math.abs((a as number) * (d as number) - (b as number) * (c as number))
+  const centre = [((a as number) + (b as number)) / 2, ((c as number) + (d as number)) / 2]
+  const fmt = (v: number) => (Number.isInteger(v) ? String(v) : v.toFixed(1)).replace('-', '−')
   return (
     <svg
       ref={ref}
@@ -121,10 +140,30 @@ function Area({
       data-obj="area"
       data-pending={shown ? undefined : 'true'}
     >
+      {gridX.map((x) => (
+        <line key={`x${x}`} x1={x} y1={-(minY - pad)} x2={x} y2={-(maxY + pad)} className="ls-area__grid" />
+      ))}
+      {gridY.map((y) => (
+        <line key={`y${y}`} x1={minX - pad} y1={-y} x2={maxX + pad} y2={-y} className="ls-area__grid" />
+      ))}
       <line x1={minX - pad} y1={0} x2={maxX + pad} y2={0} className="ls-area__axis" />
       <line x1={0} y1={-(minY - pad)} x2={0} y2={-(maxY + pad)} className="ls-area__axis" />
-      <polygon points={poly(unit)} className="ls-area__unit" />
       <polygon ref={image} points={poly(shown ? points : unit)} className="ls-area__image" />
+      <polygon points={poly(unit)} className="ls-area__unit" />
+      <text x={0.32} y={-0.68} className="ls-area__label" fontSize={0.36} dominantBaseline="central">
+        1
+      </text>
+      <text
+        ref={imageLabel}
+        x={centre[0]}
+        y={-(centre[1] as number)}
+        className="ls-area__label"
+        data-tone="ok"
+        fontSize={0.56}
+        dominantBaseline="central"
+      >
+        {fmt(det)}
+      </text>
     </svg>
   )
 }
