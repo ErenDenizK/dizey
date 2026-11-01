@@ -364,6 +364,7 @@ a.sh-node {
   text-decoration: none;
   cursor: pointer;
   line-height: var(--leading-none);
+  letter-spacing: var(--tracking-title);
 }
 .ls-top__btn:disabled {
   color: var(--sh-line);
@@ -960,6 +961,7 @@ a.sh-node {
   font-variant-numeric: tabular-nums;
   text-align: center;
   line-height: var(--leading-title1);
+  letter-spacing: var(--tracking-title1);
 }
 .ls-answer__hint {
   color: var(--ink-3);
@@ -984,6 +986,7 @@ a.sh-node {
   font-size: var(--type-title2);
   cursor: pointer;
   line-height: var(--leading-none);
+  letter-spacing: var(--tracking-title);
 }
 .ls-key[data-fn="true"] {
   background: var(--surface);
@@ -1031,6 +1034,7 @@ a.sh-node {
   font-weight: var(--weight-semibold);
   color: var(--ink-2);
   line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
 }
 /* App frame: tab panes and full-screen routes. */
 .sh-pane {
@@ -1073,6 +1077,7 @@ a.sh-node {
 }
 .sh-row-sub {
   display: block;
+  font-weight: var(--weight-regular);
 }
 .sh-hint {
   margin: var(--space-2) var(--space-1) 0;
@@ -1344,6 +1349,7 @@ a.dz-button[data-kind="primary"] {
   font-size: var(--type-title2);
   font-weight: var(--weight-semibold);
   line-height: var(--leading-none);
+  letter-spacing: var(--tracking-title);
 }
 .ls-seal__cell svg {
   width: 45%;

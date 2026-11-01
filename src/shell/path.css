@@ -22,10 +22,11 @@
   display: flex;
   align-items: baseline;
   gap: var(--space-1);
-  font-size: var(--type-callout);
+  font-size: var(--type-title3);
   font-weight: var(--weight-medium);
   color: var(--ink-2);
-  line-height: var(--leading-callout);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
 }
 .pa-summary__count b {
   font-size: var(--type-large);
@@ -43,6 +44,7 @@
   font-weight: var(--weight-semibold);
   color: var(--ink-1);
   line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
 }
 .pa-summary > :not(p) {
   grid-column: 1 / -1;
@@ -147,6 +149,7 @@
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   color: var(--ink-2);
+  letter-spacing: var(--tracking-small);
 }
 .pa-chapter__sub[data-complete] {
   color: var(--ok-ink);
@@ -314,6 +317,7 @@
   font-weight: var(--weight-semibold);
   box-shadow: var(--shadow-1);
   pointer-events: none;
+  letter-spacing: var(--tracking-caption);
 }
 
 /* ---- End of the path ---------------------------------------------------------- */

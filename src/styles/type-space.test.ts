@@ -90,6 +90,10 @@ function violations(path: string): string[] {
     // A role size always travels with its role's line height (rem line heights do not follow em sizes).
     if (size?.startsWith('var(--type-') && !get('line-height'))
       found.push(`role size without its line height: ${selector} { font-size: ${size} }`)
+    // Roles with non-zero tracking carry it, so one role never shows two spacings (menus read as one system).
+    const tracked = size?.match(/^var\(--type-(large|title1|title2|title3|footnote|caption)\)$/)?.[1]
+    if (tracked && !get('letter-spacing'))
+      found.push(`role size without its tracking: ${selector} { font-size: ${size} }`)
   }
   return found
 }
