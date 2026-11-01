@@ -479,6 +479,9 @@ a.sh-node {
   font-variant-numeric: tabular-nums;
   line-height: 1;
 }
+.ls-scene[data-flow="column"] {
+  flex-direction: column;
+}
 .ls-item {
   display: flex;
   flex-wrap: nowrap;
@@ -576,6 +579,13 @@ a.sh-node {
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
+/* Work lines alone on the stage take their size from the fitted cell, like a scene. */
+.ls-stage[data-solo] .ls-work {
+  width: max-content;
+  max-width: none;
+  row-gap: calc(var(--cell) * 0.25);
+  font-size: calc(var(--cell) * 0.5);
+}
 /* A matrix written in a work line (a reveal written as a bmatrix) is displayed math: stage-like, not text-size. */
 .ls-work .dz-m .dz-m-mat {
   gap: 0.1em 0.95em;
@@ -619,10 +629,26 @@ a.sh-node {
   font-weight: var(--weight-bold);
 }
 .ls-area {
-  width: min(240px, 70vw);
-  max-height: 220px;
+  width: min(300px, 78vw);
+  max-height: 280px;
   height: auto;
   overflow: visible;
+}
+.ls-area__grid {
+  stroke: var(--sh-line);
+  stroke-width: 0.015;
+  opacity: 0.6;
+}
+.ls-area__label {
+  fill: var(--sh-muted);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  text-anchor: middle;
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ls-area__label[data-tone="ok"] {
+  fill: var(--color-ok-ink);
 }
 .ls-area__axis {
   stroke: var(--sh-line);
