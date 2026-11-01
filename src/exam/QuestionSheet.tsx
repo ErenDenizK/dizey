@@ -104,7 +104,7 @@ export function QuestionSheet({
           </fieldset>
           {checked ? (
             <div className="td-q__result" data-testid="question-result" data-correct={correct}>
-              <p className="td-q__verdict">
+              <p className="td-q__verdict" ref={revealVerdict}>
                 <b>{correct ? strings.question.right : strings.question.wrong(question.answer)}</b>
                 {correct || !wrongNote ? null : ` ${wrongNote}`}
               </p>
@@ -137,4 +137,11 @@ export function QuestionSheet({
     </Sheet>,
     host,
   )
+}
+
+/** On a short phone the verdict lands below the options: bring it into view once it appears. */
+function revealVerdict(el: HTMLParagraphElement | null) {
+  if (!el) return
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  requestAnimationFrame(() => el.scrollIntoView({ block: 'nearest', behavior: reduced ? 'auto' : 'smooth' }))
 }
