@@ -23,7 +23,7 @@ async function start(page: Page) {
 test('Yol: one Birim, and it moves exactly with its tile when the page scrolls', async ({ page }) => {
   await start(page)
   const tile = page.locator('.sh-pane:not([inert]) .pa-tile[data-next]')
-  const birim = tile.locator('svg.birim')
+  const birim = page.locator('.sh-pane:not([inert]) .ph-slot[data-current] svg.birim')
   await expect(birim).toHaveCount(1)
   expect(await visibleBirims(page)).toBe(1)
   const box = async () => {
@@ -33,9 +33,12 @@ test('Yol: one Birim, and it moves exactly with its tile when the page scrolls',
   await expect.poll(async () => (await box()).b?.width ?? 0).toBeGreaterThan(30)
   const before = await box()
   // Scroll Yol's pane; go up when it already rests low, so the tile really moves.
-  await page.locator('.sh-pane:not([inert]) .dz-screen').first().evaluate((el) => {
-    el.scrollTop += el.scrollTop > 80 ? -60 : 60
-  })
+  await page
+    .locator('.sh-pane:not([inert]) .dz-screen')
+    .first()
+    .evaluate((el) => {
+      el.scrollTop += el.scrollTop > 80 ? -60 : 60
+    })
   await page.waitForTimeout(300)
   const after = await box()
   if (!before.t || !before.b || !after.t || !after.b) throw new Error('no boxes')
