@@ -39,6 +39,8 @@
   gap: 0;
   /* Clear of the settings button, which floats over the head's right edge. */
   padding-inline-end: calc(var(--target) + var(--space-2));
+  /* The name's target is taller than its line, and the title tucks into that slack: balance it so the stack's ink is centred on the avatar. */
+  padding-block-end: calc((var(--target) - var(--leading-title3)) / 2);
 }
 .me-name {
   display: grid;
@@ -124,7 +126,7 @@ section[aria-labelledby="badges"] > .dz-section-label {
   text-align: center;
 }
 .me-matrix__n[data-zero] {
-  color: var(--ink-2);
+  color: var(--ink-3);
 }
 .me-matrix__n {
   font-size: var(--type-title3);
