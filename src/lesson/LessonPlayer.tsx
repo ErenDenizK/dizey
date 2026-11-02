@@ -1,7 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Mirtis, type MirtisMood } from '../character/Mirtis'
-import { Perch } from '../character/Perch'
+import { Cheer } from '../character/Cheer'
+import type { MirtisMood } from '../character/Mirtis'
+import { lineOf, MOOD_OF, type Moment, pastHalf, pickMoment as pickCheer } from '../character/moments'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -42,6 +43,8 @@ const POLL_MS = 16
 /** The secret chord waits this long after the right pick, so it never lands on the correct chord (ms). */
 const SECRET_GAP = 520
 const MOMENT_CHANNEL = 'moment'
+/** The first step's cat comes in after the lesson's own entrance has settled (ms). */
+const GREET_DELAY = 650
 
 /** First-try answers in a row that turn the correct chord into a streak. */
 const STREAK = 3
@@ -114,6 +117,56 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     })
   // First-try answers in a row during this visit.
   const run = useRef(0)
+  // Mırtis's moments (src/character/moments.ts): what she has already done this visit, and what she does now.
+  const memo = useRef<{ lastAt: number | null; halfDone: boolean; prevMissed: boolean }>({
+    lastAt: null,
+    halfDone: false,
+    prevMissed: false,
+  })
+  const [cheer, setCheer] = useState<Moment | null>(null)
+  const [hello, setHello] = useState<Moment | null>(null)
+  // The lesson's first explain step: she wakes on its card once the lesson has settled.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: once, when the lesson opens
+  useEffect(() => {
+    const first = lesson.steps[index]
+    if (index !== 0 || !first || isQuestion(first)) return
+    const m = pickCheer({
+      index,
+      count: lesson.steps.length,
+      kind: 'explain',
+      run: 0,
+      prevMissed: false,
+      wrong: 0,
+      solved: false,
+      revealed: false,
+      lastAt: null,
+      halfDone: false,
+    })
+    if (!m) return
+    memo.current.lastAt = 0
+    engine.withChannel('hello', () => engine.after(GREET_DELAY, () => setHello(m)))
+    return () => engine.cancelCues('hello')
+  }, [])
+  /** The verdict is out: does she step in? */
+  const settle = (solved: boolean, wrong: number) => {
+    const mem = memo.current
+    const m = pickCheer({
+      index,
+      count: lesson.steps.length,
+      kind: 'question',
+      run: run.current,
+      prevMissed: mem.prevMissed,
+      wrong,
+      solved,
+      revealed: true,
+      lastAt: mem.lastAt,
+      halfDone: mem.halfDone,
+    })
+    if (m) mem.lastAt = index
+    if (pastHalf(index, lesson.steps.length)) mem.halfDone = true
+    mem.prevMissed = !solved || wrong > 0
+    setCheer(m)
+  }
 
   // The interface's taps take the step's chord; a new step sounds its chord (the lesson opening has its own).
   const sounded = useRef<number | null>(null)
@@ -142,6 +195,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const back = useRef<HTMLButtonElement>(null)
   const backOff = index === 0 || ended !== null || moment !== null
   useEase(back, !backOff)
+  // Her paws are on the counter while she greets, so the counter steps aside (an eased fade, never a cut).
+  const count = useRef<HTMLSpanElement>(null)
+  useEase(count, !hello)
   useLessonMotion(root, index, lesson.steps.length)
   useAnswerMotion(root, attempt.wrong, attempt.solved)
 
@@ -190,6 +246,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     shown > 0 ? (frames[shown - 1] ?? emptyStage) : { ...emptyStage, lines: frames[0]?.lines ?? [] }
 
   const go = (next: number) => {
+    engine.cancelCues('hello')
+    setHello(null)
+    setCheer(null)
     setReplays(0)
     setHeld(false)
     setAttempt(freshAttempt)
@@ -204,6 +263,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       run.current = attempt.wrong.length === 0 ? run.current + 1 : 0
       cue(run.current >= STREAK ? 'streak' : 'correct')
       haptic(14)
+      settle(true, attempt.wrong.length)
       setAttempt((a) => ({ ...a, solved: true, revealed: true }))
     } else {
       run.current = 0
@@ -445,6 +505,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         {/* Only the step number rolls; the code and the total stay still. */}
         {/* Room for the widest count from the start, so a new tens digit never shifts the code in one frame. */}
         <span
+          ref={count}
           className="ls-count"
           aria-hidden="true"
           style={{
@@ -460,6 +521,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       ) : (
         <>
           <div className="ls-main" data-stage={hasStage}>
+            {/* The first step's greeting: perched on the top edge of the first card, and gone with the step. */}
+            {hello ? <Cheer greet line={lineOf(hello)} /> : null}
             {hasStage ? (
               <Stage
                 lesson={lesson}
@@ -510,7 +573,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
 
           <div className="ls-dock" data-verdict={isQuestion(step) && attempt.revealed}>
             {isQuestion(step) && attempt.revealed ? (
-              <Verdict step={step} attempt={attempt} insight={Boolean(moment)} />
+              <Verdict
+                step={step}
+                attempt={attempt}
+                insight={Boolean(moment)}
+                cheer={moment ? null : cheer}
+              />
             ) : null}
             {attempt.revealed ? null : options}
             {step.kind === 'keypad' && !attempt.revealed ? (
@@ -537,7 +605,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
                 disabled={moment !== null}
                 aria-hidden={moment ? true : undefined}
                 tabIndex={moment ? -1 : undefined}
-                onClick={() => setAttempt((a) => ({ ...a, revealed: true }))}
+                onClick={() => {
+                  settle(false, attempt.wrong.length)
+                  setAttempt((a) => ({ ...a, revealed: true }))
+                }}
               >
                 {strings.lesson.showAnswer}
               </button>
@@ -591,16 +662,28 @@ type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
  * The answer, once it is out: one verdict in the dock where the options were (old feedback sheet). It names
  * what the learner gave and the right answer, then the worked solution; the question stays above it.
  */
-function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt; insight: boolean }) {
+function Verdict({
+  step,
+  attempt,
+  insight,
+  cheer,
+}: {
+  step: Question
+  attempt: Attempt
+  insight: boolean
+  cheer: Moment | null
+}) {
   const tone = attempt.solved ? 'ok' : attempt.wrong.length ? 'missed' : 'shown'
   // Mırtis: glad on a right first try, a wow when the gizli an opens, quiet after a slip, caught out on a miss.
-  const mood: MirtisMood = attempt.solved
-    ? insight
-      ? 'wow'
-      : attempt.wrong.length === 0
-        ? 'happy'
-        : 'rest'
-    : 'oops'
+  const mood: MirtisMood = cheer
+    ? MOOD_OF[cheer.play]
+    : attempt.solved
+      ? insight
+        ? 'wow'
+        : attempt.wrong.length === 0
+          ? 'happy'
+          : 'rest'
+      : 'oops'
   const title = attempt.solved
     ? strings.lesson.verdictRight
     : attempt.wrong.length
@@ -617,11 +700,15 @@ function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt;
   })
   const right = step.kind === 'choice' ? step.options.find((option) => option.key === step.answer) : undefined
   return (
-    <section className="ls-verdict" role="status" data-tone={tone} aria-label={title}>
-      {/* Perched on the sheet's top edge at the right; she rises just after the dock's own entrance. */}
-      <Perch right={16} delay={VERDICT_PERCH_DELAY}>
-        <Mirtis size="verdict" mood={mood} />
-      </Perch>
+    <section
+      className="ls-verdict"
+      role="status"
+      data-tone={tone}
+      aria-label={cheer ? `${title}. ${lineOf(cheer)}` : title}
+    >
+      {/* Perched on the sheet's top edge at the right; she rises just after the dock's own entrance. The bubble is
+          hidden from screen readers: its line is part of this status's label. */}
+      <Cheer mood={mood} delay={VERDICT_PERCH_DELAY} {...(cheer ? { line: lineOf(cheer) } : {})} />
       <p className="ls-verdict__title">
         {title}
         {given.length ? (

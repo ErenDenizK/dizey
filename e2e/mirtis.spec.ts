@@ -55,10 +55,11 @@ test('lesson: a right answer shows one Mırtis in the verdict, and the end shows
   await page.locator('.sh-pane:not([inert])').getByTestId('today-next').click()
   const player = page.getByTestId('lesson-player')
   await expect(player).toBeVisible()
-  expect(await visibleMırtiss(page)).toBe(0)
 
   const next = player.getByRole('button', { name: 'İleri' })
   while (!(await player.getByRole('group').count())) await next.click()
+  // An unanswered question never has her on it (the first step's greeting left with its step).
+  await expect.poll(() => visibleMırtiss(page)).toBe(0)
   await player.getByRole('group').getByRole('button').filter({ hasText: /^b/ }).click()
   const verdict = player.getByRole('status')
   await expect(verdict).toContainText('Doğru')
@@ -101,4 +102,74 @@ test('no Mırtis is ever under 48 px wide, on any screen', async ({ page }) => {
   await page.getByRole('navigation', { name: 'Bölümler' }).getByRole('button', { name: 'Sen' }).click()
   await expect.poll(async () => (await widths()).length).toBe(1)
   for (const w of await widths()) expect(w).toBeGreaterThanOrEqual(48)
+})
+
+test('lesson: Mırtis greets on the first step and cheers a streak of three first-try answers', async ({
+  page,
+}) => {
+  test.setTimeout(90_000)
+  await start(page)
+  await page.goto('lesson/m1-reading-a-matrix')
+  const player = page.getByTestId('lesson-player')
+  const bubble = page.getByTestId('mirtis-bubble')
+  const next = player.getByRole('button', { name: 'İleri' })
+  await expect(player).toBeVisible()
+
+  // The first explain step: one cat on the first card's top edge and her line.
+  await expect(bubble).toHaveText('Hadi başlayalım.')
+  await expect.poll(() => visibleMırtiss(page)).toBe(1)
+  const cat = await player.locator('.ls-main svg.mirtis').boundingBox()
+  expect(cat?.width ?? 0).toBeGreaterThanOrEqual(55)
+
+  // The lesson's right answers: B, then 7 on the keypad, then B.
+  const pickRight = async (letter: string) => {
+    await player
+      .locator('.ls-opts .ex-opt', { hasText: new RegExp(`^${letter}`, 'i') })
+      .first()
+      .click()
+  }
+  const reachQuestion = async (group: boolean) => {
+    for (let i = 0; i < 20; i++) {
+      const there = group
+        ? await player.getByRole('group').count()
+        : await player.locator('.ls-keypad').count()
+      if (there) return
+      await next.click()
+      await page.waitForTimeout(250)
+    }
+  }
+  await reachQuestion(true)
+  await expect.poll(() => visibleMırtiss(page)).toBe(0)
+  await pickRight('b')
+  await expect(player.getByRole('status')).toContainText('Doğru')
+  await expect(bubble).toHaveCount(0)
+  await next.click()
+  await reachQuestion(false)
+  await expect.poll(() => visibleMırtiss(page)).toBe(0)
+  await player.locator('.ls-key', { hasText: /^7$/ }).click()
+  await player.locator('.ls-key--go').click()
+  await expect(player.getByRole('status')).toContainText('Doğru')
+  // Two in a row is no streak (the halfway line may speak here).
+  await expect(bubble).not.toHaveText('3 üst üste!')
+  await next.click()
+  await reachQuestion(true)
+  await pickRight('b')
+
+  // Third first-try answer in a row: the streak, announced once (in the verdict's label, not by the bubble).
+  const verdict = player.getByRole('status')
+  await expect(bubble).toHaveText('3 üst üste!')
+  await expect(verdict).toHaveAttribute('aria-label', 'Doğru. 3 üst üste!')
+  await expect(bubble).toHaveAttribute('aria-hidden', 'true')
+  await page.waitForTimeout(1200)
+  expect(await visibleMırtiss(page)).toBe(1)
+  const [b, c, sheet] = await Promise.all([
+    bubble.boundingBox(),
+    verdict.locator('svg.mirtis').boundingBox(),
+    verdict.boundingBox(),
+  ])
+  if (!b || !c || !sheet) throw new Error('no boxes')
+  // Beside her head, to her left, and no wider than 60 % of the card.
+  expect(b.x + b.width).toBeLessThanOrEqual(c.x + 1)
+  expect(b.width).toBeLessThanOrEqual(sheet.width * 0.6)
+  expect(b.x).toBeGreaterThanOrEqual(0)
 })

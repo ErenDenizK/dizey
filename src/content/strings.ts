@@ -259,6 +259,14 @@ export const strings = {
     lastResult: 'Son prova sonucu',
   },
 
+  mirtis: {
+    streak: (n: number) => `${n} üst üste!`,
+    comebackA: 'İşte bu!',
+    comebackB: 'Toparladın.',
+    together: 'Birlikte bakalım.',
+    halfway: 'Yarıladık.',
+    start: 'Hadi başlayalım.',
+  },
   lesson: {
     close: 'Dersten çık',
     back: 'Önceki adım',

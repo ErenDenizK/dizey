@@ -62,6 +62,10 @@ export async function openAuditPage(browser, url) {
           const ink = /opacity\(([\d.]+)\)/.exec(cs.filter)
           if (ink) opacity *= Number(ink[1])
         }
+        // A perched cat rises from behind her card's edge: the part below the perch box is clipped, so it counts as unseen.
+        const perch = el.closest('.mt-perch')
+        if (perch)
+          opacity *= Math.max(0, Math.min(1, (perch.getBoundingClientRect().bottom - r.top) / r.height))
         if (hidden || opacity < 0.02) continue
         if (!ids.has(el)) ids.set(el, ++serial)
         const text = el.tagName === 'svg' ? '' : el.textContent.trim().slice(0, 24)
