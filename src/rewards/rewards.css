@@ -140,6 +140,7 @@
   padding: 0;
 }
 .badge-shelf__stage {
+  position: relative;
   display: grid;
   place-items: center;
   padding: var(--space-2) 0 var(--space-5);

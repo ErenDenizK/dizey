@@ -147,7 +147,10 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
   useEffect(() => {
     if (!shown || !pathname.startsWith('/lesson')) return
     closing.current = true
+    // The tile comes back under the growing lesson with a fade, not in one frame (PR-16).
     shown.tile.style.visibility = ''
+    engine.set(shown.tile, { opacity: 0 })
+    engine.withChannel('chrome', () => engine.to(shown.tile, { opacity: 1 }, 'fade'))
     morphFrom.current = shown.tile
     setShown(null)
     closeRef.current()
