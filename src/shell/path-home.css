@@ -176,10 +176,10 @@
 .pa-tile[data-state="done"][data-level="bad"] {
   --node-ring: inset 0 0 0 2.5px var(--bad-ink);
 }
-/* The lesson you are on: drawn 1.2 times larger (path-effects.ts) and the brightest square on the paper: solid ink with the background's colour as its code. No amber here; the one amber is the dock's button. */
+/* The lesson you are on: drawn 1.2 times larger (path-effects.ts) and the brightest square on the paper: solid ink with the dark on-bright token as its code. No amber here; the one amber is the dock's button. */
 .pa-tile[data-next] {
   background: var(--ink-1);
-  color: var(--bg);
+  color: var(--on-action);
   --node-ring: inset 0 0 0 0 transparent;
   --press-strength: 0.1;
 }
