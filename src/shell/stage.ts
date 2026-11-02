@@ -7,7 +7,7 @@ export const stageRef = createRef<HTMLDivElement>()
 export const overlayHostRef = createRef<HTMLDivElement>()
 
 /** The tab a full-screen route was opened from; closing it returns there. */
-export const returnTab: { current: '/' | '/map' | '/me' } = { current: '/' }
+export const returnTab: { current: '/' | '/me' } = { current: '/' }
 
 /**
  * The card a full-screen route was opened from, if any: the route grows out of it and shrinks back

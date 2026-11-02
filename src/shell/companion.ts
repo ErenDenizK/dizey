@@ -19,7 +19,7 @@ export type Anchor = {
 }
 
 export type RouteContext = {
-  tab: '/' | '/map' | '/me'
+  tab: '/' | '/me'
   /** A route above the tabs (a lesson, a sheet). */
   overlay: boolean
   present: 'sheet' | 'push'

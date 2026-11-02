@@ -24,16 +24,15 @@ import {
   spreadDelay,
 } from './morph'
 import { Onboarding } from './Onboarding'
-import { PathView } from './PathView'
+import { PathHome } from './PathHome'
 import { presentationOf } from './presentation'
 import { installPressFeedback } from './press'
 import { dragToDismiss } from './sheetDrag'
 import { morphFrom, overlayHostRef, returnTab, stageRef } from './stage'
-import { TodayView } from './TodayView'
 import '../ui/ui.css'
 import './shell.css'
 
-type TabPath = '/' | '/map' | '/me'
+type TabPath = '/' | '/me'
 
 const tabs = [
   { id: '/', label: strings.tabs.path, Icon: PathIcon },
@@ -41,8 +40,7 @@ const tabs = [
 ] as const
 
 const views: Record<TabPath, () => React.ReactNode> = {
-  '/': TodayView,
-  '/map': PathView,
+  '/': PathHome,
   '/me': MeView,
 }
 
@@ -52,7 +50,7 @@ function tabOf(pathname: string): TabPath | null {
 }
 
 /**
- * The app frame: three tab panes kept mounted (so each keeps its scroll position), the floating tab
+ * The app frame: two tab panes (Yol and Sen) kept mounted (so each keeps its scroll position), the floating tab
  * bar, and full-screen routes (a lesson, a rehearsal) on top. Tabs are peers: the outgoing pane leaves
  * quickly while the incoming one rises in, and the old one hides when its exit lands
  * (docs/design/motion-system.md).
@@ -69,8 +67,8 @@ export function Shell() {
   const presentRef = useRef(present)
   presentRef.current = present
   // Under a full-screen route the tab it came from stays where it was. Opened straight onto one (a
-  // reload, the home-screen app coming back), the route's own section is home: a rehearsal is the map's.
-  const [tab, setTab] = useState<TabPath>(routeTab ?? (pathname.startsWith('/exam') ? '/map' : '/'))
+  // reload, the home-screen app coming back), Yol is home.
+  const [tab, setTab] = useState<TabPath>(routeTab ?? '/')
   if (routeTab && routeTab !== tab) setTab(routeTab)
   returnTab.current = tab
 
