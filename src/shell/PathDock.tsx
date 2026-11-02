@@ -18,13 +18,13 @@ import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import { type TodayBlock, todayBlocks } from './today-blocks'
 
-/** Days before the exam from which the rehearsal gets its own chip. */
+/** Days before the exam from which the rehearsal gets its own item. */
 const EXAM_SOON_DAYS = 7
 
 /**
- * The dock above the tab bar: a row of small satellites (the question of the day, the mistakes to revisit,
- * the rehearsal when the exam is close; none of them ever drawn empty) and under it the one next lesson,
- * the screen's only primary button (decision 0012).
+ * The dock above the tab bar: one card and nothing else. It holds the next lesson, the screen's only primary
+ * button (decision 0012), and under a hairline one thin row of text links (the question of the day, the
+ * mistakes to revisit, the rehearsal when the exam is close; none of them ever drawn empty).
  */
 export function PathDock() {
   const records = useLessonRecords()
@@ -50,7 +50,7 @@ export function PathDock() {
     exam: Boolean(main && examSoon),
   })
   const show = (block: TodayBlock) => blocks.includes(block)
-  // The rehearsal chip's one fact: the countdown when the date is known, else its size.
+  // The rehearsal item's one fact: the countdown when the date is known, else its size.
   const examValue =
     examDays === null || examDays < 0
       ? strings.today.examSub
@@ -58,49 +58,60 @@ export function PathDock() {
         ? strings.today.examToday
         : strings.today.examDays(examDays)
 
+  const more = (
+    <>
+      {show('daily') && daily ? <DailyItem question={daily} answered={answered} /> : null}
+      {show('review') ? (
+        firstLesson ? (
+          <PressLink
+            to="/lesson/$id"
+            params={{ id: firstLesson.lessonId }}
+            search={{ step: firstLesson.stepId }}
+            className="ph-more__item"
+            data-testid="today-review"
+          >
+            <ItemFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+          </PressLink>
+        ) : (
+          <PressLink to="/me" className="ph-more__item" data-testid="today-review">
+            <ItemFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+          </PressLink>
+        )
+      ) : null}
+      {show('exam') ? (
+        <PressLink to="/exam" className="ph-more__item" data-testid="today-exam">
+          <ItemFace title={strings.today.exam} value={examValue} />
+        </PressLink>
+      ) : null}
+    </>
+  )
+
   return (
     <div className="ph-dock" data-testid="path-dock">
-      <div className="ph-chips">
-        {show('daily') && daily ? <DailyChip question={daily} answered={answered} /> : null}
-        {show('review') ? (
-          firstLesson ? (
-            <PressLink
-              to="/lesson/$id"
-              params={{ id: firstLesson.lessonId }}
-              search={{ step: firstLesson.stepId }}
-              className="ph-chip"
-              data-testid="today-review"
-            >
-              <ChipFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
-            </PressLink>
-          ) : (
-            <PressLink to="/me" className="ph-chip" data-testid="today-review">
-              <ChipFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
-            </PressLink>
-          )
-        ) : null}
-        {show('exam') ? (
-          <PressLink to="/exam" className="ph-chip" data-testid="today-exam">
-            <ChipFace title={strings.today.exam} value={examValue} />
-          </PressLink>
-        ) : null}
-      </div>
-      {main ? <NextLesson lessonId={main.id} /> : <AllDone />}
+      {main ? <NextLesson lessonId={main.id}>{more}</NextLesson> : <AllDone>{more}</AllDone>}
     </div>
   )
 }
 
-function ChipFace({ title, value }: { title: string; value: string }) {
+/** The thin row under the card's lesson: whatever items exist, or nothing at all (no empty hairline). */
+function MoreRow({ children }: { children: React.ReactNode }) {
+  return <div className="ph-more">{children}</div>
+}
+
+function ItemFace({ title, value }: { title: string; value: string }) {
   return (
     <>
-      <span className="ph-chip__title">{title}</span>
-      <span className="ph-chip__value">{value}</span>
+      <span className="ph-more__title">{title}</span>
+      <span className="ph-more__dot" aria-hidden="true">
+        {' · '}
+      </span>
+      <span className="ph-more__value">{value}</span>
     </>
   )
 }
 
 /** The one primary action: the lesson in progress, else the first one not finished. */
-function NextLesson({ lessonId }: { lessonId: string }) {
+function NextLesson({ lessonId, children }: { lessonId: string; children: React.ReactNode }) {
   const records = useLessonRecords()
   const lesson = lessons.find((l) => l.id === lessonId)
   if (!lesson) return null
@@ -108,49 +119,55 @@ function NextLesson({ lessonId }: { lessonId: string }) {
   const resuming = stateOf(record) === 'current' && record
   const chapter = chapterOf(lesson)
   return (
-    <PressLink
-      to="/lesson/$id"
-      params={{ id: lesson.id }}
-      className="dz-card ph-next"
-      data-lesson={lesson.id}
-      data-testid="today-next"
-      onClick={(event) => {
-        morphFrom.current = event.currentTarget
-      }}
-    >
-      <span className="ph-next__text">
-        <span className="ph-next__where">
-          <span className="num">{pathCode(lesson)}</span>
-          {chapter && !resuming ? <span>{chapter.label}</span> : null}
-          {resuming ? (
-            <span className="num">
-              {strings.today.stepOf(resumeIndex(lesson, record) + 1, lesson.steps.length)}
-            </span>
-          ) : null}
+    <div className="dz-card ph-next">
+      <PressLink
+        to="/lesson/$id"
+        params={{ id: lesson.id }}
+        className="ph-next__main"
+        data-lesson={lesson.id}
+        data-testid="today-next"
+        onClick={(event) => {
+          morphFrom.current = event.currentTarget
+        }}
+      >
+        <span className="ph-next__text">
+          <span className="ph-next__where">
+            <span className="num">{pathCode(lesson)}</span>
+            {chapter && !resuming ? <span>{chapter.label}</span> : null}
+            {resuming ? (
+              <span className="num">
+                {strings.today.stepOf(resumeIndex(lesson, record) + 1, lesson.steps.length)}
+              </span>
+            ) : null}
+          </span>
+          <b className="ph-next__title">{lesson.title}</b>
         </span>
-        <b className="ph-next__title">{lesson.title}</b>
-      </span>
-      <span className="dz-button ph-next__action" data-kind="primary">
-        {resuming ? strings.today.resume : strings.today.start}
-      </span>
-    </PressLink>
-  )
-}
-
-/** Every lesson done: the card becomes the way to the rehearsal. */
-function AllDone() {
-  return (
-    <div className="dz-card ph-next" data-testid="today-done">
-      <b className="ph-next__title">{strings.today.allDone}</b>
-      <PressLink to="/exam" className="dz-button ph-next__action" data-kind="primary">
-        {strings.today.allDoneAction}
+        <span className="dz-button ph-next__action" data-kind="primary">
+          {resuming ? strings.today.resume : strings.today.start}
+        </span>
       </PressLink>
+      <MoreRow>{children}</MoreRow>
     </div>
   )
 }
 
-/** The question of the day: one chip, it opens the sheet; once answered it rests until tomorrow. */
-function DailyChip({
+/** Every lesson done: the card becomes the way to the rehearsal. */
+function AllDone({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="dz-card ph-next" data-testid="today-done">
+      <div className="ph-next__main">
+        <b className="ph-next__title">{strings.today.allDone}</b>
+        <PressLink to="/exam" className="dz-button ph-next__action" data-kind="primary">
+          {strings.today.allDoneAction}
+        </PressLink>
+      </div>
+      <MoreRow>{children}</MoreRow>
+    </div>
+  )
+}
+
+/** The question of the day: one item, it opens the sheet; once answered it rests until tomorrow. */
+function DailyItem({
   question,
   answered,
 }: {
@@ -163,12 +180,12 @@ function DailyChip({
   return (
     <>
       <Pressable
-        className="ph-chip"
+        className="ph-more__item"
         data-testid="today-daily"
         data-state={answered ? (answered.correct ? 'right' : 'wrong') : 'open'}
         onClick={() => setOpen(true)}
       >
-        <ChipFace title={text.eyebrow} value={answered ? text.next : text.solve} />
+        <ItemFace title={text.eyebrow} value={answered ? text.next : text.solve} />
       </Pressable>
       {host ? (
         <QuestionSheet

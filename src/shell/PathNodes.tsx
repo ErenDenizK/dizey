@@ -97,7 +97,7 @@ export function Gate() {
 
 /**
  * One lesson on the path: a rounded square. Done is green with a tick (a ring in the bad ink when the first
- * tries were weak), the lesson you are on is larger and amber and opens in one tap, any other opens its card
+ * tries were weak), the lesson you are on is larger and solid-bright and opens in one tap, any other opens its card
  * (no locks).
  */
 export function LessonNode({
@@ -176,7 +176,15 @@ function Tick() {
  * The chapter's test, the bracketed node that ends its chapter. Six questions from the bank, untimed, never
  * locked. A chapter whose bank has fewer than six is dimmed and says why on tap.
  */
-export function ChapterTestNode({ chapter, onNote }: { chapter: Chapter; onNote: (note: TestNote) => void }) {
+export function ChapterTestNode({
+  chapter,
+  number,
+  onNote,
+}: {
+  chapter: Chapter
+  number: number
+  onNote: (note: TestNote) => void
+}) {
   const navigate = useNavigate()
   const { session, chapters: results } = useExam()
   const { ready, available } = chapterTestState(questions, chapter)
@@ -224,7 +232,11 @@ export function ChapterTestNode({ chapter, onNote }: { chapter: Chapter; onNote:
       <i className="pa-test__bracket" data-side="end" aria-hidden="true" />
       {last && ready ? (
         <span className="pa-test__score num">{strings.path.chapterTest.score(last.correct, last.total)}</span>
-      ) : null}
+      ) : (
+        <span className="pa-test__no num" aria-hidden="true">
+          {number}
+        </span>
+      )}
     </Pressable>
   )
 }
