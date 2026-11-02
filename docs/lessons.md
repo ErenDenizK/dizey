@@ -68,3 +68,4 @@ character.
   occurrence of the root cause): identity choices (mascot, logo, palette, app name) pass an Eren pick gate. Options
   arrive as visual mockups, Eren picks, and only then is code written. Character candidates are drawn large in at
   least six moods and reviewed for appeal by someone who did not draw them.
+| 2026-11-02 | Every thread was told to read the whole prompt ledger before working; by P51 that history had grown to tens of kilobytes, re-read in each of several parallel threads. | The read rule was written when the ledger was small and never revisited; context cost was not measured. | Threads read only the ledger's "Çalışma listesi"; history is searched by ID. ADR and research indexes mark what is current, and the 256 KB old-UI inventory is grep-only. CLAUDE.md states what makes work succeed so trimming never drops it. | Eren 11-02 18:37 (P51) |
