@@ -1329,7 +1329,7 @@ a.dz-button[data-kind="primary"] {
   opacity: var(--glow, 0);
   transform: scale(calc(0.8 + var(--glow, 0) * 0.35));
 }
-/* The lesson end's Birim: inline in the stage; it wears the glow (--glow) set on it. */
+/* The lesson end's Mırtis: inline in the stage; it wears the glow (--glow) set on it. */
 svg.ls-duo {
   display: block;
   width: clamp(96px, 26vh, 150px);

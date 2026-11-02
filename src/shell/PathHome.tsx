@@ -11,7 +11,7 @@ import { Screen } from '../ui/Screen'
 import type { Preview } from './DockPreview'
 import { LessonPeek, type Peek } from './LessonPeek'
 import { PathDock } from './PathDock'
-import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet, TileBirim } from './PathNodes'
+import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet, TileMirtis } from './PathNodes'
 import { useCelebrations } from './path-effects'
 import { columnCount, columnsAt, layoutPath } from './path-layout'
 import { overlayHostRef } from './stage'
@@ -22,7 +22,7 @@ import './path-home.css'
  * Yol: the whole route as one game-like path, and the home screen. Every lesson and every chapter test walks a
  * grid in a serpentine (src/shell/path-layout.ts), Satır's blue along the rows and Sütun's plum down the
  * columns; what you have walked is full strength, what is left is faint. Each chapter opens with its bracketed
- * number, name and count; Birim sits on the lesson you are on, and a dock above the tab bar holds the next lesson's card
+ * number, name and count; Mırtis sits on the lesson you are on, and a dock above the tab bar holds the next lesson's card
  * with the satellites (question of the day, mistakes, the rehearsal). Every lesson stays open (no locks).
  */
 export function PathHome() {
@@ -133,7 +133,7 @@ export function PathHome() {
                     ) : c ? (
                       <ChapterTestNode chapter={c} number={node.chapter + 1} onNote={setNote} />
                     ) : null}
-                    {node.lesson ? <TileBirim on={current} /> : null}
+                    {node.lesson ? <TileMirtis on={current} /> : null}
                   </li>
                 )
               })}

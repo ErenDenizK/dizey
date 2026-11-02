@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Birim } from '../character/Birim'
+import { Mirtis } from '../character/Mirtis'
 import type { Lesson } from '../content/lessons/types'
 import { type Chapter, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
@@ -257,13 +257,13 @@ export function ChapterTestNode({
 }
 
 /**
- * Birim on the lesson you are on, inline in that node's slot (the same scrolling layer as its tile). When the lesson
+ * Mırtis on the lesson you are on, inline in that node's slot (the same scrolling layer as its tile). When the lesson
  * you are on changes, the old one fades out and the new one fades in; nothing appears or vanishes in one frame.
  */
-/** The first Birim the app shows after it opens wakes up: from a line (rank 1) into the square (rank 2). */
+/** The first Mırtis the app shows after it opens wakes up: from asleep, stretching, into her resting pose. */
 let woken = false
 
-export function TileBirim({ on }: { on: boolean }) {
+export function TileMirtis({ on }: { on: boolean }) {
   const [wake] = useState(() => !woken)
   useLayoutEffect(() => {
     woken = true
@@ -287,8 +287,8 @@ export function TileBirim({ on }: { on: boolean }) {
     )
   }, [on, shown])
   return shown ? (
-    <span ref={box} className="pa-tile__birim" aria-hidden="true">
-      <Birim size="path" mood="happy" wake={wake} />
+    <span ref={box} className="pa-tile__mirtis" aria-hidden="true">
+      <Mirtis size="path" wake={wake} />
     </span>
   ) : null
 }

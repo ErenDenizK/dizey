@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Birim } from '../character/Birim'
-import type { BirimMood } from '../character/birim'
+import { Mirtis, type MirtisMood } from '../character/Mirtis'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -559,8 +558,8 @@ type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
  */
 function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt; insight: boolean }) {
   const tone = attempt.solved ? 'ok' : attempt.wrong.length ? 'missed' : 'shown'
-  // Birim: glad on a right first try, a wow when the gizli an opens, quiet after a slip, caught out on a miss.
-  const mood: BirimMood = attempt.solved
+  // Mırtis: glad on a right first try, a wow when the gizli an opens, quiet after a slip, caught out on a miss.
+  const mood: MirtisMood = attempt.solved
     ? insight
       ? 'wow'
       : attempt.wrong.length === 0
@@ -585,7 +584,7 @@ function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt;
   return (
     <section className="ls-verdict" role="status" data-tone={tone} aria-label={title}>
       <p className="ls-verdict__title">
-        <Birim size="answer" mood={mood} />
+        <Mirtis size="answer" mood={mood} />
         {title}
         {given.length ? (
           <span className="ls-verdict__given">
