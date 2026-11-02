@@ -10,7 +10,7 @@ import { createSynth, PALETTES, type PaletteId, type Synth } from './synth'
  * obeys iPhone's silent switch: the audio session is 'ambient', which also lets music from other
  * apps keep playing underneath. The learner can choose 'playback' in Ben ("Sessiz modda da çal"),
  * which sounds through the silent switch but pauses other apps' music. iOS only starts audio inside
- * a tap, so the context is created and resumed from the first tap and from any tap after it was
+ * a tap, so the context is built while idle, then unlocked and resumed from the first tap and from any tap after it was
  * parked.
  */
 
@@ -77,18 +77,46 @@ function armIdle() {
   }, IDLE_MS)
 }
 
+/**
+ * Builds the context and the synth (a 3 s reverb impulse, its convolution set-up) without making a sound. This is
+ * the expensive part of audio start-up (about 60 ms on a phone-class CPU), so it runs once while the app is idle,
+ * never inside the first tap where it would stall the tap's own animation.
+ */
+function prepare() {
+  if (ctx || !soundOn()) return
+  const Context = globalThis.AudioContext
+  if (!Context) return
+  applySession()
+  try {
+    ctx = new Context({ latencyHint: 'interactive' })
+  } catch {
+    return
+  }
+  const settings = readSettings()
+  synth = createSynth(ctx, { palette: paletteOf(settings.palette) })
+  synth.setMusicLevel(settings.musicSoft ? MUSIC_SOFT_DB : 0)
+  synth.listen((plan) => {
+    const now = ctx?.currentTime ?? 0
+    for (const listener of heard) listener(plan, now)
+  })
+  ctx.addEventListener('statechange', () => {
+    if (ctx?.state === 'running') {
+      armIdle()
+      syncMusic()
+    }
+  })
+}
+
+let primed = false
+
 /** Create or resume audio. Call only from a tap handler (or a listener on one). */
 function unlock() {
   if (!soundOn() || document.hidden) return
-  if (!ctx) {
-    const Context = globalThis.AudioContext
-    if (!Context) return
+  prepare()
+  if (!ctx) return
+  if (!primed) {
+    primed = true
     applySession()
-    try {
-      ctx = new Context({ latencyHint: 'interactive' })
-    } catch {
-      return
-    }
     // Older iOS only unlocks a context that has played something inside the tap: one silent sample.
     try {
       const source = ctx.createBufferSource()
@@ -98,19 +126,6 @@ function unlock() {
     } catch {
       // Nothing to unlock.
     }
-    const settings = readSettings()
-    synth = createSynth(ctx, { palette: paletteOf(settings.palette) })
-    synth.setMusicLevel(settings.musicSoft ? MUSIC_SOFT_DB : 0)
-    synth.listen((plan) => {
-      const now = ctx?.currentTime ?? 0
-      for (const listener of heard) listener(plan, now)
-    })
-    ctx.addEventListener('statechange', () => {
-      if (ctx?.state === 'running') {
-        armIdle()
-        syncMusic()
-      }
-    })
   }
   if (ctx.state !== 'running') void ctx.resume().catch(() => {})
 }
@@ -135,6 +150,9 @@ export function installSound() {
     if (document.hidden) quiet()
   })
   setInterval(syncMusic, TICK_MS)
+  // Build the (silent, suspended) audio graph once the first screen has settled.
+  const whenIdle = globalThis.requestIdleCallback ?? ((run: () => void) => setTimeout(run, 1000))
+  setTimeout(() => whenIdle(prepare), 1500)
 }
 
 /** Plays a cue on the frame its motion lands. Silent when sound is off or audio is not yet unlocked. */
