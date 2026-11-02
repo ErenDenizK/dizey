@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { chapters } from '../content/path'
 import { questions } from '../content/questions'
-import { activityDays, parseActivity, serializeActivity, weekStrip, withDay } from './activity'
+import { activityDays, parseActivity, serializeActivity, withDay } from './activity'
 import { answeredOn, dayKey, parseDaily, pickDaily, serializeDaily } from './daily'
 
 const firstNodes = new Set<string>(chapters[0]?.lessons.map((lesson) => lesson.node) ?? [])
@@ -62,22 +62,5 @@ describe('activity days', () => {
     expect(parseActivity('[]')).toEqual([])
     expect(parseActivity('nope')).toEqual([])
     expect(withDay(['2026-11-02'], monday)).toEqual(['2026-11-02'])
-  })
-  it('lays out Monday to Sunday around today', () => {
-    const strip = weekStrip(new Date(2026, 10, 1, 10), new Set(['2026-10-27']))
-    expect(strip.map((d) => d.key)).toEqual([
-      '2026-10-26',
-      '2026-10-27',
-      '2026-10-28',
-      '2026-10-29',
-      '2026-10-30',
-      '2026-10-31',
-      '2026-11-01',
-    ])
-    expect(strip[6]).toMatchObject({ today: true, future: false })
-    expect(strip[1]?.active).toBe(true)
-    const week = weekStrip(monday, new Set())
-    expect(week[0]).toMatchObject({ today: true })
-    expect(week.slice(1).every((d) => d.future)).toBe(true)
   })
 })

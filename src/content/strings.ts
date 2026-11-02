@@ -31,17 +31,6 @@ export const strings = {
     },
   },
 
-  week: {
-    label: 'Bu hafta',
-    initials: ['P', 'S', 'Ç', 'P', 'C', 'C', 'P'],
-    names: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
-    studied: 'çalıştın',
-    rest: 'çalışılmadı',
-    today: 'bugün',
-    summary: (count: number) => `Bu hafta ${count} gün çalıştın`,
-    none: 'Bu hafta ilk gün seni bekliyor',
-  },
-
   question: {
     check: 'Kontrol et',
     done: 'Tamam',
@@ -134,6 +123,26 @@ export const strings = {
     mistakesMore: (count: number) => `${count} hata daha göster`,
     mistakesLess: 'Daha az göster',
     mistakeExam: 'Prova sorusu',
+    namePlaceholder: 'Adını yaz',
+    nameLabel: 'Adın',
+    titles: [
+      'Yola yeni çıktın',
+      'Matris okuru',
+      'Satır işlemcisi',
+      'Determinant avcısı',
+      'Tersin ustası',
+      'Vizeye hazır',
+    ],
+    matrix: 'Senin matrisin',
+    matrixLabel: 'Senin matrisin: altı sayı',
+    stats: {
+      lessons: 'ders bitti',
+      answered: 'soru çözdün',
+      firstTry: 'ilk seferde doğru',
+      days: 'gün çalıştın',
+      fixed: 'hata düzelttin',
+      badges: 'rozet',
+    },
   },
 
   settings: {

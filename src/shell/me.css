@@ -1,5 +1,5 @@
 /* Profil (src/shell/MeView.tsx). Tokens only; no transitions or keyframes. */
-/* Scene: the duo, large and centred, with the week under it. */
+/* Scene: the duo, large and centred, with the name and title under it. */
 .me-scene {
   display: grid;
   justify-items: center;
@@ -7,13 +7,109 @@
   margin-top: var(--space-2);
   padding: 0;
 }
-.me-scene .companion-slot--large {
+/* The avatar spot: as wide as the slot in it, so whatever fills it later keeps the same place. */
+.me-avatar {
   width: 168px;
 }
+.me-scene .companion-slot--large {
+  width: 100%;
+}
 @media (max-height: 700px) {
-  .me-scene .companion-slot--large {
+  .me-avatar {
     width: 120px;
   }
+}
+
+/* Name and title: centred under the duo. The text button and the input share one cell and crossfade. */
+.me-id {
+  display: grid;
+  justify-items: center;
+  gap: 0;
+}
+.me-name {
+  display: grid;
+  width: min(100%, 18rem);
+}
+.me-name > * {
+  grid-area: 1 / 1;
+}
+.me-name__text,
+.me-name__input {
+  min-height: var(--target);
+  width: 100%;
+  margin: 0;
+  padding: 0 var(--space-2);
+  border: 0;
+  border-radius: var(--corner-button);
+  background: none;
+  text-align: center;
+  font-family: inherit;
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-1);
+}
+.me-name__text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.me-name__text[data-placeholder] {
+  font-weight: var(--weight-medium);
+  color: var(--ink-2);
+}
+.me-name__input {
+  outline: none;
+  caret-color: var(--action);
+  box-shadow: inset 0 -2px 0 var(--ink-3);
+}
+.me-name:not([data-editing]) .me-name__input,
+.me-name[data-editing] .me-name__text {
+  pointer-events: none;
+}
+.me-title {
+  margin: 0;
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+  text-align: center;
+}
+
+/* Senin matrisin: six figures in one pair of tall brackets (the chapter-number bracket, scaled up). No boxes. */
+.me-matrix {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-5) var(--space-2);
+  width: min(100%, 22rem);
+  margin: var(--gap-related) auto 0;
+  padding: var(--space-4) var(--space-3);
+  list-style: none;
+  border-inline: 2px solid var(--ink-3);
+  border-radius: 4px;
+}
+.me-matrix__cell {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  gap: var(--space-0-5);
+  min-width: 0;
+  text-align: center;
+}
+.me-matrix__n {
+  font-size: var(--type-title3);
+  line-height: var(--leading-title3);
+  letter-spacing: var(--tracking-title3);
+  font-weight: var(--weight-bold);
+  color: var(--ink-1);
+}
+.me-matrix__l {
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
 }
 
 /* Gizli anlar: one slot per hidden moment in a single row. A labelled group, not a card, and nothing presses. */
