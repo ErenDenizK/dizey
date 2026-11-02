@@ -260,6 +260,13 @@
   bottom: 6px;
   left: calc(28px + var(--space-2));
 }
+/* Four columns: a chapter is a block, its heading at the left gutter on a plate in the page colour, so the run that drops
+   past it to the first node never crosses the text. */
+.ph-root[data-columns="4"] .ph-chapter {
+  right: auto;
+  padding-right: var(--space-3);
+  background: var(--bg);
+}
 /* The last column has no room to its right at 600 px: Birim leans to the left there. */
 .ph-root[data-columns="4"] .ph-slot[data-col="3"] .pa-tile__birim {
   left: calc(-28px - var(--space-2) - 40px);

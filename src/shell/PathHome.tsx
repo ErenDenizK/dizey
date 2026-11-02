@@ -69,9 +69,10 @@ export function PathHome() {
             data-columns={count}
           >
             <svg className="ph-wires" width="100%" height={layout.height} aria-hidden="true">
-              {layout.segments.map((seg) => (
+              {layout.segments.map((seg, i) => (
                 <line
-                  key={`${seg.to}`}
+                  // biome-ignore lint/suspicious/noArrayIndexKey: a fixed list; one node can have up to three pieces arriving
+                  key={i}
                   className="ph-wire"
                   data-axis={seg.axis}
                   data-to={seg.to}

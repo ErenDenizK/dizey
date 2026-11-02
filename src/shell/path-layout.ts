@@ -27,6 +27,14 @@ export const ROW = 100
 export const HEAD_GAP = 75
 /** The first chapter header's centre, from the top of the path (px). */
 export const HEAD_TOP = 28
+/**
+ * Four columns only: every chapter is its own block that starts at the left. The test node joins the next block with an
+ * elbow: down this far (px) from the test node into the gap above the next heading, across to the left column, then down
+ * past the heading to the first node.
+ */
+export const ELBOW_DROP = 50
+/** Four columns only: from that horizontal run to the next heading's centre (px). */
+export const ELBOW_HEAD = 30
 /** Space under the last row (px). */
 export const TAIL = 56
 
@@ -80,9 +88,16 @@ export function layoutPath(chapters: readonly Chapter[], columns: 2 | 4 = 2): Pa
   // The way the last row walked: 1 to the right, -1 to the left.
   let heading: 1 | -1 = -1
   chapters.forEach((chapter, ci) => {
-    const headerY = last ? y + HEAD_GAP : HEAD_TOP
-    // The heading sits on the side the vertical run does not cross.
-    headers.push({ chapter: ci, y: headerY, side: last ? (last.col <= edge / 2 ? 'end' : 'start') : 'start' })
+    // Four columns: a chapter is a block. Its first row starts at the left and the heading sits at the left gutter.
+    const block = columns > 2
+    const gapY = y + ELBOW_DROP
+    const headerY = last ? (block ? gapY + ELBOW_HEAD : y + HEAD_GAP) : HEAD_TOP
+    // Two columns: the heading sits on the side the vertical run does not cross.
+    headers.push({
+      chapter: ci,
+      y: headerY,
+      side: last && !block ? (last.col <= edge / 2 ? 'end' : 'start') : 'start',
+    })
     y = headerY + HEAD_GAP
     const items: (Lesson | null)[] = [...chapter.lessons, null]
     let at = 0
@@ -90,7 +105,8 @@ export function layoutPath(chapters: readonly Chapter[], columns: 2 | 4 = 2): Pa
     while (at < items.length) {
       if (!first) y += ROW
       first = false
-      const from = last ? last.col : 0
+      const opening = at === 0 && block
+      const from = opening ? 0 : last ? last.col : 0
       // From an edge the row walks away from it; from the middle it walks back the way the last row did not.
       const way: 1 | -1 = from === 0 ? 1 : from === edge ? -1 : heading === 1 ? -1 : 1
       const room = way === 1 ? columns - from : from + 1
@@ -106,7 +122,17 @@ export function layoutPath(chapters: readonly Chapter[], columns: 2 | 4 = 2): Pa
           y,
           lesson: item,
         }
-        if (last) {
+        if (last && opening && k === 0) {
+          // The elbow: down into the gap above the heading, across, down past the heading. Each piece arrives at this node.
+          const piece = (axis: 'row' | 'col', x1: number, x2: number, y1: number, y2: number) =>
+            segments.push({ axis, to: node.index, x1, x2, y1, y2 })
+          if (last.col === 0) piece('col', 0, 0, last.y, y)
+          else {
+            piece('col', last.col, last.col, last.y, gapY)
+            piece('row', last.col, 0, gapY, gapY)
+            piece('col', 0, 0, gapY, y)
+          }
+        } else if (last) {
           const horizontal = last.y === y
           segments.push({
             axis: horizontal ? 'row' : 'col',
