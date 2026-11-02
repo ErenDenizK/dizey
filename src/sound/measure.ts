@@ -1,4 +1,5 @@
-import { type MusicCue, planLesson, type StepKind } from './form'
+import { createConductor, createLearner } from './conductor'
+import { type Flourish, type MusicCue, planLesson, type StepKind } from './form'
 import { PROGRESSION, seeded } from './harmony'
 import { composeSection, freshState, idleCue, SECTION } from './music'
 import { EVENTS, type SoundEvent } from './score'
@@ -194,9 +195,13 @@ export async function renderLesson(
   const random = seeded(11)
   let state = freshState(seed)
   let at = 0.05
-  plan.forEach((cue) => {
+  plan.forEach((planned, i) => {
     state = { ...state, bar: 0 }
+    // The loudest music a lesson makes: a rise on every arrival, a peak on the last two steps.
+    const flourish: Flourish | undefined =
+      i >= plan.length - 2 ? 'peak' : planned.role === 'arrival' ? 'rise' : undefined
     for (let k = 0; k < 2; k++) {
+      const cue = k === 0 && flourish ? { ...planned, flourish } : planned
       const written = composeSection(cue, at, random, state, k === 0)
       state = written.state
       synth.playMusic(written.notes)
@@ -212,4 +217,111 @@ export async function measureLessonMusic(palette: PaletteId = 'rhodes', masterDb
   const plan = planLesson(sampleKinds(steps), 1234)
   const buffer = await renderLesson(plan, { palette, masterDb })
   return { palette, peakEnergy: Math.max(...plan.map((c) => c.energy)), ...loudnessOf(buffer) }
+}
+
+/**
+ * A listening sample: a lesson played the way a learner plays it, through the real conductor and
+ * synth, offline. Steps change every 6 to 14 s (seeded), questions are answered (the first one
+ * wrong, the rest right, so a streak builds), the lesson ends. Returns mono samples at `rate`.
+ */
+export async function renderListening(
+  kinds: readonly StepKind[],
+  lessonSeed: number,
+  options: { rate?: number; palette?: PaletteId; maxSeconds?: number } = {},
+) {
+  const { rate = 22050, palette = 'rhodes', maxSeconds = 185 } = options
+  const plan = planLesson(kinds, lessonSeed)
+  const random = seeded(99)
+  // Step durations, then the whole thing scaled to fit the sample's length.
+  let lengths = plan.map(() => 6 + random() * 8)
+  const total = lengths.reduce((a, b) => a + b, 0)
+  if (total > maxSeconds) lengths = lengths.map((l) => (l * maxSeconds) / total)
+  const length = Math.ceil(lengths.reduce((a, b) => a + b, 0) + 22)
+  const ctx = new OfflineAudioContext(1, rate * length, rate)
+  const synth = createSynth(ctx, { random: seeded(7), palette })
+
+  let clock = 0
+  let step = 0
+  const learner = createLearner()
+  const conductor = createConductor({
+    now: () => clock,
+    sink: { play: (notes, at) => synth.playMusic(notes, at), cut: (at, tau) => synth.cutMusic(at, tau) },
+    random: seeded(5),
+    wanted: (n) => {
+      const cue = plan[step] ?? idleCue(n)
+      return { ...cue, energy: learner.energy(cue.energy, step) }
+    },
+  })
+  conductor.setSeed(plan[0]?.seed ?? 0)
+
+  const sound = (event: SoundEvent, at: number, index = step) => {
+    clock = at
+    learner.heard(event)
+    const context = { chord: plan[index]?.chord ?? 'I', step: index, steps: plan.length }
+    const played = synth.play(event, context, at)
+    if (EVENTS[event].tier === 'lesson' || EVENTS[event].tier === 'reward') conductor.fade(played.end - 1.5)
+  }
+
+  type Item = { at: number; run: () => void }
+  const items: Item[] = []
+  let at = 0.3
+  items.push({ at, run: () => sound('lessonOpen', 0.3) })
+  let questions = 0
+  let streak = 0
+  plan.forEach((cue, i) => {
+    const start = at
+    const kind = kinds[i] as StepKind
+    if (i > 0)
+      items.push({
+        at: start,
+        run: () => {
+          clock = start
+          step = i
+          sound('step', start, i)
+          conductor.request(learner.stepped(i, cue.role, true))
+        },
+      })
+    if (kind === 'choice' || kind === 'keypad') {
+      const answerAt = start + (lengths[i] as number) * 0.55
+      const wrong = questions === 0
+      questions++
+      if (wrong) items.push({ at: answerAt - 1.2, run: () => sound('wrong', answerAt - 1.2, i) })
+      items.push({
+        at: answerAt,
+        run: () => {
+          streak = wrong ? 0 : streak + 1
+          sound(streak >= 3 ? 'streak' : 'correct', answerAt, i)
+        },
+      })
+    }
+    at += lengths[i] as number
+  })
+  const endAt = at
+  items.push({ at: endAt, run: () => sound('lessonEnd', endAt) })
+
+  // The transport ticks every 400 ms; sounds and steps land between ticks, in time order.
+  items.sort((a, b) => a.at - b.at)
+  let nextTick = 0
+  let k = 0
+  while (nextTick < length - 8) {
+    const item = items[k]
+    if (item && item.at <= nextTick) {
+      item.run()
+      k++
+    } else {
+      clock = nextTick
+      conductor.tick()
+      nextTick += 0.4
+    }
+  }
+
+  const buffer = await ctx.startRendering()
+  const samples = buffer.getChannelData(0)
+  let peak = 0
+  for (const x of samples) peak = Math.max(peak, Math.abs(x))
+  const gain = 10 ** (-1 / 20) / (peak || 1)
+  const int16 = new Int16Array(samples.length)
+  for (let i = 0; i < samples.length; i++)
+    int16[i] = Math.round(Math.max(-1, Math.min(1, (samples[i] as number) * gain)) * 32767)
+  return { seconds: length, steps: plan.length, questions, int16 }
 }
