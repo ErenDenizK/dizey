@@ -144,7 +144,7 @@ test.describe('wide layout', () => {
     expect(aside.y + aside.height).toBeCloseTo(bar.y + bar.height, 0)
     await expect(pane(page).locator('.me-aside').getByText('Hata defteri')).toBeVisible()
     await expect(pane(page).locator('.me-aside').getByText('Sıradaki')).toBeVisible()
-    const matrix = await box(page, '.sh-pane:not([inert]) [data-testid="me-matrix"]')
+    const matrix = await box(page, '.sh-pane:not([inert]) [data-testid="me-status"]')
     expect(matrix.x + matrix.width).toBeLessThanOrEqual(GUTTER + 560 + 1)
     expect(await noHorizontalScroll(page)).toBe(true)
   })

@@ -177,7 +177,7 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   )
   await expect(screen(page).getByTestId('today-week')).toHaveCount(0)
   await tab(page, 'Sen').click()
-  await expect(screen(page).getByTestId('stat-days').locator('.me-matrix__n')).toHaveText('1')
+  await expect(screen(page).getByTestId('status-days').locator('.me-figure__n')).toHaveText('1')
   await tab(page, 'Yol').click()
   await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
 })
@@ -305,7 +305,7 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
   const log = screen(page).getByRole('region', { name: /Hata defteri/ })
-  await log.getByTestId('mistake-row').click()
+  await log.getByTestId('mistake-group').click()
   await expect(log).toContainText('İki çarpımı topladın')
   // Back to that step: a right first try on this visit clears it.
   await log.getByRole('link').first().click()
@@ -316,8 +316,10 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
     .filter({ hasText: /^b/ })
     .click()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
-  // An empty log is not shown at all.
-  await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toHaveCount(0)
+  // Nothing open any more, but one was fixed: one calm line instead of the list.
+  await tab(page, 'Sen').click()
+  await expect(screen(page).getByTestId('mistakes-calm')).toHaveText('Açık hatan yok · 1 düzelttin')
+  await expect(screen(page).getByTestId('mistake-group')).toHaveCount(0)
 })
 
 test('Sen is a profile scene: duo, name, your matrix, mistakes, badge shelf, moments and the gear', async ({
@@ -327,20 +329,17 @@ test('Sen is a profile scene: duo, name, your matrix, mistakes, badge shelf, mom
   await openApp(page, './me')
   const sen = screen(page)
   await expect(sen.getByTestId('me-scene')).toBeVisible()
-  // The matrix is always there, honestly zero before any study; the week strip is gone.
-  await expect(sen.getByTestId('me-matrix').locator('.me-matrix__n')).toHaveText([
-    '0',
-    '0',
-    '0',
-    '0',
-    '0',
-    '0',
-  ])
+  // The status card is always there, honestly zero before any study; the week strip is gone.
+  await expect(sen.getByTestId('status-readiness').locator('.me-status__big')).toHaveText('0%')
+  await expect(sen.getByTestId('status-firsttry').locator('.me-figure__n')).toHaveText('–')
+  await expect(sen.getByTestId('status-days').locator('.me-figure__n')).toHaveText('0')
+  await expect(sen.getByTestId('status-fixed').locator('.me-figure__n')).toHaveText('0')
+  await expect(sen.getByTestId('status-strip').locator('li[data-active]')).toHaveCount(0)
   await expect(sen.getByTestId('week-strip')).toHaveCount(0)
   await expect(sen.getByTestId('me-scene')).not.toContainText(/\/ \d+ ders/)
   // Nothing settings-like lives here; the mistake row is hidden while the log is empty.
   await expect(sen.getByRole('switch')).toHaveCount(0)
-  await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
+  await expect(sen.getByTestId('mistake-group')).toHaveCount(0)
   // Nothing earned, nothing found: the shelf and the moments are hidden and Sıradaki leads back to learning.
   await expect(sen.getByRole('heading', { name: /Rozetler/ })).toHaveCount(0)
   await expect(sen.getByTestId('moments-album')).toHaveCount(0)
@@ -358,7 +357,8 @@ test('Sen is a profile scene: duo, name, your matrix, mistakes, badge shelf, mom
   await player.getByRole('group').getByRole('button').filter({ hasText: '26' }).click()
   await page.getByRole('link', { name: 'Dersten çık' }).click()
   await tab(page, 'Sen').click()
-  await expect(sen.getByTestId('mistake-row')).toContainText('1 açık hata')
+  await expect(sen.getByRole('heading', { name: /Hata defteri · 1 açık/ })).toBeVisible()
+  await expect(sen.getByTestId('mistake-group')).toHaveCount(1)
   // The wrong try marks the lesson's node on Yol; it is the lesson you are on now, so the node opens it.
   await tab(page, 'Yol').click()
   const cell = screen(page).locator('.pa-tile[data-lesson="d1-determinant"]')
@@ -1379,8 +1379,9 @@ test.describe('Sen, the profile', () => {
     const sen = screen(page)
     await expect(sen.getByTestId('me-name')).toHaveText('Adını yaz')
     await expect(sen.getByTestId('me-title')).toHaveText('Yola yeni çıktın')
-    await expect(sen.getByTestId('me-matrix').locator('li')).toHaveCount(6)
-    await expect(sen.getByRole('heading', { name: 'Senin matrisin' })).toBeVisible()
+    await expect(sen.getByTestId('me-status')).toBeVisible()
+    await expect(sen.getByTestId('status-path').locator('.me-path__seg')).toHaveCount(23)
+    await expect(sen.getByRole('heading', { name: 'Durumun' })).toBeVisible()
   })
 
   test('the matrix and the title follow progress', async ({ page }) => {
@@ -1389,13 +1390,12 @@ test.describe('Sen, the profile', () => {
     await openApp(page, './me')
     const sen = screen(page)
     await expect(sen.getByTestId('me-title')).toHaveText('Matris okuru')
-    const figure = (key: string) => sen.getByTestId(`stat-${key}`).locator('.me-matrix__n')
-    await expect(figure('lessons')).toHaveText('10')
-    await expect(figure('answered')).toHaveText('10')
-    await expect(figure('firstTry')).toHaveText('7')
+    const figure = (key: string) => sen.getByTestId(`status-${key}`).locator('.me-figure__n')
+    await expect(sen.getByTestId('status-readiness').locator('.me-status__big')).toHaveText('43%')
+    await expect(sen.getByTestId('status-path').locator('.me-path__seg[data-fill="1"]')).toHaveCount(10)
+    await expect(figure('firsttry')).toHaveText('70%')
     await expect(figure('days')).toHaveText('10')
     await expect(figure('fixed')).toHaveText('2')
-    await expect(figure('badges')).toHaveText(/^[1-9]/)
   })
 
   test('the name is typed in place, saved with Enter and survives a reload', async ({ page }) => {

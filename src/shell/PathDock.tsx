@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { Mirtis } from '../character/Mirtis'
+import { Perch } from '../character/Perch'
 import { daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import { chapterOf, chapters, pathCode } from '../content/path'
@@ -22,6 +24,22 @@ import { type TodayBlock, todayBlocks } from './today-blocks'
 
 /** Days before the exam from which the rehearsal gets its own item. */
 const EXAM_SOON_DAYS = 7
+
+/** The first Mırtis the app shows after it opens wakes up: from asleep, stretching, into her resting pose. */
+let woken = false
+
+/** Mırtis on the dock card's top edge, at its right (decision 0017, Presence). One cat on Yol, here and nowhere else. */
+function DockCat() {
+  const [wake] = useState(() => !woken)
+  useLayoutEffect(() => {
+    woken = true
+  }, [])
+  return (
+    <Perch right={20}>
+      <Mirtis size="dock" wake={wake} />
+    </Perch>
+  )
+}
 
 /**
  * The dock above the tab bar: one card and nothing else. It holds the next lesson, the screen's only primary
@@ -170,6 +188,7 @@ function NextLesson({
   const chapter = chapterOf(lesson)
   return (
     <div className="dz-card ph-next">
+      <DockCat />
       <PressLink
         to="/lesson/$id"
         params={{ id: lesson.id }}
@@ -205,6 +224,7 @@ function NextLesson({
 function AllDone({ count, children }: { count: number; children: React.ReactNode }) {
   return (
     <div className="dz-card ph-next" data-testid="today-done">
+      <DockCat />
       <div className="ph-next__main">
         <b className="ph-next__title">{strings.today.allDone}</b>
         <PressLink to="/exam" className="dz-button ph-next__action" data-kind="primary">

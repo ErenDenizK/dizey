@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
-import { Birim } from '../character/Birim'
-import type { BirimMood } from '../character/birim'
+import { Mirtis, type MirtisMood } from '../character/Mirtis'
+import { Perch } from '../character/Perch'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -24,6 +24,7 @@ import { useAnswerMotion, useLessonMotion } from './motion'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { rewardFor } from './reward'
 import { Stage } from './Stage'
+import { StepExit } from './StepExit'
 import { stateOf } from './state'
 import { recordOf, saveRecord } from './store'
 import { tempoClassOf } from './tempo'
@@ -330,7 +331,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   // A wrong try's hint.
   const hint =
     isQuestion(step) && wrongFeedback && !attempt.revealed ? (
-      <div className="ls-feedback" role="status" data-tone="wrong">
+      <div key={wrongFeedback} className="ls-feedback" role="status" data-tone="wrong">
         <span className="ls-feedback__mark" aria-hidden="true">
           <Close />
         </span>
@@ -374,7 +375,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
                   : answer(option.key, option.key === step.answer)
               }
             >
-              <span className="ex-opt__key">{wrong ? <Close /> : option.key}</span>
+              <OptionKey letter={option.key} wrong={wrong} />
               <span className="ex-opt__body">
                 <Blocks blocks={option.content} />
               </span>
@@ -391,6 +392,13 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       data-testid="lesson-player"
       data-options-stage={optionsAreStage || undefined}
     >
+      <StepExit
+        root={root}
+        swap={ended ? 'end' : `${step.id}:${moment ? 'moment' : 'step'}:${hasStage}`}
+        dock={`${attempt.revealed}:${step.kind === 'keypad'}`}
+        top={moment ? 'moment' : 'lesson'}
+        hint={`${wrongFeedback ?? ''}:${attempt.revealed}`}
+      />
       <div className="ls-top" data-moment={moment ? 'true' : undefined}>
         {moment ? (
           <button
@@ -435,7 +443,14 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           <span className="ls-progress__fill" />
         </div>
         {/* Only the step number rolls; the code and the total stay still. */}
-        <span className="ls-count" aria-hidden="true">
+        {/* Room for the widest count from the start, so a new tens digit never shifts the code in one frame. */}
+        <span
+          className="ls-count"
+          aria-hidden="true"
+          style={{
+            minWidth: `${`${pathCode(lesson)} · ${lesson.steps.length}/${lesson.steps.length}`.length}ch`,
+          }}
+        >
           {pathCode(lesson)} · <RollNumber value={index + 1} />/{lesson.steps.length}
         </span>
       </div>
@@ -516,6 +531,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             {/* The give-up action holds the bottom slot from the start, so nothing above it moves when an answer lands. */}
             {locked ? (
               <button
+                key="give-up"
                 type="button"
                 className={`sh-btn sh-btn--soft sh-press${moment ? ' ls-ghost' : ''}`}
                 disabled={moment !== null}
@@ -527,6 +543,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
               </button>
             ) : (
               <button
+                key="primary"
                 type="button"
                 className="sh-btn sh-btn--primary sh-press"
                 // Skipping a beat taps; the next step and the lesson end play their own sounds.
@@ -545,11 +562,28 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   )
 }
 
+/** An option's key: its letter, crossfading into a cross once it was a wrong try (never a one-frame swap). */
+function OptionKey({ letter, wrong }: { letter: string; wrong: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useEase(ref, wrong)
+  return (
+    <span ref={ref} className="ex-opt__key ls-key-swap">
+      <span className="ls-key-swap__letter">{letter}</span>
+      <span className="ls-key-swap__cross" aria-hidden={!wrong || undefined}>
+        <Close />
+      </span>
+    </span>
+  )
+}
+
 function Score({ lesson }: { lesson: Lesson }) {
   const { correct, total } = firstTryScore(lesson, recordOf(lesson.id) ?? emptyRecord)
   if (!total) return null
   return <p className="ls-score">{strings.lesson.score(correct, total)}</p>
 }
+
+/** ms the verdict's cat waits, so her rise starts after the dock's entrance hold and reads as one continuous motion. */
+const VERDICT_PERCH_DELAY = 90
 
 type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
 
@@ -559,8 +593,8 @@ type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
  */
 function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt; insight: boolean }) {
   const tone = attempt.solved ? 'ok' : attempt.wrong.length ? 'missed' : 'shown'
-  // Birim: glad on a right first try, a wow when the gizli an opens, quiet after a slip, caught out on a miss.
-  const mood: BirimMood = attempt.solved
+  // Mırtis: glad on a right first try, a wow when the gizli an opens, quiet after a slip, caught out on a miss.
+  const mood: MirtisMood = attempt.solved
     ? insight
       ? 'wow'
       : attempt.wrong.length === 0
@@ -584,8 +618,11 @@ function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt;
   const right = step.kind === 'choice' ? step.options.find((option) => option.key === step.answer) : undefined
   return (
     <section className="ls-verdict" role="status" data-tone={tone} aria-label={title}>
+      {/* Perched on the sheet's top edge at the right; she rises just after the dock's own entrance. */}
+      <Perch right={16} delay={VERDICT_PERCH_DELAY}>
+        <Mirtis size="verdict" mood={mood} />
+      </Perch>
       <p className="ls-verdict__title">
-        <Birim size="answer" mood={mood} />
         {title}
         {given.length ? (
           <span className="ls-verdict__given">

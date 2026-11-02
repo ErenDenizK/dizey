@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { type ReactNode, useLayoutEffect, useRef, useState } from 'react'
 import { strings } from '../content/strings'
 import { useExam } from '../exam/store'
+import { leaveInPlace } from '../lesson/leave'
 import { useMoments } from '../lesson/moments'
 import { useLessonRecords } from '../lesson/store'
+import { Expander } from '../ui/Expander'
 import { Pressable } from '../ui/Pressable'
 import { BadgeReveal } from './BadgeReveal'
 import { BADGES, type BadgeId, earnedBadges } from './badges'
@@ -22,6 +24,10 @@ export function BadgeShelf() {
   const earned = earnedBadges({ records, history, moments })
   const [open, setOpen] = useState<{ id: BadgeId; n: number } | null>(null)
   const current = earned.find((badge) => badge.id === open?.id)
+  // While the stage folds shut it keeps showing the rozet it had, instead of emptying in one frame.
+  const last = useRef({ badge: current, n: open?.n ?? 0 })
+  if (current && open) last.current = { badge: current, n: open.n }
+  const staged = last.current.badge
   if (!earned.length) return null
   return (
     <section aria-labelledby="badges">
@@ -30,11 +36,15 @@ export function BadgeShelf() {
         {` · ${earned.length} / ${BADGES.length}`}
       </h2>
       <div className="badge-shelf">
-        {current && open ? (
-          <div className="badge-shelf__stage">
-            <BadgeReveal key={`${open.id}-${open.n}`} badge={current} kicker={strings.badges.one} />
-          </div>
-        ) : null}
+        <Expander open={Boolean(current)} id="badge-stage">
+          {staged ? (
+            <div className="badge-shelf__stage">
+              <Leaves key={`${staged.id}-${last.current.n}`}>
+                <BadgeReveal badge={staged} kicker={strings.badges.one} />
+              </Leaves>
+            </div>
+          ) : null}
+        </Expander>
         <ul className="badge-shelf__grid">
           {earned.map((badge) => (
             <li key={badge.id} className="badge-shelf__cell">
@@ -45,7 +55,8 @@ export function BadgeShelf() {
                 aria-pressed={open?.id === badge.id}
                 aria-label={strings.badges.items[badge.id].name}
                 onClick={() => {
-                  setOpen((was) => ({ id: badge.id, n: (was?.n ?? 0) + 1 }))
+                  // A second tap on the open rozet folds the stage away; another rozet takes its place.
+                  setOpen((was) => (was?.id === badge.id ? null : { id: badge.id, n: (was?.n ?? 0) + 1 }))
                   markShown([badge.id], Date.now())
                 }}
               >
@@ -56,5 +67,19 @@ export function BadgeShelf() {
         </ul>
       </div>
     </section>
+  )
+}
+
+/** A replaced rozet fades out where it stood while the next one plays its moment. */
+function Leaves({ children }: { children: ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    return () => leaveInPlace(el)
+  }, [])
+  return (
+    <div ref={ref} className="badge-shelf__play">
+      {children}
+    </div>
   )
 }
