@@ -63,3 +63,27 @@ How the cat is shown across the app, after Eren found her too small and hard to 
 5. **Between pages** each page's cat enters with its page and leaves with it. No cross-page flights.
 
 Guards: `e2e/mirtis.spec.ts` (perch position, one cat per screen, every cat at least 48 px wide).
+
+## Moments
+
+Until now the learner saw three moods in a lesson (rest, correct, wrong). Moments give the others a job without ever
+disturbing the solving. `src/character/moments.ts` (`pickMoment`) is pure and deterministic: it gets the step, the
+first-try run, whether the last question was missed, the wrong count, solved or not, the last step that showed a moment
+and whether halfway has had its turn, and returns `{ play, line }` or null. No randomness; a line with variants is
+picked by step index.
+
+1. Priority, highest first:
+   - **Streak:** the first-try run reaches 3, then every 3. `wow`, "N üst üste!".
+   - **Comeback:** solved first try right after a missed question, or solved on a later try after a wrong. `proud`.
+   - **Two wrongs** and the answer revealed (a gentle `think`, "Birlikte bakalım."; never blaming).
+   - **Halfway:** the first verdict at or past 50 % of the steps, once per lesson (`correct` if clean, else `proud`).
+   - **First step:** the lesson's first explain step; `wake`, then glad. "Hadi başlayalım."
+2. **Cap:** one moment per 3 steps, except a streak. The greeting counts. A plain verdict keeps `correct` / `wrong`
+   with no bubble. The halfway moment is spent by the first verdict past 50 %, shown or not.
+3. **Never while solving:** moments only appear on a verdict or on an explain step, never on an unanswered question.
+4. **Bubble** (`Bubble.tsx`, `Cheer.tsx`): one line of at most 28 characters (`strings.mirtis`), left of the perched
+   cat's head with its tail pointing at her, at most 55 vw wide. It rides the perch's lift, so it enters after the rise
+   (opacity and scale on the engine) and sinks behind the card's edge with her. It is `aria-hidden`; the verdict's
+   `aria-label` carries the line, so it is announced once.
+5. The first step's cat perches on the top edge of the first card, over the top bar, so the step counter fades out
+   (`useEase`) while she is there. No new sounds.
