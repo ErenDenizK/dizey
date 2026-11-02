@@ -23,6 +23,7 @@ import { useAnswerMotion, useLessonMotion } from './motion'
 import { checkKeypad, emptyRecord, firstTryScore, isQuestion, recordTry, resumeIndex } from './progress'
 import { rewardFor } from './reward'
 import { Stage } from './Stage'
+import { StepExit } from './StepExit'
 import { stateOf } from './state'
 import { recordOf, saveRecord } from './store'
 import { tempoClassOf } from './tempo'
@@ -329,7 +330,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   // A wrong try's hint.
   const hint =
     isQuestion(step) && wrongFeedback && !attempt.revealed ? (
-      <div className="ls-feedback" role="status" data-tone="wrong">
+      <div key={wrongFeedback} className="ls-feedback" role="status" data-tone="wrong">
         <span className="ls-feedback__mark" aria-hidden="true">
           <Close />
         </span>
@@ -373,7 +374,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
                   : answer(option.key, option.key === step.answer)
               }
             >
-              <span className="ex-opt__key">{wrong ? <Close /> : option.key}</span>
+              <OptionKey letter={option.key} wrong={wrong} />
               <span className="ex-opt__body">
                 <Blocks blocks={option.content} />
               </span>
@@ -390,6 +391,13 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       data-testid="lesson-player"
       data-options-stage={optionsAreStage || undefined}
     >
+      <StepExit
+        root={root}
+        swap={ended ? 'end' : `${step.id}:${moment ? 'moment' : 'step'}:${hasStage}`}
+        dock={`${attempt.revealed}:${step.kind === 'keypad'}`}
+        top={moment ? 'moment' : 'lesson'}
+        hint={`${wrongFeedback ?? ''}:${attempt.revealed}`}
+      />
       <div className="ls-top" data-moment={moment ? 'true' : undefined}>
         {moment ? (
           <button
@@ -434,7 +442,14 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           <span className="ls-progress__fill" />
         </div>
         {/* Only the step number rolls; the code and the total stay still. */}
-        <span className="ls-count" aria-hidden="true">
+        {/* Room for the widest count from the start, so a new tens digit never shifts the code in one frame. */}
+        <span
+          className="ls-count"
+          aria-hidden="true"
+          style={{
+            minWidth: `${`${pathCode(lesson)} · ${lesson.steps.length}/${lesson.steps.length}`.length}ch`,
+          }}
+        >
           {pathCode(lesson)} · <RollNumber value={index + 1} />/{lesson.steps.length}
         </span>
       </div>
@@ -515,6 +530,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             {/* The give-up action holds the bottom slot from the start, so nothing above it moves when an answer lands. */}
             {locked ? (
               <button
+                key="give-up"
                 type="button"
                 className={`sh-btn sh-btn--soft sh-press${moment ? ' ls-ghost' : ''}`}
                 disabled={moment !== null}
@@ -526,6 +542,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
               </button>
             ) : (
               <button
+                key="primary"
                 type="button"
                 className="sh-btn sh-btn--primary sh-press"
                 // Skipping a beat taps; the next step and the lesson end play their own sounds.
@@ -541,6 +558,20 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         </>
       )}
     </div>
+  )
+}
+
+/** An option's key: its letter, crossfading into a cross once it was a wrong try (never a one-frame swap). */
+function OptionKey({ letter, wrong }: { letter: string; wrong: boolean }) {
+  const ref = useRef<HTMLSpanElement>(null)
+  useEase(ref, wrong)
+  return (
+    <span ref={ref} className="ex-opt__key ls-key-swap">
+      <span className="ls-key-swap__letter">{letter}</span>
+      <span className="ls-key-swap__cross" aria-hidden={!wrong || undefined}>
+        <Close />
+      </span>
+    </span>
   )
 }
 

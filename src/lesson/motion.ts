@@ -8,6 +8,9 @@ import { CHOREO_MS, ENTER_FLOOR, SHIFT } from '../engine/tokens'
  * motion to elements React already placed: no layout depends on it.
  */
 
+/** The lesson's live content: not a copy that StepExit is fading out. */
+const LIVE = ':scope > :not(.ls-leaving)'
+
 /** Old `wrong` push for a shake: x velocity in px/s on the `shake` spring (k1300, zeta 0.2). */
 const SHAKE_VELOCITY = 320
 /** Old right-answer swell: scale velocity per second on `land`. */
@@ -29,6 +32,8 @@ export function useLessonMotion(root: RefObject<HTMLElement | null>, index: numb
   const seen = useRef(new WeakSet<Element>())
   const fill = useRef<HTMLElement | null>(null)
   const button = useRef<HTMLElement | null>(null)
+  /** Where each narration block sat at the last commit (offsetTop: no transform, no scroll). */
+  const tops = useRef(new WeakMap<Element, number>())
   // biome-ignore lint/correctness/useExhaustiveDependencies: runs after every commit; refs only
   useLayoutEffect(() => {
     const box = root.current
@@ -38,7 +43,10 @@ export function useLessonMotion(root: RefObject<HTMLElement | null>, index: numb
     shownIndex.current = index
     const direction = previous === null || index >= previous ? 1 : -1
     engine.withChannel('chrome', () => {
-      const narration = [...box.querySelectorAll('.ls-narr > *')]
+      // The narration's blocks, and a wrong try's hint where a question without a stage keeps it.
+      const narration = [
+        ...box.querySelectorAll<HTMLElement>(`${LIVE} .ls-narr > *, ${LIVE}.ls-main > .ls-feedback`),
+      ]
       if (changed) {
         narration.forEach((el, order) => {
           seen.current.add(el)
@@ -48,15 +56,26 @@ export function useLessonMotion(root: RefObject<HTMLElement | null>, index: numb
       } else {
         let order = 0
         for (const el of narration) {
-          if (seen.current.has(el)) continue
+          if (seen.current.has(el)) {
+            // A block that stays but is pushed by one that came or went (a hint under a centred question)
+            // glides to its new place instead of jumping there in one frame.
+            const was = tops.current.get(el)
+            const shift = was === undefined ? 0 : was - el.offsetTop
+            if (Math.abs(shift) > 0.5) {
+              engine.set(el, { y: engine.value(el, 'y') + shift })
+              engine.to(el, { y: 0 }, 'move')
+            }
+            continue
+          }
           seen.current.add(el)
           enter(el, { opacity: 0, y: SHIFT.enter }, order++ * CHOREO_MS.stagger)
         }
       }
+      for (const el of narration) tops.current.set(el, el.offsetTop)
       // Dock rows: a control that was already there stays put (nav to nav only changes its label).
       let row = 0
       let lastTop = Number.NaN
-      for (const el of box.querySelectorAll('.ls-dock > *')) {
+      for (const el of box.querySelectorAll(':scope > .ls-dock:not(.ls-leaving) > *')) {
         if (seen.current.has(el)) continue
         seen.current.add(el)
         const top = (el as HTMLElement).offsetTop
@@ -65,7 +84,7 @@ export function useLessonMotion(root: RefObject<HTMLElement | null>, index: numb
         enter(el, { opacity: ENTER_FLOOR, y: SHIFT.dock }, (row - 1) * CHOREO_MS.stagger)
       }
       // Soft İleri: the fill eases between primary and soft; the label ink flips at the midpoint.
-      const primary = box.querySelector<HTMLElement>('.ls-dock .sh-btn--primary')
+      const primary = box.querySelector<HTMLElement>(`:scope > .ls-dock:not(.ls-leaving) .sh-btn--primary`)
       if (primary) {
         const soft = primary.hasAttribute('data-soft') ? 1 : 0
         if (button.current !== primary) {
@@ -109,14 +128,14 @@ export function useAnswerMotion(
     engine.withChannel('chrome', () => {
       if (wrong.length > before.wrong) {
         const key = wrong.at(-1)
-        const option = [...box.querySelectorAll<HTMLElement>('.ex-opt[data-state="wrong"]')].find(
+        const option = [...box.querySelectorAll<HTMLElement>(`${LIVE} .ex-opt[data-state="wrong"]`)].find(
           (el) => el.querySelector('.ex-opt__key')?.textContent === key,
         )
-        const target = option ?? box.querySelector<HTMLElement>('.ls-answer')
+        const target = option ?? box.querySelector<HTMLElement>(`${LIVE} .ls-answer`)
         if (target) engine.to(target, { x: 0 }, 'shake', { velocity: { x: SHAKE_VELOCITY } })
       }
       if (solved && !before.solved) {
-        const right = box.querySelector<HTMLElement>('.ex-opt[data-state="right"]')
+        const right = box.querySelector<HTMLElement>(`${LIVE} .ex-opt[data-state="right"]`)
         if (right) engine.to(right, { scale: 1 }, 'land', { velocity: { scale: SWELL_VELOCITY } })
       }
     })

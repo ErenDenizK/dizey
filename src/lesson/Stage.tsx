@@ -7,6 +7,7 @@ import { CHOREO_MS, ENTER_FLOOR, SHIFT, SPRINGS } from '../engine/tokens'
 import { Matrix, RichText } from '../exam/Blocks'
 import { parse } from '../lib/math/rational'
 import { playSound } from '../sound/player'
+import { leaveInPlace } from './leave'
 import { copyName, type Flight, minorBlock, type Source, type StageState, type WorkLine } from './timeline'
 
 /** A new line of working rises into place on the lesson channel (finished at once by a tap). */
@@ -17,6 +18,8 @@ function Rise({ children, className }: { children: ReactNode; className?: string
     if (!el) return
     engine.set(el, { opacity: 0, y: SHIFT.scene })
     engine.withChannel('lesson', () => engine.to(el, { opacity: 1, y: 0 }, 'teach'))
+    // Replaced by the next value (the "?" by the result): the old one fades where it stood.
+    return () => leaveInPlace(el)
   }, [])
   return (
     <span ref={ref} className={className}>
@@ -611,8 +614,10 @@ function useReveal(
           duration: spec.duration * slow,
         })
         const land = () => {
-          if (!chip.isConnected) return
-          chip.remove()
+          if (!chip.isConnected || chip.dataset.landed) return
+          chip.dataset.landed = ''
+          // The tile hands over to the written number: it fades off the number instead of vanishing in one frame.
+          engine.to(chip, { opacity: 0 }, 'leave', { onArrive: () => chip.remove() })
           show()
           playSound('land')
         }
@@ -666,6 +671,36 @@ function useLanding(
         )
         if (!el) return
         const from = carried ? root.querySelector<HTMLElement>(`[data-tok="${carried}"]`) : null
+        // The value it replaces leaves upward from the cell instead of vanishing in one frame.
+        const old = was.rows[r]?.[c]
+        // (A fraction is set in markup the copy cannot rebuild from text; it keeps the plain swap.)
+        if (old !== undefined && old !== '' && !String(old).includes('/')) {
+          const stageRect = root.getBoundingClientRect()
+          const at = el.getBoundingClientRect()
+          const ghost = el.cloneNode(true) as HTMLElement
+          ghost.textContent = old
+          ghost.classList.add('ls-leaving')
+          ghost.removeAttribute('data-cell')
+          ghost.setAttribute('aria-hidden', 'true')
+          Object.assign(ghost.style, {
+            position: 'absolute',
+            left: `${at.left - stageRect.left}px`,
+            top: `${at.top - stageRect.top}px`,
+            width: `${at.width}px`,
+            height: `${at.height}px`,
+            margin: '0',
+            pointerEvents: 'none',
+            transform: 'none',
+            fontSize: getComputedStyle(el).fontSize,
+          })
+          root.append(ghost)
+          chips.push(ghost)
+          engine.withChannel('lesson', () => {
+            engine.set(ghost, { opacity: 1, y: 0 })
+            engine.to(ghost, { opacity: 0 }, 'leave', { onArrive: () => ghost.remove() })
+            engine.to(ghost, { y: -SHIFT.scene }, 'move')
+          })
+        }
         if (!from) {
           engine.set(el, { opacity: 0, y: SHIFT.scene, scale: 0.7 })
           engine.withChannel('lesson', () => {
@@ -702,8 +737,9 @@ function useLanding(
             duration: spec.duration * slow,
           })
           const land = () => {
-            if (!chip.isConnected) return
-            chip.remove()
+            if (!chip.isConnected || chip.dataset.landed) return
+            chip.dataset.landed = ''
+            engine.to(chip, { opacity: 0 }, 'leave', { onArrive: () => chip.remove() })
             engine.set(el, { opacity: 1, scale: 1.15 })
             engine.to(el, { scale: 1 }, 'land')
             playSound('land')
@@ -865,11 +901,29 @@ const TRANSPORT = {
   replay: { path: 'M5 12a7 7 0 1 0 2.1-5M5 4v4h4', label: strings.lesson.replay },
 } as const
 
-/** One button, three states (old transport): pause while a beat plays, play while held, replay when done. */
+/**
+ * One button, three states (old transport): pause while a beat plays, play while held, replay when done.
+ * The three icons share the button's cell and crossfade, so the icon never swaps in one frame.
+ */
 function Transport({ mode, onPress }: { mode: 'pause' | 'play' | 'replay'; onPress: () => void }) {
-  const icon = useRef<SVGSVGElement>(null)
+  const icons = useRef<Partial<Record<keyof typeof TRANSPORT, SVGSVGElement | null>>>({})
+  const first = useRef(true)
+  useLayoutEffect(() => {
+    const instant = first.current
+    first.current = false
+    engine.withChannel('chrome', () => {
+      for (const key of Object.keys(TRANSPORT) as (keyof typeof TRANSPORT)[]) {
+        const el = icons.current[key]
+        if (!el) continue
+        const goal = key === mode ? 1 : 0
+        // The button's first icon fades in with it; later swaps crossfade.
+        if (instant) engine.set(el, { opacity: 0 })
+        engine.to(el, { opacity: goal }, 'fade')
+      }
+    })
+  }, [mode])
   const press = () => {
-    const el = icon.current
+    const el = icons.current[mode]
     if (el) {
       engine.withChannel('chrome', () => {
         if (mode === 'replay') {
@@ -885,9 +939,19 @@ function Transport({ mode, onPress }: { mode: 'pause' | 'play' | 'replay'; onPre
   }
   return (
     <button type="button" className="ls-replay sh-press" aria-label={TRANSPORT[mode].label} onClick={press}>
-      <svg ref={icon} viewBox="0 0 24 24" aria-hidden="true">
-        <path d={TRANSPORT[mode].path} />
-      </svg>
+      {(Object.keys(TRANSPORT) as (keyof typeof TRANSPORT)[]).map((key) => (
+        <svg
+          key={key}
+          ref={(el) => {
+            icons.current[key] = el
+          }}
+          viewBox="0 0 24 24"
+          aria-hidden="true"
+          data-icon={key}
+        >
+          <path d={TRANSPORT[key].path} />
+        </svg>
+      ))}
     </button>
   )
 }

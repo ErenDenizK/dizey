@@ -99,7 +99,10 @@ export function LessonEnd({
       for (const [at, next] of fresh.entries()) {
         engine.after(BADGE_AFTER + at * BADGE_EVERY, () => {
           markShown([next.id], Date.now())
-          setBadge(next)
+          // The seal fades before the rozet takes its place, instead of vanishing in one frame.
+          const seal = el.querySelector<HTMLElement>('.ls-seal')
+          if (at === 0 && seal) engine.to(seal, { opacity: 0 }, 'leave', { onArrive: () => setBadge(next) })
+          else setBadge(next)
         })
       }
     }

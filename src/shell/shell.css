@@ -963,6 +963,32 @@ a.sh-node {
 .ls-answer__last {
   display: inline-block;
 }
+/* An option key's letter and its wrong-try cross share one cell and crossfade on --on (useEase). */
+.ls-key-swap > * {
+  grid-area: 1 / 1;
+  display: grid;
+  place-items: center;
+}
+.ls-key-swap__letter {
+  opacity: calc(1 - var(--on, 0));
+}
+.ls-key-swap__cross {
+  opacity: var(--on, 0);
+}
+/* A lesson swap fades through: what enters waits on its own ink while the copy of what left fades (StepExit). */
+.ls-through {
+  filter: opacity(var(--through, 1));
+}
+.ls-answer__line {
+  display: inline-block;
+  position: relative;
+}
+/* A deleted character: out of the flow so the line recentres while it fades where it stood. */
+.ls-answer__ghost {
+  position: absolute;
+  left: 100%;
+  top: 0;
+}
 .ls-answer__hint {
   position: absolute;
   inset-inline: 0;
@@ -1255,6 +1281,7 @@ a.dz-button[data-kind="primary"] {
   cursor: pointer;
 }
 .ls-replay svg {
+  grid-area: 1 / 1;
   width: 22px;
   height: 22px;
   fill: none;
