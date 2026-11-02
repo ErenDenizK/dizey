@@ -68,3 +68,20 @@ character.
   occurrence of the root cause): identity choices (mascot, logo, palette, app name) pass an Eren pick gate. Options
   arrive as visual mockups, Eren picks, and only then is code written. Character candidates are drawn large in at
   least six moods and reviewed for appeal by someone who did not draw them.
+
+## 2026-11-02: a model reviewer's appeal score stopped being a usable gate
+
+**What happened.** Mırtis (the orange cat Eren picked) went through nine design rounds against a written quality bar
+(`docs/decisions/0017-mirtis.md`). Every technical line passed, and so did the blind mood read (8 of 8). The appeal
+line ("8.5/10 from a reviewer who did not draw it") never moved. Four independent reviews of clearly different
+drawings all scored 6 to 7, and each one's advice contradicted the previous one. One review asked for a white tail
+tip after an earlier review had called the existing cream tip a detached capsule.
+
+**Root cause.** A measurable bar works for what can be measured: continuity, cost, a blind mood read. "Appeal" scored
+by a model against "the best mascot you know" is a taste ceiling, not a measurement. Past a point, more rounds spend
+budget without moving the number.
+
+**What changed.** Model reviewers still find concrete weaknesses, and each round fixed the ones that held up (a sweat
+drop for oops, distinct closed eyes, a banded tail as the signature). The appeal verdict, though, went to Eren's eye,
+and he approved. For future identity work: gate on what a reviewer can check (blind read, silhouettes, small-size
+legibility), and use the appeal score only as a source of critique, never as a pass mark.
