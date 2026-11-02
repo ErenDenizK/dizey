@@ -320,12 +320,10 @@
   text-decoration: none;
   color: var(--ink-1);
 }
-/* One thin row under the lesson, a hairline apart: text links, no pills or fills. */
+/* One thin row under the lesson, a hairline apart: equal cells (one to three, only the ones that exist), each a label over its value. */
 .ph-more {
-  display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
-  padding: 0 var(--space-4);
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
   border-top: 0.5px solid var(--hairline-strong);
 }
 .ph-more:empty {
@@ -333,14 +331,14 @@
 }
 .ph-more__item {
   min-width: 0;
-  display: flex;
-  align-items: center;
+  display: grid;
+  align-content: center;
+  justify-items: center;
   min-height: var(--target);
-  padding: 0;
+  padding: 0 var(--space-1);
   border: 0;
   background: none;
-  white-space: nowrap;
-  text-align: start;
+  text-align: center;
   text-decoration: none;
   font: inherit;
   font-size: var(--type-caption);
@@ -348,20 +346,19 @@
   letter-spacing: var(--tracking-caption);
   color: var(--ink-1);
 }
+.ph-more__item + .ph-more__item {
+  border-inline-start: 0.5px solid var(--hairline-strong);
+}
+.ph-more__title,
+.ph-more__value {
+  max-width: 100%;
+  white-space: nowrap;
+}
 .ph-more__title {
-  flex: none;
   font-weight: var(--weight-medium);
   color: var(--ink-2);
 }
-.ph-more__dot {
-  flex: none;
-  color: var(--ink-2);
-  white-space: pre;
-}
 .ph-more__value {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
   font-weight: var(--weight-semibold);
   color: var(--ink-1);
 }
@@ -392,9 +389,8 @@
 }
 .ph-next__title {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
   letter-spacing: var(--tracking-title3);
