@@ -73,6 +73,15 @@ const scenarios = {
     },
   },
   // Birim in the verdict: a wrong pick, then the right one; the face springs in with the verdict card.
+  // The cold start, filmed from the first frame: the first Birim on Yol wakes from a line into the square.
+  'birim-wake': {
+    region: 'body',
+    scale: 2,
+    cold: true,
+    run: async ({ frames }) => {
+      await frames(60)
+    },
+  },
   'birim-answer': {
     region: '.ls-dock',
     lesson: 'd1-determinant',
