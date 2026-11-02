@@ -21,6 +21,7 @@ import { hasNewProgress, moodOf, parseSeen } from '../progress/readiness'
 import { BadgeShelf } from '../rewards/BadgeShelf'
 import { badgeOf, earnedBadges } from '../rewards/badges'
 import { Emblem } from '../rewards/Emblem'
+import { NextBadge } from '../rewards/NextBadge'
 import { ChevronRight, GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
@@ -49,6 +50,7 @@ export function MeView() {
       <Scene />
       <ProfileMatrix />
       <MistakeLog />
+      <NextBadge />
       <BadgeShelf />
       <SecretMoments />
     </Screen>
@@ -224,45 +226,31 @@ function ProfileMatrix() {
 }
 
 /**
- * Gizli anlar: a labelled group of one slot per hidden moment, in a single row. Found ones show their emblem, the
- * rest are dim with a "?". Nothing here presses.
+ * Gizli anlar: only the moments found so far, each as its emblem, with the count of all of them in the label. Hidden
+ * until the first one is found (nothing is drawn as a hole). Nothing here presses.
  */
 function SecretMoments() {
   const moments = useMoments()
   const withMoment = lessons.filter((lesson) => lesson.moment)
-  if (!withMoment.length) return null
-  const found = withMoment.filter((lesson) => moments[lesson.id] === 'solved').length
+  const found = withMoment.filter((lesson) => moments[lesson.id] === 'solved')
+  if (!withMoment.length || !found.length) return null
   return (
     <section aria-labelledby="moments" className="me-moments" data-testid="moments-album">
       <h2 id="moments" className="dz-section-label">
         {strings.me.moments}
-        {` · ${strings.me.momentsCount(found, withMoment.length)}`}
+        {` · ${strings.me.momentsCount(found.length, withMoment.length)}`}
       </h2>
-      <ul className="me-moments__list" style={{ '--slots': withMoment.length } as React.CSSProperties}>
-        {withMoment.map((lesson) =>
-          moments[lesson.id] === 'solved' ? (
-            <li
-              key={lesson.id}
-              className="me-moments__slot"
-              role="img"
-              aria-label={strings.me.momentFound(pathCode(lesson))}
-            >
-              <Emblem badge={badgeOf('insight')} />
-            </li>
-          ) : (
-            <li
-              key={lesson.id}
-              className="me-moments__slot me-moments__slot--hidden"
-              role="img"
-              aria-label={strings.me.momentHidden}
-            >
-              <Emblem badge={badgeOf('insight')} />
-              <span className="me-moments__mark" aria-hidden="true">
-                ?
-              </span>
-            </li>
-          ),
-        )}
+      <ul className="me-moments__list">
+        {found.map((lesson) => (
+          <li
+            key={lesson.id}
+            className="me-moments__slot"
+            role="img"
+            aria-label={strings.me.momentFound(pathCode(lesson))}
+          >
+            <Emblem badge={badgeOf('insight')} />
+          </li>
+        ))}
       </ul>
     </section>
   )
