@@ -162,8 +162,8 @@
 }
 /* Done: quiet. A low tint of the success hue over the surface (opaque, so the run underneath never shows through), a hairline in the same hue and a tick in the success ink. */
 .pa-tile[data-state="done"] {
-  background: color-mix(in oklch, var(--ok-fill) 16%, var(--surface));
-  --node-ring: inset 0 0 0 1px color-mix(in oklch, var(--ok-fill) 50%, transparent);
+  background: var(--ok-tint);
+  --node-ring: inset 0 0 0 1px var(--ok-edge);
 }
 /* Weak first tries on a finished lesson: a small dot in the bad ink at the node's top-right corner. The lesson is still done. */
 .pa-tile__flag {
