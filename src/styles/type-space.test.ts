@@ -127,7 +127,10 @@ describe('the scale itself', () => {
 
   it.each(roles)('%s has a whole even-pixel line height at the default text size', (role) => {
     const line = px(`--leading-${role}`)
-    expect(Math.abs(line - Math.round(line))).toBeLessThan(0.05)
+    // Never below the whole pixel and within a thousandth above it: layout snaps to 1/64 px, so a rem value like
+    // 1.294 (21.998 px) would lose a sixty-fourth per line and leave every rule below it on a fractional pixel.
+    expect(line - Math.round(line)).toBeGreaterThanOrEqual(0)
+    expect(line - Math.round(line)).toBeLessThan(0.001)
     expect(Math.round(line) % 2).toBe(0)
   })
 

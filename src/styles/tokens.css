@@ -146,16 +146,16 @@
   --type-subhead: 0.941rem; /* 16 */
   --type-footnote: 0.882rem; /* 15 */
   --type-caption: 0.824rem; /* 14 */
-  --leading-large: 2.235rem; /* 38 */
-  --leading-title1: 1.882rem; /* 32 */
-  --leading-title2: 1.647rem; /* 28 */
-  --leading-title3: 1.412rem; /* 24 */
-  --leading-body: 1.529rem; /* 26 */
-  --leading-read: 1.647rem; /* 28 */
-  --leading-callout: 1.412rem; /* 24 */
-  --leading-subhead: 1.294rem; /* 22 */
-  --leading-footnote: 1.294rem; /* 22 */
-  --leading-caption: 1.176rem; /* 20 */
+  --leading-large: 2.2353rem; /* 38 */
+  --leading-title1: 1.88236rem; /* 32 */
+  --leading-title2: 1.64706rem; /* 28 */
+  --leading-title3: 1.41177rem; /* 24 */
+  --leading-body: 1.52942rem; /* 26 */
+  --leading-read: 1.64706rem; /* 28 */
+  --leading-callout: 1.41177rem; /* 24 */
+  --leading-subhead: 1.29412rem; /* 22 */
+  --leading-footnote: 1.29412rem; /* 22 */
+  --leading-caption: 1.17648rem; /* 20 */
   --leading-none: 1; /* one-line glyph boxes only: numerals in chips and cells */
   /* Unitless body leading for inheritance: an element that only changes its size keeps a proportional line. */
   --leading-base: 1.444; /* 26 / 18 */
