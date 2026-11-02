@@ -18,6 +18,7 @@ import {
   holdTagsOf,
   insets,
   isRound,
+  landsRound,
   lastThird,
   reach,
   release,
@@ -305,7 +306,8 @@ function arrive(el: HTMLElement, current: () => boolean) {
 function recede() {
   const back = stageRef.current
   if (!back) return
-  engine.to(back, { scale: CHOREO.sheetRecede }, 'page')
+  // Under reduced motion the screen only dims: a scale would land in one frame.
+  if (!engine.reducedMotion) engine.to(back, { scale: CHOREO.sheetRecede }, 'page')
   engine.to(back, { opacity: 1 - CHOREO.sheetScrim }, 'fade')
 }
 
@@ -347,6 +349,10 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
   if (card.classList.contains('lp')) standIn(el)
   engine.withChannel('chrome', () => {
     recede()
+    if (engine.reducedMotion) {
+      fadeOpen(el, card, face, current)
+      return
+    }
     if (isRound(card)) {
       growCircle(el, card, face, current)
       return
@@ -387,6 +393,32 @@ function growFrom(el: HTMLElement, card: HTMLElement) {
         card.style.visibility = ''
       },
     })
+  })
+}
+
+/**
+ * Reduced motion: nothing grows or travels; the route fades in over the card and the dimmed screen, and its
+ * content follows (PR-16: shortened, never cut).
+ */
+function fadeOpen(el: HTMLElement, card: HTMLElement, face: HTMLElement, current: () => boolean) {
+  // The surface itself is see-through: the copy of the card fades out where the card is while the route's
+  // container, which carries the page colour, fades in over it and over the dimmed screen.
+  el.style.clipPath = ''
+  el.style.background = 'transparent'
+  engine.to(face, { opacity: 0 }, 'fade', {
+    onArrive: () => {
+      face.remove()
+      card.style.visibility = ''
+      if (current()) el.style.background = ''
+    },
+  })
+  arrive(el, current)
+}
+
+/** The route's own opacity, written straight to its style (it has no clip under reduced motion). */
+function fadeBind(el: HTMLElement) {
+  engine.bind(el, (v) => {
+    el.style.opacity = String(v.opacity ?? 1)
   })
 }
 
@@ -500,6 +532,13 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null, she
     }
     const content = contentOf(el)
     for (const old of el.querySelectorAll(':scope > [data-face], :scope > .sh-cells')) old.remove()
+    if (engine.reducedMotion) {
+      // Nothing shrinks back into the tile: the route fades away over the screen it covered.
+      el.style.clipPath = ''
+      fadeBind(el)
+      engine.to(el, { opacity: 0 }, 'fade', { onArrive: done })
+      return
+    }
     // The tile is measured where it will rest: the covered screen is still on its way back from its recess.
     const target = atRest(() => insets(el, card))
     // The clip lives in the sheet's own (lifted) frame.
@@ -517,7 +556,7 @@ function leave(el: HTMLElement, host: HTMLElement, card: HTMLElement | null, she
     holdTagsOf(card)
     // The lesson's own ink goes first and fast.
     if (content) engine.to(content, { opacity: 0 }, 'leave')
-    if (isRound(card)) {
+    if (landsRound(card)) {
       const { cx, cy: cy0, r0, far } = circleOf(el, card)
       const cy = cy0 + lift
       const span = Math.max(1, far - r0)
