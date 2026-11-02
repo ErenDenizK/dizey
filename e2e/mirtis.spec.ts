@@ -32,8 +32,9 @@ test('Yol: one Mırtis, perched on the dock card at 72 px, moving with the dock'
   const [c, m] = await Promise.all([card.boundingBox(), mirtis.boundingBox()])
   if (!c || !m) throw new Error('no boxes')
   expect(m.width).toBeGreaterThanOrEqual(70)
-  expect(m.y + m.height).toBeLessThanOrEqual(c.y + 1)
-  expect(c.y - (m.y + m.height)).toBeLessThan(16)
+  // The drawing ends 8 % of the width above the svg's bottom edge; that is where the paws meet the card's border.
+  const paws = m.y + m.height - m.width * 0.08
+  expect(Math.abs(paws - c.y)).toBeLessThan(3)
   expect(m.x + m.width).toBeLessThanOrEqual(c.x + c.width)
   expect(m.x).toBeGreaterThanOrEqual(c.x)
   expect(await visibleMırtiss(page)).toBe(1)
@@ -67,7 +68,9 @@ test('lesson: a right answer shows one Mırtis in the verdict, and the end shows
   await page.waitForTimeout(1200)
   const [sheet, cat] = await Promise.all([verdict.boundingBox(), verdict.locator('svg.mirtis').boundingBox()])
   expect(cat?.width ?? 0).toBeGreaterThanOrEqual(55)
-  expect((cat?.y ?? 0) + (cat?.height ?? 0)).toBeLessThanOrEqual((sheet?.y ?? 0) + 1)
+  expect(
+    Math.abs((cat?.y ?? 0) + (cat?.height ?? 0) - (cat?.width ?? 0) * 0.08 - (sheet?.y ?? 0)),
+  ).toBeLessThan(3)
 
   const finish = player.getByRole('button', { name: 'Dersi bitir' })
   const reveal = player.getByRole('button', { name: 'Cevabı göster' })
