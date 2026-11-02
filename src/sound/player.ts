@@ -1,7 +1,8 @@
 import { readSettings, saveSettings } from '../progress/settings'
+import { type Conductor, createConductor, createLearner } from './conductor'
 import type { MusicCue } from './form'
-import { type ChordId, chordAt, seeded } from './harmony'
-import { composeSection, freshState, idleCue, type MusicState, SECTION } from './music'
+import { chordAt, seeded } from './harmony'
+import { idleCue } from './music'
 import { EVENTS, type Plan, type SoundContext, type SoundEvent } from './score'
 import { createSynth, PALETTES, type PaletteId, type Synth } from './synth'
 
@@ -46,28 +47,25 @@ function applySession() {
  */
 let ambientContext: SoundContext & { music?: MusicCue } = {}
 export function setSoundContext(context: SoundContext & { music?: MusicCue }) {
-  const before = wantedChord()
   const stepBefore = ambientContext.step
+  const inLesson = ambientContext.steps !== undefined
   // A new lesson opens over a lesson end still ringing: its opening fades that cadence (the pedal in
   // synth.ts), so the music may come back with the new lesson's first chord.
-  if (context.steps && !ambientContext.steps) quietUntil = 0
+  if (context.steps && !inLesson) {
+    conductor?.resume()
+    learner.reset()
+  }
   ambientContext = context
   // A new lesson starts its own piece (its own motif); leaving one returns to the home walk.
-  const seed = context.music?.seed ?? 0
-  if (seed !== musicState.motifSeed)
-    musicState = {
-      ...freshState(seed),
-      motifSeed: seed,
-      ...(musicState.last === undefined ? {} : { last: musicState.last }),
-    }
-  if (context.step !== stepBefore) musicState = { ...musicState, bar: 0 }
-  // A new chord on screen: the music moves with it at once (a quick crossfade), never a beat late.
-  if (musicTimer && wantedChord() !== before) {
-    stopMusic(0.5)
-    entering = true
-    syncMusic()
-  }
+  conductor?.setSeed(context.music?.seed ?? 0)
+  if (context.step === stepBefore) return
+  // A new step: the music moves with it on the next beat. What the learner just did decides how it
+  // answers: a flourish after a correct answer, a softer next step after a wrong one.
+  conductor?.request(learner.stepped(context.step, context.music?.role, inLesson && !!context.steps))
 }
+
+/** The learner's answers steer the music (tracked from the sounds the lesson plays). */
+const learner = createLearner()
 
 function armIdle() {
   clearTimeout(idle)
@@ -95,6 +93,15 @@ function prepare() {
   const settings = readSettings()
   synth = createSynth(ctx, { palette: paletteOf(settings.palette) })
   synth.setMusicLevel(settings.musicSoft ? MUSIC_SOFT_DB : 0)
+  conductor = createConductor({
+    now: () => ctx?.currentTime ?? 0,
+    sink: {
+      play: (notes, at) => synth?.playMusic(notes, at),
+      cut: (at, tau) => synth?.cutMusic(at, tau),
+    },
+    random: musicRandom,
+    wanted: wantedCue,
+  })
   synth.listen((plan) => {
     const now = ctx?.currentTime ?? 0
     for (const listener of heard) listener(plan, now)
@@ -158,18 +165,18 @@ export function installSound() {
 /** Plays a cue on the frame its motion lands. Silent when sound is off or audio is not yet unlocked. */
 export function playSound(event: SoundEvent, given?: SoundContext) {
   if (!soundOn() || !ctx || !synth) return
+  learner.heard(event)
   const tier = EVENTS[event].tier
   const context: SoundContext = { ...(tier === 'touch' ? ambientContext : {}), ...given }
   // Outside a lesson a 'step' sound takes the chord the music is holding, so the two always agree.
-  const holding = musicChordAt(ctx.currentTime)
+  const holding = conductor?.chordAt(ctx.currentTime)
   if (!context.steps && holding) context.chord = holding
   if (ctx.state === 'running') {
     armIdle()
     const plan = synth.play(event, context)
     // A lesson end or a reward walks its own chords: the music steps aside and comes back after it.
     if (tier === 'lesson' || tier === 'reward') {
-      stopMusic(0.25)
-      quietUntil = plan.end - 0.8
+      conductor?.fade(plan.end - 1.5)
     }
     return
   }
@@ -205,73 +212,37 @@ export function setPalette(id: PaletteId) {
 
 /* ---------- Background music ---------- */
 
+/** How often the music scheduler runs, ms (it writes bars about 2.4 s ahead, see conductor.ts). */
+const TICK_MS = 400
+
 /** Softer music setting, dB under normal. */
 const MUSIC_SOFT_DB = -7
-/** How often the music scheduler looks ahead, ms, and how far ahead a section is written, s. */
-const TICK_MS = 400
-const LOOKAHEAD = 1.2
 
-let musicTimer = false
-/** Context time before which the music stays out (a cadence or reward is ringing). */
-let quietUntil = 0
-/** Sections written, by start time: what chord the music holds at any moment. */
-let sections: { at: number; chord: ChordId }[] = []
-
-function musicChordAt(time: number): ChordId | undefined {
-  if (!musicTimer) return undefined
-  let chord: ChordId | undefined
-  for (const written of sections) if (written.at <= time + 0.05) chord = written.chord
-  return chord
-}
+let conductor: Conductor | null = null
 
 /** What the music should play now: the lesson's plan for the step on screen, or the home walk. */
-const wantedCue = (): MusicCue => {
+const wantedCue = (phrase: number): MusicCue => {
   const { step, steps, music } = ambientContext
-  if (music) return music
-  if (steps) return { ...idleCue(section), chord: chordAt(step, steps) }
-  return idleCue(section)
+  if (!steps) return idleCue(phrase)
+  const base = music ?? { ...idleCue(phrase), chord: chordAt(step, steps) }
+  return { ...base, energy: learner.energy(base.energy, step) }
 }
-const wantedChord = (): ChordId => wantedCue().chord
 let held = false
-let nextAt = 0
-let section = 0
-let musicState: MusicState & { motifSeed: number } = { ...freshState(0), motifSeed: 0 }
-/** The next section follows a chord change: its pad comes in quickly. */
-let entering = false
 const musicRandom = seeded(Date.now() & 0xffff)
 
 const musicWanted = () => soundOn() && readSettings().music !== false && !held && !document.hidden
 
 function stopMusic(tau = 0.8) {
-  if (!musicTimer) return
-  musicTimer = false
-  sections = []
-  synth?.stopMusic(tau)
+  conductor?.stop(tau)
 }
 
-/** Writes the next section when it is due; starts and stops with the settings, the page and the exam. */
+/** Writes the next bars when they are due; starts and stops with the settings, the page and the exam. */
 function syncMusic() {
   if (!ctx || !synth || ctx.state !== 'running' || !musicWanted()) {
     if (!musicWanted()) stopMusic()
     return
   }
-  if (ctx.currentTime < quietUntil) return
-  if (!musicTimer) {
-    musicTimer = true
-    nextAt = ctx.currentTime + 0.05
-  }
-  if (nextAt - ctx.currentTime > LOOKAHEAD) return
-  if (nextAt < ctx.currentTime) nextAt = ctx.currentTime + 0.05
-  const cue = wantedCue()
-  const chord = cue.chord
-  const written = composeSection(cue, nextAt, musicRandom, musicState, entering)
-  entering = false
-  musicState = { ...written.state, motifSeed: musicState.motifSeed }
-  synth.playMusic(written.notes)
-  const now = ctx.currentTime
-  sections = [...sections.filter((written) => written.at > now - SECTION * 2), { at: nextAt, chord }]
-  section++
-  nextAt += SECTION
+  conductor?.tick()
 }
 
 /** Ben's music switch: inside the tap, so turning it on can start at once. */
