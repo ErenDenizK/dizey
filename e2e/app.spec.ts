@@ -221,31 +221,34 @@ test('no week strip anywhere: Yol and Sen count up and never show a missed day',
   await expect(page.getByTestId('week-summary')).toHaveCount(0)
 })
 
-test('Yol: the graph paper is the whole screen background and scrolls with the content', async ({ page }) => {
+test('Yol: the graph paper covers the whole scroll and scrolls as content, not as a repainted background', async ({
+  page,
+}) => {
   await openApp(page)
   const paper = await page.evaluate(() => {
     const scroller = document.querySelector<HTMLElement>('.sh-pane:not([inert]) .dz-screen')
-    if (!scroller) return null
-    const style = getComputedStyle(scroller)
+    const sheet = scroller?.querySelector<HTMLElement>('.ph-paper')
+    if (!scroller || !sheet) return null
+    const frame = scroller.getBoundingClientRect()
+    const box = sheet.getBoundingClientRect()
     return {
-      image: style.backgroundImage,
-      attachment: style.backgroundAttachment,
-      scrollHeight: scroller.scrollHeight,
-      clientHeight: scroller.clientHeight,
-      fieldHeight: document.querySelector<HTMLElement>('.sh-pane:not([inert]) .ph-field')?.offsetHeight ?? 0,
+      image: getComputedStyle(sheet).backgroundImage,
+      scrollerImage: getComputedStyle(scroller).backgroundImage,
+      attachment: getComputedStyle(scroller).backgroundAttachment,
+      left: box.left - frame.left,
+      right: frame.right - box.right,
+      top: box.top - frame.top + scroller.scrollTop,
+      bottom: scroller.scrollHeight - (box.bottom - frame.top + scroller.scrollTop),
     }
   })
   expect(paper).not.toBeNull()
   expect(paper?.image).toContain('linear-gradient')
-  expect(paper?.attachment).toContain('local')
-  // The paper is the scroller's own background, so it spans its full scroll height (not just the path).
-  expect(paper?.scrollHeight ?? 0).toBeGreaterThan(paper?.fieldHeight ?? 0)
-  const bare = await page.evaluate(
-    () =>
-      getComputedStyle(document.querySelector('.sh-pane:not([inert]) .ph-field') as HTMLElement)
-        .backgroundImage,
-  )
-  expect(bare).toBe('none')
+  // The scroller itself paints nothing, so iOS never repaints a scrolling background (it stuttered with `local`).
+  expect(paper?.scrollerImage).toBe('none')
+  expect(paper?.attachment).not.toContain('local')
+  // Edge to edge: the sheet reaches every side of the scroll content.
+  for (const gap of [paper?.left, paper?.right, paper?.top, paper?.bottom])
+    expect(Math.abs(gap ?? 99)).toBeLessThan(1)
 })
 
 test('a lesson end offers one exam question on its topic', async ({ page }) => {
@@ -984,8 +987,12 @@ test.describe('small phone (375 x 667) reach', () => {
       const scroller = screen(page).locator('.dz-screen')
       const bottom = await scroller.evaluate((el) => {
         el.scrollTop = el.scrollHeight
-        const kids = [...el.children].filter((kid) => kid.getBoundingClientRect().height > 0)
-        return kids[kids.length - 1]?.getBoundingClientRect().bottom ?? 0
+        const shown = (box: Element) =>
+          [...box.children].filter((kid) => kid.getBoundingClientRect().height > 0)
+        let last = shown(el).at(-1)
+        // Yol's graph paper is a full-bleed sheet that runs under the bar on purpose: measure what sits on it.
+        if (last?.classList.contains('ph-paper')) last = shown(last).at(-1)
+        return last?.getBoundingClientRect().bottom ?? 0
       })
       const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
       expect(bar && bottom <= bar.y).toBe(true)
@@ -1022,8 +1029,12 @@ test.describe('standard phone (390 x 844) reach', () => {
       const scroller = screen(page).locator('.dz-screen')
       const bottom = await scroller.evaluate((el) => {
         el.scrollTop = el.scrollHeight
-        const kids = [...el.children].filter((kid) => kid.getBoundingClientRect().height > 0)
-        return kids[kids.length - 1]?.getBoundingClientRect().bottom ?? 0
+        const shown = (box: Element) =>
+          [...box.children].filter((kid) => kid.getBoundingClientRect().height > 0)
+        let last = shown(el).at(-1)
+        // Yol's graph paper is a full-bleed sheet that runs under the bar on purpose: measure what sits on it.
+        if (last?.classList.contains('ph-paper')) last = shown(last).at(-1)
+        return last?.getBoundingClientRect().bottom ?? 0
       })
       const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
       expect(bar && bottom <= bar.y).toBe(true)
