@@ -7,7 +7,7 @@
 .me-scene {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
   margin-top: 0;
   padding: 0;
 }
@@ -38,23 +38,24 @@
   justify-items: start;
   gap: 0;
   /* Clear of the settings button, which floats over the head's right edge. */
-  padding-inline-end: calc(var(--target) + var(--space-2));
-  /* The name's target is taller than its line, and the title tucks into that slack: balance it so the stack's ink is centred on the avatar. */
-  padding-block-end: calc((var(--target) - var(--leading-title3)) / 2);
+  padding-inline-end: var(--target);
 }
+/* The name may wrap to two lines. Its 48 px target is the lines plus padding, handed back as negative margin so the title follows the ink directly and the stack stays centred on the avatar. */
 .me-name {
   display: grid;
   width: 100%;
+  margin-block: calc((var(--leading-title3) - var(--target)) / 2);
 }
 .me-name > * {
   grid-area: 1 / 1;
 }
 .me-name__text,
 .me-name__input {
+  box-sizing: border-box;
   min-height: var(--target);
   width: 100%;
   margin: 0;
-  padding: 0;
+  padding: calc((var(--target) - var(--leading-title3)) / 2) 0;
   border: 0;
   border-radius: var(--corner-button);
   background: none;
@@ -67,9 +68,8 @@
   color: var(--ink-1);
 }
 .me-name__text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
 }
 .me-name__text[data-placeholder] {
   font-weight: var(--weight-medium);
@@ -87,7 +87,7 @@
 /* The name keeps its full 48 px target; the title tucks up into the name's empty padding so the two read as one title/subtitle stack. */
 .me-title {
   position: relative;
-  margin: calc((var(--leading-title3) - var(--target)) / 2) 0 0;
+  margin: 0;
   pointer-events: none;
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
