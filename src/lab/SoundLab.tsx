@@ -15,7 +15,7 @@ import {
 } from '../sound/harmony'
 import { listenSounds, playSound, setMusicOn, setMusicSoft, setPalette, setSoundOn } from '../sound/player'
 import { createScore, EVENTS, type Plan, type SoundEvent } from '../sound/score'
-import { PALETTES, type PaletteId } from '../sound/synth'
+import { MUSIC_DUCK, PALETTES, type PaletteId } from '../sound/synth'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
@@ -276,6 +276,13 @@ export function SoundLab() {
   const palette: PaletteId = settings.palette ?? 'rhodes'
   const [step, setStep] = useState(0)
   const [lit, setLit] = useState<Map<number, Light>>(new Map())
+
+  // The offline measurer, loaded only here, for the sound level guard (e2e/sound-levels.spec.ts).
+  useEffect(() => {
+    void import('../sound/measure').then((measure) => {
+      ;(window as unknown as { __dzMeasure?: unknown }).__dzMeasure = { ...measure, EVENTS, MUSIC_DUCK }
+    })
+  }, [])
   const [readout, setReadout] = useState<{ event: string; chord: string; detail: string }>({
     event: text.console.idle,
     chord: 'I',
