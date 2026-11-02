@@ -22,8 +22,8 @@ cat designs over nine rounds and approved Mırtis. The design was built and test
 - `Mirtis.tsx` keeps Birim's API (`size`, `mood`, `wake`, `className`, `ref.react(mood)`). Moods map onto storyboards:
   happy is `correct`, oops is `wrong`, wow, think, rest, sleep (`sleepy`), lesson end is `proud`, `wake` plays
   `wake`, and the profile avatar (a real button with a Turkish aria-label) plays `purr`.
-- Size picks the rig: answer (24 px) and path (40 px) use the small head bust, profile (96 px) the full-detail
-  bust, hero the full body.
+- Size picks the rig (see Presence): verdict (56 px) and dock (72 px) the full body, profile (112 px) the full-detail
+  bust, hero the full body. No cat is under 48 px except the app icon.
 - Motion runs on the spring engine's clock: frames are an engine ticker that exists only while the cat moves; blink
   waits are plain timers, so an idle cat keeps `engine.isActive()` false. `engine.reducedMotion` is followed frame by
   frame: reactions get stiffer and half as long, never cut.
@@ -42,4 +42,24 @@ cat designs over nine rounds and approved Mırtis. The design was built and test
   not retuned.
 - Birim's code, tests and `--birim-*` tokens are gone. The Satır and Sütun duo (`Duo.tsx`, `rig.ts`) stays because
   the character lab still uses it.
-- The path tile shows Mırtis at rest (blinking), not in the closed-eyes grin, so she looks awake while you choose.
+- Mırtis on Yol rests (blinking), not in the closed-eyes grin, so she looks awake while you choose.
+
+## Presence
+
+How the cat is shown across the app, after Eren found her too small and hard to see on some screens.
+
+1. **One cat, one place, a real job.** At most one Mırtis on screen, and never on a question while it is being solved.
+2. **She perches.** Her paws rest on the top edge of the card she belongs to and her body rises above it. She never
+   floats and never sits beside a tile.
+3. **She enters and leaves through that edge.** `Perch` (`src/character/Perch.tsx`) clips everything below the edge line
+   and moves her on an engine spring (`land`, a small overshoot) from behind the card; leaving she sinks behind it
+   (`leave`). No fade. Under reduced motion the rise is the shorter effect spring, never a cut (PR-16).
+4. **Sizes.** No cat under 48 px except the app icon, and the full body wherever there is room.
+   - Yol: on the dock card, top right, 72 px (the tile no longer carries her). The wake storyboard plays there.
+   - Lesson verdict: 56 px, on the verdict sheet's top edge at the right; she rises just after the dock's entrance
+     (`VERDICT_PERCH_DELAY`), so it reads as one rise.
+   - Sen: the avatar is 112 px (88 px under 700 px of height). Lesson end: the hero is `clamp(128px, 30vh, 176px)`, and
+     `clamp(96px, 16vh, 128px)` while a rozet shows; the change glides on the engine (`--badge` on the stage).
+5. **Between pages** each page's cat enters with its page and leaves with it. No cross-page flights.
+
+Guards: `e2e/mirtis.spec.ts` (perch position, one cat per screen, every cat at least 48 px wide).
