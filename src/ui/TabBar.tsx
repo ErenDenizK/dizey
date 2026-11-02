@@ -63,6 +63,7 @@ export function TabBar<Id extends string>({
     engine.bind(el, (v) => {
       el.style.transform = `translate3d(${(v.l ?? 0).toFixed(2)}px, 0, 0)`
       el.style.width = `${Math.max(0, (v.r ?? 0) - (v.l ?? 0)).toFixed(2)}px`
+      el.style.opacity = v.opacity === undefined ? '' : v.opacity.toFixed(3)
     })
   }, [])
 
@@ -76,12 +77,36 @@ export function TabBar<Id extends string>({
       engine.set(el, goal)
       return
     }
+    if (engine.reducedMotion) {
+      // Reduced motion: no slide (edges would land in one frame); the lens fades out, moves unseen, fades in.
+      engine.withChannel('chrome', () =>
+        engine.to(el, { opacity: 0 }, 'fade', {
+          onArrive: () => {
+            engine.set(el, goal)
+            engine.to(el, { opacity: 1 }, 'fade')
+          },
+        }),
+      )
+      return
+    }
     const movingRight = goal.l > engine.value(el, 'l')
     engine.withChannel('chrome', () => {
       engine.to(el, { [movingRight ? 'r' : 'l']: movingRight ? goal.r : goal.l }, 'snap')
       engine.to(el, { [movingRight ? 'l' : 'r']: movingRight ? goal.l : goal.r }, 'glide')
     })
   }, [index, tabs.length])
+
+  // The tabs' own selection look (colour, weight, icon fill) eases with --on, never in one frame.
+  useLayoutEffect(() => {
+    const items = bar.current?.querySelectorAll<HTMLElement>('.dz-tab') ?? []
+    items.forEach((el, i) => {
+      const goal = i === index ? 1 : 0
+      if (el.dataset.on === undefined) {
+        el.dataset.on = ''
+        engine.set(el, { '--on': goal })
+      } else engine.withChannel('chrome', () => engine.to(el, { '--on': goal }, 'fade', { effect: true }))
+    })
+  }, [index])
 
   // Keep the lens on its slot when the bar resizes (rotation, text size), without animating.
   useEffect(() => {

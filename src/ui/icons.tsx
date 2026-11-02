@@ -14,7 +14,12 @@ const stroke = {
   strokeLinejoin: 'round',
 } as const
 
-const softFill = (active?: boolean) => ({ fill: 'currentColor', fillOpacity: active ? 0.18 : 0 })
+// In the tab bar the fill eases with the tab's --on (.dz-tab .dz-soft in ui.css); elsewhere it follows `active`.
+const softFill = (active?: boolean) => ({
+  className: 'dz-soft',
+  fill: 'currentColor',
+  fillOpacity: active ? 0.18 : 0,
+})
 
 /** Dersler: a 2 x 2 matrix in brackets, its first entry done. */
 export function PathIcon({ active }: IconProps) {

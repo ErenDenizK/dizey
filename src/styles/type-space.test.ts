@@ -71,7 +71,11 @@ function violations(path: string): string[] {
         if (!(token || (math && (relative || scaled || /^[\d.]+em$/.test(value))) || value === 'inherit'))
           found.push(`raw font size: ${at}`)
       }
-      if (prop === 'font-weight' && !/^var\(--weight-\w+\)$/.test(value) && value !== 'inherit')
+      // An eased blend of weight tokens (a calc over --weight-* and an ease value --on) is still the scale.
+      const blend =
+        value.startsWith('calc(') &&
+        /^calc\([\s()+\-*]*\)$/.test(value.replace(/var\(--weight-\w+\)|var\(--on(, ?0)?\)/g, ''))
+      if (prop === 'font-weight' && !/^var\(--weight-\w+\)$/.test(value) && !blend && value !== 'inherit')
         found.push(`raw weight: ${at}`)
       if (prop === 'letter-spacing' && !/^var\(--tracking-[\w-]+\)$/.test(value))
         found.push(`raw tracking: ${at}`)

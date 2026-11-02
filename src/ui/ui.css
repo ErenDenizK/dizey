@@ -521,16 +521,16 @@
   justify-content: center;
   gap: var(--space-0-5);
   min-width: var(--target);
-  color: var(--ink-2);
   font-size: var(--type-caption);
   line-height: var(--leading-caption);
-  font-weight: var(--weight-medium);
   letter-spacing: var(--tracking-caption);
   border-radius: var(--corner-pill);
+  /* Selection eases: --on (0 to 1, TabBar.tsx) blends the colour, the weight (a variable font) and the icon's fill. */
+  color: color-mix(in oklab, var(--ink-1) calc(var(--on, 0) * 100%), var(--ink-2));
+  font-weight: calc(var(--weight-medium) + (var(--weight-semibold) - var(--weight-medium)) * var(--on, 0));
 }
-.dz-tab[aria-current="page"] {
-  color: var(--ink-1);
-  font-weight: var(--weight-semibold);
+.dz-tab .dz-soft {
+  fill-opacity: calc(var(--on, 0) * 0.18);
 }
 .dz-tab svg {
   width: 26px;
