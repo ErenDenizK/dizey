@@ -236,6 +236,8 @@ type Bus = {
   sources: [AudioScheduledSourceNode, number][]
   released: boolean
   duck: number
+  /** Music buses: the grid time the bus belongs to (a cut drops buses from here on). */
+  start?: number
 }
 
 export type SynthOptions = {
@@ -533,19 +535,44 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
   let musicOffset = 0
   let ducked = { db: 0, until: 0 }
 
-  /** Plays background-music notes (already in context time) at the music level. */
-  function playMusic(notes: Note[]) {
-    if (!notes.length) return
-    music.push(
-      render(
-        notes,
-        { cutoff: MUSIC_TONE.cutoff, wet: 0 },
-        MUSIC_TRIM[palette.id] + musicOffset,
-        'music',
-        '-',
-        musicIn,
-      ),
+  /**
+   * Plays background-music notes (already in context time) at the music level, as one group that
+   * starts at `at` (default: its first note). `cutMusic` treats the group as a unit.
+   */
+  function playMusic(notes: Note[], at = Math.min(...notes.map((n) => n.at))) {
+    if (!notes.length) return { at }
+    const bus = render(
+      notes,
+      { cutoff: MUSIC_TONE.cutoff, wet: 0 },
+      MUSIC_TRIM[palette.id] + musicOffset,
+      'music',
+      '-',
+      musicIn,
     )
+    bus.start = at
+    music.push(bus)
+    return { at }
+  }
+
+  /**
+   * Changes the music from `at`: groups that start at or after it are dropped unheard, groups
+   * already ringing are released from `at` with time constant `tau`.
+   */
+  function cutMusic(at: number, tau: number) {
+    const from = Math.max(at, ctx.currentTime)
+    for (const bus of [...music]) {
+      if (bus.released) continue
+      if ((bus.start ?? 0) >= at - 1e-4) {
+        for (const [source] of bus.sources) {
+          try {
+            source.stop(0)
+          } catch {
+            // Already stopped.
+          }
+        }
+        cleanup(bus)
+      } else release(bus, from, tau)
+    }
   }
 
   /** Turns the music down for a moment so an event sounds clear over it. */
@@ -576,6 +603,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     play,
     stopAll,
     playMusic,
+    cutMusic,
     stopMusic,
     /** Music level, dB on top of the calibrated base (0 = normal). */
     setMusicLevel(offsetDb: number) {

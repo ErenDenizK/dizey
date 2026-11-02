@@ -1,4 +1,4 @@
-import type { MusicCue } from './form'
+import type { Flourish, MusicCue } from './form'
 import { CHORDS, type ChordId, clamp, mod, nearest } from './harmony'
 import type { Note } from './score'
 
@@ -17,8 +17,10 @@ import type { Note } from './score'
  * Outside a lesson the music walks the old app's home loop (I–vi–IV–V) slowly, at low energy.
  */
 
-/** Seconds per beat (about 67 bpm) and beats per section. */
-export const BEAT = 0.9
+/** Seconds per beat (72 bpm), beats per bar, and the two-bar phrase (a "section") the composer writes. */
+export const BEAT = 60 / 72
+export const BAR_BEATS = 4
+export const BAR = BEAT * BAR_BEATS
 export const SECTION_BEATS = 8
 export const SECTION = BEAT * SECTION_BEATS
 
@@ -96,6 +98,71 @@ function vary(motif: Motif, v: number): { contour: number[]; lift: number } {
   }
 }
 
+/** A sixteenth note at 72 bpm. */
+const SIXTEENTH = BEAT / 4
+
+/** All tones of the chord's arpeggio in `low..high` (semitones above the tonic), ascending. */
+function toneRange(chord: ChordId, low: number, high: number): number[] {
+  const c = CHORDS[chord]
+  const base = mod(c.root + 6, 12) - 6
+  return [...new Set(c.arpeggio.flatMap((interval) => [-1, 0, 1, 2, 3].map((o) => base + interval + 12 * o)))]
+    .filter((p) => p >= low && p <= high)
+    .sort((a, b) => a - b)
+}
+
+/**
+ * A flourish: the music answering a key moment, on the first beat of the new phrase, as `shine`
+ * notes (never ducked away, they come after the answer sound). Chord tones of `chord` only.
+ * - rise: an ascending arpeggio, six sixteenths, landing on a held tone;
+ * - peak: nine sixteenths, about two octaves, plus a halo swell;
+ * - cascade: five notes falling onto the root.
+ */
+export function flourishNotes(kind: Flourish, chord: ChordId, start: number): Note[] {
+  const c = CHORDS[chord]
+  const note = (pitch: number, at: number, velocity: number, ring: number): Note => ({
+    kind: 'shine',
+    pitch,
+    at,
+    ring,
+    velocity,
+    bright: 0.35,
+  })
+  const at0 = start + 0.03
+  if (kind === 'cascade') {
+    const root = toneRange(chord, 4, 17).find((p) => mod(p - c.root, 12) === 0) ?? c.root
+    const above = toneRange(chord, root + 1, root + 19)
+      .slice(0, 4)
+      .reverse()
+    return [...above, root].map((p, k, all) =>
+      note(
+        p,
+        at0 + k * SIXTEENTH * 1.25,
+        k === all.length - 1 ? 0.2 : 0.11 + 0.012 * k,
+        k === all.length - 1 ? 2.8 : 1.1,
+      ),
+    )
+  }
+  const count = kind === 'rise' ? 6 : 9
+  const tones = toneRange(chord, kind === 'rise' ? 4 : -3, 40)
+  const first = 0
+  const notes = tones.slice(first, first + count).map((p, k, all) => {
+    const last = k === all.length - 1
+    return note(p, at0 + k * SIXTEENTH, last ? 0.2 : 0.1 + 0.07 * (k / all.length), last ? 2.8 : 0.9)
+  })
+  if (kind === 'peak')
+    for (const pitch of CHORDS[chord].voicing.slice(-2))
+      notes.push({
+        kind: 'halo',
+        pitch: pitch + 12,
+        at: start + 0.1,
+        ring: 3.2,
+        velocity: 0.22,
+        bright: 0,
+        rise: 1.2,
+      })
+  return notes
+}
+
 /**
  * One section starting at `start` (context time). `entering`: the chord just changed, so the pad
  * comes in quickly instead of swelling. Returns the notes and the state for the next section.
@@ -116,31 +183,52 @@ export function composeSection(
     : cue.energy
   const tension = cue.role === 'tension'
 
-  // Pad: the nearest voicing to the last one, swelling in, ringing into the next section.
+  // Pad: the nearest voicing to the last one, swelling in. One strike per bar: the first bar's pad rings
+  // into the second's soft re-strike, so there is no gap at the bar line.
   const voicing = state.voicing ? nearest(c.voicing, state.voicing) : [...c.voicing]
   const padVelocity = 0.42 + 0.14 * energy
-  for (const pitch of voicing)
+  for (const pitch of voicing) {
     notes.push({
       kind: 'pad',
       pitch,
       at: start,
-      ring: SECTION + 2.6,
+      ring: BAR + 1.4,
       velocity: padVelocity,
       bright: 0,
-      rise: entering ? 0.5 : 2.4,
+      rise: entering ? 0.3 : 2.4,
     })
+    notes.push({
+      kind: 'pad',
+      pitch,
+      at: start + BAR,
+      ring: BAR + 2.6,
+      velocity: padVelocity * 0.9,
+      bright: 0,
+      rise: 0.6,
+    })
+  }
   // High shimmer on the top two voices, only near the peak.
   if (energy >= 0.72 && !tired)
-    for (const pitch of voicing.slice(-2))
+    for (const pitch of voicing.slice(-2)) {
       notes.push({
         kind: 'halo',
         pitch: pitch + 12,
         at: start + 0.4,
-        ring: SECTION + 1.5,
+        ring: BAR + 0.8,
         velocity: 0.2 + 0.2 * (energy - 0.72),
         bright: 0,
         rise: 2.2,
       })
+      notes.push({
+        kind: 'halo',
+        pitch: pitch + 12,
+        at: start + BAR + 0.4,
+        ring: BAR + 1.5,
+        velocity: 0.2 + 0.2 * (energy - 0.72),
+        bright: 0,
+        rise: 1.2,
+      })
+    }
 
   // Bass: one root; then root and a 5th; then a slow walk (root, 5th, octave, 5th).
   const bass = (beat: number, pitch: number, velocity: number, ring: number) =>
@@ -236,6 +324,8 @@ export function composeSection(
       })
     })
   }
+
+  if (cue.flourish) notes.push(...flourishNotes(cue.flourish, cue.chord, start))
 
   return {
     notes,
