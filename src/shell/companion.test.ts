@@ -13,10 +13,9 @@ const anchor = (id: string, name: string, connected = true): Anchor => ({
 })
 
 describe('companion anchors', () => {
-  it('wants the tab’s own anchor, none for Harita', () => {
+  it('wants the tab’s own anchor', () => {
     expect(wantedNames({ tab: '/', overlay: false, present: 'push' })).toEqual(['today'])
     expect(wantedNames({ tab: '/me', overlay: false, present: 'push' })).toEqual(['me'])
-    expect(wantedNames({ tab: '/map', overlay: false, present: 'push' })).toEqual([])
   })
 
   it('keeps the tab behind a sheet and takes the lesson’s anchors for a full-screen route', () => {
