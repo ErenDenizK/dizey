@@ -23,7 +23,7 @@ const EXAM_SOON_DAYS = 7
 
 /**
  * The dock above the tab bar: one card and nothing else. It holds the next lesson, the screen's only primary
- * button (decision 0012), and under a hairline one thin row of text links (the question of the day, the
+ * button (decision 0012), and under a hairline one thin row of equal cells, each a label over its value (the question of the day, the
  * mistakes to revisit, the rehearsal when the exam is close; none of them ever drawn empty).
  */
 export function PathDock() {
@@ -88,30 +88,45 @@ export function PathDock() {
 
   return (
     <div className="ph-dock" data-testid="path-dock">
-      {main ? <NextLesson lessonId={main.id}>{more}</NextLesson> : <AllDone>{more}</AllDone>}
+      {main ? (
+        <NextLesson lessonId={main.id} count={blocks.length - 1}>
+          {more}
+        </NextLesson>
+      ) : (
+        <AllDone count={blocks.length - 1}>{more}</AllDone>
+      )}
     </div>
   )
 }
 
 /** The thin row under the card's lesson: whatever items exist, or nothing at all (no empty hairline). */
-function MoreRow({ children }: { children: React.ReactNode }) {
-  return <div className="ph-more">{children}</div>
+function MoreRow({ children, count }: { children: React.ReactNode; count: number }) {
+  return (
+    <div className="ph-more" style={{ '--cols': count } as React.CSSProperties}>
+      {children}
+    </div>
+  )
 }
 
 function ItemFace({ title, value }: { title: string; value: string }) {
   return (
     <>
       <span className="ph-more__title">{title}</span>
-      <span className="ph-more__dot" aria-hidden="true">
-        {' · '}
-      </span>
       <span className="ph-more__value">{value}</span>
     </>
   )
 }
 
 /** The one primary action: the lesson in progress, else the first one not finished. */
-function NextLesson({ lessonId, children }: { lessonId: string; children: React.ReactNode }) {
+function NextLesson({
+  lessonId,
+  count,
+  children,
+}: {
+  lessonId: string
+  count: number
+  children: React.ReactNode
+}) {
   const records = useLessonRecords()
   const lesson = lessons.find((l) => l.id === lessonId)
   if (!lesson) return null
@@ -146,13 +161,13 @@ function NextLesson({ lessonId, children }: { lessonId: string; children: React.
           {resuming ? strings.today.resume : strings.today.start}
         </span>
       </PressLink>
-      <MoreRow>{children}</MoreRow>
+      <MoreRow count={count}>{children}</MoreRow>
     </div>
   )
 }
 
 /** Every lesson done: the card becomes the way to the rehearsal. */
-function AllDone({ children }: { children: React.ReactNode }) {
+function AllDone({ count, children }: { count: number; children: React.ReactNode }) {
   return (
     <div className="dz-card ph-next" data-testid="today-done">
       <div className="ph-next__main">
@@ -161,7 +176,7 @@ function AllDone({ children }: { children: React.ReactNode }) {
           {strings.today.allDoneAction}
         </PressLink>
       </div>
-      <MoreRow>{children}</MoreRow>
+      <MoreRow count={count}>{children}</MoreRow>
     </div>
   )
 }
