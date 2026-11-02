@@ -216,7 +216,9 @@ function ProfileMatrix() {
       <ul className="me-matrix" data-testid="me-matrix">
         {cells.map(([key, value, label]) => (
           <li key={key} className="me-matrix__cell" data-testid={`stat-${key}`}>
-            <b className="me-matrix__n num">{value}</b>
+            <b className="me-matrix__n num" data-zero={value === 0 || undefined}>
+              {value}
+            </b>
             <span className="me-matrix__l">{label}</span>
           </li>
         ))}

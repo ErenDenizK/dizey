@@ -10,7 +10,7 @@ import { Emblem } from './Emblem'
 import { markShown, useShown } from './store'
 
 /**
- * Sen's rozet shelf: the badges you have earned, in a five-column grid of equal emblems, each in its bracket slot and
+ * Sen's rozet shelf: the badges you have earned, in a five-column grid of equal emblems, each an item without a bracket (brackets mean a slot) and
  * pressable. Nothing locked is drawn (the next one to earn is Sıradaki's row); with none earned the section is hidden.
  * A badge not shown yet carries a spark dot; a tap plays its moment above the shelf (and marks it shown). A tap on a shown badge replays it.
  */
@@ -49,7 +49,7 @@ export function BadgeShelf() {
                   markShown([badge.id], Date.now())
                 }}
               >
-                <Emblem badge={badge} />
+                <Emblem badge={badge} bare />
               </Pressable>
             </li>
           ))}
