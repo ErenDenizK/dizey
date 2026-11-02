@@ -1,6 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { Birim, type BirimHandle } from '../character/Birim'
-import type { BirimMood } from '../character/birim'
+import { Mirtis, type MirtisHandle, type MirtisMood } from '../character/Mirtis'
 import { lessons } from '../content/lessons'
 import { chapters, codeOfNode, pathCode } from '../content/path'
 import { questions } from '../content/questions'
@@ -62,8 +61,8 @@ export function MeView() {
   )
 }
 
-/** Birim's mood for the profile's progress mood. */
-function birimMood(mood: ReturnType<typeof moodOf>): BirimMood {
+/** Mırtis's reaction for the profile's progress mood: a glad bounce when there is something new to be glad about. */
+function catMood(mood: ReturnType<typeof moodOf>): MirtisMood {
   return mood === 'proud' || mood === 'happy' ? 'happy' : 'rest'
 }
 
@@ -76,7 +75,7 @@ function Scene() {
   const titles = strings.me.titles
   const title = titles[Math.min(finished, titles.length - 1)]
   const root = useRef<HTMLElement>(null)
-  const duo = useRef<BirimHandle>(null)
+  const duo = useRef<MirtisHandle>(null)
   const latest = useRef({ done, mood })
   latest.current = { done, mood }
 
@@ -88,7 +87,7 @@ function Scene() {
       if (pane.hasAttribute('inert')) return
       const { done: count, mood: current } = latest.current
       const seen = parseSeen(appStorage.getItem(SEEN_KEY))
-      if (hasNewProgress(count, seen)) duo.current?.react(birimMood(current))
+      if (hasNewProgress(count, seen)) duo.current?.react(catMood(current))
       if (seen !== count) appStorage.setItem(SEEN_KEY, String(count))
     }
     visit()
@@ -100,7 +99,13 @@ function Scene() {
   return (
     <section ref={root} className="me-scene" aria-label={strings.me.companion} data-testid="me-scene">
       <div className="me-avatar">
-        <Birim ref={duo} size="profile" mood={birimMood(mood)} />
+        <Pressable
+          className="me-avatar__tap"
+          aria-label={strings.me.petLabel}
+          onClick={() => duo.current?.react('purr')}
+        >
+          <Mirtis ref={duo} size="profile" />
+        </Pressable>
       </div>
       <div className="me-id">
         <NameField />

@@ -1,0 +1,151 @@
+/* Mırtis (src/character/Mirtis.tsx, rig in mirtis.ts). Every colour is a --mirtis-* token (src/styles/tokens.css); the
+   rig writes geometry only and names a colour role per node: mt-f-<role> fills, mt-s-<role> strokes. No transitions. */
+.mirtis {
+  display: block;
+  flex: none;
+  overflow: visible;
+  aspect-ratio: 1;
+  height: auto;
+  /* The lesson end's glow is an engine value (--glow, 0..1) written to this element (src/ui/shine.ts). */
+  filter: drop-shadow(0 0 calc(var(--glow, 0) * 16px) var(--glow-spark));
+}
+/* The head bust's viewBox is 86 x 84. */
+.mirtis--head {
+  aspect-ratio: 86 / 84;
+}
+.mirtis--answer {
+  width: 24px;
+}
+.mirtis--path {
+  width: 40px;
+}
+.mirtis--profile {
+  width: 96px;
+}
+@media (max-height: 700px) {
+  .mirtis--profile {
+    width: 72px;
+  }
+}
+.mirtis--hero {
+  width: 120px;
+}
+
+.mt-f-fur {
+  fill: var(--mirtis-fur);
+}
+.mt-s-fur {
+  stroke: var(--mirtis-fur);
+}
+
+.mt-f-fur-shade {
+  fill: var(--mirtis-fur-shade);
+}
+.mt-s-fur-shade {
+  stroke: var(--mirtis-fur-shade);
+}
+
+.mt-f-stripe {
+  fill: var(--mirtis-stripe);
+}
+.mt-s-stripe {
+  stroke: var(--mirtis-stripe);
+}
+
+.mt-f-cream {
+  fill: var(--mirtis-cream);
+}
+.mt-s-cream {
+  stroke: var(--mirtis-cream);
+}
+
+.mt-f-cream-shade {
+  fill: var(--mirtis-cream-shade);
+}
+.mt-s-cream-shade {
+  stroke: var(--mirtis-cream-shade);
+}
+
+.mt-f-ear-in {
+  fill: var(--mirtis-ear-in);
+}
+.mt-s-ear-in {
+  stroke: var(--mirtis-ear-in);
+}
+
+.mt-f-nose {
+  fill: var(--mirtis-nose);
+}
+.mt-s-nose {
+  stroke: var(--mirtis-nose);
+}
+
+.mt-f-ink {
+  fill: var(--mirtis-ink);
+}
+.mt-s-ink {
+  stroke: var(--mirtis-ink);
+}
+
+.mt-f-blush {
+  fill: var(--mirtis-blush);
+}
+.mt-s-blush {
+  stroke: var(--mirtis-blush);
+}
+
+.mt-f-tongue {
+  fill: var(--mirtis-tongue);
+}
+.mt-s-tongue {
+  stroke: var(--mirtis-tongue);
+}
+
+.mt-f-shadow {
+  fill: var(--mirtis-shadow);
+}
+.mt-s-shadow {
+  stroke: var(--mirtis-shadow);
+}
+
+.mt-f-collar {
+  fill: var(--mirtis-collar);
+}
+.mt-s-collar {
+  stroke: var(--mirtis-collar);
+}
+
+.mt-f-tag {
+  fill: var(--mirtis-tag);
+}
+.mt-s-tag {
+  stroke: var(--mirtis-tag);
+}
+
+.mt-f-glint {
+  fill: var(--mirtis-glint);
+}
+.mt-s-glint {
+  stroke: var(--mirtis-glint);
+}
+
+.mt-f-whisker {
+  fill: var(--mirtis-whisker);
+}
+.mt-s-whisker {
+  stroke: var(--mirtis-whisker);
+}
+
+.mt-f-sweat {
+  fill: var(--mirtis-sweat);
+}
+.mt-s-sweat {
+  stroke: var(--mirtis-sweat);
+}
+
+.mt-f-sweat-edge {
+  fill: var(--mirtis-sweat-edge);
+}
+.mt-s-sweat-edge {
+  stroke: var(--mirtis-sweat-edge);
+}

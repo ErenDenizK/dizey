@@ -115,7 +115,8 @@ export const strings = {
 
   me: {
     title: 'Sen',
-    companion: 'Birim',
+    companion: 'Mırtis',
+    petLabel: 'Mırtis’i sev',
     moments: 'Gizli anlar',
     momentsCount: (found: number, total: number) => `${found} / ${total}`,
     momentFound: (code: string) => `${code}: gizli an bulundu`,
