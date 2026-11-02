@@ -130,7 +130,13 @@ const MUSIC_TONE = { cutoff: 1500, wet: 1.6 }
  * clearly, an answer deeply (its suspended 4th must not meet the music's 3rd). Lesson ends and
  * rewards change chord, so the player stops the music for them instead (see player.ts).
  */
-const MUSIC_DUCK: Record<Tier, number> = { touch: -3, frequent: -6, question: -16, lesson: -24, reward: -24 }
+export const MUSIC_DUCK: Record<Tier, number> = {
+  touch: -4.5,
+  frequent: -6,
+  question: -16,
+  lesson: -24,
+  reward: -24,
+}
 
 /** Sounds that come in quick runs: each new one ducks the others still ringing. */
 const quick = (event: SoundEvent | 'music') =>
