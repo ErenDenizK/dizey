@@ -238,3 +238,71 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   await browser.close()
   process.exit(total ? 1 : 0)
 }
+
+/* ---------- Shell flows (scripts/shell-audit.mjs, e2e/shell-jumps.spec.ts) ---------- */
+
+/** A tap that films what follows; frames where the test itself scrolled a target into view are noted. */
+export function shellTap(page, frames) {
+  // Bringing a target into view is the test scrolling, not the app moving: those frames are not judged.
+  const scrolled = new Set()
+  const tap = async (selector) => {
+    if (selector) {
+      const target = page.locator(selector).first()
+      const y = (await target.boundingBox({ timeout: 1500 }).catch(() => null))?.y
+      if (y !== undefined) await target.scrollIntoViewIfNeeded({ timeout: 3000 })
+      const after = y === undefined ? y : (await target.boundingBox())?.y
+      if (after !== y) {
+        scrolled.add(frames.length)
+        await film(page, frames)
+      }
+      await target.click({ timeout: 3000 })
+    }
+    await film(page, frames)
+  }
+  return { tap, scrolled }
+}
+
+/** Jumps outside the frames the test scrolled. */
+export function shellJumps(frames, scrolled) {
+  return findJumps(frames).filter((j) => ![...scrolled].some((f) => Math.abs(j.frame - f) <= 3))
+}
+
+const tab = (n) => `.dz-tab >> nth=${n}`
+export const shellFlows = {
+  tabs: async ({ tap }) => {
+    await tap(tab(1))
+    await tap(tab(0))
+  },
+  settings: async ({ tap }) => {
+    await tap(tab(1))
+    await tap('[data-testid="open-settings"]')
+    await tap('.sh-overlay button:has-text("Bitti")')
+  },
+  sheet: async ({ tap, page }) => {
+    await tap('.pa-tile:not([data-next]) >> nth=0')
+    await page
+      .locator('.dz-scrim')
+      .first()
+      .click({ position: { x: 20, y: 20 } })
+    await tap(null)
+  },
+  lesson: async ({ tap }) => {
+    await tap('.pa-tile:not([data-next]) >> nth=0')
+    await tap('[data-testid="lesson-peek"] .dz-button[data-kind="primary"]')
+    await tap('[data-testid="lesson-player"] [aria-label="Dersten çık"]')
+  },
+  rozet: async ({ tap }) => {
+    await tap(tab(1))
+    await tap('[data-testid="badge-earned"] >> nth=0')
+    await tap('[data-testid="badge-earned"] >> nth=-1')
+  },
+  mistakes: async ({ tap, page }) => {
+    const group = '[data-testid="mistake-group"]'
+    await tap(tab(1))
+    await tap(`${group} >> nth=0`)
+    // With two groups, opening the second closes the first; then it closes too.
+    const last = (await page.locator(group).count()) > 1 ? 1 : 0
+    if (last) await tap(`${group} >> nth=1`)
+    await tap(`${group} >> nth=${last}`)
+  },
+}
