@@ -30,6 +30,8 @@ const FOLLOW_MAX_MS = 3000
 /** The cold start hello: waking, the hop, and when the travel to the first anchor begins. */
 const HELLO_MS = { wake: 170, hop: 260, go: 440 } as const
 const HELLO_FROM = { scale: 0.34, y: 0.46 } as const
+/** The largest change of the edge fade applied in one frame; more than this eases instead. */
+const SHADE_STEP = 0.12
 /** Names whose anchors scroll with a screen, so they fade out under the top fade and the tab bar. */
 const SCROLLING = new Set(['today', 'me'])
 
@@ -41,6 +43,16 @@ type Travel = {
   total: number
   dropped: boolean
   landed: boolean
+}
+
+/** How much the scrims under the route layer dim the screen at the duo's height (0 when none is up). */
+function dimOver(): number {
+  let clear = 1
+  for (const el of document.querySelectorAll<HTMLElement>('.dz-scrim')) {
+    if (el.closest('.cl')) continue
+    clear *= 1 - Number(getComputedStyle(el).opacity)
+  }
+  return 1 - clear
 }
 
 /** Everything the layer does, apart from React: choosing the anchor, travelling, following, the hello. */
@@ -58,6 +70,8 @@ function createController(
   let helloing = false
   /** Between the route change and the leap (the crouch): the box stays on the old anchor. */
   let crouching = false
+  /** Reduced motion: the box fades out on the old anchor before it reappears on the new one. */
+  let swapping = false
   let tracking = false
   let trackEnd = 0
   let clock = 0
@@ -79,7 +93,7 @@ function createController(
   /** Opacity from how much of a scrolling anchor is clear of the top fade and the tab bar. */
   const edge = (anchor: Anchor | null) => {
     if (!anchor || !SCROLLING.has(anchor.name)) {
-      fade.style.opacity = ''
+      shade(1)
       return
     }
     const r = anchor.el.getBoundingClientRect()
@@ -88,12 +102,17 @@ function createController(
     const bar = frame.parentElement?.querySelector('.dz-tabbar')?.getBoundingClientRect().top
     const bottom = bar ?? window.innerHeight
     const clear = Math.min(r.bottom, bottom) - Math.max(r.top, top)
-    fade.style.opacity = String(
-      Math.round(Math.min(1, Math.max(0, clear / Math.max(1, r.height))) * 100) / 100,
-    )
+    shade(Math.round(Math.min(1, Math.max(0, clear / Math.max(1, r.height))) * 100) / 100)
+  }
+  /** Scrolling follows the edge exactly; a bigger step (the anchor changed, from under the top fade to clear) eases. */
+  const shade = (goal: number) => {
+    const easing = engine.stateOf(fade).motions.opacity !== undefined
+    if (easing || Math.abs(engine.value(fade, 'opacity') - goal) > SHADE_STEP)
+      engine.withChannel(CHANNEL, () => engine.to(fade, { opacity: goal }, 'fade'))
+    else engine.set(fade, { opacity: goal })
   }
 
-  const moving = () => travel !== null || crouching
+  const moving = () => travel !== null || crouching || swapping
   const settled = () => {
     const motions = engine.stateOf(box).motions
     return motions.x === undefined && motions.y === undefined && motions.scale === undefined
@@ -215,8 +234,25 @@ function createController(
   function go(anchor: Anchor, options: { air?: boolean } = {}) {
     const mine = ++turn
     crouching = false
+    swapping = false
     const h = read.handle()
     helloing = options.air === true
+    if (placed && engine.reducedMotion && engine.value(box, 'opacity') > 0.05) {
+      // Reduced motion: no flight, but no teleport either. The duo fades out where it is and fades in on the anchor.
+      registry.traveling = true
+      swapping = true
+      engine.withChannel(CHANNEL, () =>
+        engine.to(box, { opacity: 0 }, 'fade', {
+          onArrive: () => {
+            if (turn !== mine) return
+            swapping = false
+            shown = false
+            jump(anchor, mine)
+          },
+        }),
+      )
+      return
+    }
     if (!placed || engine.reducedMotion) {
       if (!placed) engine.set(box, { opacity: 0 })
       shown = false
@@ -276,6 +312,7 @@ function createController(
     turn++
     travel = null
     crouching = false
+    swapping = false
     helloing = false
     registry.traveling = false
     if (!shown) return
@@ -290,13 +327,29 @@ function createController(
   function sync(routeChanged: boolean) {
     const ctx = read.ctx()
     const over = ctx.overlay && ctx.present === 'push'
-    if (over) frame.dataset.over = 'route'
-    else if (frame.dataset.over) {
-      // The leaving route's exit still plays: the duo stays above it until it has landed.
+    if (over && !frame.dataset.over) {
+      // Rising out from under a dimmed screen (a card's scrim): the duo keeps the scrim's dimming across the
+      // change of layer and then brightens, so it never jumps to full light in one frame.
+      const dim = dimOver()
+      frame.dataset.over = 'route'
+      if (dim > 0) {
+        engine.set(frame, { opacity: 1 - dim })
+        engine.to(frame, { opacity: 1 }, 'fade')
+      }
+    } else if (!over && frame.dataset.over) {
+      // The leaving route's exit still plays: the duo stays above it until it has landed. If a scrim waits
+      // underneath, the duo first dims to its level, so going under it is no step either.
       engine.withChannel(CHANNEL, () =>
         engine.after(900, () => {
           const now = read.ctx()
-          if (!(now.overlay && now.present === 'push')) delete frame.dataset.over
+          if (now.overlay && now.present === 'push') return
+          const lower = () => {
+            delete frame.dataset.over
+            engine.set(frame, { opacity: 1 })
+          }
+          const dim = dimOver()
+          if (dim > 0) engine.to(frame, { opacity: 1 - dim }, 'fade', { onArrive: lower })
+          else lower()
         }),
       )
     }
