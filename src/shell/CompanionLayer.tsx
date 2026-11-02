@@ -160,7 +160,7 @@ function createController(
                 travel.goal = goal
                 engine.to(box, goal, 'page')
               }
-            } else if (!helloing && !crouching) {
+            } else if (!helloing && !crouching && !swapping) {
               if (travel && settled()) travel = null
               if (!travel && apart(goal, live()) > 0.2) engine.set(box, goal)
             }
