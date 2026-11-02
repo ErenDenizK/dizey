@@ -388,6 +388,18 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       </fieldset>
     ) : null
 
+  // Once the duo has flown into the end hero, its place in the top bar closes and the progress takes the room.
+  const topBar = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const el = topBar.current
+    if (!el) return
+    const goal = ended ? 0 : 1
+    if (el.dataset.duo === undefined) {
+      el.dataset.duo = ''
+      engine.set(el, { '--duo': goal })
+    } else engine.withChannel('chrome', () => engine.to(el, { '--duo': goal }, 'fade'))
+  }, [ended])
+
   return (
     <div
       ref={root}
@@ -395,7 +407,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       data-testid="lesson-player"
       data-options-stage={optionsAreStage || undefined}
     >
-      <div className="ls-top" data-moment={moment ? 'true' : undefined}>
+      <div ref={topBar} className="ls-top" data-moment={moment ? 'true' : undefined}>
         {moment ? (
           <button
             type="button"

@@ -1478,7 +1478,8 @@ a.dz-button[data-kind="primary"] {
  * in the primary ink.
  */
 .ls-top {
-  grid-template-columns: 44px 44px 1fr 28px auto;
+  /* --duo (1 to 0, eased by LessonPlayer) closes the duo's column once it has left for the end hero. */
+  grid-template-columns: 44px 44px 1fr calc(28px * var(--duo, 1)) auto;
   min-height: 48px;
 }
 /* The duo's place in the top bar, between the progress and the count (an anchor of the companion layer). */
@@ -1507,6 +1508,8 @@ a.dz-button[data-kind="primary"] {
 }
 .ls-progress {
   height: 8px;
+  /* With the duo's column closed (--duo 0), the progress also takes the gap that column left. */
+  margin-inline-end: calc(var(--space-1) * (var(--duo, 1) - 1));
   border-radius: var(--corner-pill);
   background: var(--control-soft);
 }
