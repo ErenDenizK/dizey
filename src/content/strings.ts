@@ -138,7 +138,7 @@ export const strings = {
     stats: {
       lessons: 'ders bitti',
       answered: 'soru çözdün',
-      firstTry: 'ilk seferde doğru',
+      firstTry: 'tam isabet',
       days: 'gün çalıştın',
       fixed: 'hata düzelttin',
       badges: 'rozet',

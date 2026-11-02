@@ -3,7 +3,8 @@
 .me-scene {
   display: grid;
   justify-items: center;
-  gap: var(--gap-block);
+  /* The slot's own ground shadow already spaces the duo from the name. */
+  gap: var(--space-1);
   margin-top: var(--space-2);
   padding: 0;
 }
