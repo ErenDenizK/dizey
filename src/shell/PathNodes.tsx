@@ -240,6 +240,7 @@ export function TileBirim({ on }: { on: boolean }) {
   useLayoutEffect(() => {
     if (on) setShown(true)
   }, [on])
+  // biome-ignore lint/correctness/useExhaustiveDependencies: `shown` re-runs this once the span has mounted
   useLayoutEffect(() => {
     const el = box.current
     if (!el) return
