@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import type { DuoHandle } from '../character/Duo'
+import { Birim, type BirimHandle } from '../character/Birim'
+import type { BirimMood } from '../character/birim'
 import { lessons } from '../content/lessons'
 import { chapters, codeOfNode, pathCode } from '../content/path'
 import { questions } from '../content/questions'
@@ -23,7 +24,6 @@ import { Emblem } from '../rewards/Emblem'
 import { ChevronRight, GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
-import { CompanionSlot } from './CompanionSlot'
 import { PressLink } from './PressLink'
 import './me.css'
 
@@ -55,6 +55,11 @@ export function MeView() {
   )
 }
 
+/** Birim's mood for the profile's progress mood. */
+function birimMood(mood: ReturnType<typeof moodOf>): BirimMood {
+  return mood === 'proud' || mood === 'happy' ? 'happy' : 'rest'
+}
+
 /** The profile's head: the duo in a mood that follows progress, your name and the title you have earned. */
 function Scene() {
   const records = useLessonRecords()
@@ -64,7 +69,7 @@ function Scene() {
   const titles = strings.me.titles
   const title = titles[Math.min(finished, titles.length - 1)]
   const root = useRef<HTMLElement>(null)
-  const duo = useRef<DuoHandle>(null)
+  const duo = useRef<BirimHandle>(null)
   const latest = useRef({ done, mood })
   latest.current = { done, mood }
 
@@ -76,7 +81,7 @@ function Scene() {
       if (pane.hasAttribute('inert')) return
       const { done: count, mood: current } = latest.current
       const seen = parseSeen(appStorage.getItem(SEEN_KEY))
-      if (hasNewProgress(count, seen)) duo.current?.react(current === 'neutral' ? 'happy' : current)
+      if (hasNewProgress(count, seen)) duo.current?.react(birimMood(current))
       if (seen !== count) appStorage.setItem(SEEN_KEY, String(count))
     }
     visit()
@@ -88,7 +93,7 @@ function Scene() {
   return (
     <section ref={root} className="me-scene" aria-label={strings.me.companion} data-testid="me-scene">
       <div className="me-avatar">
-        <CompanionSlot name="me" size="large" mood={mood} duo={duo} />
+        <Birim ref={duo} size="profile" mood={birimMood(mood)} />
       </div>
       <div className="me-id">
         <NameField />

@@ -1,0 +1,48 @@
+/* Birim (src/character/Birim.tsx). Every colour is a token; the component writes geometry only. No transitions. */
+.birim {
+  display: block;
+  flex: none;
+  overflow: visible;
+  aspect-ratio: 1;
+  height: auto;
+  /* The lesson end's glow is an engine value (--glow, 0..1) written to this element. */
+  filter: drop-shadow(0 0 calc(var(--glow, 0) * 16px) var(--glow-spark));
+}
+.birim--answer {
+  width: 24px;
+}
+.birim--path {
+  width: 40px;
+}
+.birim--profile {
+  width: 96px;
+}
+@media (max-height: 700px) {
+  .birim--profile {
+    width: 72px;
+  }
+}
+.birim--hero {
+  width: 120px;
+}
+.birim__shadow {
+  fill: var(--birim-shadow);
+}
+.birim__body {
+  fill: var(--birim-body);
+  stroke: var(--birim-body);
+  stroke-width: 0.28;
+  stroke-linejoin: round;
+}
+.birim__eye {
+  fill: var(--birim-face);
+}
+.birim__glint {
+  fill: var(--birim-body);
+}
+.birim__smile {
+  fill: none;
+  stroke: var(--birim-face);
+  stroke-width: 0.08;
+  stroke-linecap: round;
+}

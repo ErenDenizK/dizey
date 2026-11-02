@@ -807,18 +807,6 @@ a.sh-node {
 .ls-verdict[data-tone="missed"] .ls-verdict__title {
   color: var(--bad-ink);
 }
-.ls-verdict__mark:empty {
-  display: none;
-}
-.ls-verdict__mark {
-  display: grid;
-  place-items: center;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--corner-pill);
-  background: var(--ok-fill);
-  color: var(--on-ok);
-}
 .ls-verdict__given {
   flex-basis: 100%;
   font-size: var(--type-subhead);
@@ -1341,8 +1329,8 @@ a.dz-button[data-kind="primary"] {
   opacity: var(--glow, 0);
   transform: scale(calc(0.8 + var(--glow, 0) * 0.35));
 }
-/* The lesson end's anchor for the duo: an empty box; the companion layer draws the duo (and its glow) over it. */
-.ls-duo {
+/* The lesson end's Birim: inline in the stage; it wears the glow (--glow) set on it. */
+svg.ls-duo {
   display: block;
   width: clamp(96px, 26vh, 150px);
 }
@@ -1478,13 +1466,8 @@ a.dz-button[data-kind="primary"] {
  * in the primary ink.
  */
 .ls-top {
-  /* --duo (1 to 0, eased by LessonPlayer) closes the duo's column once it has left for the end hero. */
-  grid-template-columns: 44px 44px 1fr calc(28px * var(--duo, 1)) auto;
+  grid-template-columns: 44px 44px 1fr auto;
   min-height: 48px;
-}
-/* The duo's place in the top bar, between the progress and the count (an anchor of the companion layer). */
-.ls-top__duo {
-  width: 28px;
 }
 .ls-top__btn {
   width: 40px;
@@ -1508,8 +1491,6 @@ a.dz-button[data-kind="primary"] {
 }
 .ls-progress {
   height: 8px;
-  /* With the duo's column closed (--duo 0), the progress also takes the gap that column left. */
-  margin-inline-end: calc(var(--space-1) * (var(--duo, 1) - 1));
   border-radius: var(--corner-pill);
   background: var(--control-soft);
 }
@@ -1523,11 +1504,11 @@ a.dz-button[data-kind="primary"] {
   display: none;
 }
 /* While a new rozet shows, the duo steps back so the emblem and its sentence fit any phone. */
-.ls-end__stage[data-badge] .ls-duo {
+.ls-end__stage[data-badge] svg.ls-duo {
   width: clamp(72px, 14vh, 120px);
 }
 @media (max-height: 700px) {
-  .ls-end__stage[data-badge] .ls-duo {
+  .ls-end__stage[data-badge] svg.ls-duo {
     width: 64px;
   }
   .ls-end__stage[data-badge] .badge-reveal__emblem {
@@ -1587,7 +1568,7 @@ a.dz-button[data-kind="primary"] {
 /* A short phone (iPhone SE class): the duo shrinks a little, so the hero keeps room for the whole duo and the
    seal or the badge instead of clipping the heads. */
 @media (max-height: 700px) {
-  .ls-duo {
+  svg.ls-duo {
     width: clamp(88px, 20vh, 150px);
   }
 }

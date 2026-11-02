@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { Birim } from '../character/Birim'
 import type { Lesson } from '../content/lessons/types'
 import { type Chapter, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
@@ -142,6 +143,7 @@ export function LessonNode({
       }
     >
       {face}
+      <Birim size="path" mood="happy" className="pa-tile__birim" />
     </PressLink>
   ) : (
     <Pressable

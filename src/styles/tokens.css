@@ -301,6 +301,10 @@
   --duo-blush-row: oklch(0.72 0.11 15 / 0.75);
   --duo-blush-col: oklch(0.66 0.12 5 / 0.6);
   --duo-ground: oklch(0 0 0 / 0.38);
+  /* Birim (src/character/Birim.tsx): an amber unit square with a dark face and a faint contact shadow. */
+  --birim-body: oklch(0.84 0.075 76);
+  --birim-face: oklch(0.2 0.01 70);
+  --birim-shadow: oklch(0.2 0.01 70 / 0.35);
   /* Rozet enamels: a lit top, a deep bottom, the ink drawn on it, and the deep mark on an inked cell. */
   --badge-row-top: oklch(0.63 0.11 246);
   --badge-row-bottom: oklch(0.41 0.09 254);
@@ -399,6 +403,9 @@
   --duo-blush-row: oklch(0.72 0.11 15 / 0.75);
   --duo-blush-col: oklch(0.66 0.12 5 / 0.6);
   --duo-ground: oklch(0 0 0 / 0.38);
+  --birim-body: oklch(0.84 0.075 76);
+  --birim-face: oklch(0.2 0.01 70);
+  --birim-shadow: oklch(0.2 0.01 70 / 0.35);
   --badge-row-top: oklch(0.63 0.11 246);
   --badge-row-bottom: oklch(0.41 0.09 254);
   --badge-row-ink: oklch(0.97 0.018 246);
@@ -487,6 +494,9 @@
   --duo-blush-row: oklch(0.72 0.11 15 / 0.75);
   --duo-blush-col: oklch(0.66 0.12 5 / 0.6);
   --duo-ground: oklch(0 0 0 / 0.38);
+  --birim-body: oklch(0.84 0.188 172);
+  --birim-face: oklch(0.2 0.025 172);
+  --birim-shadow: oklch(0.2 0.025 172 / 0.35);
   --badge-row-top: oklch(0.63 0.121 236);
   --badge-row-bottom: oklch(0.41 0.099 244);
   --badge-row-ink: oklch(0.97 0.02 236);
@@ -575,6 +585,9 @@
   --duo-blush-row: oklch(0.72 0.11 15 / 0.75);
   --duo-blush-col: oklch(0.66 0.12 5 / 0.6);
   --duo-ground: oklch(0 0 0 / 0.38);
+  --birim-body: oklch(0.828 0.3 272);
+  --birim-face: oklch(0.188 0.04 272);
+  --birim-shadow: oklch(0.188 0.04 272 / 0.35);
   --badge-row-top: oklch(0.63 0.132 70);
   --badge-row-bottom: oklch(0.41 0.108 78);
   --badge-row-ink: oklch(0.97 0.022 70);
@@ -663,6 +676,9 @@
   --duo-blush-row: oklch(0.72 0.11 15 / 0.75);
   --duo-blush-col: oklch(0.66 0.12 5 / 0.6);
   --duo-ground: oklch(0 0 0 / 0.38);
+  --birim-body: oklch(0.834 0.281 336);
+  --birim-face: oklch(0.194 0.037 336);
+  --birim-shadow: oklch(0.194 0.037 336 / 0.35);
   --badge-row-top: oklch(0.63 0.132 210);
   --badge-row-bottom: oklch(0.41 0.108 218);
   --badge-row-ink: oklch(0.97 0.022 210);

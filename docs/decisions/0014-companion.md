@@ -1,6 +1,6 @@
 # 0014: Satır and Sütun are one companion that travels with Eren
 
-- Status: accepted (Eren asked for a mascot that follows him through the app, 2026-11-01; built, his review pending)
+- Status: superseded by 0015 (the overlay jittered on scroll, sat at the wrong size and was not crisp; Eren rejected it, 2026-11-02)
 - Date: 2026-11-01
 - Ledger items: Eren 2026-11-01 ("maskotumuz ... uygulamanın akışı boyunca bize yanımızda olacak, bizi takip edecek ... sayfalar arasında bağlayıcı ve kesintisiz bir şey")
 

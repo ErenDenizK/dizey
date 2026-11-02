@@ -5,8 +5,8 @@
 //
 // Usage: pnpm build && pnpm preview --port 4173 &
 //        node scripts/motion-strip.mjs <scenario> <outDir>
-// Scenarios: companion-tabs, companion-hello and companion-end (the duo travelling between screens, the cold
-// start, into the lesson end), count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
+// Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), birim-answer (the
+// same, filmed on the whole dock so Birim's spring into the verdict shows), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
 // chapter-test-open / chapter-test-close (alias test-close) (Yol's chapter test node and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
@@ -72,6 +72,18 @@ const scenarios = {
       await frames(60)
     },
   },
+  // Birim in the verdict: a wrong pick, then the right one; the face springs in with the verdict card.
+  'birim-answer': {
+    region: '.ls-dock',
+    lesson: 'd1-determinant',
+    before: 4,
+    run: async ({ tap, frames, page }) => {
+      await tap(page.locator('.ex-opt', { hasText: '26' }))
+      await frames(50)
+      await tap(page.locator('.ex-opt', { hasText: /^b/ }))
+      await frames(50)
+    },
+  },
   press: {
     region: '.ls-dock',
     lesson: 'd1-determinant',
@@ -122,26 +134,6 @@ const scenarios = {
       await frames(40)
     },
   },
-  // The companion: Yol to Sen and back (the duo travels between its anchors).
-  'companion-tabs': {
-    region: 'body',
-    scale: 2,
-    run: async ({ tap, frames }) => {
-      await tap(tabN(1))
-      await frames(60)
-      await tap(tabN(0))
-      await frames(60)
-    },
-  },
-  // The cold start hello, filmed from the first frame (no settling first).
-  'companion-hello': {
-    region: 'body',
-    scale: 2,
-    cold: true,
-    run: async ({ frames }) => {
-      await frames(75)
-    },
-  },
   sheet: {
     region: 'body',
     scale: 2,
@@ -164,17 +156,6 @@ const scenarios = {
       await frames(40)
       await tap('.ls-top__btn[aria-label="Önceki adım"]')
       await frames(40)
-    },
-  },
-  // A lesson's last step to its end screen: the duo flies from the top bar into the end hero and its place in the
-  // top bar closes.
-  'companion-end': {
-    region: 'body',
-    scale: 2,
-    lesson: 'r2-echelon-forms?step=summary',
-    run: async ({ tap, frames }) => {
-      await tap('button:has-text("Dersi bitir")')
-      await frames(75)
     },
   },
   'lesson-open': {

@@ -1,6 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
-import type { DuoHandle } from '../character/Duo'
+import { Birim, type BirimHandle } from '../character/Birim'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
 import { chapterOf, chapters } from '../content/path'
@@ -10,8 +10,6 @@ import { useExam } from '../exam/store'
 import { BadgeReveal, landReveal } from '../rewards/BadgeReveal'
 import { type Badge, earnedBadges } from '../rewards/badges'
 import { markShown, unshown } from '../rewards/store'
-import { CompanionSlot } from '../shell/CompanionSlot'
-import { glowTarget } from '../shell/companion'
 import { PressLink } from '../shell/PressLink'
 import { returnTab } from '../shell/stage'
 import type { SoundEvent } from '../sound/score'
@@ -64,7 +62,7 @@ export function LessonEnd({
   const asked = examQuestionFor(lesson.node)
 
   const root = useRef<HTMLDivElement>(null)
-  const duo = useRef<DuoHandle>(null)
+  const duo = useRef<BirimHandle>(null)
   const records = useLessonRecords()
   const { history } = useExam()
   const moments = useMoments()
@@ -73,7 +71,6 @@ export function LessonEnd({
     unshown(earnedBadges({ records, history, moments })).slice(0, BADGE_MAX),
   )
   const [badge, setBadge] = useState<Badge | null>(null)
-  const proud = chapterDone || perfect
   // biome-ignore lint/correctness/useExhaustiveDependencies: the ceremony plays once, when the screen opens
   useLayoutEffect(() => {
     const el = root.current
@@ -97,8 +94,7 @@ export function LessonEnd({
     }
     // The duo watches the cells fill, then cheers when the brackets close.
     const hop = () => {
-      duo.current?.look(0, 0)
-      duo.current?.react(proud ? 'proud' : 'happy')
+      duo.current?.react('happy')
       // Then each new rozet takes the seal's place; it counts as shown once it is on screen.
       for (const [at, next] of fresh.entries()) {
         engine.after(BADGE_AFTER + at * BADGE_EVERY, () => {
@@ -107,7 +103,6 @@ export function LessonEnd({
         })
       }
     }
-    if (cells.length) duo.current?.look(0, 1.6)
     engine.withChannel(END_CHANNEL, () => {
       for (const [at, item] of enter.entries()) {
         engine.after(at * 35, () => engine.to(item, { y: 0, opacity: 1 }, 'move'))
@@ -147,7 +142,7 @@ export function LessonEnd({
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: as above */}
       <div className="ls-end__stage" data-badge={badge ? '' : undefined} onClick={land}>
         <i className="ls-end__halo" aria-hidden="true" />
-        <CompanionSlot name="end" size="hero" mood="neutral" className="ls-duo" duo={duo} />
+        <Birim ref={duo} size="hero" className="ls-duo" />
         {badge ? (
           <BadgeReveal key={badge.id} badge={badge} onClosed={() => duo.current?.react('wow')} />
         ) : null}
@@ -282,8 +277,7 @@ function celebrate(root: HTMLElement, reward: SoundEvent, perfect: boolean) {
     }
     engine.after(home, () => {
       glow(halo, light.peak, perfect ? Math.max(light.rest, 0.14) : light.rest)
-      const wearer = glowTarget() ?? duo
-      if (wearer && kind !== 'lessonEnd') glow(wearer, 1)
+      if (duo && kind !== 'lessonEnd') glow(duo, 1)
       for (const [at, cell] of rights.entries()) {
         engine.after(at * GLINT_STAGGER, () => {
           glow(cell, 1)
