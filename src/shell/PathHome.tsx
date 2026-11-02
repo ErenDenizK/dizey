@@ -39,81 +39,83 @@ export function PathHome() {
 
   return (
     <Screen title={strings.path.title}>
-      <div className="ph-field">
-        <div ref={root} className="ph-root" style={{ height: layout.height }} data-testid="path">
-          <svg className="ph-wires" width="100%" height={layout.height} aria-hidden="true">
-            {layout.segments.map((seg) => (
-              <line
-                key={`${seg.to}`}
-                className="ph-wire"
-                data-axis={seg.axis}
-                data-to={seg.to}
-                data-faint={seg.to > reached || undefined}
-                x1={`${COL_X[seg.x1]}%`}
-                x2={`${COL_X[seg.x2]}%`}
-                y1={seg.y1}
-                y2={seg.y2}
-              />
-            ))}
-          </svg>
-          {layout.headers.map((header) => {
-            const c = chapters[header.chapter]
-            if (!c) return null
-            return (
-              <h2
-                key={c.id}
-                className="ph-chapter"
-                data-side={header.side}
-                data-testid={`chapter-${c.id}`}
-                style={{ top: header.y }}
-              >
-                <span className="ph-chapter__no num" aria-hidden="true">
-                  {header.chapter + 1}
-                </span>
-                <span className="ph-chapter__name">{c.label}</span>
-                <span className="ph-chapter__count num">
-                  {strings.path.chapterCount(
-                    c.lessons.filter((l) => stateOf(records[l.id]) === 'done').length,
-                    c.lessons.length,
-                  )}
-                </span>
-              </h2>
-            )
-          })}
-          <ol className="ph-nodes" aria-label={strings.path.listLabel}>
-            {layout.nodes.map((node) => {
-              const c = chapters[node.chapter]
-              const current = node.lesson !== null && node.lesson.id === main?.id
+      <div className="ph-paper">
+        <div className="ph-field">
+          <div ref={root} className="ph-root" style={{ height: layout.height }} data-testid="path">
+            <svg className="ph-wires" width="100%" height={layout.height} aria-hidden="true">
+              {layout.segments.map((seg) => (
+                <line
+                  key={`${seg.to}`}
+                  className="ph-wire"
+                  data-axis={seg.axis}
+                  data-to={seg.to}
+                  data-faint={seg.to > reached || undefined}
+                  x1={`${COL_X[seg.x1]}%`}
+                  x2={`${COL_X[seg.x2]}%`}
+                  y1={seg.y1}
+                  y2={seg.y2}
+                />
+              ))}
+            </svg>
+            {layout.headers.map((header) => {
+              const c = chapters[header.chapter]
+              if (!c) return null
               return (
-                <li
-                  key={node.index}
-                  className="ph-slot"
-                  data-kind={node.kind}
-                  data-current={current || undefined}
-                  data-col={node.col}
-                  style={{ left: `${COL_X[node.col]}%`, top: node.y }}
+                <h2
+                  key={c.id}
+                  className="ph-chapter"
+                  data-side={header.side}
+                  data-testid={`chapter-${c.id}`}
+                  style={{ top: header.y }}
                 >
-                  {node.lesson ? (
-                    <LessonNode
-                      lesson={node.lesson}
-                      record={records[node.lesson.id]}
-                      main={current}
-                      onPick={(lesson, tile) => setPeek({ lesson, tile })}
-                    />
-                  ) : c ? (
-                    <ChapterTestNode chapter={c} onNote={setNote} />
-                  ) : null}
-                  {node.lesson ? <TileBirim on={current} /> : null}
-                </li>
+                  <span className="ph-chapter__no num" aria-hidden="true">
+                    {header.chapter + 1}
+                  </span>
+                  <span className="ph-chapter__name">{c.label}</span>
+                  <span className="ph-chapter__count num">
+                    {strings.path.chapterCount(
+                      c.lessons.filter((l) => stateOf(records[l.id]) === 'done').length,
+                      c.lessons.length,
+                    )}
+                  </span>
+                </h2>
               )
             })}
-          </ol>
+            <ol className="ph-nodes" aria-label={strings.path.listLabel}>
+              {layout.nodes.map((node) => {
+                const c = chapters[node.chapter]
+                const current = node.lesson !== null && node.lesson.id === main?.id
+                return (
+                  <li
+                    key={node.index}
+                    className="ph-slot"
+                    data-kind={node.kind}
+                    data-current={current || undefined}
+                    data-col={node.col}
+                    style={{ left: `${COL_X[node.col]}%`, top: node.y }}
+                  >
+                    {node.lesson ? (
+                      <LessonNode
+                        lesson={node.lesson}
+                        record={records[node.lesson.id]}
+                        main={current}
+                        onPick={(lesson, tile) => setPeek({ lesson, tile })}
+                      />
+                    ) : c ? (
+                      <ChapterTestNode chapter={c} onNote={setNote} />
+                    ) : null}
+                    {node.lesson ? <TileBirim on={current} /> : null}
+                  </li>
+                )
+              })}
+            </ol>
+          </div>
+          <div className="ph-end">
+            <Gate />
+          </div>
         </div>
-        <div className="ph-end">
-          <Gate />
-        </div>
+        <PathDock />
       </div>
-      <PathDock />
       {overlayHostRef.current
         ? createPortal(
             <>

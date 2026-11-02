@@ -9,18 +9,23 @@
   margin: 0 calc(var(--page-gutter) * -1);
 }
 /*
- * The paper is the whole Yol screen: one grid on the scroller's own background, fixed to its content (local), so it
- * runs edge to edge, behind the headings and the dock and past the gate, and moves with the page. Its origin is the
- * top of the path, so the nodes keep sitting on the lines.
+ * The paper is the whole Yol screen: one grid on an in-flow sheet that takes back the scroller's padding on every
+ * side, so it runs edge to edge, behind the headings and the dock and past the gate. Being content, it scrolls on
+ * the compositor with everything else (a `background-attachment: local` scroller repaints every frame on iOS and
+ * stutters). Its origin is the top of the path, so the nodes keep sitting on the lines.
  */
-.dz-screen:has(.ph-field) {
+.ph-paper {
   --grid: color-mix(in oklch, var(--hairline) 70%, transparent);
+  --paper-top: calc(env(safe-area-inset-top) + var(--space-3));
+  position: relative;
+  min-height: 100dvh;
+  margin: calc(var(--paper-top) * -1) calc(var(--page-gutter) * -1) calc(var(--bar-clearance) * -1);
+  padding: var(--paper-top) var(--page-gutter) var(--bar-clearance);
   background-image:
     linear-gradient(to bottom, var(--grid) 1px, transparent 1px),
     linear-gradient(to right, var(--grid) 1px, transparent 1px);
   background-size: 25px 25px;
-  background-attachment: local;
-  background-position: 0 calc(env(safe-area-inset-top) + var(--space-3));
+  background-position: 0 var(--paper-top);
 }
 .ph-root {
   position: relative;
