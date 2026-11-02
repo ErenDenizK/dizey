@@ -402,6 +402,7 @@ a.sh-node {
  * every action in the thumb zone.
  */
 .ls-main {
+  position: relative;
   flex: 1;
   min-height: 0;
   display: flex;
@@ -1636,4 +1637,9 @@ svg.ls-duo {
   .sh-overlay[data-present="sheet"] .sh-overlay__content {
     max-width: none;
   }
+}
+
+/* The step counter yields to the first step's greeting (eased by useEase on --on). */
+.ls-count[data-ease] {
+  opacity: var(--on, 1);
 }

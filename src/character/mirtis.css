@@ -166,3 +166,40 @@
 .mt-perch .mirtis {
   margin-bottom: -8%;
 }
+
+/* The speech bubble (Bubble.tsx): left of the perched cat's head, its tail pointing at her. It rides the perch's lift,
+   so it sinks behind the card's edge with her. Entrance is an engine spring on opacity and scale. */
+.mt-perch__lift {
+  position: relative;
+}
+.mt-bubble {
+  position: absolute;
+  right: calc(100% + var(--space-2));
+  top: 18%;
+  width: max-content;
+  max-width: 55vw;
+  padding: var(--space-1) var(--space-3);
+  border: 1px solid var(--hairline-strong);
+  border-radius: var(--corner-card, 20px);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-2);
+  color: var(--ink-1);
+  font-size: var(--type-footnote);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-small);
+  white-space: nowrap;
+  transform-origin: 100% 50%;
+}
+.mt-bubble::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: -5px;
+  width: 8px;
+  height: 8px;
+  border-top: 1px solid var(--hairline-strong);
+  border-right: 1px solid var(--hairline-strong);
+  background: var(--surface-raised);
+  transform: translateY(-50%) rotate(45deg);
+}
