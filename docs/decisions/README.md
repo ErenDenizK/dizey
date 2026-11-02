@@ -19,10 +19,11 @@ Read only the current ones unless you need history.
 | 0007 | One path screen | partly superseded by 0012 (tabs); the path stays |
 | 0008 | Own math typesetter | current |
 | 0009 | Type and space scale | current |
-| 0010 | Character and rozetler | current for rozetler; character replaced (see 0014, 0015, Mırtis) |
+| 0010 | Character and rozetler | current for rozetler; character replaced by 0017 |
 | 0011 | Lesson card grows from tile | current |
 | 0012 | Bugün, Harita, Sen | current |
 | 0013 | Question engine | current |
 | 0014 | Companion overlay | superseded by 0015 |
 | 0015 | Birim | rejected; history only |
 | 0016 | Bracket grammar | current |
+| 0017 | Mırtis | current |
