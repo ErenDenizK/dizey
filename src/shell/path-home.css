@@ -35,19 +35,11 @@
   inset: 0;
   overflow: visible;
 }
-/* Rows are Satır's blue, columns Sütun's plum; the part of the walk still ahead is faint. */
+/* One neutral for every run: colour on this screen belongs to node state only. The part of the walk still ahead is faint (opacity is the engine's, PathHome.useWalked). */
 .ph-wire {
-  stroke-width: 6;
+  stroke: var(--ink-3);
+  stroke-width: 4;
   stroke-linecap: round;
-}
-.ph-wire[data-axis="row"] {
-  stroke: var(--row-fill);
-}
-.ph-wire[data-axis="col"] {
-  stroke: var(--col-fill);
-}
-.ph-wire[data-faint] {
-  opacity: 0.25;
 }
 
 /* ---- Chapter headings: a 1 x 1 bracket and a name, on the side the column does not run ---------- */
@@ -163,18 +155,27 @@
 }
 .pa-tile__check path {
   fill: none;
-  stroke: var(--on-ok);
+  stroke: var(--ok-ink);
   stroke-width: 2.4;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-/* Done: green with a tick. Weak first tries add a thin ring in the bad ink; the lesson is still done. */
+/* Done: quiet. A low tint of the success hue over the surface (opaque, so the run underneath never shows through), a hairline in the same hue and a tick in the success ink. */
 .pa-tile[data-state="done"] {
-  background: var(--ok-fill);
-  --node-ring: inset 0 0 0 0 transparent;
+  background: color-mix(in oklch, var(--ok-fill) 16%, var(--surface));
+  --node-ring: inset 0 0 0 1px color-mix(in oklch, var(--ok-fill) 50%, transparent);
 }
-.pa-tile[data-state="done"][data-level="bad"] {
-  --node-ring: inset 0 0 0 2.5px var(--bad-ink);
+/* Weak first tries on a finished lesson: a small dot in the bad ink at the node's top-right corner. The lesson is still done. */
+.pa-tile__flag {
+  position: absolute;
+  top: calc(var(--space-1) * -1);
+  right: calc(var(--space-1) * -1);
+  width: var(--space-3);
+  height: var(--space-3);
+  border-radius: var(--corner-pill);
+  background: var(--bad-ink);
+  box-shadow: 0 0 0 var(--space-0-5) var(--bg);
+  pointer-events: none;
 }
 /* The lesson you are on: drawn 1.2 times larger (path-effects.ts) and the brightest square on the paper: solid ink with the dark on-bright token as its code. No amber here; the one amber is the dock's button. */
 .pa-tile[data-next] {
