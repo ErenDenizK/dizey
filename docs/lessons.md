@@ -40,3 +40,31 @@ A taller top fade for the floating back button (ed00d73) was checked only on a s
 ## 2026-11-02: an overlay that tracks scrolled content through JavaScript always lags a frame on iOS
 
 The companion (0014) lived in a fixed layer and followed anchors inside scrolling pages by reading their rects. On iOS the compositor scrolls the page on its own thread, so a JavaScript read is a frame behind and the character trembled against its anchor; sized from a measured rect it was also never crisp. Lesson: a thing that belongs to scrolling content lives in that content's layer (inline, in the card) so the compositor moves both together. Guard: `e2e/birim.spec.ts` scrolls Yol and asserts the Birim's rect moves exactly with its tile (difference under 1 px).
+
+## 2026-11-02: a mascot shipped on a concept nobody looked at as a character
+
+**What happened.** Eren rejected the following duo (0014) at 01:32Z. The character thread wrote a report with three
+directions, picked one itself (Birim, a unit square whose moods are 2×2 matrices) and had it built and merged
+(0.58.0 and 0.59.0) within hours. At 14:06Z Eren called it ugly, out of proportion, nearly without reactions,
+soulless and without personality, and asked how it got approved. Satır, Sütun and Köşeli, which it replaced, had more
+character.
+
+**Root causes.**
+- A taste and identity decision was run like a reversible engineering step. "Decide and show results" (PR-13) and
+  "decide without waiting" were meant for workflow and layout. They were applied to the face of the product, where
+  only Eren's reaction counts.
+- The concept was judged by its cleverness (det = area), not by its appeal. Nobody asked "is it cute, would you bond
+  with it?" A square limits expression, and affine shape changes do not read as emotion.
+- What made the old cast likeable was thrown away: limbs (Köşeli's bracket arms), a relationship (Satır and Sütun),
+  cheeks, brows, gaze, blinks. The body was also the same sand colour as the primary button, so it read as interface.
+- No independent review. The "two voices" debate in the report was the same author arguing with itself. Most
+  placements were 24 to 40 px, where the weakness did not show.
+
+**What changed.**
+- Five new candidates (Köşeli, Satır ve Sütun, Pivot, Öz, İnce) went to Eren as phone mockups, each with six moods,
+  an in-app scene and a story. None is built until he picks one.
+- A second reviewer who did not draw them rated appeal and flagged moods that do not read.
+- Principle candidate (to weigh with `principle-adoption`; the 2026-10-30 rejected design directions are the first
+  occurrence of the root cause): identity choices (mascot, logo, palette, app name) pass an Eren pick gate. Options
+  arrive as visual mockups, Eren picks, and only then is code written. Character candidates are drawn large in at
+  least six moods and reviewed for appeal by someone who did not draw them.

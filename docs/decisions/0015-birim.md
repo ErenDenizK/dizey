@@ -1,6 +1,6 @@
 # 0015: Birim, a unit square that lives inside its card
 
-- Status: accepted (Eren rejected the companion overlay and asked for a new character, 2026-11-02; built, his review pending)
+- Status: rejected by Eren 2026-11-02 14:06Z ("ruhsuz, kişiliksiz, oransız"); five replacement candidates in review, see docs/lessons.md
 - Date: 2026-11-02
 - Ledger items: Eren 2026-11-02 ("Bu karakterlerin tüm uygulama içindeki takip etmeleri pek bir manası yok ... yüksekliği yanlış sayfayı kaydırırken titriyor pek net de gözükmüyor. Sıfırdan zekice kendini ortalamaya kısıtlamadan yeni bir karakterizasyon değerlendir")
 - Supersedes: 0014
