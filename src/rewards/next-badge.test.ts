@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { lessons } from '../content/lessons'
 import type { LessonRecord } from '../lesson/progress'
 import { BADGES, NOTEBOOK_FIXES, type Progress } from './badges'
-import { nextBadge, remainingFor } from './next-badge'
+import { NEEDS, nextBadge, remainingFor } from './next-badge'
 
 const done: LessonRecord = { at: null, doneAt: 1, answers: {} }
 const empty: Progress = { records: {}, history: [], moments: {} }
@@ -46,5 +47,12 @@ describe('nextBadge', () => {
     })
     expect(remainingFor('clean-notebook', empty)).toEqual({ kind: 'fixes', count: NOTEBOOK_FIXES })
     expect(remainingFor('fixed', empty)).toEqual({ kind: 'plain' })
+  })
+
+  it('only asks for lessons that exist in the course', () => {
+    const known = new Set(lessons.map((lesson) => lesson.id))
+    for (const [badge, needs] of Object.entries(NEEDS)) {
+      for (const id of needs?.ids ?? []) expect(known.has(id), `${badge} needs ${id}`).toBe(true)
+    }
   })
 })

@@ -911,6 +911,50 @@ test.describe('small phone (375 x 667) reach', () => {
     expect(rowBox && bar && rowBox.y + rowBox.height <= bar.y).toBe(true)
   })
 
+  test('the last chapter test scrolls clear above the dock card', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.setViewportSize({ width: 375, height: 667 })
+    await openApp(page)
+    const pane = screen(page)
+    await pane.evaluate((el) => {
+      const scroller = el.querySelector('.dz-screen')
+      if (scroller) scroller.scrollTop = scroller.scrollHeight
+    })
+    await page.waitForTimeout(400)
+    const test = await pane.locator('[data-testid^="chapter-test-"]').last().boundingBox()
+    const card = await pane.locator('.ph-next').boundingBox()
+    expect(test && card && test.y + test.height <= card.y).toBe(true)
+  })
+
+  test('with the daily question, a review and the exam days in the dock the path keeps 60% of a 375 px screen', async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await page.setViewportSize({ width: 375, height: 667 })
+    const day = new Date()
+    const key = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`
+    await page.addInitScript(
+      ([p, today]) => {
+        localStorage.setItem(`${p}dizey.settings`, JSON.stringify({ examDate: today }))
+        localStorage.setItem(
+          `${p}dizey.exam.outcomes`,
+          JSON.stringify({ 'v1-2024s-01': { correct: false, given: 'a', at: 1 } }),
+        )
+      },
+      [prefix, key],
+    )
+    await openApp(page)
+    const pane = screen(page)
+    await expect(pane.getByTestId('today-daily')).toBeVisible()
+    await expect(pane.getByTestId('today-review')).toBeVisible()
+    await expect(pane.getByTestId('today-exam')).toBeVisible()
+    await page.waitForTimeout(600)
+    const card = await pane.locator('.ph-next').boundingBox()
+    const share = (card?.y ?? 0) / 667
+    console.log('path share 375x667 all dock items', share.toFixed(3), 'card height', card?.height)
+    expect(share).toBeGreaterThanOrEqual(0.6)
+  })
+
   test('the last option of a chapter test question scrolls fully above the action bar', async ({ page }) => {
     await openApp(page, './')
     await screen(page).getByTestId('chapter-test-matrices').click()
@@ -1235,24 +1279,19 @@ test.describe('Yol, the path home', () => {
       .toBe(true)
   })
 
-  test('rows and columns of the walk use different tokens, and what is ahead is faint', async ({ page }) => {
+  test('every run of the walk shares one neutral colour, and what is ahead is faint', async ({ page }) => {
     await seedDone(page, 3)
     await openApp(page)
     const wires = await screen(page)
       .locator('.ph-wire')
       .evaluateAll((lines) =>
         lines.map((line) => ({
-          axis: line.getAttribute('data-axis'),
           stroke: getComputedStyle(line).stroke,
           opacity: getComputedStyle(line).opacity,
           faint: line.hasAttribute('data-faint'),
         })),
       )
-    const rows = new Set(wires.filter((w) => w.axis === 'row').map((w) => w.stroke))
-    const cols = new Set(wires.filter((w) => w.axis === 'col').map((w) => w.stroke))
-    expect(rows.size).toBe(1)
-    expect(cols.size).toBe(1)
-    expect([...rows][0]).not.toBe([...cols][0])
+    expect(new Set(wires.map((w) => w.stroke)).size).toBe(1)
     const walked = wires.filter((w) => !w.faint)
     const ahead = wires.filter((w) => w.faint)
     expect(walked.length).toBeGreaterThan(0)

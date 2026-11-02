@@ -7,7 +7,7 @@ export type Remaining =
   | { kind: 'plain' }
 
 /** Lessons a badge asks for: all of them, or any one of them (the first listed is the one to point at). */
-const NEEDS: Partial<Record<BadgeId, { ids: readonly string[]; any?: true }>> = {
+export const NEEDS: Partial<Record<BadgeId, { ids: readonly string[]; any?: true }>> = {
   sarrus: { ids: ['d1-determinant'] },
   laplace: { ids: ['d2-cofactor-expansion'] },
   gauss: { ids: ['r1-row-operations', 'r2-echelon-forms'] },
