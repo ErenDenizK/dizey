@@ -85,17 +85,50 @@ describe('layoutPath in four columns', () => {
     expect(rows[2]?.slice(0, 2).every((node) => node.kind === 'lesson')).toBe(true)
   })
 
-  it('keeps the same shape guarantees as the phone path', () => {
+  it('makes every chapter a block: its first node at the left column, its heading at the gutter', () => {
+    for (const [ci] of chapters.entries()) {
+      const first = layout.nodes.find((node) => node.chapter === ci)
+      expect(first?.col).toBe(0)
+      expect(
+        layout.nodes.filter((node) => node.chapter === ci && node.y === first?.y).map((n) => n.col),
+      ).toEqual(
+        [0, 1, 2, 3].slice(0, layout.nodes.filter((n) => n.chapter === ci && n.y === first?.y).length),
+      )
+    }
+    for (const header of layout.headers) expect(header.side).toBe('start')
+  })
+
+  it('joins consecutive nodes in a block directly, and one block to the next by an axis-aligned elbow on whole px', () => {
     const lessonCount = chapters.reduce((sum, chapter) => sum + chapter.lessons.length, 0)
     expect(layout.nodes).toHaveLength(lessonCount + chapters.length)
-    expect(layout.segments).toHaveLength(layout.nodes.length - 1)
     for (const seg of layout.segments) {
-      if (seg.axis === 'row') {
-        expect(seg.y1).toBe(seg.y2)
-        expect(Math.abs(seg.x1 - seg.x2)).toBe(1)
-      } else {
-        expect(seg.y2).toBeGreaterThan(seg.y1)
+      if (seg.axis === 'row') expect(seg.y1).toBe(seg.y2)
+      else {
         expect(seg.x1).toBe(seg.x2)
+        expect(seg.y2).toBeGreaterThan(seg.y1)
+      }
+      for (const v of [seg.y1, seg.y2]) expect(Number.isInteger(v)).toBe(true)
+    }
+    for (const node of layout.nodes.slice(1)) {
+      const arriving = layout.segments.filter((seg) => seg.to === node.index)
+      const before = layout.nodes[node.index - 1]
+      if (before && before.chapter === node.chapter) {
+        expect(arriving).toHaveLength(1)
+        if (arriving[0]?.axis === 'row') expect(Math.abs(arriving[0].x1 - arriving[0].x2)).toBe(1)
+      } else {
+        // The elbow: down, across (unless the test node is already at the left), down. It starts at the test node
+        // and ends at the first node; its crossing runs between the last row and the heading.
+        const header = layout.headers[node.chapter]
+        expect(arriving[0]?.y1).toBe(before?.y)
+        expect(arriving.at(-1)?.y2).toBe(node.y)
+        for (const seg of arriving) {
+          if (seg.axis === 'row') {
+            expect(seg.y1).toBeGreaterThan(before?.y ?? 0)
+            expect(seg.y1).toBeLessThan((header?.y ?? 0) - 20)
+          }
+        }
+        expect(header?.y).toBeLessThan(node.y)
+        expect(arriving.length).toBe(before?.col === 0 ? 1 : 3)
       }
     }
     for (const node of layout.nodes) {
