@@ -129,3 +129,11 @@
   margin: 0;
   color: var(--ink-2);
 }
+
+/* A wide window (600 px and up): the card keeps a phone-proportioned width, centred over the path. */
+@media (min-width: 600px) {
+  .lp {
+    max-width: var(--column-max);
+    margin-inline: auto;
+  }
+}
