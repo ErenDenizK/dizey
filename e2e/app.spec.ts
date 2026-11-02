@@ -341,15 +341,15 @@ test('Sen is a profile scene: duo, name, your matrix, mistakes, badge shelf, mom
   // Nothing settings-like lives here; the mistake row is hidden while the log is empty.
   await expect(sen.getByRole('switch')).toHaveCount(0)
   await expect(sen.getByTestId('mistake-row')).toHaveCount(0)
-  await expect(sen.getByRole('heading', { name: /Rozetler/ })).toBeVisible()
-  await expect(sen.getByTestId('moments-album')).toBeVisible()
-  // The path nodes on Yol show readiness now, not here, and the shelf shows every badge: none lit, all ten dim and inert.
+  // Nothing earned, nothing found: the shelf and the moments are hidden and Sıradaki leads back to learning.
+  await expect(sen.getByRole('heading', { name: /Rozetler/ })).toHaveCount(0)
+  await expect(sen.getByTestId('moments-album')).toHaveCount(0)
+  await expect(sen.getByTestId('next-badge')).toContainText('İlk adım')
+  // The path nodes on Yol show readiness now, not here.
   await expect(sen.getByTestId('map-cell')).toHaveCount(0)
   await expect(sen.getByText(/Hazırlık haritası/)).toHaveCount(0)
   await expect(sen.getByText(/Çalıştıkça gelir/)).toHaveCount(0)
-  await expect(sen.getByTestId('badge-locked')).toHaveCount(10)
   await expect(sen.getByTestId('badge-earned')).toHaveCount(0)
-  await expect(sen.getByTestId('moments-album').getByRole('img')).toHaveCount(6)
   // A wrong first try in the first determinant lesson fills the log row.
   await openApp(page, './lesson/d1-determinant')
   const player = page.getByTestId('lesson-player')
@@ -383,7 +383,7 @@ test('the exam line counts down once a date is set', async ({ page }) => {
     .evaluate((s) => s.scrollTo(0, 0))
   await page.getByRole('button', { name: 'Bitti', exact: true }).click()
   await tab(page, 'Yol').click()
-  await expect(screen(page).getByTestId('today-exam')).toContainText('3 gün kaldı')
+  await expect(screen(page).getByTestId('today-exam')).toContainText('3 gün')
 })
 
 test('every node is a tap target of at least 44 px and its aria-label carries the whole title', async ({
@@ -407,7 +407,7 @@ test('every node is a tap target of at least 44 px and its aria-label carries th
   }
 })
 
-test('Yol edges: one amber lesson node, equal nodes, one language of corners, nothing spills sideways', async ({
+test('Yol edges: one bright lesson node, equal nodes, one language of corners, nothing spills sideways', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 375, height: 667 })
@@ -850,15 +850,14 @@ test.describe('small phone (375 x 667) reach', () => {
     await openApp(page, './me')
     const sen = screen(page)
     await expect(sen.getByTestId('me-scene')).toBeVisible()
-    await expect(sen.getByTestId('badge-locked').first()).toBeVisible()
-    await expect(sen.getByTestId('moments-album')).toBeVisible()
+    await expect(sen.getByTestId('badge-earned').first()).toBeVisible()
     await page.evaluate(() => {
       const pane = document.querySelector('.sh-pane:not([inert])')
       for (const el of pane?.querySelectorAll('*') ?? [])
         if (el.scrollHeight > el.clientHeight + 1) el.scrollTop = 1e6
     })
     const bar = await page.getByRole('navigation', { name: 'Bölümler' }).boundingBox()
-    const last = await sen.getByTestId('moments-album').boundingBox()
+    const last = await sen.getByTestId('next-badge').boundingBox()
     expect(last && bar && last.y + last.height <= bar.y).toBe(true)
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
   })
@@ -1386,4 +1385,75 @@ test.describe('Sen, the profile', () => {
     await page.keyboard.press('Enter')
     await expect(screen(page).getByTestId('me-name')).toHaveText('Adını yaz')
   })
+})
+
+test('Yol diet: at 390 x 844 the path keeps at least 65% of the screen above the card', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openApp(page)
+  await page.waitForTimeout(1200)
+  const pane = screen(page)
+  const card = await pane.locator('.ph-next').boundingBox()
+  const height = await page.evaluate(() => innerHeight)
+  expect(card).not.toBeNull()
+  const share = (card?.y ?? 0) / height
+  expect(share).toBeGreaterThanOrEqual(0.65)
+  // One element above the tab bar: no chip row, one card, and the only amber on Yol is its button.
+  await expect(pane.locator('.ph-chips, .ph-chip')).toHaveCount(0)
+  await expect(pane.locator('.ph-next')).toHaveCount(1)
+  const amber = await pane.evaluate(
+    (root) => {
+      const probe = document.createElement('i')
+      probe.style.background = 'var(--action)'
+      document.body.append(probe)
+      const action = getComputedStyle(probe).backgroundColor
+      probe.remove()
+      return [...root.querySelectorAll<HTMLElement>('*')]
+        .filter((el) => getComputedStyle(el).backgroundColor === action)
+        .map((el) => el.className)
+    },
+    await pane.elementHandle(),
+  )
+  expect(amber).toHaveLength(1)
+  // The chapter test reads as a numbered matrix.
+  await expect(pane.getByTestId('chapter-test-matrices').locator('.pa-test__no')).toHaveText('1')
+  console.log('path share 390x844', share.toFixed(3))
+  await page.setViewportSize({ width: 375, height: 667 })
+  await page.waitForTimeout(600)
+  const small = await pane.locator('.ph-next').boundingBox()
+  console.log('path share 375x667', ((small?.y ?? 0) / 667).toFixed(3))
+})
+
+test('Sen diet: a fresh Sen shows one empty slot, Sıradaki, and neither Rozetler nor Gizli anlar', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' })
+  await page.setViewportSize({ width: 390, height: 844 })
+  await openApp(page, './me')
+  const sen = screen(page)
+  await expect(sen.getByTestId('me-scene')).toBeVisible()
+  const empty = await sen
+    .locator('[data-testid="badge-slot-empty"], .badge-shelf__item--locked, .me-moments__slot--hidden')
+    .count()
+  expect(empty).toBeLessThanOrEqual(6)
+  expect(empty).toBe(1)
+  await expect(sen.getByTestId('next-badge')).toBeVisible()
+  await expect(sen.getByRole('heading', { name: /Rozetler/ })).toHaveCount(0)
+  // One alignment: the head is a row with the name left of centre.
+  const avatar = await sen.locator('.me-avatar').boundingBox()
+  const name = await sen.getByTestId('me-name').boundingBox()
+  expect(avatar && name && name.x > avatar.x + avatar.width - 1).toBe(true)
+  // Earning a first lesson moves Sıradaki on and shows the shelf with exactly the earned badge.
+  await page.addInitScript(
+    ([key]) =>
+      localStorage.setItem(
+        key as string,
+        JSON.stringify({ 'm1-reading-a-matrix': { at: null, doneAt: 1700000000000, answers: {} } }),
+      ),
+    [`${prefix}dizey.lessons`],
+  )
+  await openApp(page, './me')
+  await expect(sen.getByTestId('badge-earned')).toHaveCount(1)
+  await expect(sen.getByRole('heading', { name: /Rozetler · 1 \/ 10/ })).toBeVisible()
+  await expect(sen.getByTestId('next-badge')).not.toContainText('İlk adım')
 })
