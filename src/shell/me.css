@@ -1,29 +1,46 @@
 /* Profil (src/shell/MeView.tsx). Tokens only; no transitions or keyframes. */
-/* Scene: Birim, centred, with the name and title under it. */
+/*
+ * One alignment: everything sits on the page gutter, left. One container grammar: a heading and content, rows apart
+ * by hairlines; nothing on this screen is a filled card.
+ */
+/* Head: the avatar slot on the left, name and title stacked on its right, centred against the slot. */
 .me-scene {
-  display: grid;
-  justify-items: center;
-  /* The slot's own ground shadow already spaces the duo from the name. */
-  gap: var(--space-1);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
   margin-top: var(--space-2);
   padding: 0;
 }
-/* The avatar spot: Birim, centred, in its own box so whatever fills it later keeps the same place. */
+/*
+ * The avatar slot: a fixed box, 72 px wide and up to 96 px tall, whatever fills it (a square, a round or a tall
+ * character) stands centred at the bottom. Nothing in the head depends on the shape inside.
+ */
 .me-avatar {
+  flex: none;
   display: flex;
+  align-items: flex-end;
   justify-content: center;
-  width: 100%;
+  width: 72px;
+  height: 96px;
+  overflow: visible;
+}
+/* Whatever stands in the slot is held to the box, not to its own size. */
+.me-avatar > * {
+  max-width: 100%;
+  max-height: 100%;
 }
 
-/* Name and title: centred under the duo. The text button and the input share one cell and crossfade. */
+/* Name and title: left aligned beside the avatar. The text button and the input share one cell and crossfade. */
 .me-id {
+  flex: 1;
+  min-width: 0;
   display: grid;
-  justify-items: center;
+  justify-items: start;
   gap: 0;
 }
 .me-name {
   display: grid;
-  width: min(100%, 18rem);
+  width: 100%;
 }
 .me-name > * {
   grid-area: 1 / 1;
@@ -33,11 +50,11 @@
   min-height: var(--target);
   width: 100%;
   margin: 0;
-  padding: 0 var(--space-2);
+  padding: 0;
   border: 0;
   border-radius: var(--corner-button);
   background: none;
-  text-align: center;
+  text-align: start;
   font-family: inherit;
   font-size: var(--type-title3);
   line-height: var(--leading-title3);
@@ -69,7 +86,16 @@
   line-height: var(--leading-footnote);
   letter-spacing: var(--tracking-small);
   color: var(--ink-2);
-  text-align: center;
+  text-align: start;
+}
+
+/* Section headings sit on the gutter, like the content under them. */
+.me-matrix-block > .dz-section-label,
+.me-mistakes > .dz-section-label,
+.me-next > .dz-section-label,
+.me-moments > .dz-section-label,
+section[aria-labelledby="badges"] > .dz-section-label {
+  margin-inline: 0;
 }
 
 /* Senin matrisin: six figures in one pair of tall brackets (the chapter-number bracket, scaled up). No boxes. */
@@ -77,8 +103,8 @@
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-5) var(--space-2);
-  width: min(100%, 22rem);
-  margin: var(--gap-related) auto 0;
+  width: 100%;
+  margin: var(--gap-related) 0 0;
   padding: var(--space-4) var(--space-3);
   list-style: none;
   border-inline: 2px solid var(--ink-3);
@@ -107,37 +133,19 @@
   overflow-wrap: anywhere;
 }
 
-/* Gizli anlar: one slot per hidden moment in a single row. A labelled group, not a card, and nothing presses. */
+/* Gizli anlar: the found moments in a row of equal emblems. A labelled group, nothing presses. */
 .me-moments__list {
   display: grid;
-  grid-template-columns: repeat(var(--slots), minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   gap: var(--space-1);
   margin: 0;
   padding: 0;
   list-style: none;
 }
-.me-moments__slot {
-  position: relative;
-}
 .me-moments__slot svg {
   display: block;
   width: 100%;
   height: auto;
-}
-.me-moments__slot--hidden svg {
-  opacity: 0.2;
-  filter: brightness(0) invert(0.5);
-}
-.me-moments__mark {
-  position: absolute;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  font-size: var(--type-subhead);
-  line-height: var(--leading-subhead);
-  letter-spacing: var(--tracking-body);
-  font-weight: var(--weight-semibold);
-  color: var(--ink-2);
 }
 
 /* The Hata defteri row: the count, then the chevron. Its label sits above, outside the block. */
@@ -147,7 +155,7 @@
   gap: var(--gap-item);
   min-height: var(--target);
   margin: 0;
-  padding: var(--space-2) var(--card-pad);
+  padding: var(--space-2) 0;
 }
 .me-row__title {
   flex: 1;
@@ -159,12 +167,57 @@
 }
 
 /* Hata defteri: a compact entry row; the list opens under it. */
-.me-mistakes__row {
+.me-mistakes__row,
+.me-next__row {
   width: 100%;
-  border-radius: var(--corner-card);
-  background: var(--surface);
+  border-block: 0.5px solid var(--hairline-strong);
   text-align: start;
-  box-shadow: var(--shadow-1), var(--edge-light);
+  text-decoration: none;
+  color: var(--ink-1);
+}
+/* Sıradaki: the badge's slot (its emblem, dimmed), its name and what earns it. */
+.me-next__row {
+  gap: var(--space-3);
+  min-height: 64px;
+}
+.me-next__slot {
+  flex: none;
+  width: 48px;
+  opacity: 0.45;
+}
+.me-next__slot svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.me-next__text {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+}
+.me-next__name {
+  font-size: var(--type-body);
+  line-height: var(--leading-body);
+  letter-spacing: var(--tracking-body);
+  font-weight: var(--weight-semibold);
+}
+.me-next__line {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  color: var(--ink-2);
+}
+/* The open mistake list is rows apart by hairlines, not a card. */
+.me-mistakes .dz-list {
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+}
+.me-mistakes .dz-list > li + li {
+  border-top: 0.5px solid var(--hairline-strong);
+}
+.me-mistakes .sh-mistake {
+  padding-inline: 0;
 }
 .me-mistakes__chevron {
   display: grid;

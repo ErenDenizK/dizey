@@ -137,10 +137,7 @@
 
 /* Profil shelf. */
 .badge-shelf {
-  padding: var(--card-pad);
-  border-radius: var(--corner-card);
-  background: var(--surface);
-  box-shadow: var(--shadow-1), var(--edge-light);
+  padding: 0;
 }
 .badge-shelf__stage {
   display: grid;
@@ -183,10 +180,5 @@
   height: var(--space-2);
   border-radius: var(--corner-pill);
   background: var(--spark);
-  box-shadow: 0 0 0 var(--space-0-5) var(--surface);
-}
-/* Not earned yet: a dim silhouette in the same bracket frame. Not a control, so nothing about it invites a tap. */
-.badge-shelf__item--locked svg {
-  opacity: 0.2;
-  filter: brightness(0) invert(0.5);
+  box-shadow: 0 0 0 var(--space-0-5) var(--bg);
 }

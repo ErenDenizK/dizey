@@ -10,8 +10,8 @@ import { Emblem } from './Emblem'
 import { markShown, useShown } from './store'
 
 /**
- * Sen's rozet shelf: every badge in a five-column grid of equal emblems. Earned ones are lit and press; the rest are
- * dim silhouettes in the same frame (no name, no press). The label sits outside the block with the count after it.
+ * Sen's rozet shelf: the badges you have earned, in a five-column grid of equal emblems, each in its bracket slot and
+ * pressable. Nothing locked is drawn (the next one to earn is Sıradaki's row); with none earned the section is hidden.
  * A badge not shown yet carries a spark dot; a tap plays its moment above the shelf (and marks it shown). A tap on a shown badge replays it.
  */
 export function BadgeShelf() {
@@ -22,6 +22,7 @@ export function BadgeShelf() {
   const earned = earnedBadges({ records, history, moments })
   const [open, setOpen] = useState<{ id: BadgeId; n: number } | null>(null)
   const current = earned.find((badge) => badge.id === open?.id)
+  if (!earned.length) return null
   return (
     <section aria-labelledby="badges">
       <h2 id="badges" className="dz-section-label">
@@ -35,38 +36,23 @@ export function BadgeShelf() {
           </div>
         ) : null}
         <ul className="badge-shelf__grid">
-          {BADGES.map((badge) => {
-            const got = earned.some((item) => item.id === badge.id)
-            if (!got)
-              return (
-                <li
-                  key={badge.id}
-                  className="badge-shelf__item badge-shelf__item--locked"
-                  data-testid="badge-locked"
-                  role="img"
-                  aria-label={strings.me.badgeHidden}
-                >
-                  <Emblem badge={badge} />
-                </li>
-              )
-            return (
-              <li key={badge.id} className="badge-shelf__cell">
-                <Pressable
-                  className="badge-shelf__item"
-                  data-testid="badge-earned"
-                  data-new={shown[badge.id] === undefined || undefined}
-                  aria-pressed={open?.id === badge.id}
-                  aria-label={strings.badges.items[badge.id].name}
-                  onClick={() => {
-                    setOpen((was) => ({ id: badge.id, n: (was?.n ?? 0) + 1 }))
-                    markShown([badge.id], Date.now())
-                  }}
-                >
-                  <Emblem badge={badge} />
-                </Pressable>
-              </li>
-            )
-          })}
+          {earned.map((badge) => (
+            <li key={badge.id} className="badge-shelf__cell">
+              <Pressable
+                className="badge-shelf__item"
+                data-testid="badge-earned"
+                data-new={shown[badge.id] === undefined || undefined}
+                aria-pressed={open?.id === badge.id}
+                aria-label={strings.badges.items[badge.id].name}
+                onClick={() => {
+                  setOpen((was) => ({ id: badge.id, n: (was?.n ?? 0) + 1 }))
+                  markShown([badge.id], Date.now())
+                }}
+              >
+                <Emblem badge={badge} />
+              </Pressable>
+            </li>
+          ))}
         </ul>
       </div>
     </section>
