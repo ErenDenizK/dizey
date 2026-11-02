@@ -1,10 +1,11 @@
 import { useNavigate } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { Birim } from '../character/Birim'
 import type { Lesson } from '../content/lessons/types'
 import { type Chapter, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
 import { strings } from '../content/strings'
+import { engine } from '../engine/driver'
 import { CHAPTER_TEST_SIZE, chapterTestState, createChapterSession, isChapterSet } from '../exam/chapter-test'
 import { remainingMs } from '../exam/session'
 import { saveSession, useExam } from '../exam/store'
@@ -143,7 +144,6 @@ export function LessonNode({
       }
     >
       {face}
-      <Birim size="path" mood="happy" className="pa-tile__birim" />
     </PressLink>
   ) : (
     <Pressable
@@ -227,4 +227,33 @@ export function ChapterTestNode({ chapter, onNote }: { chapter: Chapter; onNote:
       ) : null}
     </Pressable>
   )
+}
+
+/**
+ * Birim on the lesson you are on, inline in that node's slot (the same scrolling layer as its tile). When the lesson
+ * you are on changes, the old one fades out and the new one fades in; nothing appears or vanishes in one frame.
+ */
+export function TileBirim({ on }: { on: boolean }) {
+  const box = useRef<HTMLSpanElement>(null)
+  const [shown, setShown] = useState(on)
+  const first = useRef(true)
+  useLayoutEffect(() => {
+    if (on) setShown(true)
+  }, [on])
+  useLayoutEffect(() => {
+    const el = box.current
+    if (!el) return
+    if (first.current) {
+      first.current = false
+      engine.set(el, { opacity: 0 })
+    }
+    engine.withChannel('chrome', () =>
+      engine.to(el, { opacity: on ? 1 : 0 }, 'fade', { onArrive: () => !on && setShown(false) }),
+    )
+  }, [on, shown])
+  return shown ? (
+    <span ref={box} className="pa-tile__birim" aria-hidden="true">
+      <Birim size="path" mood="happy" />
+    </span>
+  ) : null
 }

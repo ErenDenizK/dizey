@@ -9,7 +9,7 @@ import { useLessonRecords } from '../lesson/store'
 import { Screen } from '../ui/Screen'
 import { LessonPeek, type Peek } from './LessonPeek'
 import { PathDock } from './PathDock'
-import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet } from './PathNodes'
+import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet, TileBirim } from './PathNodes'
 import { useCelebrations } from './path-effects'
 import { COL_X, layoutPath } from './path-layout'
 import { overlayHostRef } from './stage'
@@ -103,6 +103,7 @@ export function PathHome() {
                   ) : c ? (
                     <ChapterTestNode chapter={c} onNote={setNote} />
                   ) : null}
+                  {node.lesson ? <TileBirim on={current} /> : null}
                 </li>
               )
             })}
