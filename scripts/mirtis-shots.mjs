@@ -73,7 +73,9 @@ for (const [w, h] of [
     await page.evaluate(() => window.__dzReview.review.step(50))
     const box = await page.locator('.ls-verdict svg.mirtis').boundingBox()
     const sheet = await page.locator('.ls-verdict').boundingBox()
-    rise.push(`${f * 50 + 50}ms top=${box ? Math.round(box.y - sheet.y) : 'none'} (paws line at ${box ? Math.round(box.y + box.height - sheet.y) : '-'})`)
+    rise.push(
+      `${f * 50 + 50}ms top=${box ? Math.round(box.y - sheet.y) : 'none'} (paws line at ${box ? Math.round(box.y + box.height - sheet.y) : '-'})`,
+    )
     await page.screenshot({ path: join(out, `strip-verdict-rise-${f}-${w}x${h}.png`) })
   }
   console.log(`${w}x${h} verdict rise (cat top relative to the sheet's top edge):\n  ${rise.join('\n  ')}`)
@@ -101,7 +103,8 @@ for (const [w, h] of [
   await page.getByRole('button', { name: 'Dersi bitir' }).click()
   await page.waitForSelector('[data-testid="lesson-end"]')
   await page.evaluate(() => window.__dzReview.review.pause())
-  const widthOf = () => page.locator('.ls-end svg.ls-duo').evaluate((n) => Math.round(n.getBoundingClientRect().width * 10) / 10)
+  const widthOf = () =>
+    page.locator('.ls-end svg.ls-duo').evaluate((n) => Math.round(n.getBoundingClientRect().width * 10) / 10)
   const hasBadge = () => page.locator('.ls-end__stage[data-badge]').count()
   let at = 0
   while (!(await hasBadge()) && at < 12000) {
@@ -132,7 +135,11 @@ for (const [w, h] of [
 }
 // Wide: Yol at 1180x820 (the dock card bottom right, the cat on its top edge).
 {
-  const context = await browser.newContext({ viewport: { width: 1180, height: 820 }, deviceScaleFactor: 1, colorScheme: 'dark' })
+  const context = await browser.newContext({
+    viewport: { width: 1180, height: 820 },
+    deviceScaleFactor: 1,
+    colorScheme: 'dark',
+  })
   await context.addInitScript(() => {
     for (const prefix of ['', 'dev:']) localStorage.setItem(`${prefix}dizey.onboarding.safari`, '1')
   })
