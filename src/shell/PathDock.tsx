@@ -200,7 +200,7 @@ function DailyItem({
         data-state={answered ? (answered.correct ? 'right' : 'wrong') : 'open'}
         onClick={() => setOpen(true)}
       >
-        <ItemFace title={text.eyebrow} value={answered ? text.next : text.solve} />
+        <ItemFace title={text.cell} value={answered ? text.cellNext : text.solve} />
       </Pressable>
       {host ? (
         <QuestionSheet

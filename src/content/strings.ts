@@ -25,6 +25,8 @@ export const strings = {
     examToday: 'Bugün',
     daily: {
       eyebrow: 'Günün sorusu',
+      cell: 'Günlük',
+      cellNext: 'Yarın',
       solve: 'Çöz',
       next: 'Yarın yenisi',
       wrongNote: 'Yarın yeni bir soru var.',
