@@ -17,7 +17,7 @@
     "test": "vitest run",
     "lock:questions": "UPDATE_QUESTION_LOCK=1 vitest run src/content/questions/generated/lock.test.ts",
     "e2e": "playwright test",
-    "icons": "pwa-assets-generator",
+    "icons": "node scripts/make-icons.mjs",
     "check": "pnpm typecheck && pnpm lint && pnpm test"
   },
   "dependencies": {
