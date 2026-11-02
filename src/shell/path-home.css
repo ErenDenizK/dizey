@@ -15,7 +15,7 @@
  * stutters). Its origin is the top of the path, so the nodes keep sitting on the lines.
  */
 .ph-paper {
-  --grid: color-mix(in oklch, var(--hairline) 70%, transparent);
+  --grid: color-mix(in oklch, var(--hairline) 35%, transparent);
   --paper-top: calc(env(safe-area-inset-top) + var(--space-3));
   position: relative;
   min-height: 100dvh;
@@ -176,11 +176,11 @@
 .pa-tile[data-state="done"][data-level="bad"] {
   --node-ring: inset 0 0 0 2.5px var(--bad-ink);
 }
-/* The lesson you are on: drawn 1.2 times larger (path-effects.ts), amber-tinted with an amber outline (the one filled amber is the dock's button). */
+/* The lesson you are on: drawn 1.2 times larger (path-effects.ts) and the brightest square on the paper: solid ink with the background's colour as its code. No amber here; the one amber is the dock's button. */
 .pa-tile[data-next] {
-  background: color-mix(in oklch, var(--action) 24%, var(--surface));
-  color: var(--action);
-  --node-ring: inset 0 0 0 2.5px var(--action);
+  background: var(--ink-1);
+  color: var(--bg);
+  --node-ring: inset 0 0 0 0 transparent;
   --press-strength: 0.1;
 }
 
@@ -211,6 +211,17 @@
 }
 .pa-test[data-state="preparing"] .pa-test__bracket {
   border-color: var(--hairline-strong);
+}
+/* The chapter number sits between the two strokes: a 1 x 1 bracket, so the node reads as a numbered matrix. */
+.pa-test__no {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+  color: var(--ink-2);
+}
+.pa-test[data-state="done"] .pa-test__no {
+  display: none;
 }
 .pa-test__score {
   font-size: var(--type-footnote);
@@ -293,53 +304,64 @@
   padding: var(--space-6) 0 var(--space-3);
   background: linear-gradient(to bottom, transparent, var(--bg) var(--space-6));
 }
-.ph-chips {
-  display: flex;
-  gap: var(--space-2);
-}
-.ph-chips:empty {
-  display: none;
-}
-.ph-chip {
-  flex: 1 1 auto;
-  min-width: 0;
-  display: grid;
-  align-content: center;
-  min-height: 48px;
-  padding: var(--space-1) var(--space-2);
-  border-radius: var(--corner-inner);
-  background: var(--surface);
-  box-shadow: inset 0 0 0 0.5px var(--hairline-strong);
-  text-align: start;
-  text-decoration: none;
-  font: inherit;
-  color: var(--ink-1);
-}
-.ph-chip__title,
-.ph-chip__value {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: var(--type-caption);
-  line-height: var(--leading-caption);
-  letter-spacing: var(--tracking-caption);
-}
-.ph-chip__title {
-  font-weight: var(--weight-medium);
-  color: var(--ink-2);
-}
-.ph-chip__value {
-  font-weight: var(--weight-semibold);
-  color: var(--ink-1);
-}
 .dz-card.ph-next {
+  display: grid;
+  padding: 0;
+  color: var(--ink-1);
+}
+.ph-next__main {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--gap-item);
   padding: var(--space-3) var(--space-3) var(--space-3) var(--space-4);
+  border-radius: inherit;
   text-decoration: none;
+  color: var(--ink-1);
+}
+/* One thin row under the lesson, a hairline apart: text links, no pills or fills. */
+.ph-more {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+  border-top: 0.5px solid var(--hairline-strong);
+}
+.ph-more:empty {
+  display: none;
+}
+.ph-more__item {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: var(--target);
+  padding: 0;
+  border: 0;
+  background: none;
+  white-space: nowrap;
+  text-align: start;
+  text-decoration: none;
+  font: inherit;
+  font-size: var(--type-caption);
+  line-height: var(--leading-caption);
+  letter-spacing: var(--tracking-caption);
+  color: var(--ink-1);
+}
+.ph-more__title {
+  flex: none;
+  font-weight: var(--weight-medium);
+  color: var(--ink-2);
+}
+.ph-more__dot {
+  flex: none;
+  color: var(--ink-2);
+  white-space: pre;
+}
+.ph-more__value {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--weight-semibold);
   color: var(--ink-1);
 }
 .ph-next__text {

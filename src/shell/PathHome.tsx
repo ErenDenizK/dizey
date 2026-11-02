@@ -102,7 +102,7 @@ export function PathHome() {
                         onPick={(lesson, tile) => setPeek({ lesson, tile })}
                       />
                     ) : c ? (
-                      <ChapterTestNode chapter={c} onNote={setNote} />
+                      <ChapterTestNode chapter={c} number={node.chapter + 1} onNote={setNote} />
                     ) : null}
                     {node.lesson ? <TileBirim on={current} /> : null}
                   </li>
