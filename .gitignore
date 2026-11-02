@@ -28,3 +28,4 @@ dev-dist/
 # Frame-by-frame review output
 motion-review/
 lesson-review/
+scripts/.shell-audit-state.json
