@@ -32,11 +32,9 @@ test('Yol: one Birim, and it moves exactly with its tile when the page scrolls',
   }
   await expect.poll(async () => (await box()).b?.width ?? 0).toBeGreaterThan(30)
   const before = await box()
-  // Scroll whichever ancestor holds the path.
-  await tile.evaluate((el) => {
-    let node: HTMLElement | null = el.parentElement
-    while (node && node.scrollHeight <= node.clientHeight + 1) node = node.parentElement
-    node?.scrollBy(0, 37)
+  // Scroll Yol's pane; go up when it already rests low, so the tile really moves.
+  await page.locator('.sh-pane:not([inert]) .dz-screen').first().evaluate((el) => {
+    el.scrollTop += el.scrollTop > 80 ? -60 : 60
   })
   await page.waitForTimeout(300)
   const after = await box()
