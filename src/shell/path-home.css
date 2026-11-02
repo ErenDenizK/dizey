@@ -224,11 +224,15 @@
   pointer-events: none;
   z-index: 2;
 }
+/* Beside its tile on the outer side, standing on the tile's baseline: clear of the runs between the columns and of
+   the chapter header above the first row. The slot is the tile's centre; the tile is 56 px, Birim 40 px. */
 .ph-slot[data-col="0"] .pa-tile__birim {
-  left: -34px;
+  bottom: -28px;
+  left: calc(-28px - var(--space-2) - 40px);
 }
 .ph-slot[data-col="1"] .pa-tile__birim {
-  left: -6px;
+  bottom: -28px;
+  left: calc(28px + var(--space-2));
 }
 
 /* ---- End of the path: the gate ------------------------------------------------------ */
