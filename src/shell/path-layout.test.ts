@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { chapters } from '../content/path'
-import { layoutPath } from './path-layout'
+import { columnsAt, layoutPath } from './path-layout'
 
 describe('layoutPath', () => {
   const layout = layoutPath(chapters)
@@ -42,6 +42,21 @@ describe('layoutPath', () => {
       expect(header.y).toBeGreaterThan(before?.y ?? 0)
       expect(header.y).toBeLessThan(first?.y ?? 0)
       expect(header.side).toBe(before?.col === 0 ? 'end' : 'start')
+    }
+  })
+
+  it('puts every node and run endpoint on whole CSS px for any phone width', () => {
+    for (let width = 320; width <= 430; width++) {
+      const [left, right] = columnsAt(width)
+      expect(Number.isInteger(left)).toBe(true)
+      expect(Number.isInteger(right)).toBe(true)
+      expect(left).toBeLessThan(right)
+      for (const node of layout.nodes) expect(Number.isInteger(node.y)).toBe(true)
+      for (const header of layout.headers) expect(Number.isInteger(header.y)).toBe(true)
+      for (const seg of layout.segments) {
+        expect(Number.isInteger(seg.y1)).toBe(true)
+        expect(Number.isInteger(seg.y2)).toBe(true)
+      }
     }
   })
 })
