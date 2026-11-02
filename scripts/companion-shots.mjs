@@ -1,5 +1,5 @@
-// Settled-frame screenshots of the companion on its anchors: Bugün, Sen, a lesson question, after a right
-// answer, and the lesson end. Dark, 375x667 and 390x844.
+// Settled-frame screenshots of the companion on its anchors: Yol, Sen, Yol under a lesson's card, a lesson
+// question, after a right answer, and the lesson end. Dark, 375x667 and 390x844; REDUCED=1 for reduced motion.
 // Usage: pnpm vite --port 5299 &   node scripts/companion-shots.mjs <outDir>
 // Env: REVIEW_URL (default http://localhost:5299/dizey/), PLAYWRIGHT_CHROMIUM_PATH.
 import { mkdir } from 'node:fs/promises'
@@ -22,6 +22,7 @@ for (const [w, h] of [
     isMobile: true,
     hasTouch: true,
     colorScheme: 'dark',
+    reducedMotion: process.env.REDUCED === '1' ? 'reduce' : 'no-preference',
   })
   await context.addInitScript(() => {
     for (const prefix of ['', 'dev:']) localStorage.setItem(`${prefix}dizey.onboarding.safari`, '1')
@@ -35,25 +36,28 @@ for (const [w, h] of [
   }
   await page.goto(base)
   await page.waitForSelector('.dz-tab')
-  await shot('1-bugun')
-  await page.locator('.dz-tab').nth(2).click()
+  await shot('1-yol')
+  await page.locator('.dz-tab').nth(1).click()
   await shot('2-sen')
   await page.locator('.dz-tab').nth(0).click()
   await page.waitForTimeout(800)
+  // A lesson's card open over Yol: the duo stays on its anchor under the card's scrim.
+  await page.locator('.pa-tile:not([data-next])').first().click()
+  await shot('3-yol-card')
   await page.goto(`${base}lesson/d1-determinant`)
   await page.waitForSelector('[data-testid="lesson-player"]')
   for (let i = 0; i < 12 && !(await page.locator('.ex-opt').count()); i++) {
     await page.locator('.ls-dock .sh-btn--primary').click()
     await page.waitForTimeout(500)
   }
-  await shot('3-lesson-question')
+  await shot('4-lesson-question')
   const options = page.locator('.ex-opt')
   for (let i = 0; i < (await options.count()); i++) {
     await options.nth(i).click()
     await page.waitForTimeout(300)
     if (await page.getByRole('status').filter({ hasText: 'Doğru' }).count()) break
   }
-  await shot('4-lesson-right')
+  await shot('5-lesson-right')
   // The end screen: straight to the summary step (the e2e walks the whole lesson).
   await page.goto(`${base}lesson/r2-echelon-forms?step=summary`)
   await page.waitForSelector('[data-testid="lesson-player"]')
@@ -61,7 +65,7 @@ for (const [w, h] of [
   await finish.click()
   await page.waitForSelector('[data-testid="lesson-end"]')
   await page.waitForTimeout(2500)
-  await shot('5-lesson-end')
+  await shot('6-lesson-end')
   await context.close()
 }
 await browser.close()

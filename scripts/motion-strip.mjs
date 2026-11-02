@@ -5,13 +5,15 @@
 //
 // Usage: pnpm build && pnpm preview --port 4173 &
 //        node scripts/motion-strip.mjs <scenario> <outDir>
-// Scenarios: companion-tabs and companion-hello (the duo travelling between screens, the cold start), count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
+// Scenarios: companion-tabs, companion-hello and companion-end (the duo travelling between screens, the cold
+// start, into the lesson end), count (lesson counter, forward then back), verdict (a wrong pick, then the right one), press, keypad,
 // tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
 // chapter-test-open / chapter-test-close (alias test-close) (Yol's chapter test node and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
 //        node scripts/pop-check.mjs <outDir>/frames   (exit 1 and the frames and cells when something steps)
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
-// Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390).
+// Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390),
+// REDUCED=1 (film with prefers-reduced-motion: reduce).
 import { execFileSync } from 'node:child_process'
 import { mkdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
@@ -164,6 +166,17 @@ const scenarios = {
       await frames(40)
     },
   },
+  // A lesson's last step to its end screen: the duo flies from the top bar into the end hero and its place in the
+  // top bar closes.
+  'companion-end': {
+    region: 'body',
+    scale: 2,
+    lesson: 'r2-echelon-forms?step=summary',
+    run: async ({ tap, frames }) => {
+      await tap('button:has-text("Dersi bitir")')
+      await frames(75)
+    },
+  },
   'lesson-open': {
     region: 'body',
     scale: 2,
@@ -275,6 +288,7 @@ const context = await browser.newContext({
   isMobile: true,
   hasTouch: true,
   colorScheme: 'dark',
+  reducedMotion: process.env.REDUCED === '1' ? 'reduce' : 'no-preference',
 })
 await context.addInitScript(() => {
   let hook
