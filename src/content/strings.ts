@@ -45,6 +45,7 @@ export const strings = {
   path: {
     title: 'Yol',
     listLabel: 'Dersler',
+    backToNext: 'Sıradakine dön',
     examLine: (days: number, date: string) =>
       days > 0 ? `Vize 1'e ${days} gün · ${date}` : `Vize 1 · ${date}`,
     examWeekLine: (date: string) => `Vize 1 · ${date} civarı`,

@@ -233,7 +233,8 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
   )
 }
 
-function PeekBody({ lesson, onEnter }: { lesson: Lesson; onEnter: () => void }) {
+/** A lesson's card content: its head, how it opens, its shape and the way in. One component for the phone's sheet and the wide screen's card. */
+export function PeekBody({ lesson, onEnter }: { lesson: Lesson; onEnter: () => void }) {
   const records = useLessonRecords()
   const record = records[lesson.id]
   const state = stateOf(record)

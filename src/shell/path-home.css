@@ -114,7 +114,10 @@
   text-decoration: none;
   --node-glow: 0 0 calc(var(--glow, 0) * 26px) calc(var(--glow, 0) * 3px) var(--glow-ok);
   --node-ring: inset 0 0 0 0 transparent;
-  box-shadow: var(--node-ring), var(--node-glow);
+  box-shadow:
+    var(--node-ring),
+    var(--node-glow),
+    0 0 0 calc(var(--pick, 0) * 2px) var(--ink-1);
 }
 /* A source coming home (node, test, gate): the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
 .pa-tile__trace {
@@ -249,6 +252,12 @@
 }
 .ph-slot[data-col="1"] .pa-tile__birim {
   bottom: -28px;
+  left: calc(28px + var(--space-2));
+}
+
+/* Four columns: the spacing grew, not the nodes. Birim stands above the run on the node's upper right, where nothing else reaches it. */
+.ph-root[data-columns="4"] .ph-slot .pa-tile__birim {
+  bottom: 6px;
   left: calc(28px + var(--space-2));
 }
 
@@ -400,4 +409,83 @@
   flex: none;
   min-height: var(--target);
   padding: 0 var(--space-5);
+}
+
+/* ---- Wide screens ------------------------------------------------------------------------------------------ */
+/* A lane is one of the dock's two contents (the next lesson, a picked lesson). On a phone it is not a box at all. */
+.ph-lane {
+  display: contents;
+}
+@media (min-width: 600px) {
+  /* The dock stays the bottom card, but a phone-width one in the middle instead of stretched across the window. */
+  .ph-next-lane {
+    display: block;
+    width: min(100%, var(--column-max));
+    justify-self: center;
+  }
+}
+@media (min-width: 1000px) {
+  /* The path takes the width left of the right column; the paper still runs edge to edge behind everything. */
+  .ph-paper {
+    padding-right: calc(var(--page-gutter) + var(--wide-reserve));
+  }
+  /* "What to do" lives bottom right, its foot level with the tab bar's. */
+  .ph-dock {
+    position: fixed;
+    z-index: 4;
+    right: var(--page-gutter);
+    bottom: var(--bar-bottom);
+    width: var(--card-wide);
+    height: 0;
+    margin: 0;
+    padding: 0;
+    display: block;
+    background: none;
+  }
+  .ph-lane {
+    display: block;
+    position: absolute;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+  }
+  .ph-next-lane {
+    justify-self: auto;
+  }
+  .ph-preview-lane {
+    display: grid;
+    gap: var(--space-1);
+    justify-items: start;
+  }
+}
+.ph-back {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--target);
+  padding: 0 var(--space-2);
+  margin-inline-start: calc(var(--space-2) * -1);
+  border: 0;
+  background: none;
+  border-radius: var(--corner-button);
+  font: inherit;
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-medium);
+  color: var(--ink-2);
+}
+.dz-card.ph-preview {
+  padding: var(--space-5);
+  border-radius: var(--corner-sheet);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-3), var(--edge-light);
+}
+.ph-preview[data-state="done"] {
+  background: var(--ok-tint);
+  box-shadow:
+    var(--shadow-3),
+    inset 0 0 0 1px var(--ok-edge);
+}
+.ph-preview[data-state="done"] .lp__code {
+  color: var(--ok-ink);
 }

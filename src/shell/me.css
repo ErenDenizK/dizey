@@ -409,3 +409,47 @@ section[aria-labelledby="badges"] > .dz-section-label {
   color: var(--ink-1);
   text-decoration: none;
 }
+
+/* ---- Wide screens ------------------------------------------------------------------------------------------- */
+/* The two groups are boxes only where they have to be: under 1000 px they are not a layout box at all. */
+.me-aside {
+  display: contents;
+}
+@media (min-width: 600px) {
+  /* A reading column in the middle; the head, the matrix and the badges keep phone proportions. */
+  .me-page {
+    max-width: var(--column-max);
+    margin-inline: auto;
+  }
+}
+@media (min-width: 1000px) {
+  /* The left area: everything but "what to do", top-aligned on the page gutter. */
+  .me-page {
+    margin-inline: 0;
+  }
+  .sh-pane:has(.me-page) .dz-screen {
+    padding-right: calc(var(--page-gutter) + var(--wide-reserve));
+  }
+  /* What to do (the mistake log and the next badge) is the one card at the bottom right, its foot level with the tab bar's. */
+  .me-aside {
+    position: fixed;
+    z-index: 4;
+    right: var(--page-gutter);
+    bottom: var(--bar-bottom);
+    width: var(--card-wide);
+    display: grid;
+    gap: var(--space-4);
+    max-height: calc(100dvh - var(--bar-bottom) - var(--space-8) * 2);
+    overflow-y: auto;
+    padding: var(--card-pad);
+    border-radius: var(--corner-card);
+    background: var(--surface);
+    box-shadow: var(--shadow-1), var(--edge-light);
+  }
+  .me-aside .dz-section-label {
+    margin-top: 0;
+  }
+  .me-aside:empty {
+    display: none;
+  }
+}

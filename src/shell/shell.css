@@ -1591,3 +1591,22 @@ svg.ls-duo {
   inset: 0;
   z-index: 29;
 }
+
+/* ---- Wide screens: routes and sheets keep phone proportions, centred (from 600 px; below it nothing applies) ---- */
+@media (min-width: 600px) {
+  /* A full-screen route's content (settings, a rehearsal's result) is a centred column; the lesson and rehearsal stages are already max 440. */
+  .sh-overlay__content {
+    max-width: var(--lesson-max);
+    margin-inline: auto;
+  }
+  /* A second-level route presented as a sheet is a centred sheet, not a full-width one. */
+  .sh-overlay[data-present="sheet"] {
+    left: 0;
+    right: 0;
+    max-width: var(--column-max);
+    margin-inline: auto;
+  }
+  .sh-overlay[data-present="sheet"] .sh-overlay__content {
+    max-width: none;
+  }
+}

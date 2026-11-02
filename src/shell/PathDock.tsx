@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { daysUntil, examWeek } from '../content/exam'
 import { lessons } from '../content/lessons'
 import { chapterOf, chapters, pathCode } from '../content/path'
 import { type Question, questions } from '../content/questions'
 import { strings } from '../content/strings'
+import { engine } from '../engine/driver'
 import { QuestionSheet } from '../exam/QuestionSheet'
 import { recordOutcome, useExam } from '../exam/store'
 import { resumeIndex } from '../lesson/progress'
@@ -14,6 +15,7 @@ import { saveDailyAnswer, useDailyAnswer } from '../progress/daily-store'
 import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
 import { Pressable } from '../ui/Pressable'
+import { DockPreview, type Preview } from './DockPreview'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import { type TodayBlock, todayBlocks } from './today-blocks'
@@ -26,7 +28,14 @@ const EXAM_SOON_DAYS = 7
  * button (decision 0012), and under a hairline one thin row of equal cells, each a label over its value (the question of the day, the
  * mistakes to revisit, the rehearsal when the exam is close; none of them ever drawn empty).
  */
-export function PathDock() {
+export function PathDock({
+  preview = null,
+  onBack = () => {},
+}: {
+  /** Wide screens: the lesson picked on the path, whose card takes this slot. */
+  preview?: Preview | null
+  onBack?: () => void
+}) {
   const records = useLessonRecords()
   const { outcomes } = useExam()
   const { examDate } = useSettings()
@@ -87,14 +96,40 @@ export function PathDock() {
   )
 
   return (
-    <div className="ph-dock" data-testid="path-dock">
-      {main ? (
-        <NextLesson lessonId={main.id} count={blocks.length - 1}>
-          {more}
-        </NextLesson>
-      ) : (
-        <AllDone count={blocks.length - 1}>{more}</AllDone>
-      )}
+    <div className="ph-dock" data-testid="path-dock" data-previewing={preview ? '' : undefined}>
+      <NextLane away={preview !== null}>
+        {main ? (
+          <NextLesson lessonId={main.id} count={blocks.length - 1}>
+            {more}
+          </NextLesson>
+        ) : (
+          <AllDone count={blocks.length - 1}>{more}</AllDone>
+        )}
+      </NextLane>
+      <DockPreview preview={preview} onBack={onBack} />
+    </div>
+  )
+}
+
+/**
+ * The slot's usual card. On a phone the lane is transparent to layout (display: contents) and `away` never turns on.
+ * On a wide screen it fades out under a picked lesson's card and back in over the spring engine, never in one frame.
+ */
+function NextLane({ away, children }: { away: boolean; children: React.ReactNode }) {
+  const lane = useRef<HTMLDivElement>(null)
+  const first = useRef(true)
+  useLayoutEffect(() => {
+    const el = lane.current
+    if (!el) return
+    if (first.current) {
+      first.current = false
+      if (!away) return
+    }
+    engine.to(el, { opacity: away ? 0 : 1 }, 'fade')
+  }, [away])
+  return (
+    <div ref={lane} className="ph-lane ph-next-lane" inert={away || undefined}>
+      {children}
     </div>
   )
 }
