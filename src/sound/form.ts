@@ -18,6 +18,9 @@ export type StepKind = 'explain' | 'choice' | 'keypad' | 'summary'
  */
 export type Role = 'open' | 'travel' | 'tension' | 'arrival' | 'coda'
 
+/** A short gesture on a phrase's first beat that answers a key moment (see music.ts flourishNotes). */
+export type Flourish = 'rise' | 'peak' | 'cascade'
+
 export type MusicCue = {
   chord: ChordId
   /** 0–1: how many layers play and how high the line sits. */
@@ -27,6 +30,8 @@ export type MusicCue = {
   act: number
   /** Same for every step of one lesson: picks the lesson's own motif. */
   seed: number
+  /** Played on the first beat of the phrase this cue starts. */
+  flourish?: Flourish
 }
 
 /** Chords that travel: never home (kept for arrivals) and never the dominant (kept for cadences). */
