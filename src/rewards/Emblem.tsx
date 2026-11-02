@@ -12,10 +12,13 @@ export function Emblem({
   badge,
   art,
   className = '',
+  bare = false,
 }: {
   badge: Badge
   art?: string | undefined
   className?: string
+  /** An item, not a slot: the same footprint without the brackets (docs/decisions/0016-bracket-grammar.md). */
+  bare?: boolean
 }) {
   const id = useId().replace(/:/g, '')
   return (
@@ -54,8 +57,12 @@ export function Emblem({
         <rect x="22" y="22" width="76" height="76" rx="22" fill={`url(#${id}-gloss)`} />
         <rect className="emblem__rim" x="22.75" y="22.75" width="74.5" height="74.5" rx="21.25" />
       </g>
-      <path className="emblem__br emblem__br--l" d="M16 20H11V100H16" />
-      <path className="emblem__br emblem__br--r" d="M104 20H109V100H104" />
+      {bare ? null : (
+        <>
+          <path className="emblem__br emblem__br--l" d="M16 20H11V100H16" />
+          <path className="emblem__br emblem__br--r" d="M104 20H109V100H104" />
+        </>
+      )}
     </svg>
   )
 }

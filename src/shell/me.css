@@ -8,7 +8,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-4);
-  margin-top: var(--space-2);
+  margin-top: 0;
   padding: 0;
 }
 /*
@@ -37,6 +37,8 @@
   display: grid;
   justify-items: start;
   gap: 0;
+  /* Clear of the settings button, which floats over the head's right edge. */
+  padding-inline-end: calc(var(--target) + var(--space-2));
 }
 .me-name {
   display: grid;
@@ -80,8 +82,11 @@
 .me-name[data-editing] .me-name__text {
   pointer-events: none;
 }
+/* The name keeps its full 48 px target; the title tucks up into the name's empty padding so the two read as one title/subtitle stack. */
 .me-title {
-  margin: 0;
+  position: relative;
+  margin: calc((var(--leading-title3) - var(--target)) / 2) 0 0;
+  pointer-events: none;
   font-size: var(--type-footnote);
   line-height: var(--leading-footnote);
   letter-spacing: var(--tracking-small);
@@ -117,6 +122,9 @@ section[aria-labelledby="badges"] > .dz-section-label {
   gap: var(--space-0-5);
   min-width: 0;
   text-align: center;
+}
+.me-matrix__n[data-zero] {
+  color: var(--ink-2);
 }
 .me-matrix__n {
   font-size: var(--type-title3);
@@ -389,7 +397,8 @@ section[aria-labelledby="badges"] > .dz-section-label {
   place-items: center;
   width: 44px;
   height: 44px;
-  margin-right: var(--space-2);
+  /* Right edge on the page gutter; top level with the avatar slot (the scene starts one page-top step under the safe area, the float starts one space-2 step). */
+  margin: calc(var(--space-3) - var(--space-2)) var(--space-2) 0 0;
   border-radius: var(--corner-pill);
   background: var(--surface-raised);
   box-shadow:
