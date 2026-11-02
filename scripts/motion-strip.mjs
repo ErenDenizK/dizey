@@ -7,7 +7,7 @@
 //        node scripts/motion-strip.mjs <scenario> <outDir>
 // Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), birim-answer (the
 // same, filmed on the whole dock so Birim's spring into the verdict shows), press, keypad,
-// tabs, sheet, progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
+// tabs, sheet, dock-swap (wide: W=1180), progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
 // chapter-test-open / chapter-test-close (alias test-close) (Yol's chapter test node and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
 //        node scripts/pop-check.mjs <outDir>/frames   (exit 1 and the frames and cells when something steps)
@@ -154,6 +154,18 @@ const scenarios = {
         .locator('.dz-scrim')
         .first()
         .click({ position: { x: 20, y: 20 } })
+      await frames(50)
+    },
+  },
+  // Wide screens (W=1180): a picked lesson swaps into the bottom-right card and "Sıradakine dön" swaps it back.
+  'dock-swap': {
+    region: 'body',
+    scale: 2,
+    prep: toYol,
+    run: async ({ tap, frames }) => {
+      await tap('.pa-tile:not([data-next])')
+      await frames(50)
+      await tap('[data-testid="dock-back"]')
       await frames(50)
     },
   },
