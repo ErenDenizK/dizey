@@ -47,12 +47,17 @@ export function MeView() {
         </PressLink>
       }
     >
-      <Scene />
-      <ProfileMatrix />
-      <MistakeLog />
-      <NextBadge />
-      <BadgeShelf />
-      <SecretMoments />
+      <div className="me-page">
+        <Scene />
+        <ProfileMatrix />
+        {/* "What to do": under 1000 px these two sit in the page; from 1000 px they move into the bottom-right card. */}
+        <div className="me-aside" data-testid="me-aside">
+          <MistakeLog />
+          <NextBadge />
+        </div>
+        <BadgeShelf />
+        <SecretMoments />
+      </div>
     </Screen>
   )
 }

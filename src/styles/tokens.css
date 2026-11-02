@@ -215,6 +215,16 @@
   --bar-bottom: max(14px, calc(env(safe-area-inset-bottom) - 10px));
   --bar-clearance: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
   --nav-height: 48px; /* top bar */
+  /*
+   * Wide screens. Breakpoints cannot be tokens in a media query, so they live here in words: from 600 px the
+   * path walks four columns and the app stops being a phone column; from 1000 px "what to do" moves to a card at
+   * the bottom right (src/shell/path-home.css, me.css). Under 600 nothing changes.
+   */
+  --column-max: 560px; /* a reading column on a wide screen (the dock card, Sen's head and badges) */
+  --card-wide: 360px; /* the bottom-right card from 1000 px */
+  --wide-reserve: calc(var(--card-wide) + var(--page-gutter) * 2); /* the right column, gutters included */
+  --bar-width: 360px; /* the floating tab bar on a wide screen: phone width */
+  --lesson-max: 640px; /* a lesson or rehearsal stage keeps phone proportions */
 
   /* ---- Radius: concentric (outer = inner + padding) -------------------- */
   --corner-device: 55px; /* current iPhone screen corners, for full-bleed surfaces */

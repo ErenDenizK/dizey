@@ -15,27 +15,6 @@
   background: var(--backdrop);
 }
 
-/*
- * Wider than a phone (a computer or a tablet window): the app stays a phone-width column in the middle
- * instead of stretching cards across the screen. No device mock around it, just the app on the page's own
- * background. The transform makes the column the containing block for the full-screen layers inside it
- * (lesson, exam run, sheets), so they stay in the column too.
- */
-@media (min-width: 600px) {
-  html,
-  body {
-    background: var(--bg);
-  }
-  .dz-app {
-    width: min(100%, 460px);
-    margin-inline: auto;
-    transform: translateZ(0);
-    box-shadow:
-      0 0 0 0.5px var(--hairline),
-      0 24px 80px -24px oklch(0 0 0 / 0.5);
-  }
-}
-
 /* Everything that recedes behind a sheet lives in the stage. */
 .dz-stage {
   position: absolute;
@@ -664,4 +643,43 @@
 /* Expander (src/ui/Expander.tsx): the body clips while its height springs. */
 .dz-expander {
   overflow: hidden;
+}
+
+/*
+ * Wider than a phone (a tablet or a computer window): the frame takes the whole window and the screens inside it
+ * lay themselves out (the path walks four columns, the tab bar stays phone-sized and centred, sheets and lessons
+ * keep a phone-proportioned column in the middle). Under 600 px nothing here applies. The transform makes the
+ * frame the containing block for the full-screen layers inside it (lesson, exam run, sheets).
+ */
+@media (min-width: 600px) {
+  html,
+  body {
+    background: var(--bg);
+  }
+  .dz-app {
+    transform: translateZ(0);
+  }
+  .dz-tabbar {
+    left: calc(50% - var(--bar-width) / 2);
+    right: auto;
+    width: var(--bar-width);
+  }
+  /* Sheets keep a phone-proportioned width, centred. */
+  .dz-sheet {
+    max-width: var(--column-max);
+    margin-inline: auto;
+  }
+  /* Sen's one floating action stays on its column's right edge. */
+  .dz-float-action {
+    right: calc(max(var(--page-gutter), (100% - var(--column-max)) / 2) - var(--space-2));
+  }
+}
+/* From 1000 px the left area (everything but the right column) holds the screens and the tab bar. */
+@media (min-width: 1000px) {
+  .dz-tabbar {
+    left: calc((100% - var(--wide-reserve)) / 2 - var(--bar-width) / 2);
+  }
+  .dz-float-action {
+    right: calc(100% - var(--page-gutter) - var(--column-max) - var(--space-2));
+  }
 }
