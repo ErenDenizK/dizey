@@ -60,6 +60,22 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     const tile = shown.tile
     const radius = Number.parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0
     clipWith(el)
+    el.style.opacity = ''
+    if (engine.reducedMotion) {
+      // Reduced motion: nothing grows out of the tile (a clip would land in one frame); the card fades in
+      // where it rests, over the dimming map.
+      engine.set(el, { t: 0, r: 0, b: 0, l: 0, rad: radius, y: 0 })
+      engine.set(body, { opacity: 1, y: 0 })
+      if (scrim.current) engine.set(scrim.current, { opacity: 0 })
+      playSound('open')
+      engine.withChannel('chrome', () => {
+        fadeSurface(el, 0, 1)
+        if (scrim.current) engine.to(scrim.current, { opacity: CHOREO.sheetScrim }, 'fade')
+      })
+      return () => {
+        tile.style.visibility = ''
+      }
+    }
     // A card opened while the last one is still folding measures its tile with the map at rest.
     const { start, face } = atRest(() => ({ start: insets(el, tile), face: faceOf(el, tile) }))
     engine.set(el, { ...start, y: 0 })
@@ -71,7 +87,8 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     const stage = stageRef.current
     engine.withChannel('chrome', () => {
       // The map behind recedes as one layer; the scrim does the dimming.
-      if (stage) engine.to(stage, { scale: CHOREO.sheetRecede }, 'page')
+      // Under reduced motion the map only dims: a scale would land in one frame.
+      if (stage && !engine.reducedMotion) engine.to(stage, { scale: CHOREO.sheetRecede }, 'page')
       engine.to(el, { t: 0, r: 0, b: 0, l: 0, rad: radius }, 'page', { launch: 0.4 })
       engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
       if (scrim.current) engine.to(scrim.current, { opacity: CHOREO.sheetScrim }, 'fade')
@@ -90,6 +107,17 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     if (peek || !shown || !el || !body || closing.current) return
     closing.current = true
     const tile = shown.tile
+    if (engine.reducedMotion) {
+      playSound('close')
+      engine.withChannel('chrome', () => {
+        if (scrim.current) engine.to(scrim.current, { opacity: 0 }, 'fade')
+        fadeSurface(el, 1, 0, () => {
+          tile.style.visibility = ''
+          setShown((current) => (current === shown ? null : current))
+        })
+      })
+      return
+    }
     const lift = engine.value(el, 'y')
     // The tile is measured where it will come to rest: the map behind is still receded.
     const stage = stageRef.current
@@ -277,4 +305,15 @@ function PeekBody({ lesson, onEnter }: { lesson: Lesson; onEnter: () => void }) 
       </PressLink>
     </>
   )
+}
+
+/** The card's own opacity, through a stand-in target: the card's engine state already draws its clip. */
+function fadeSurface(el: HTMLElement, from: number, to: number, onArrive?: () => void) {
+  const fader = {}
+  engine.bind(fader, (v) => {
+    el.style.opacity = String(v.opacity ?? 1)
+  })
+  el.style.opacity = String(from)
+  engine.set(fader, { opacity: from })
+  engine.to(fader, { opacity: to }, 'fade', { onArrive: () => onArrive?.() })
 }

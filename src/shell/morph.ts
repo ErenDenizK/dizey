@@ -37,6 +37,17 @@ export function isRound(card: HTMLElement) {
   return (width < 64 && height < 64) || radius >= Math.min(width, height) / 2 - 0.5
 }
 
+/**
+ * Folding back, only a truly round or icon-sized source (under 50 px) closes as a circle. A 56 px path node is a
+ * rounded square: it takes the inset clip, so the fold lands on its own corners instead of a circle that hands
+ * over to the square's corners in one frame. (Opening keeps `isRound`: growing out of a circle has no handover.)
+ */
+export function landsRound(card: HTMLElement) {
+  const { width, height } = card.getBoundingClientRect()
+  const radius = Number.parseFloat(getComputedStyle(card).borderTopLeftRadius) || 0
+  return (width < 50 && height < 50) || radius >= Math.min(width, height) / 2 - 0.5
+}
+
 /** The source's circle in the surface's own coordinates, and the radius that covers the whole surface. */
 export function circleOf(surface: HTMLElement, card: HTMLElement) {
   const outer = surface.getBoundingClientRect()

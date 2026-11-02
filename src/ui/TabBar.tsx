@@ -104,7 +104,20 @@ export function TabBar<Id extends string>({
   useEffect(() => {
     const el = bar.current
     if (!el) return
-    engine.withChannel('chrome', () => engine.to(el, { y: hidden ? el.offsetHeight + 48 : 0 }, 'page'))
+    const away = el.offsetHeight + 48
+    engine.withChannel('chrome', () => {
+      if (!engine.reducedMotion) {
+        engine.to(el, { y: hidden ? away : 0, opacity: 1 }, 'page')
+        return
+      }
+      // Reduced motion: no slide (it would land in one frame); the bar fades out where it is, then steps
+      // aside unseen, and comes back the same way.
+      if (hidden) engine.to(el, { opacity: 0 }, 'fade', { onArrive: () => engine.set(el, { y: away }) })
+      else {
+        engine.set(el, { y: 0 })
+        engine.to(el, { opacity: 1 }, 'fade')
+      }
+    })
   }, [hidden])
 
   // Scrub gesture.
