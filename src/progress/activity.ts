@@ -4,8 +4,8 @@ import { dayKey } from './daily'
 import type { ExamOutcomes } from './mistakes'
 
 export const ACTIVITY_VERSION = 1
-/** Recorded days kept; older ones are no use to a week strip. */
-export const ACTIVITY_KEEP = 60
+/** Recorded days kept (about three years): Sen counts them, so they must not fall away. */
+export const ACTIVITY_KEEP = 1100
 
 /** Reads the recorded activity days; anything unreadable or old reads as none. */
 export function parseActivity(raw: string | null): string[] {
@@ -56,17 +56,4 @@ export function activityDays({ recorded, records, history, outcomes, chapters }:
   for (const outcome of Object.values(outcomes)) add(outcome.at)
   for (const chapter of Object.values(chapters)) add(chapter.at)
   return days
-}
-
-export type StripDay = { key: string; weekday: number; today: boolean; future: boolean; active: boolean }
-
-/** The week containing `now`, Monday first: seven days with whether each had activity. */
-export function weekStrip(now: Date, active: ReadonlySet<string>): StripDay[] {
-  const sinceMonday = (now.getDay() + 6) % 7
-  const todayKey = dayKey(now)
-  return Array.from({ length: 7 }, (_, weekday) => {
-    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - sinceMonday + weekday)
-    const key = dayKey(date)
-    return { key, weekday, today: key === todayKey, future: key > todayKey, active: active.has(key) }
-  })
 }

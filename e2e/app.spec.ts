@@ -168,7 +168,7 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   await expect(sheet).toHaveCount(0)
   await expect(card).toContainText('Yarın yenisi')
   await expect(card).toHaveAttribute('data-state', right ? 'right' : 'wrong')
-  // Answered stays answered across a reload, and the day shows on the week strip.
+  // Answered stays answered across a reload, and the day counts in Sen's matrix.
   await page.reload()
   await expect(screen(page).getByTestId('today-daily')).toContainText('Yarın yenisi')
   await expect(screen(page).getByTestId('today-daily')).toHaveAttribute(
@@ -177,8 +177,7 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   )
   await expect(screen(page).getByTestId('today-week')).toHaveCount(0)
   await tab(page, 'Sen').click()
-  await expect(screen(page).locator('[data-testid="week-strip"] [data-active="true"]')).toHaveCount(1)
-  await expect(screen(page).getByTestId('week-summary')).toHaveText('Bu hafta 1 gün çalıştın')
+  await expect(screen(page).getByTestId('stat-days').locator('.me-matrix__n')).toHaveText('1')
   await tab(page, 'Yol').click()
   await expect(screen(page).getByTestId('today-review')).toHaveCount(right ? 0 : 1)
 })
@@ -213,10 +212,40 @@ test('Yol has one primary action and the question chip opens its sheet from anyw
   await expect(page.getByTestId('question-sheet')).toBeVisible()
 })
 
-test('the week strip lives on Sen, not on Yol', async ({ page }) => {
+test('no week strip anywhere: Yol and Sen count up and never show a missed day', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByTestId('today-next')).toBeVisible()
-  await expect(screen(page).getByTestId('week-strip')).toHaveCount(0)
+  await expect(page.getByTestId('week-strip')).toHaveCount(0)
+  await tab(page, 'Sen').click()
+  await expect(page.getByTestId('week-strip')).toHaveCount(0)
+  await expect(page.getByTestId('week-summary')).toHaveCount(0)
+})
+
+test('Yol: the graph paper is the whole screen background and scrolls with the content', async ({ page }) => {
+  await openApp(page)
+  const paper = await page.evaluate(() => {
+    const scroller = document.querySelector<HTMLElement>('.sh-pane:not([inert]) .dz-screen')
+    if (!scroller) return null
+    const style = getComputedStyle(scroller)
+    return {
+      image: style.backgroundImage,
+      attachment: style.backgroundAttachment,
+      scrollHeight: scroller.scrollHeight,
+      clientHeight: scroller.clientHeight,
+      fieldHeight: document.querySelector<HTMLElement>('.sh-pane:not([inert]) .ph-field')?.offsetHeight ?? 0,
+    }
+  })
+  expect(paper).not.toBeNull()
+  expect(paper?.image).toContain('linear-gradient')
+  expect(paper?.attachment).toContain('local')
+  // The paper is the scroller's own background, so it spans its full scroll height (not just the path).
+  expect(paper?.scrollHeight ?? 0).toBeGreaterThan(paper?.fieldHeight ?? 0)
+  const bare = await page.evaluate(
+    () =>
+      getComputedStyle(document.querySelector('.sh-pane:not([inert]) .ph-field') as HTMLElement)
+        .backgroundImage,
+  )
+  expect(bare).toBe('none')
 })
 
 test('a lesson end offers one exam question on its topic', async ({ page }) => {
@@ -288,16 +317,23 @@ test('a wrong first try lands in the mistake log and leaves it when fixed', asyn
   await expect(screen(page).getByRole('region', { name: /Hata defteri/ })).toHaveCount(0)
 })
 
-test('Sen is a profile scene: duo and your week, mistakes, badge shelf, moments and the gear', async ({
+test('Sen is a profile scene: duo, name, your matrix, mistakes, badge shelf, moments and the gear', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await openApp(page, './me')
   const sen = screen(page)
   await expect(sen.getByTestId('me-scene')).toBeVisible()
-  // The week is always there; with no study it invites instead of counting zero.
-  await expect(sen.getByTestId('me-scene').getByTestId('week-strip')).toBeVisible()
-  await expect(sen.getByTestId('week-summary')).toHaveText('Bu hafta ilk gün seni bekliyor')
+  // The matrix is always there, honestly zero before any study; the week strip is gone.
+  await expect(sen.getByTestId('me-matrix').locator('.me-matrix__n')).toHaveText([
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+    '0',
+  ])
+  await expect(sen.getByTestId('week-strip')).toHaveCount(0)
   await expect(sen.getByTestId('me-scene')).not.toContainText(/\/ \d+ ders/)
   // Nothing settings-like lives here; the mistake row is hidden while the log is empty.
   await expect(sen.getByRole('switch')).toHaveCount(0)
@@ -1253,5 +1289,90 @@ test.describe('Yol, the path home', () => {
     await button.click()
     await expect(page.getByTestId('app-version')).toBeVisible()
     await expect(pushed(page)).toHaveAttribute('data-present', 'push')
+  })
+})
+
+test.describe('Sen, the profile', () => {
+  /** Chapter 1 (ten lessons) done; first answers: 7 right and 3 wrong in all, 2 of the wrong ones cleared. */
+  const seedChapterOne = async (page: Page) => {
+    const ids = [
+      'm1-reading-a-matrix',
+      'm2-matrix-types',
+      'm4-matrix-arithmetic',
+      'm5-matrix-product',
+      'm3-trace',
+      'm6-transpose',
+      'm7-symmetric-antisymmetric',
+      'm8-power-classes',
+      'm9-orthogonal',
+      'm10-conjugate-hermitian',
+    ]
+    const records = Object.fromEntries(
+      ids.map((id, n) => [
+        id,
+        {
+          at: null,
+          doneAt: 1700000000000 + n * 86_400_000,
+          answers: { q1: { given: 'x', correct: n >= 3 } },
+          ...(n < 2 ? { cleared: { q1: 1700000000000 + n * 86_400_000 } } : {}),
+        },
+      ]),
+    )
+    await page.addInitScript(
+      ([key, value]) => localStorage.setItem(key as string, value as string),
+      [`${prefix}dizey.lessons`, JSON.stringify(records)],
+    )
+  }
+
+  test('a fresh Sen asks for a name and starts at the first title', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await openApp(page, './me')
+    const sen = screen(page)
+    await expect(sen.getByTestId('me-name')).toHaveText('Adını yaz')
+    await expect(sen.getByTestId('me-title')).toHaveText('Yola yeni çıktın')
+    await expect(sen.getByTestId('me-matrix').locator('li')).toHaveCount(6)
+    await expect(sen.getByRole('heading', { name: 'Senin matrisin' })).toBeVisible()
+  })
+
+  test('the matrix and the title follow progress', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await seedChapterOne(page)
+    await openApp(page, './me')
+    const sen = screen(page)
+    await expect(sen.getByTestId('me-title')).toHaveText('Matris okuru')
+    const figure = (key: string) => sen.getByTestId(`stat-${key}`).locator('.me-matrix__n')
+    await expect(figure('lessons')).toHaveText('10')
+    await expect(figure('answered')).toHaveText('10')
+    await expect(figure('firstTry')).toHaveText('7')
+    await expect(figure('days')).toHaveText('10')
+    await expect(figure('fixed')).toHaveText('2')
+    await expect(figure('badges')).toHaveText(/^[1-9]/)
+  })
+
+  test('the name is typed in place, saved with Enter and survives a reload', async ({ page }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' })
+    await openApp(page, './me')
+    const sen = screen(page)
+    await sen.getByTestId('me-name').click()
+    const input = sen.getByRole('textbox', { name: 'Adın' })
+    await expect(input).toBeFocused()
+    expect(
+      await input.evaluate((el) => Number.parseFloat(getComputedStyle(el).fontSize)),
+    ).toBeGreaterThanOrEqual(16)
+    await input.fill('Eren')
+    await input.press('Enter')
+    await expect(sen.getByTestId('me-name')).toHaveText('Eren')
+    await page.reload()
+    await expect(screen(page).getByTestId('me-name')).toHaveText('Eren')
+    // Escape drops an edit; an empty name is no name.
+    await tab(page, 'Sen').click()
+    await screen(page).getByTestId('me-name').click()
+    await screen(page).getByRole('textbox', { name: 'Adın' }).fill('Başkası')
+    await page.keyboard.press('Escape')
+    await expect(screen(page).getByTestId('me-name')).toHaveText('Eren')
+    await screen(page).getByTestId('me-name').click()
+    await screen(page).getByRole('textbox', { name: 'Adın' }).fill('   ')
+    await page.keyboard.press('Enter')
+    await expect(screen(page).getByTestId('me-name')).toHaveText('Adını yaz')
   })
 })
