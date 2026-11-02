@@ -219,10 +219,10 @@
    with it natively. It leans out to the outer side, where no run reaches it. */
 .pa-tile__birim {
   position: absolute;
-  bottom: 20px;
+  bottom: 36px;
   left: -20px;
   pointer-events: none;
-  z-index: 1;
+  z-index: 2;
 }
 .ph-slot[data-col="0"] .pa-tile__birim {
   left: -34px;
