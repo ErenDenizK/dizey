@@ -11,7 +11,7 @@ import { LessonPeek, type Peek } from './LessonPeek'
 import { PathDock } from './PathDock'
 import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet, TileBirim } from './PathNodes'
 import { useCelebrations } from './path-effects'
-import { COL_X, layoutPath } from './path-layout'
+import { columnsAt, layoutPath } from './path-layout'
 import { overlayHostRef } from './stage'
 import './path-home.css'
 
@@ -33,6 +33,7 @@ export function PathHome() {
   const reached = main ? (mainNode?.index ?? -1) : Number.POSITIVE_INFINITY
 
   const root = useRef<HTMLDivElement>(null)
+  const columns = columnsAt(useWidth(root))
   useCelebrations(root, records)
   useWalked(root, reached)
   useOpening(root, main?.id ?? null)
@@ -50,8 +51,8 @@ export function PathHome() {
                   data-axis={seg.axis}
                   data-to={seg.to}
                   data-faint={seg.to > reached || undefined}
-                  x1={`${COL_X[seg.x1]}%`}
-                  x2={`${COL_X[seg.x2]}%`}
+                  x1={columns[seg.x1]}
+                  x2={columns[seg.x2]}
                   y1={seg.y1}
                   y2={seg.y2}
                 />
@@ -92,7 +93,7 @@ export function PathHome() {
                     data-kind={node.kind}
                     data-current={current || undefined}
                     data-col={node.col}
-                    style={{ left: `${COL_X[node.col]}%`, top: node.y }}
+                    style={{ left: columns[node.col], top: node.y }}
                   >
                     {node.lesson ? (
                       <LessonNode
@@ -127,6 +128,21 @@ export function PathHome() {
         : null}
     </Screen>
   )
+}
+
+/** The path's width in px, measured before the first paint and kept current, so the columns can sit on whole pixels. */
+function useWidth(root: React.RefObject<HTMLElement | null>): number {
+  const [width, setWidth] = useState(390)
+  useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    const read = () => setWidth(el.clientWidth || 390)
+    read()
+    const watch = new ResizeObserver(read)
+    watch.observe(el)
+    return () => watch.disconnect()
+  }, [root])
+  return width
 }
 
 /**

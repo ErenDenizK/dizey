@@ -19,6 +19,15 @@ export const HEAD_TOP = 28
 /** Space under the last row (px). */
 export const TAIL = 56
 
+/**
+ * The two columns' x in whole CSS px for a path of this width. Fractional positions (28% of 390 is 109.2) land
+ * between device pixels and blur the 4 px runs and the tiles' edges; rounding here puts every node and every
+ * run endpoint on the same whole pixel.
+ */
+export function columnsAt(width: number): readonly [number, number] {
+  return [Math.round((width * COL_X[0]) / 100), Math.round((width * COL_X[1]) / 100)]
+}
+
 export type PathNode = {
   /** Position in the whole walk, from 0. */
   index: number
