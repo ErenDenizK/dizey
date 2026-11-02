@@ -12,7 +12,7 @@
   padding: 0;
 }
 /*
- * The avatar slot: a fixed box, 72 px wide and up to 96 px tall, whatever fills it (a square, a round or a tall
+ * The avatar slot: a fixed box, 112 px square (88 px on a short phone), whatever fills it (a square, a round or a tall
  * character) stands centred at the bottom. Nothing in the head depends on the shape inside.
  */
 .me-avatar {
@@ -20,9 +20,15 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  width: 72px;
-  height: 96px;
+  width: 112px;
+  height: 112px;
   overflow: visible;
+}
+@media (max-height: 700px) {
+  .me-avatar {
+    width: 88px;
+    height: 88px;
+  }
 }
 /* Whatever stands in the slot is held to the box, not to its own size. */
 .me-avatar > * {

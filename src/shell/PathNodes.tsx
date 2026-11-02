@@ -1,6 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { Mirtis } from '../character/Mirtis'
 import type { Lesson } from '../content/lessons/types'
 import { type Chapter, pathCode, tileTitle } from '../content/path'
 import { questions } from '../content/questions'
@@ -254,41 +253,4 @@ export function ChapterTestNode({
       )}
     </Pressable>
   )
-}
-
-/**
- * Mırtis on the lesson you are on, inline in that node's slot (the same scrolling layer as its tile). When the lesson
- * you are on changes, the old one fades out and the new one fades in; nothing appears or vanishes in one frame.
- */
-/** The first Mırtis the app shows after it opens wakes up: from asleep, stretching, into her resting pose. */
-let woken = false
-
-export function TileMirtis({ on }: { on: boolean }) {
-  const [wake] = useState(() => !woken)
-  useLayoutEffect(() => {
-    woken = true
-  }, [])
-  const box = useRef<HTMLSpanElement>(null)
-  const [shown, setShown] = useState(on)
-  const first = useRef(true)
-  useLayoutEffect(() => {
-    if (on) setShown(true)
-  }, [on])
-  // biome-ignore lint/correctness/useExhaustiveDependencies: `shown` re-runs this once the span has mounted
-  useLayoutEffect(() => {
-    const el = box.current
-    if (!el) return
-    if (first.current) {
-      first.current = false
-      engine.set(el, { opacity: 0 })
-    }
-    engine.withChannel('chrome', () =>
-      engine.to(el, { opacity: on ? 1 : 0 }, 'fade', { onArrive: () => !on && setShown(false) }),
-    )
-  }, [on, shown])
-  return shown ? (
-    <span ref={box} className="pa-tile__mirtis" aria-hidden="true">
-      <Mirtis size="path" wake={wake} />
-    </span>
-  ) : null
 }

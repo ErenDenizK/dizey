@@ -320,9 +320,9 @@ describe('rig', () => {
       }
   })
 
-  it('maps every app size to a rig: busts under 48 px use the small LOD', () => {
-    expect(RIG_OF.answer).toEqual({ lod: 'small', head: true })
-    expect(RIG_OF.path).toEqual({ lod: 'small', head: true })
+  it('maps every app size to a rig: no size is under 48 px; only the profile is a bust', () => {
+    expect(RIG_OF.verdict).toEqual({ lod: 'full', head: false })
+    expect(RIG_OF.dock).toEqual({ lod: 'full', head: false })
     expect(RIG_OF.profile).toEqual({ lod: 'full', head: true })
     expect(RIG_OF.hero).toEqual({ lod: 'full', head: false })
   })
