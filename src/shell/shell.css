@@ -780,6 +780,7 @@ a.sh-node {
 }
 /* The verdict takes the options' place in the dock; the question stays on screen above it. */
 .ls-verdict {
+  position: relative;
   display: grid;
   gap: var(--space-3);
   padding: var(--card-pad);
@@ -1359,7 +1360,11 @@ a.dz-button[data-kind="primary"] {
 /* The lesson end's Mırtis: inline in the stage; it wears the glow (--glow) set on it. */
 svg.ls-duo {
   display: block;
-  width: clamp(96px, 26vh, 150px);
+  /* The hero, and the smaller one while a rozet shows. --badge (0..1) is an engine value on the stage (LessonEnd.tsx),
+     so the size glides between the two instead of jumping. */
+  --hero-full: clamp(128px, 30vh, 176px);
+  --hero-badge: clamp(96px, 16vh, 128px);
+  width: calc(var(--hero-full) + (var(--hero-badge) - var(--hero-full)) * var(--badge, 0));
 }
 .ls-seal {
   display: grid;
@@ -1530,14 +1535,8 @@ svg.ls-duo {
 .ls-seal[hidden] {
   display: none;
 }
-/* While a new rozet shows, the duo steps back so the emblem and its sentence fit any phone. */
-.ls-end__stage[data-badge] svg.ls-duo {
-  width: clamp(72px, 14vh, 120px);
-}
+/* While a new rozet shows, the duo steps back (--badge, above) so the emblem and its sentence fit any phone. */
 @media (max-height: 700px) {
-  .ls-end__stage[data-badge] svg.ls-duo {
-    width: 64px;
-  }
   .ls-end__stage[data-badge] .badge-reveal__emblem {
     width: 88px;
   }
@@ -1596,7 +1595,8 @@ svg.ls-duo {
    seal or the badge instead of clipping the heads. */
 @media (max-height: 700px) {
   svg.ls-duo {
-    width: clamp(88px, 20vh, 150px);
+    --hero-full: clamp(112px, 24vh, 152px);
+    --hero-badge: clamp(80px, 13vh, 96px);
   }
 }
 

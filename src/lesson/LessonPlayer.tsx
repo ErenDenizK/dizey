@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Mirtis, type MirtisMood } from '../character/Mirtis'
+import { Perch } from '../character/Perch'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -581,6 +582,9 @@ function Score({ lesson }: { lesson: Lesson }) {
   return <p className="ls-score">{strings.lesson.score(correct, total)}</p>
 }
 
+/** ms the verdict's cat waits, so her rise starts after the dock's entrance hold and reads as one continuous motion. */
+const VERDICT_PERCH_DELAY = 90
+
 type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
 
 /**
@@ -614,8 +618,11 @@ function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt;
   const right = step.kind === 'choice' ? step.options.find((option) => option.key === step.answer) : undefined
   return (
     <section className="ls-verdict" role="status" data-tone={tone} aria-label={title}>
+      {/* Perched on the sheet's top edge at the right; she rises just after the dock's own entrance. */}
+      <Perch right={16} delay={VERDICT_PERCH_DELAY}>
+        <Mirtis size="verdict" mood={mood} />
+      </Perch>
       <p className="ls-verdict__title">
-        <Mirtis size="answer" mood={mood} />
         {title}
         {given.length ? (
           <span className="ls-verdict__given">

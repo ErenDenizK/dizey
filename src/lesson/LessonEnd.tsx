@@ -71,6 +71,16 @@ export function LessonEnd({
     unshown(earnedBadges({ records, history, moments })).slice(0, BADGE_MAX),
   )
   const [badge, setBadge] = useState<Badge | null>(null)
+  // The hero steps back while a rozet shows: --badge (0..1) glides on the engine, the CSS turns it into the width.
+  const stage = useRef<HTMLDivElement>(null)
+  const shown = badge !== null
+  useLayoutEffect(() => {
+    const el = stage.current
+    if (!el) return
+    const goal = shown ? 1 : 0
+    if (engine.value(el, '--badge') === goal) return
+    engine.withChannel(END_CHANNEL, () => engine.to(el, { '--badge': goal }, 'glide', { effect: true }))
+  }, [shown])
   // biome-ignore lint/correctness/useExhaustiveDependencies: the ceremony plays once, when the screen opens
   useLayoutEffect(() => {
     const el = root.current
@@ -143,7 +153,7 @@ export function LessonEnd({
     <div ref={root} className="ls-end" data-testid="lesson-end">
       {/* biome-ignore lint/a11y/noStaticElementInteractions: the tap only skips motion; nothing is lost without it */}
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: as above */}
-      <div className="ls-end__stage" data-badge={badge ? '' : undefined} onClick={land}>
+      <div ref={stage} className="ls-end__stage" data-badge={badge ? '' : undefined} onClick={land}>
         <i className="ls-end__halo" aria-hidden="true" />
         <Mirtis ref={duo} size="hero" className="ls-duo" />
         {badge ? (
