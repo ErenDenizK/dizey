@@ -96,8 +96,8 @@ export function Gate() {
 }
 
 /**
- * One lesson on the path: a rounded square. Done is green with a tick (a ring in the bad ink when the first
- * tries were weak), the lesson you are on is larger and solid-bright and opens in one tap, any other opens its card
+ * One lesson on the path: a rounded square. Done is a quiet green tint with a tick (a small dot in the bad ink
+ * on its corner when the first tries were weak), the lesson you are on is larger and solid-bright and opens in one tap, any other opens its card
  * (no locks).
  */
 export function LessonNode({
@@ -121,7 +121,10 @@ export function LessonNode({
   )
   const resuming = main && state === 'current' && record
   const face = (
-    <>{state === 'done' ? <Tick /> : <span className="pa-tile__code num">{pathCode(lesson)}</span>}</>
+    <>
+      {state === 'done' ? <Tick /> : <span className="pa-tile__code num">{pathCode(lesson)}</span>}
+      {state === 'done' && level === 'bad' ? <WeakFlag /> : null}
+    </>
   )
   return main ? (
     <PressLink
@@ -161,6 +164,18 @@ export function LessonNode({
       {face}
     </Pressable>
   )
+}
+
+/** A finished lesson whose first tries were weak: a small dot on the node's corner that fades in with it. */
+function WeakFlag() {
+  const dot = useRef<HTMLSpanElement>(null)
+  useLayoutEffect(() => {
+    const el = dot.current
+    if (!el) return
+    engine.set(el, { opacity: 0 })
+    engine.to(el, { opacity: 1 }, 'fade')
+  }, [])
+  return <span ref={dot} className="pa-tile__flag" aria-hidden="true" />
 }
 
 /** The one quiet mark of a finished lesson. */
