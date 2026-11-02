@@ -36,3 +36,7 @@ Two Dersler scroll effects shipped and were rejected: a focus lens (each tile an
 ## 2026-11-01: a chrome fix checked on one scroll position hid the title at the other
 
 A taller top fade for the floating back button (ed00d73) was checked only on a scrolled page; at scroll 0 it sat over the large "Ayarlar" title and hid it, and Eren found it. Lesson: chrome that overlays scrolling content has two states, and both need a look. Guard: pushed screens are checked at scroll 0 and scrolled; the e2e settings test asserts the top fade is transparent at scroll 0 and visible once scrolled.
+
+## 2026-11-02: an overlay that tracks scrolled content through JavaScript always lags a frame on iOS
+
+The companion (0014) lived in a fixed layer and followed anchors inside scrolling pages by reading their rects. On iOS the compositor scrolls the page on its own thread, so a JavaScript read is a frame behind and the character trembled against its anchor; sized from a measured rect it was also never crisp. Lesson: a thing that belongs to scrolling content lives in that content's layer (inline, in the card) so the compositor moves both together. Guard: `e2e/birim.spec.ts` scrolls Yol and asserts the Birim's rect moves exactly with its tile (difference under 1 px).

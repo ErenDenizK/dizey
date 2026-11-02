@@ -1,5 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Birim } from '../character/Birim'
+import type { BirimMood } from '../character/birim'
 import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
@@ -7,14 +9,12 @@ import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
-import { CompanionSlot } from '../shell/CompanionSlot'
-import { reactCompanion } from '../shell/companion'
 import { returnTab } from '../shell/stage'
 import { hashOf, planLesson } from '../sound/form'
 import { haptic } from '../sound/haptics'
 import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
-import { Check, ChevronLeft, Close } from '../ui/icons'
+import { ChevronLeft, Close } from '../ui/icons'
 import { RollNumber } from '../ui/RollNumber'
 import { useEase } from './ease'
 import { Keypad } from './Keypad'
@@ -203,13 +203,10 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       run.current = attempt.wrong.length === 0 ? run.current + 1 : 0
       cue(run.current >= STREAK ? 'streak' : 'correct')
       haptic(14)
-      // The companion cheers a right first try only; a right answer after a slip is quiet.
-      if (attempt.wrong.length === 0) reactCompanion('happy')
       setAttempt((a) => ({ ...a, solved: true, revealed: true }))
     } else {
       run.current = 0
       cue('wrong')
-      reactCompanion('console')
       haptic([10, 60, 10])
       setAttempt((a) => ({ ...a, wrong: [...a.wrong, given] }))
     }
@@ -227,7 +224,6 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       setHeld(false)
       setAttempt(freshAttempt)
       setMomentView({ reward, misses: [], first: momentState(readMoments(), lesson.id) === 'open' })
-      reactCompanion('curious')
     } else setEnded(reward)
   }
 
@@ -388,18 +384,6 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       </fieldset>
     ) : null
 
-  // Once the duo has flown into the end hero, its place in the top bar closes and the progress takes the room.
-  const topBar = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const el = topBar.current
-    if (!el) return
-    const goal = ended ? 0 : 1
-    if (el.dataset.duo === undefined) {
-      el.dataset.duo = ''
-      engine.set(el, { '--duo': goal })
-    } else engine.withChannel('chrome', () => engine.to(el, { '--duo': goal }, 'fade'))
-  }, [ended])
-
   return (
     <div
       ref={root}
@@ -407,7 +391,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       data-testid="lesson-player"
       data-options-stage={optionsAreStage || undefined}
     >
-      <div ref={topBar} className="ls-top" data-moment={moment ? 'true' : undefined}>
+      <div className="ls-top" data-moment={moment ? 'true' : undefined}>
         {moment ? (
           <button
             type="button"
@@ -450,8 +434,6 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         >
           <span className="ls-progress__fill" />
         </div>
-        {/* The companion's place in the lesson: it only reacts to answers from here. */}
-        <CompanionSlot name="lesson" size="lesson" mood="keep" className="ls-top__duo" />
         {/* Only the step number rolls; the code and the total stay still. */}
         <span className="ls-count" aria-hidden="true">
           {pathCode(lesson)} · <RollNumber value={index + 1} />/{lesson.steps.length}
@@ -512,7 +494,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
           </div>
 
           <div className="ls-dock" data-verdict={isQuestion(step) && attempt.revealed}>
-            {isQuestion(step) && attempt.revealed ? <Verdict step={step} attempt={attempt} /> : null}
+            {isQuestion(step) && attempt.revealed ? (
+              <Verdict step={step} attempt={attempt} insight={Boolean(moment)} />
+            ) : null}
             {attempt.revealed ? null : options}
             {step.kind === 'keypad' && !attempt.revealed ? (
               <Keypad
@@ -573,8 +557,16 @@ type Question = Extract<Step, { kind: 'choice' | 'keypad' }>
  * The answer, once it is out: one verdict in the dock where the options were (old feedback sheet). It names
  * what the learner gave and the right answer, then the worked solution; the question stays above it.
  */
-function Verdict({ step, attempt }: { step: Question; attempt: Attempt }) {
+function Verdict({ step, attempt, insight }: { step: Question; attempt: Attempt; insight: boolean }) {
   const tone = attempt.solved ? 'ok' : attempt.wrong.length ? 'missed' : 'shown'
+  // Birim: glad on a right first try, a wow when the gizli an opens, quiet after a slip, caught out on a miss.
+  const mood: BirimMood = attempt.solved
+    ? insight
+      ? 'wow'
+      : attempt.wrong.length === 0
+        ? 'happy'
+        : 'rest'
+    : 'oops'
   const title = attempt.solved
     ? strings.lesson.verdictRight
     : attempt.wrong.length
@@ -593,9 +585,7 @@ function Verdict({ step, attempt }: { step: Question; attempt: Attempt }) {
   return (
     <section className="ls-verdict" role="status" data-tone={tone} aria-label={title}>
       <p className="ls-verdict__title">
-        <span className="ls-verdict__mark" aria-hidden="true">
-          {attempt.solved ? <Check /> : null}
-        </span>
+        <Birim size="answer" mood={mood} />
         {title}
         {given.length ? (
           <span className="ls-verdict__given">

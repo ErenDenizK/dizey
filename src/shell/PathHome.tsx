@@ -1,6 +1,5 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import type { DuoHandle } from '../character/Duo'
 import { lessons } from '../content/lessons'
 import { chapters } from '../content/path'
 import { strings } from '../content/strings'
@@ -8,21 +7,19 @@ import { engine } from '../engine/driver'
 import { stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { Screen } from '../ui/Screen'
-import { CompanionSlot } from './CompanionSlot'
 import { LessonPeek, type Peek } from './LessonPeek'
 import { PathDock } from './PathDock'
 import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet } from './PathNodes'
 import { useCelebrations } from './path-effects'
 import { COL_X, layoutPath } from './path-layout'
 import { overlayHostRef } from './stage'
-import './companion-slot.css'
 import './path-home.css'
 
 /**
  * Yol: the whole route as one game-like path, and the home screen. Every lesson and every chapter test walks a
  * grid in a serpentine (src/shell/path-layout.ts), Satır's blue along the rows and Sütun's plum down the
  * columns; what you have walked is full strength, what is left is faint. Each chapter opens with its bracketed
- * number, name and count; the duo stands by the lesson you are on, and a dock above the tab bar holds the next lesson's card
+ * number, name and count; Birim sits on the lesson you are on, and a dock above the tab bar holds the next lesson's card
  * with the satellites (question of the day, mistakes, the rehearsal). Every lesson stays open (no locks).
  */
 export function PathHome() {
@@ -36,10 +33,6 @@ export function PathHome() {
   const reached = main ? (mainNode?.index ?? -1) : Number.POSITIVE_INFINITY
 
   const root = useRef<HTMLDivElement>(null)
-  const duo = useRef<DuoHandle>(null)
-  useEffect(() => {
-    duo.current?.react('happy')
-  }, [])
   useCelebrations(root, records)
   useWalked(root, reached)
   useOpening(root, main?.id ?? null)
@@ -109,11 +102,6 @@ export function PathHome() {
                     />
                   ) : c ? (
                     <ChapterTestNode chapter={c} onNote={setNote} />
-                  ) : null}
-                  {current ? (
-                    <span className="ph-duo">
-                      <CompanionSlot name="today" size="large" mood="happy" alive duo={duo} />
-                    </span>
                   ) : null}
                 </li>
               )

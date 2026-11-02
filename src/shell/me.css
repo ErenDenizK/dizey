@@ -1,5 +1,5 @@
 /* Profil (src/shell/MeView.tsx). Tokens only; no transitions or keyframes. */
-/* Scene: the duo, large and centred, with the name and title under it. */
+/* Scene: Birim, centred, with the name and title under it. */
 .me-scene {
   display: grid;
   justify-items: center;
@@ -8,17 +8,11 @@
   margin-top: var(--space-2);
   padding: 0;
 }
-/* The avatar spot: as wide as the slot in it, so whatever fills it later keeps the same place. */
+/* The avatar spot: Birim, centred, in its own box so whatever fills it later keeps the same place. */
 .me-avatar {
-  width: 168px;
-}
-.me-scene .companion-slot--large {
+  display: flex;
+  justify-content: center;
   width: 100%;
-}
-@media (max-height: 700px) {
-  .me-avatar {
-    width: 120px;
-  }
 }
 
 /* Name and title: centred under the duo. The text button and the input share one cell and crossfade. */

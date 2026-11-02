@@ -215,21 +215,19 @@
   color: var(--ok-ink);
 }
 
-/* The duo stands by the lesson you are on, on the outer side where no run reaches it. */
-.ph-duo {
+/* Birim sits on the lesson you are on, as part of its tile: it scrolls and scales with the tile, never over it
+   by a layer of its own. It leans out to the outer side, where no run reaches it. */
+.pa-tile__birim {
   position: absolute;
-  top: -30px;
+  bottom: calc(100% - 14px);
+  left: calc(50% - 20px);
   pointer-events: none;
-  z-index: 1;
 }
-.ph-slot[data-col="0"] .ph-duo {
-  right: 22px;
+.ph-slot[data-col="0"] .pa-tile__birim {
+  left: calc(50% - 34px);
 }
-.ph-slot[data-col="1"] .ph-duo {
-  left: 22px;
-}
-.ph-root .companion-slot--large {
-  width: 52px;
+.ph-slot[data-col="1"] .pa-tile__birim {
+  left: calc(50% - 6px);
 }
 
 /* ---- End of the path: the gate ------------------------------------------------------ */
