@@ -11,18 +11,30 @@ import { useMoments } from '../lesson/moments'
 import { stateOf } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { appStorage } from '../lib/storage/app-storage'
+import { activityDays } from '../progress/activity'
 import { useActivityDays } from '../progress/activity-store'
 import { openMistakes } from '../progress/mistakes'
 import { NAME_MAX } from '../progress/profile'
 import { chaptersDone, profileStats } from '../progress/profile-stats'
 import { saveName, useProfile } from '../progress/profile-store'
 import { hasNewProgress, moodOf, parseSeen } from '../progress/readiness'
+import {
+  firstTryRate,
+  fixedCount,
+  groupMistakes,
+  pathProgress,
+  pathSegments,
+  percent,
+  recentDays,
+} from '../progress/status'
 import { BadgeShelf } from '../rewards/BadgeShelf'
-import { badgeOf, earnedBadges } from '../rewards/badges'
+import { badgeOf } from '../rewards/badges'
 import { Emblem } from '../rewards/Emblem'
 import { NextBadge } from '../rewards/NextBadge'
+import { Expander } from '../ui/Expander'
 import { ChevronRight, GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
+import { RollNumber } from '../ui/RollNumber'
 import { Screen } from '../ui/Screen'
 import { PressLink } from './PressLink'
 import './me.css'
@@ -48,7 +60,7 @@ export function MeView() {
     >
       <div className="me-page">
         <Scene />
-        <ProfileMatrix />
+        <ProfileStatus />
         {/* "What to do": under 1000 px these two sit in the page; from 1000 px they move into the bottom-right card. */}
         <div className="me-aside" data-testid="me-aside">
           <MistakeLog />
@@ -199,40 +211,96 @@ function NameField() {
 }
 
 /**
- * Senin matrisin: six figures as one 2 x 3 matrix in the app's bracket style. They only ever count up, and with
- * nothing studied yet they read zero, honestly.
+ * Durumun: one card. The hero is the Vize 1 readiness (lessons done of all on the path) over a segmented path bar,
+ * one segment per lesson grouped by chapter; under a hairline sit three honest figures. Nothing here is invented:
+ * with nothing studied it reads 0 %, a dash and an empty strip.
  */
-function ProfileMatrix() {
+function ProfileStatus() {
   const records = useLessonRecords()
   const { outcomes, history, chapters: tested } = useExam()
   const recorded = useActivityDays()
-  const moments = useMoments()
   const stats = profileStats({ records, history, outcomes, chapters: tested, recorded })
-  const badges = earnedBadges({ records, history, moments }).length
+  const { done, total } = pathProgress(records, chapters)
+  const segments = pathSegments(records, chapters)
+  const rate = firstTryRate(records)
+  const active = activityDays({ recorded, records, history, outcomes, chapters: tested })
+  const strip = recentDays(active, new Date())
   const text = strings.me.stats
-  const cells = [
-    ['lessons', stats.lessons, text.lessons],
-    ['answered', stats.answered, text.answered],
-    ['firstTry', stats.firstTry, text.firstTry],
-    ['days', stats.days, text.days],
-    ['fixed', stats.fixed, text.fixed],
-    ['badges', badges, text.badges],
-  ] as const
   return (
-    <section aria-labelledby="matrix" className="me-matrix-block">
-      <h2 id="matrix" className="dz-section-label">
-        {strings.me.matrix}
+    <section aria-labelledby="status" className="me-status-block">
+      <h2 id="status" className="dz-section-label">
+        {strings.me.status}
       </h2>
-      <ul className="me-matrix" data-testid="me-matrix">
-        {cells.map(([key, value, label]) => (
-          <li key={key} className="me-matrix__cell" data-testid={`stat-${key}`}>
-            <b className="me-matrix__n num" data-zero={value === 0 || undefined}>
-              {value}
+      <div className="dz-card me-status" data-testid="me-status">
+        <div className="me-status__hero" data-testid="status-readiness" data-zero={done === 0 || undefined}>
+          <b className="me-status__big num">
+            <RollNumber value={percent(done, total)} />
+            <span className="me-status__unit">%</span>
+          </b>
+          <span className="me-status__caption">{strings.me.statusReadiness(done, total)}</span>
+        </div>
+        <div
+          role="progressbar"
+          aria-valuemin={0}
+          aria-valuemax={total}
+          aria-valuenow={done}
+          aria-valuetext={strings.me.statusPathLabel(done, total)}
+          aria-label={strings.me.statusReadiness(done, total)}
+          data-testid="status-path"
+        >
+          <ul className="me-path">
+            {segments.map((chapter) => (
+              <li key={chapter.id} className="me-path__chapter" style={{ flexGrow: chapter.fills.length }}>
+                {chapter.fills.map((fill, index) => (
+                  <span
+                    // biome-ignore lint/suspicious/noArrayIndexKey: a chapter's lessons have a fixed order
+                    key={index}
+                    className="me-path__seg"
+                    data-fill={fill || undefined}
+                  />
+                ))}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="me-figures">
+          <div className="me-figure" data-testid="status-firsttry">
+            <b className="me-figure__n num" data-zero={!rate.percent || undefined}>
+              {rate.percent === null ? (
+                '–'
+              ) : (
+                <>
+                  <RollNumber value={rate.percent} />
+                  <span className="me-figure__unit">%</span>
+                </>
+              )}
             </b>
-            <span className="me-matrix__l">{label}</span>
-          </li>
-        ))}
-      </ul>
+            <span className="me-figure__l">{text.firstTry}</span>
+          </div>
+          <div className="me-figure" data-testid="status-days">
+            <b className="me-figure__n num" data-zero={stats.days === 0 || undefined}>
+              <RollNumber value={stats.days} />
+            </b>
+            <span className="me-figure__l">{text.days}</span>
+            <ul
+              className="me-strip"
+              role="img"
+              aria-label={strings.me.daysStripLabel(strip.filter((day) => day.active).length)}
+              data-testid="status-strip"
+            >
+              {strip.map((day) => (
+                <li key={day.key} className="me-strip__day" data-active={day.active || undefined} />
+              ))}
+            </ul>
+          </div>
+          <div className="me-figure" data-testid="status-fixed">
+            <b className="me-figure__n num" data-zero={stats.fixed === 0 || undefined}>
+              <RollNumber value={stats.fixed} />
+            </b>
+            <span className="me-figure__l">{text.fixed}</span>
+          </div>
+        </div>
+      </div>
     </section>
   )
 }
@@ -268,78 +336,114 @@ function SecretMoments() {
   )
 }
 
-const MISTAKES_SHOWN = 3
+/** The chevron turns through the engine (--on 0..1), never in one frame; it starts in place on first render. */
+function Turn({ open }: { open: boolean }) {
+  const root = useRef<HTMLSpanElement>(null)
+  const placed = useRef(false)
+  useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    if (!placed.current) {
+      placed.current = true
+      engine.set(el, { '--on': open ? 1 : 0 })
+      return
+    }
+    engine.withChannel('chrome', () => engine.to(el, { '--on': open ? 1 : 0 }, 'snap', { effect: true }))
+  }, [open])
+  return (
+    <span ref={root} className="me-mistakes__chevron me-group__chevron">
+      <ChevronRight />
+    </span>
+  )
+}
 
+/**
+ * Hata defteri: open mistakes grouped by lesson. One group is open at a time; its mistakes grow out of the row
+ * through the Expander. With nothing open but something fixed it is one calm line; with no history it is hidden.
+ */
 function MistakeLog() {
   const records = useLessonRecords()
   const { outcomes } = useExam()
-  const [all, setAll] = useState(false)
-  const [open, setOpen] = useState(false)
+  const [openKey, setOpenKey] = useState<string | null>(null)
   const list = openMistakes(lessons, records, questions, outcomes)
-  const shown = all ? list : list.slice(0, MISTAKES_SHOWN)
-  if (!list.length) return null
+  const fixed = fixedCount(records)
+  if (!list.length && !fixed) return null
+  const groups = groupMistakes(list)
   return (
     <section aria-labelledby="mistakes" className="me-mistakes">
       <h2 id="mistakes" className="dz-section-label">
         {strings.me.mistakes}
+        {list.length ? ` · ${strings.me.mistakesOpen(list.length)}` : ''}
       </h2>
-      <Pressable
-        className="me-row me-mistakes__row"
-        aria-expanded={open}
-        aria-controls="mistake-list"
-        data-testid="mistake-row"
-        onClick={() => setOpen(!open)}
-      >
-        <span className="me-row__title num">{strings.me.mistakesRow(list.length)}</span>
-        <span className="me-mistakes__chevron" data-open={open || undefined}>
-          <ChevronRight />
-        </span>
-      </Pressable>
-      {open ? (
-        <div id="mistake-list">
-          <ul className="dz-list sh-mistakes">
-            {shown.map((mistake) => (
-              <li
-                key={
-                  mistake.source === 'lesson' ? `${mistake.lessonId}:${mistake.stepId}` : mistake.questionId
-                }
-              >
-                {mistake.source === 'lesson' ? (
-                  <PressLink
-                    to="/lesson/$id"
-                    params={{ id: mistake.lessonId }}
-                    search={{ step: mistake.stepId }}
-                    className="sh-mistake"
-                  >
-                    <span className="sh-mistake__code">{codeOfNode(mistake.node)}</span>
-                    <span>
-                      <b>
-                        <RichText text={mistake.title} />
-                      </b>
-                      <RichText text={mistake.text} />
-                    </span>
-                  </PressLink>
-                ) : (
-                  <div className="sh-mistake">
-                    <span className="sh-mistake__code">{codeOfNode(mistake.node)}</span>
-                    <span>
-                      <b>{strings.me.mistakeExam}</b>
-                      <RichText text={mistake.text} />
-                    </span>
-                  </div>
-                )}
-              </li>
-            ))}
-            {list.length > MISTAKES_SHOWN ? (
-              <li>
-                <Pressable className="me-more" aria-expanded={all} onClick={() => setAll(!all)}>
-                  {all ? strings.me.mistakesLess : strings.me.mistakesMore(list.length - MISTAKES_SHOWN)}
+      {list.length ? (
+        <ul className="me-groups" data-testid="mistake-groups">
+          {groups.map((group) => {
+            const open = openKey === group.key
+            const title = group.lessonId
+              ? (lessons.find((lesson) => lesson.id === group.lessonId)?.title ?? group.node)
+              : strings.me.mistakeExamGroup
+            const code = codeOfNode(group.node)
+            const bodyId = `mistakes-${group.key.replace(/[^a-z0-9-]/gi, '-')}`
+            return (
+              <li key={group.key} className="me-group" data-open={open || undefined}>
+                <Pressable
+                  className="me-row me-group__row"
+                  aria-expanded={open}
+                  aria-controls={bodyId}
+                  aria-label={strings.me.mistakeGroupLabel(code, title, group.mistakes.length)}
+                  data-testid="mistake-group"
+                  onClick={() => setOpenKey(open ? null : group.key)}
+                >
+                  <span className="me-group__code num">{code}</span>
+                  <span className="me-group__title">{title}</span>
+                  <span className="me-group__count num">{group.mistakes.length}</span>
+                  <Turn open={open} />
                 </Pressable>
+                <Expander open={open} id={bodyId}>
+                  <ul className="me-group__list">
+                    {group.mistakes.map((mistake) => (
+                      <li
+                        key={
+                          mistake.source === 'lesson'
+                            ? `${mistake.lessonId}:${mistake.stepId}`
+                            : mistake.questionId
+                        }
+                        className="me-mistake"
+                        data-testid="mistake-item"
+                      >
+                        <span className="me-mistake__text">
+                          <b>
+                            {mistake.source === 'lesson' ? (
+                              <RichText text={mistake.title} />
+                            ) : (
+                              strings.me.mistakeExam
+                            )}
+                          </b>
+                          <RichText text={mistake.text} />
+                        </span>
+                        {mistake.source === 'lesson' ? (
+                          <PressLink
+                            to="/lesson/$id"
+                            params={{ id: mistake.lessonId }}
+                            search={{ step: mistake.stepId }}
+                            className="me-mistake__retry"
+                          >
+                            {strings.me.mistakeRetry}
+                          </PressLink>
+                        ) : null}
+                      </li>
+                    ))}
+                  </ul>
+                </Expander>
               </li>
-            ) : null}
-          </ul>
-        </div>
-      ) : null}
+            )
+          })}
+        </ul>
+      ) : (
+        <p className="me-calm" data-testid="mistakes-calm">
+          {strings.me.mistakesNone(fixed)}
+        </p>
+      )}
     </section>
   )
 }
