@@ -977,12 +977,12 @@ export const PLAY_OF: Record<MirtisMood, PlayName> = {
   purr: 'purr',
 }
 
-export type MirtisSize = 'answer' | 'path' | 'profile' | 'hero'
+export type MirtisSize = 'verdict' | 'dock' | 'profile' | 'hero'
 
-/** Rig per size: under 48 px the small head bust, the profile a full-detail bust, the hero the full body. */
+/** Rig per size: no cat is under 48 px (except the app icon). The profile is a full-detail bust, every other size the full body. */
 export const RIG_OF: Record<MirtisSize, Required<RigOptions>> = {
-  answer: { lod: 'small', head: true },
-  path: { lod: 'small', head: true },
+  verdict: { lod: 'full', head: false },
+  dock: { lod: 'full', head: false },
   profile: { lod: 'full', head: true },
   hero: { lod: 'full', head: false },
 }

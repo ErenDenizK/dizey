@@ -235,43 +235,6 @@
   color: var(--ok-ink);
 }
 
-/* Mırtis sits on the lesson you are on, inline in the node's slot: the same scrolling layer as its tile, so it moves
-   with it natively. It leans out to the outer side, where no run reaches it. */
-.pa-tile__mirtis {
-  position: absolute;
-  bottom: 36px;
-  left: -20px;
-  pointer-events: none;
-  z-index: 2;
-}
-/* Beside its tile on the outer side, standing on the tile's baseline: clear of the runs between the columns and of
-   the chapter header above the first row. The slot is the tile's centre; the tile is 56 px, Mırtis 40 px. */
-.ph-slot[data-col="0"] .pa-tile__mirtis {
-  bottom: -28px;
-  left: calc(-28px - var(--space-2) - 40px);
-}
-.ph-slot[data-col="1"] .pa-tile__mirtis {
-  bottom: -28px;
-  left: calc(28px + var(--space-2));
-}
-
-/* Four columns: the spacing grew, not the nodes. Mırtis stands above the run on the node's upper right, where nothing else reaches it. */
-.ph-root[data-columns="4"] .ph-slot .pa-tile__mirtis {
-  bottom: 6px;
-  left: calc(28px + var(--space-2));
-}
-/* Four columns: a chapter is a block, its heading at the left gutter on a plate in the page colour, so the run that drops
-   past it to the first node never crosses the text. */
-.ph-root[data-columns="4"] .ph-chapter {
-  right: auto;
-  padding-right: var(--space-3);
-  background: var(--bg);
-}
-/* The last column has no room to its right at 600 px: Mırtis leans to the left there. */
-.ph-root[data-columns="4"] .ph-slot[data-col="3"] .pa-tile__mirtis {
-  left: calc(-28px - var(--space-2) - 40px);
-}
-
 /* ---- End of the path: the gate ------------------------------------------------------ */
 .ph-end {
   padding: var(--space-4) var(--page-gutter) var(--space-8);
@@ -326,6 +289,7 @@
   background: linear-gradient(to bottom, transparent, var(--bg) var(--space-6));
 }
 .dz-card.ph-next {
+  position: relative;
   display: grid;
   padding: 0;
   color: var(--ink-1);

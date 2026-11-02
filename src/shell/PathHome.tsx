@@ -11,7 +11,7 @@ import { Screen } from '../ui/Screen'
 import type { Preview } from './DockPreview'
 import { LessonPeek, type Peek } from './LessonPeek'
 import { PathDock } from './PathDock'
-import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet, TileMirtis } from './PathNodes'
+import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet } from './PathNodes'
 import { useCelebrations } from './path-effects'
 import { columnCount, columnsAt, layoutPath } from './path-layout'
 import { overlayHostRef } from './stage'
@@ -133,7 +133,6 @@ export function PathHome() {
                     ) : c ? (
                       <ChapterTestNode chapter={c} number={node.chapter + 1} onNote={setNote} />
                     ) : null}
-                    {node.lesson ? <TileMirtis on={current} /> : null}
                   </li>
                 )
               })}

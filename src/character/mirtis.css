@@ -13,22 +13,22 @@
 .mirtis--head {
   aspect-ratio: 86 / 84;
 }
-.mirtis--answer {
-  width: 24px;
+.mirtis--verdict {
+  width: 56px;
 }
-.mirtis--path {
-  width: 40px;
+.mirtis--dock {
+  width: 72px;
 }
 .mirtis--profile {
-  width: 96px;
+  width: 112px;
 }
 @media (max-height: 700px) {
   .mirtis--profile {
-    width: 72px;
+    width: 88px;
   }
 }
 .mirtis--hero {
-  width: 120px;
+  width: 128px;
 }
 
 .mt-f-fur {
@@ -148,4 +148,21 @@
 }
 .mt-s-sweat-edge {
   stroke: var(--mirtis-sweat-edge);
+}
+
+/* The perch (Perch.tsx): her paws rest on the top edge of the card she belongs to (a positioned ancestor). The wrapper
+   clips everything below that edge line, so she rises from behind the card and sinks back behind it. */
+.mt-perch {
+  position: absolute;
+  bottom: 100%;
+  z-index: 3;
+  pointer-events: none;
+  clip-path: inset(-100vh -100vw 0 -100vw);
+}
+.mt-perch__lift {
+  display: flex;
+}
+/* The full body's drawing ends 8 % of its width above the svg's bottom edge; sink the box so the paws, not the box, rest on the line. */
+.mt-perch .mirtis {
+  margin-bottom: -8%;
 }
