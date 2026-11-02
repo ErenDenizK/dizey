@@ -85,3 +85,11 @@ budget without moving the number.
 drop for oops, distinct closed eyes, a banded tail as the signature). The appeal verdict, though, went to Eren's eye,
 and he approved. For future identity work: gate on what a reviewer can check (blind read, silhouettes, small-size
 legibility), and use the appeal score only as a source of critique, never as a pass mark.
+
+## 2026-11-02: every thread re-read the whole prompt ledger
+
+**What happened.** Every thread was told to read the whole prompt ledger before working; by P51 that history had grown to tens of kilobytes, re-read in each of several parallel threads.
+
+**Root cause.** The read rule was written when the ledger was small and never revisited; context cost was not measured.
+
+**What changed.** Threads read only the ledger's "Çalışma listesi"; history is searched by ID. ADR and research indexes mark what is current, and the 256 KB old-UI inventory is grep-only. CLAUDE.md states what makes work succeed so trimming never drops it (Eren 11-02 18:37, P51).
