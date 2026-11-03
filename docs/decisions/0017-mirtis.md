@@ -87,3 +87,39 @@ picked by step index.
    `aria-label` carries the line, so it is announced once.
 5. The first step's cat perches on the first card's top edge, in a 40 px lane reserved above that card from the first frame, so
    she never covers the top bar and nothing moves when she arrives. No new sounds.
+
+## Hand-offs
+
+Presence item 5 ("no cross-page flights") stands for rest and for scrolling: she always lives inside her card and scrolls
+with it natively, because an overlay that tracks scrolled content through JavaScript lags a frame on iOS
+(`docs/lessons.md`), and an app-wide following companion was rejected (decision 0014). What changes is that where a
+page changes and nothing scrolls, one short flight hands her from the cat she was to the cat she becomes, so the two
+pages share one cat (Eren: "sayfalar arasında daha kesintisiz hareket edebilir").
+
+1. **Where.** Yol's dock "Başla" to the lesson's first-step greeting (only when the lesson opens at a first step that
+   explains); the last verdict to the lesson end's hero (today only the gizli an ends a lesson on a verdict, every
+   lesson's last step is a summary, so this flight is dormant for plain lessons); the end screen back to the dock
+   ("Yola dön" or ×, landing with `happy`), or, from "Sıradaki", to the next lesson's greeting when it has one.
+   No other transition flies.
+2. **Mechanism** (`src/character/flight.ts`, `CatFlight.tsx`). The flyer is a clone of the departing cat's svg, so its
+   pose is exactly the pose on screen. In one frame the source is hidden and the flyer shown at the source's rect in a
+   fixed, tap-proof layer above the overlay; it flies on the `page` spring along a small hop (lift scaled to the
+   distance, 18 to 64 px) while its size follows the target's; on arrival, in one frame, it is removed and the target
+   cat is shown already seated (no rise) and plays the storyboard (`happy`, `proud`). One cat on screen in every frame.
+   Cats take part by naming an `anchor` (`dock`, `greet`, `verdict`, `hero`).
+3. **Measuring.** The source is measured once, at take-off. The target is read each frame, because its page may still
+   be settling (the stage coming back from its recess under a closing lesson). Nothing here follows scrolling.
+4. **The dock waits for the overlay.** A target on the covered page is not revealed while any overlay, including a
+   closing ghost, is above it: the flyer stays over it, following, until the overlay is gone, so she is never hidden
+   beneath the page that is shrinking away.
+5. **Fallbacks.** No flight, and today's sink and rise, when the layer or an anchor is missing, an anchor has no size
+   or is off screen, a source is not seated on its perch (mid-rise), the target is on a hidden tab, or anything
+   scrolled in the last 140 ms. A cat in the air that nobody claims within 2.6 s goes back to where it took off. A lesson
+   closed with no flight in the air gives the dock its cat back, rising.
+6. **Reduced motion.** No flight: the flyer fades out where it stands while the target fades in, on the effect spring.
+7. **Interrupts.** Any tap during a flight lands her at once (`finishChannel` and the swap); the flyer is never left
+   behind, and a target that disappears mid-flight ends it.
+
+Guards: `e2e/mirtis-flight.spec.ts` films each hand-off on the virtual clock (`scripts/flight-flows.mjs`): exactly one
+visible cat per frame, no step in the cat's track, the flyer gone after landing, the reduced-motion crossfade, and a
+tap landing her at once. Frame strips: `scripts/flight-strips.mjs`.
