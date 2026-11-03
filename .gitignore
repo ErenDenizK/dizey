@@ -32,3 +32,6 @@ scripts/.shell-audit-state.json
 
 # Local instrument samples for tools/sound (CC0, fetched by hand, never committed)
 tools/sound/.samples/
+
+__pycache__/
+*.pyc
