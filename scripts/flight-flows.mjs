@@ -2,7 +2,7 @@
 // One chain walks the whole route: Yol's dock "Başla" -> the lesson's greeting (flight 1), the last answer -> the lesson
 // end (flight 2), then "Yola dön" back to the dock (flight 3) or "Sıradaki" to the next lesson's greeting (flight 3b).
 // Shared by e2e/mirtis-flight.spec.ts (the guard) and scripts/flight-strips.mjs (the frame strips).
-import { film, hooks, openAuditPage } from './jump-audit.mjs'
+import { drive, film, hooks, openAuditPage } from './jump-audit.mjs'
 
 const base = process.env.REVIEW_URL ?? 'http://localhost:4173/dizey/'
 
@@ -56,6 +56,10 @@ export async function runChain(
     await at(page, name)
   }
   const settle = () => film(page, frames)
+  // Between hand-offs only the clock has to move: no frame is checked there, and sampling every frame of a whole
+  // lesson walk is what made the gizli an chain run for minutes.
+  let walking = false
+  const step = () => (walking ? drive(page) : settle())
   try {
     await page.goto(lesson ? `${base}lesson/${lesson}` : base)
     await page.waitForFunction(() => window.__dzReview && window.__dzCats)
@@ -67,6 +71,7 @@ export async function runChain(
       await settle()
     }
     await mark('walk')
+    walking = true
     const primary = page.locator('.ls-dock:not(.ls-leaving) .sh-btn--primary')
     const finishing = async () =>
       (await primary.count()) > 0 && /bitir/.test((await primary.first().textContent()) ?? '')
@@ -75,42 +80,46 @@ export async function runChain(
       const options = page.locator('.ls-dock:not(.ls-leaving) .ls-opts .ex-opt:not([disabled])')
       if (await options.count()) {
         await options.last().click({ timeout: 2000 })
-        await settle()
+        await step()
         if (!(await page.locator('.ls-verdict').count())) {
           const soft = page.locator('.ls-dock:not(.ls-leaving) .sh-btn--soft:not([disabled])')
           if (await soft.count()) {
             await soft.first().click()
-            await settle()
+            await step()
           } else if (await options.count()) {
             await options.first().click()
-            await settle()
+            await step()
           }
         }
       } else if (await page.locator('.ls-keypad').count()) {
         await page.locator('.ls-key').first().click()
-        await settle()
+        await step()
         await page.locator('.ls-key--go').click()
-        await settle()
+        await step()
         if (!(await page.locator('.ls-verdict').count())) {
           await page.locator('.ls-dock:not(.ls-leaving) .sh-btn--soft:not([disabled])').first().click()
-          await settle()
+          await step()
         }
       }
       await primary.first().click({ timeout: 2000 })
-      await settle()
+      await step()
     }
     await primary.first().click()
-    await settle()
+    await step()
     // Flight 2: the gizli an's verdict (the one place a lesson ends on a verdict) to the lesson end.
     if (await page.locator('.ls-top__skip').count()) {
       for (let n = 0; n < 6 && !(await page.locator('.ls-verdict').count()); n++) {
         await page.locator('.ls-dock:not(.ls-leaving) .ls-opts .ex-opt:not([disabled])').first().click()
-        await settle()
+        await step()
       }
+      walking = false
       await mark('finish')
       await primary.first().click()
-      await settle()
-    } else await mark('finish')
+      await step()
+    } else {
+      walking = false
+      await mark('finish')
+    }
     // Flight 3: the hero to the dock, or to the next lesson's greeting.
     await mark('close')
     if (end === 'next') await page.locator('.ls-end__next').click()
