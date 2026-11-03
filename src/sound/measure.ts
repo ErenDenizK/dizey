@@ -2,7 +2,7 @@ import { createConductor, createLearner } from './conductor'
 import { type Flourish, hashOf, type MusicCue, planLesson, type StepKind, type Theme } from './form'
 import { PROGRESSION, seeded } from './harmony'
 import { composeSection, freshState, idleCue, SECTION } from './music'
-import { EVENTS, type SoundEvent } from './score'
+import { createScore, EVENTS, type SoundEvent } from './score'
 import { createSynth, PALETTES, type PaletteId } from './synth'
 
 /**
@@ -375,4 +375,170 @@ export async function renderThemes(options: { rate?: number; seconds?: number; p
   })
   const buffer = await ctx.startRendering()
   return { seconds: seconds * themes.length + 6, int16: toInt16(buffer.getChannelData(0)) }
+}
+
+/**
+ * A scripted 70 s session through the real synth and conductor, offline: lesson open, ten steps, six
+ * taps within a second, a select/land/merge burst, wrong, correct, streak, halfway, the lesson end,
+ * then home music. Rendered twice, as the learner hears it and with the music alone (the same script
+ * with no sounds), so a click anywhere and a music dropout can be measured.
+ */
+export async function renderSession(palette: PaletteId = 'rhodes') {
+  const kinds = sampleKinds(10)
+  const plan = planLesson(kinds, 4242, 'D')
+  const length = 72
+  type Step = { at: number; run: (play: (event: SoundEvent, at: number, step?: number) => void) => void }
+  const windows: [number, number][] = []
+
+  async function run(withSounds: boolean) {
+    const ctx = new OfflineAudioContext(2, RATE * length, RATE)
+    const synth = createSynth(ctx, { random: seeded(7), palette })
+    const score = createScore(seeded(7))
+    const learner = createLearner()
+    let clock = 0
+    let step = 0
+    let inLesson = true
+    const conductor = createConductor({
+      now: () => clock,
+      sink: { play: (n, at) => synth.playMusic(n, at), cut: (at, tau) => synth.cutMusic(at, tau) },
+      random: seeded(5),
+      wanted: (n) => {
+        if (!inLesson) return idleCue(n)
+        const cue = plan[step] as MusicCue
+        return { ...cue, energy: learner.energy(cue.energy, step) }
+      },
+    })
+    conductor.setSeed(plan[0]?.seed ?? 0)
+    const play = (event: SoundEvent, at: number, index = step) => {
+      clock = at
+      learner.heard(event)
+      const context = { chord: plan[index]?.chord ?? 'I', step: index, steps: plan.length }
+      const planned = withSounds ? synth.play(event, context, at) : score.plan(event, context, at)
+      const tier = EVENTS[event].tier
+      if (tier === 'lesson' || tier === 'reward') {
+        conductor.fade(planned.end - 1.5)
+        if (!withSounds) windows.push([at, planned.end + 2])
+      }
+    }
+    const steps: Step[] = []
+    const add = (at: number, f: Step['run']) => steps.push({ at, run: f })
+    add(0.3, (p) => p('lessonOpen', 0.3, 0))
+    for (let i = 1; i < 10; i++) {
+      const at = 4 + i * 4.2
+      add(at, (p) => {
+        clock = at
+        step = i
+        p('step', at, i)
+        conductor.request(learner.stepped(i, plan[i]?.role, true))
+      })
+    }
+    for (let i = 0; i < 6; i++) add(20.5 + i * 0.17, (p) => p('tap', 20.5 + i * 0.17))
+    for (const [k, event] of (['select', 'land', 'merge', 'select', 'land'] as SoundEvent[]).entries())
+      add(26.2 + k * 0.15, (p) => p(event, 26.2 + k * 0.15))
+    add(30.1, (p) => p('wrong', 30.1))
+    add(32.4, (p) => p('correct', 32.4))
+    add(35.2, (p) => p('streak', 35.2))
+    add(42.5, (p) => p('halfway', 42.5))
+    add(50, (p) => p('lessonEnd', 50))
+    add(50.5, () => {
+      inLesson = false
+      conductor.setSeed(0)
+      learner.reset()
+    })
+    steps.sort((a, b) => a.at - b.at)
+    let next = 0
+    let k = 0
+    while (next < length - 4) {
+      const item = steps[k]
+      if (item && item.at <= next) {
+        item.run(play)
+        k++
+      } else {
+        clock = next
+        // After the lesson end the learner has left the lesson: the home walk resumes by itself.
+        conductor.tick()
+        next += 0.4
+      }
+    }
+    return ctx.startRendering()
+  }
+
+  const mix = await run(true)
+  const music = await run(false)
+
+  // Clicks: the largest 4th difference against the peak, as measure() does.
+  let peak = 0
+  let click = 0
+  for (let c = 0; c < mix.numberOfChannels; c++) {
+    const d = mix.getChannelData(c)
+    for (let i = 4; i < d.length; i++) {
+      const at = (j: number) => d[i - j] as number
+      peak = Math.max(peak, Math.abs(at(0)))
+      click = Math.max(click, Math.abs(at(0) - 4 * at(1) + 6 * at(2) - 4 * at(3) + at(4)))
+    }
+  }
+
+  // Dropouts: 50 ms RMS of the music alone against its running median (the last 4 s), outside the
+  // windows where a reward or the lesson end has the floor, and 3 s after the music starts.
+  const left = music.getChannelData(0)
+  const right = music.getChannelData(1)
+  const hop = Math.round(RATE * 0.05)
+  const db: number[] = []
+  for (let i = 0; i + hop <= left.length; i += hop) {
+    let sum = 0
+    for (let j = i; j < i + hop; j++) sum += ((left[j] as number) ** 2 + (right[j] as number) ** 2) / 2
+    db.push(10 * Math.log10(sum / hop + 1e-14))
+  }
+  const dropouts: { at: number; db: number; median: number }[] = []
+  let worst = 0
+  const firstSound = db.findIndex((x) => x > -90)
+  const inWindow = (t: number) => windows.some(([a, b]) => t >= a && t <= b)
+  for (let i = firstSound + 60; i < db.length - 30; i++) {
+    const t = i * 0.05
+    if (inWindow(t)) continue
+    const recent = db
+      .slice(Math.max(0, i - 80), i)
+      .filter((_, j) => !inWindow((Math.max(0, i - 80) + j) * 0.05))
+    if (recent.length < 20) continue
+    const median = [...recent].sort((a, b) => a - b)[Math.floor(recent.length / 2)] as number
+    worst = Math.min(worst, (db[i] as number) - median)
+    if ((db[i] as number) < median - 30)
+      dropouts.push({ at: round(t), db: round(db[i] as number), median: round(median) })
+  }
+  return {
+    clickDb: round(20 * Math.log10(click / peak)),
+    peakDb: round(20 * Math.log10(peak)),
+    dropouts,
+    worstDipDb: round(worst),
+    windows,
+  }
+}
+
+/** Each cue alone, one after another with 1.5 s of quiet between (a listening sample). Mono samples. */
+export async function renderCues(options: { rate?: number; palette?: PaletteId } = {}) {
+  const { rate = 22050, palette = 'rhodes' } = options
+  const events: SoundEvent[] = [
+    'lessonOpen',
+    'correct',
+    'streak',
+    'halfway',
+    'milestone',
+    'seal',
+    'secret',
+    'lessonEnd',
+  ]
+  const score = createScore(seeded(7))
+  let at = 0.3
+  const starts: number[] = []
+  for (const event of events) {
+    starts.push(at)
+    at = score.plan(event, { chord: 'I' }, at).end + 1.5
+  }
+  const ctx = new OfflineAudioContext(1, Math.ceil(rate * (at + 1)), rate)
+  const synth = createSynth(ctx, { random: seeded(7), palette })
+  events.forEach((event, i) => {
+    synth.play(event, { chord: 'I' }, starts[i])
+  })
+  const buffer = await ctx.startRendering()
+  return { seconds: at + 1, int16: toInt16(buffer.getChannelData(0)) }
 }
