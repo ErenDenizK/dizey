@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import type { Page } from '@playwright/test'
 
 /**
@@ -330,4 +331,87 @@ export async function withProbe<T>(page: Page, token: string, run: () => Promise
   } finally {
     await page.evaluate(() => document.getElementById('__probe')?.remove())
   }
+}
+
+/* ---- Phone layout snapshot -------------------------------------------------------------------------------------- */
+
+export type LayoutNode = {
+  key: string
+  rect: [number, number, number, number]
+  style: Record<string, string>
+}
+
+/** Always left out of a snapshot: values that change with the build or the clock. */
+const VOLATILE = [
+  '[data-testid=version-foot]',
+  '[data-testid=app-version]',
+  'time',
+  // A looping ambient pulse: its rect and opacity depend on the instant the snapshot is taken.
+  '.ls-end__halo',
+]
+
+/**
+ * Every visible element in DOM order: a tag + test id or class key, its rect rounded to 0.5 px and the computed styles
+ * that make a screen look the way it does. Text pixels are not compared, so it is the same on every rasteriser.
+ */
+export async function layoutSnapshot(page: Page, skip: string[] = []): Promise<LayoutNode[]> {
+  // Springs settle at slightly different instants: read until two reads 150 ms apart agree (at most 10 tries).
+  let last = await readLayout(page, skip)
+  for (let i = 0; i < 10; i++) {
+    await page.waitForTimeout(150)
+    const next = await readLayout(page, skip)
+    if (JSON.stringify(next) === JSON.stringify(last)) return next
+    last = next
+  }
+  return last
+}
+
+async function readLayout(page: Page, skip: string[]): Promise<LayoutNode[]> {
+  return page.evaluate(
+    ({ skipSelectors }) => {
+      const half = (n: number) => Math.round(n * 2) / 2
+      const props = ['color', 'background-color', 'font-size', 'font-weight', 'border-radius', 'opacity']
+      const out: { key: string; rect: [number, number, number, number]; style: Record<string, string> }[] = []
+      const skipped = (el: Element) => skipSelectors.some((s) => el.closest(s))
+      for (const el of Array.from(document.body.querySelectorAll('*'))) {
+        if (el.closest('svg') && el.tagName.toLowerCase() !== 'svg') continue
+        if (['SCRIPT', 'STYLE', 'LINK', 'META', 'TEMPLATE'].includes(el.tagName)) continue
+        if (skipped(el)) continue
+        const cs = getComputedStyle(el)
+        if (cs.display === 'none' || cs.visibility === 'hidden') continue
+        const r = el.getBoundingClientRect()
+        if (r.width === 0 && r.height === 0) continue
+        const testId = el.getAttribute('data-testid')
+        const cls = (el.getAttribute('class') ?? '').split(/\s+/).filter(Boolean).join('.')
+        const key = el.tagName.toLowerCase() + (testId ? `[${testId}]` : cls ? `.${cls}` : '')
+        const style: Record<string, string> = {}
+        for (const p of props) style[p] = cs.getPropertyValue(p)
+        // A spring that has not finished its last 0.1% would make opacity differ by the instant of the read.
+        style.opacity = (Math.round(Number(style.opacity) * 10) / 10).toString()
+        out.push({ key, rect: [half(r.left), half(r.top), half(r.width), half(r.height)], style })
+      }
+      return out
+    },
+    { skipSelectors: [...VOLATILE, ...skip] },
+  )
+}
+
+const BASELINES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'baselines')
+
+/** Compare with e2e/wide-walk/baselines/<name>.json, or write it when UPDATE_LAYOUT=1. Returns a diff summary or null. */
+export function compareLayout(name: string, nodes: LayoutNode[]): string | null {
+  const file = path.join(BASELINES, `${name}.json`)
+  const json = `${JSON.stringify(nodes, null, 1)}\n`
+  if (process.env.UPDATE_LAYOUT === '1') {
+    fs.mkdirSync(BASELINES, { recursive: true })
+    fs.writeFileSync(file, json)
+    return null
+  }
+  if (!fs.existsSync(file)) return `no baseline ${name}.json (run with UPDATE_LAYOUT=1)`
+  const want = JSON.parse(fs.readFileSync(file, 'utf8')) as LayoutNode[]
+  const same = JSON.stringify(want) === JSON.stringify(nodes)
+  if (same) return null
+  const i = want.findIndex((w, k) => JSON.stringify(w) !== JSON.stringify(nodes[k]))
+  const at = i === -1 ? want.length : i
+  return `layout differs from ${name}.json (${nodes.length} elements, baseline ${want.length}); first at #${at}: got ${JSON.stringify(nodes[at])} want ${JSON.stringify(want[at])}`
 }

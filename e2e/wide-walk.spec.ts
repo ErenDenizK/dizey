@@ -3,7 +3,9 @@ import path from 'node:path'
 import { expect, type Page, test } from '@playwright/test'
 import {
   boxOf,
+  compareLayout,
   declaredWidth,
+  layoutSnapshot,
   longestLine,
   overflowsSideways,
   prepare,
@@ -18,14 +20,14 @@ import { type Entry, manifest } from './wide-walk/manifest'
 
 /**
  * The wide walk: every screen and overlay of the app, reached by real taps, measured at four wide sizes and compared
- * with the phone's baselines at 390 and 320 px. One browser context per size, navigation reused where screens chain.
+ * with the phone's layout baselines at 390 and 320 px. One browser context per size, navigation reused where screens chain.
  * Lessons: docs/lessons.md, "Widescreen 0.62.0 shipped broken". A new screen goes into e2e/wide-walk/manifest.ts.
  *
  * Wide sizes assert (1) the content column is centred on the window centre (1 px), (2) it has the declared measure,
  * (3) nothing scrolls sideways, (4) dialogs sit under a full-window scrim with nothing above it and close on Escape and an
  * outside tap, (5) the window edges are the surface colour (no bars), (6) no text line passes 80 characters, (7) the side
- * column is in the flow. Phone sizes compare screenshots with baselines rendered from main before the layout work
- * (maxDiffPixels 0).
+ * column is in the flow. Phone sizes compare a layout snapshot (every visible element's rect and key styles, no pixels, so
+ * it is portable across rasterisers) with baselines taken from main before the layout work. UPDATE_LAYOUT=1 rewrites them.
  */
 
 const DESKTOP_UA =
@@ -39,7 +41,7 @@ const PHONE: SizeName[] = ['phone-390', 'phone-320']
 
 test.skip(
   ({ browserName }) => browserName !== 'chromium',
-  'Chromium only: baselines and pixel reads are Chromium renders',
+  'Chromium only: pixel reads and layout are Chromium renders',
 )
 test.describe.configure({ mode: 'parallel' })
 
@@ -75,7 +77,7 @@ for (const size of [...WIDE, ...PHONE]) {
           continue
         }
         if (phone) {
-          await phoneShot(page, size, entry, note)
+          await phoneLayout(page, size, entry, note)
           // A phone's sheet closes on Escape too, or on a tap on the dimmed screen above it.
           if (entry.dialog && !(await closeWithEscape(page, entry))) await page.mouse.click(6, 6)
           if (entry.dialog) await page.waitForTimeout(700)
@@ -88,29 +90,11 @@ for (const size of [...WIDE, ...PHONE]) {
   })
 }
 
-/* ---- Phone: pixel-identical to the baselines rendered from main ----------------------------------------------- */
+/* ---- Phone: the same layout as the baselines taken from main ------------------------------------------------- */
 
-async function phoneShot(page: Page, size: SizeName, entry: Entry, note: (msg: string) => void) {
-  try {
-    await expect(page).toHaveScreenshot(`${size}-${entry.id}.png`, {
-      maxDiffPixels: 0,
-      mask: (entry.mask ?? []).map((selector) => page.locator(selector)),
-      ...(entry.clipTop
-        ? {
-            clip: {
-              x: 0,
-              y: entry.clipTop,
-              width: SIZES[size].width,
-              height: SIZES[size].height - entry.clipTop,
-            },
-          }
-        : {}),
-      animations: 'disabled',
-      caret: 'hide',
-    })
-  } catch (error) {
-    note(`phone screenshot differs: ${(error as Error).message.split('\n')[0]}`)
-  }
+async function phoneLayout(page: Page, size: SizeName, entry: Entry, note: (msg: string) => void) {
+  const diff = compareLayout(`${size}-${entry.id}`, await layoutSnapshot(page, entry.mask))
+  if (diff) note(diff)
 }
 
 /* ---- Wide: geometry, dialogs, edges, lines ---------------------------------------------------------------------- */
