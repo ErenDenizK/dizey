@@ -133,7 +133,7 @@ for (const [w, h] of [
   await page.screenshot({ path: join(out, `7-8-sen-purr-${w}x${h}.png`) })
   await context.close()
 }
-// Wide: Yol at 1180x820 (the dock card bottom right, the cat on its top edge).
+// Wide: Yol at 1180x820 (the dock card in the stage grid's side column, the cat on its top edge).
 {
   const context = await browser.newContext({
     viewport: { width: 1180, height: 820 },

@@ -36,6 +36,7 @@ import { ChevronRight, GearIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { RollNumber } from '../ui/RollNumber'
 import { Screen } from '../ui/Screen'
+import { useSideHeight } from '../ui/useSideHeight'
 import { PressLink } from './PressLink'
 import './me.css'
 
@@ -63,14 +64,25 @@ export function MeView() {
         <Scene />
         <ProfileStatus />
         {/* "What to do": under 1024 px these two sit in the page; from 1024 px they are the stage's side column. */}
-        <div className="me-aside" data-testid="me-aside">
+        <Aside>
           <MistakeLog />
           <NextBadge />
-        </div>
+        </Aside>
         <BadgeShelf />
         <SecretMoments />
       </div>
     </Screen>
+  )
+}
+
+/** The side column's card (decision 0020): in the flow, sticky from 1024 px; it tells the CSS how tall it is. */
+function Aside({ children }: { children: React.ReactNode }) {
+  const root = useRef<HTMLDivElement>(null)
+  useSideHeight(root)
+  return (
+    <div ref={root} className="me-aside" data-testid="me-aside">
+      {children}
+    </div>
   )
 }
 

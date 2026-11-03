@@ -614,8 +614,11 @@ section[aria-labelledby="badges"] > .dz-section-label {
     grid-column: 2;
     grid-row: 1 / span 5;
     position: sticky;
-    /* Under the settings gear, which floats at the stage's top right. */
-    top: calc(env(safe-area-inset-top) + var(--space-2) + var(--target) + var(--space-3));
+    /* Under the settings gear, which floats at the stage's top right; a card taller than the window sticks only once its foot is in view. */
+    top: min(
+      calc(env(safe-area-inset-top) + var(--space-2) + var(--target) + var(--space-3)),
+      calc(100dvh - var(--side-h, 0px) - var(--bar-clearance))
+    );
     display: grid;
     gap: var(--space-4);
     padding: var(--card-pad);
