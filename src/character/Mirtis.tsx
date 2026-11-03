@@ -1,5 +1,6 @@
 import { forwardRef, useId, useImperativeHandle, useLayoutEffect, useRef } from 'react'
 import { engine } from '../engine/driver'
+import { flight, type Spot } from './flight'
 import {
   CatMotion,
   createCat,
@@ -50,13 +51,14 @@ let nextSeed = 1
  * (mirtis.ts); the motion runs its own springs and asks for frames only while something moves. Reduced motion follows
  * the engine's flag: reactions get shorter and stiffer, they are never cut.
  *
+ * `anchor` names the spot she can be flown from or to between pages (flight.ts).
  * `mood` plays that mood's reaction when it changes; `wake` starts asleep and stretches awake (the app's hello).
  * The lesson end's glow is an engine value (`--glow`) on this very svg; CSS reads it.
  */
 export const Mirtis = forwardRef<
   MirtisHandle,
-  { size: MirtisSize; mood?: MirtisMood; className?: string; wake?: boolean }
->(function Mirtis({ size, mood = 'rest', className = '', wake = false }, ref) {
+  { size: MirtisSize; mood?: MirtisMood; className?: string; wake?: boolean; anchor?: Spot }
+>(function Mirtis({ size, mood = 'rest', className = '', wake = false, anchor }, ref) {
   const root = useRef<SVGSVGElement>(null)
   const motion = useRef<CatMotion | null>(null)
   const first = useRef(true)
@@ -112,6 +114,14 @@ export const Mirtis = forwardRef<
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: react reads refs only
   useImperativeHandle(ref, () => ({ react }), [])
+
+  // A cat with an anchor can be flown from and to (flight.ts).
+  // biome-ignore lint/correctness/useExhaustiveDependencies: react reads refs only
+  useLayoutEffect(() => {
+    const svg = root.current
+    if (!anchor || !svg) return
+    return flight.register(anchor, { svg, react })
+  }, [anchor])
 
   return (
     <svg
