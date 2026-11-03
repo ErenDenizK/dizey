@@ -66,7 +66,7 @@ export const s3HomogeneousSystems: Lesson = {
       kind: 'explain',
       eyebrow: 'Gözlem',
       title: '$x = 0$ her zaman çözüm',
-      body: 'Buna {ok}aşikâr çözüm{/ok} denir. Homojen sistem asla çözümsüz olmaz. Soru: başka çözüm var mı?',
+      body: 'Buna {ok}aşikâr (trivial) çözüm{/ok} denir. Homojen sistem asla çözümsüz olmaz. Soru: başka çözüm var mı?',
       scene: { items: ['H'] },
       beat: { kind: 'equation', lines: ['A \\cdot 0 = 0'] },
     },

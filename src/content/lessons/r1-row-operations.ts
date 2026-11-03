@@ -170,7 +170,7 @@ export const r1RowOperations: Lesson = {
       kind: 'explain',
       eyebrow: 'Tanım',
       title: 'Denk matrisler: $A \\sim B$',
-      body: 'Her hamle geri alınır, bu yüzden {ok}denklik iki yönlü{/ok}. Rank ve çözüm kümesi değişmez.',
+      body: 'Her hamle geri alınır, bu yüzden {ok}denklik iki yönlü{/ok}. Rank ve çözüm kümesi değişmez. Sütun işlemleri de rankı korur, ama sistemde yalnız satır işlemi kullan.',
       scene: { items: ['E', '~', 'E2'] },
       claims: [
         { kind: 'rank', matrix: 'E', equals: '3' },
