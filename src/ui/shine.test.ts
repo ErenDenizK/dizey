@@ -5,13 +5,14 @@ describe('lightScore: the light follows the reward music', () => {
   it('finds one onset per chord of the lesson end (ii, V, I), home last', () => {
     const score = lightScore('lessonEnd')
     expect(score.chords).toHaveLength(3)
-    expect(score.shines).toHaveLength(0)
+    // The two lead chords sing four melody notes each.
+    expect(score.shines).toHaveLength(8)
     expect(score.chords[0]).toBe(0)
   })
 
-  it('gives every arpeggio note of a reward its own spark onset, before the home chord', () => {
+  it('gives every melody note of a reward its own spark onset, before the home chord', () => {
     for (const [event, chords, shines] of [
-      ['halfway', 2, 5],
+      ['halfway', 2, 3],
       ['milestone', 3, 6],
     ] as const) {
       const score = lightScore(event)

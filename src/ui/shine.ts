@@ -29,8 +29,10 @@ export function lightScore(event: SoundEvent): LightScore {
     const last = chords[chords.length - 1]
     if (last === undefined || at - last > CHORD_SPLIT) chords.push(at)
   }
+  // A spark leaves on each melody note that comes before the home chord (the home chord has its own burst).
+  const home = chords[chords.length - 1] ?? 0
   const shines = plan.notes
-    .filter((note) => note.kind === 'shine')
+    .filter((note) => note.kind === 'shine' && note.at < home)
     .map((note) => note.at)
     .sort((a, b) => a - b)
   return { chords, shines, end: plan.end }

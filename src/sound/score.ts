@@ -78,6 +78,19 @@ type Part = {
   arpeggio?: { count: number; from?: number; at?: number }
   /** A soft contact thump, relative level. */
   thump?: number
+  /**
+   * A melody over the part's chord, played as glass notes: [seconds from the part's start, pitch in
+   * semitones above the tonic (D♭4 = 0), length in s]. The last note of the event's last part is held.
+   */
+  tune?: readonly (readonly [at: number, pitch: number, length: number])[]
+  /** Level of the tune, relative (default 0.42; its last note is 10 % louder). */
+  tuneVelocity?: number
+  /** The chord's voices rolled as a broken chord, this many seconds apart, lowest first, each a little softer. Replaces `roll`. */
+  broken?: number
+  /** Seconds until the next part; overrides the event's gap. */
+  length?: number
+  /** A soft descending glass shimmer under a held note. */
+  shimmer?: { at: number; pitches: readonly number[]; step: number; velocity: number }
 }
 
 export type EventSpec = {
@@ -173,11 +186,45 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     loudness: -28,
     cutoff: 5000,
     wet: 1.1,
-    gap: 0.9,
     parts: [
-      { chord: 'ii', ring: 1.6 },
-      { chord: 'V', ring: 1.6 },
-      { chord: 'I', ring: 4.2, bloom: 0.8 },
+      {
+        chord: 'ii',
+        broken: 0.07,
+        ring: 1.6,
+        length: 1.2,
+        tune: [
+          [0, 14, 0.4],
+          [0.4, 12, 0.2],
+          [0.6, 14, 0.2],
+          [0.8, 17, 0.4],
+        ],
+      },
+      {
+        chord: 'V',
+        broken: 0.07,
+        ring: 1.6,
+        length: 1.2,
+        tune: [
+          [0, 19, 0.4],
+          [0.4, 17, 0.2],
+          [0.6, 16, 0.2],
+          [0.8, 14, 0.4],
+        ],
+      },
+      {
+        chord: 'I',
+        broken: 0.09,
+        ring: 4.8,
+        bloom: 0.8,
+        halo: 0.5,
+        tune: [
+          [0, 16, 0.3],
+          [0.3, 19, 0.3],
+          [0.6, 23, 0.2],
+          [0.8, 24, 2.6],
+        ],
+        shimmer: { at: 1.1, pitches: [19, 16, 12], step: 0.16, velocity: 0.22 },
+      },
     ],
   },
   halfway: {
@@ -186,8 +233,28 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     cutoff: 5600,
     wet: 1.2,
     parts: [
-      { chord: 'iv', ring: 2, bloom: 0.3, arpeggio: { count: 5 } },
-      { chord: 'I', ring: 4.8, bloom: 0.8, halo: 0.5 },
+      {
+        chord: 'iv',
+        broken: 0.08,
+        ring: 2,
+        bloom: 0.3,
+        length: 1,
+        tune: [
+          [0, 17, 0.3],
+          [0.3, 20, 0.3],
+          [0.6, 24, 0.4],
+        ],
+      },
+      {
+        chord: 'I',
+        ring: 4.8,
+        bloom: 0.8,
+        halo: 0.5,
+        tune: [
+          [0, 23, 0.25],
+          [0.25, 24, 2.2],
+        ],
+      },
     ],
   },
   milestone: {
@@ -195,11 +262,38 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     loudness: -26,
     cutoff: 6000,
     wet: 1.3,
-    gap: 1,
     parts: [
-      { chord: 'iv', ring: 1.8 },
-      { chord: 'bVII', ring: 2.2, bloom: 0.3, arpeggio: { count: 6 } },
-      { chord: 'I', ring: 5, bloom: 1, halo: 0.8 },
+      {
+        chord: 'iv',
+        ring: 1.8,
+        length: 0.9,
+        tune: [
+          [0, 12, 0.3],
+          [0.3, 17, 0.3],
+          [0.6, 20, 0.3],
+        ],
+      },
+      {
+        chord: 'bVII',
+        ring: 2.2,
+        bloom: 0.3,
+        length: 0.9,
+        tune: [
+          [0, 21, 0.25],
+          [0.25, 22, 0.25],
+          [0.5, 26, 0.4],
+        ],
+      },
+      {
+        chord: 'I',
+        ring: 5,
+        bloom: 1,
+        halo: 0.8,
+        tune: [
+          [0, 24, 0.3],
+          [0.3, 28, 2.4],
+        ],
+      },
     ],
   },
   // A mastery seal closes: the dominant, held open, rises into home.
@@ -209,8 +303,19 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     cutoff: 5600,
     wet: 1.2,
     parts: [
-      { chord: 'V', sus: 'hold', ring: 1.8, bloom: 0.3, arpeggio: { count: 4 } },
-      { chord: 'I', ring: 5.8, bloom: 0.8, halo: 0.4 },
+      {
+        chord: 'V',
+        sus: 'hold',
+        ring: 1.8,
+        bloom: 0.3,
+        length: 1,
+        tune: [
+          [0, 19, 0.25],
+          [0.25, 21, 0.25],
+          [0.5, 23, 0.4],
+        ],
+      },
+      { chord: 'I', ring: 5.8, bloom: 0.8, halo: 0.4, tune: [[0, 24, 2.4]] },
     ],
   },
   // A hidden insight found: a colour heard nowhere else (♭VI to a Lydian tonic).
@@ -220,8 +325,28 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     cutoff: 6400,
     wet: 1.3,
     parts: [
-      { chord: 'bVI', ring: 2.4, bloom: 0.5, arpeggio: { count: 5 } },
-      { chord: 'Is11', ring: 4.6, bloom: 0.9, halo: 0.8 },
+      {
+        chord: 'bVI',
+        ring: 2.4,
+        bloom: 0.5,
+        length: 1.1,
+        tune: [
+          [0, 15, 0.3],
+          [0.3, 20, 0.3],
+          [0.6, 24, 0.4],
+        ],
+      },
+      {
+        chord: 'Is11',
+        ring: 4.6,
+        bloom: 0.9,
+        halo: 0.8,
+        tune: [
+          [0, 23, 0.3],
+          [0.3, 18, 0.3],
+          [0.6, 19, 2.2],
+        ],
+      },
     ],
   },
   tap: {
@@ -285,7 +410,21 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
     loudness: -36,
     cutoff: 5000,
     wet: 1,
-    parts: [{ chord: 'I', roll: 0.05, ring: 2.4, bloom: 0.4, arpeggio: { count: 3, from: 1, at: 0.22 } }],
+    parts: [
+      {
+        chord: 'I',
+        roll: 0.05,
+        ring: 2.4,
+        bloom: 0.4,
+        tuneVelocity: 0.34,
+        tune: [
+          [0.12, 12, 0.18],
+          [0.3, 16, 0.18],
+          [0.48, 19, 0.18],
+          [0.66, 24, 1.2],
+        ],
+      },
+    ],
   },
 }
 
@@ -308,6 +447,8 @@ export type Note = {
   bright: number
   /** Swell time for pads, s. */
   rise?: number
+  /** Pads: seconds the level is held after the swell before it starts to fade (default 0). */
+  hold?: number
   /** Stereo position, -1..1. Default: follows the pitch, narrowly. */
   pan?: number
 }
@@ -360,8 +501,8 @@ export function createScore(random: () => number) {
       end = Math.max(end, note.at + note.ring)
     }
 
-    for (const raw of spec.parts) {
-      const part = { ...DEFAULT_PART, ...raw }
+    const parts = spec.parts.map((raw) => ({ ...DEFAULT_PART, ...raw }))
+    for (const part of parts) {
       const id = part.chord !== 'step' ? part.chord : (context.chord ?? chordAt(context.step, context.steps))
       const chord = CHORDS[id]
       const voicing: number[] = previous ? nearest(chord.voicing, previous) : [...chord.voicing]
@@ -439,7 +580,7 @@ export function createScore(random: () => number) {
         const open = part.sus ? suspend(chord, voicing) : voicing
         const resolveAt = at + RESOLVE
         open.forEach((pitch, i) => {
-          const voiceAt = at + i * part.roll
+          const voiceAt = at + i * (part.broken ?? part.roll)
           const target = voicing[i] as number
           if (pitch === target) {
             add({
@@ -447,7 +588,7 @@ export function createScore(random: () => number) {
               pitch,
               at: voiceAt,
               ring: part.ring,
-              velocity: part.velocity,
+              velocity: part.velocity * (part.broken ? 0.9 ** i : 1),
               bright: part.sus === 'hold' ? 0.12 : brightFor(pitch),
             })
           } else if (part.sus === 'resolve') {
@@ -501,7 +642,30 @@ export function createScore(random: () => number) {
             rise: 0.9,
           })
 
-      let next = at + (spec.gap ?? 0.9)
+      if (part.tune) {
+        const lastPart = part === parts[parts.length - 1]
+        part.tune.forEach(([t, pitch, length], i) => {
+          const last = i === (part.tune?.length ?? 0) - 1
+          const held = last && lastPart
+          add({
+            kind: 'shine',
+            pitch,
+            at: at + t + (random() * 2 - 1) * 0.006,
+            // The event's last note is held for 2.8 s whatever the register.
+            ring: held ? 2.8 / ringScale(pitch) : Math.max(length * 1.6, 0.5),
+            velocity: (part.tuneVelocity ?? 0.42) * (last ? 1.1 : 1),
+            bright: 0.5,
+          })
+        })
+      }
+      if (part.shimmer) {
+        const { at: from, pitches, step, velocity } = part.shimmer
+        pitches.forEach((pitch, i) => {
+          add({ kind: 'shine', pitch, at: at + from + i * step, ring: 1.6, velocity, bright: 0.4 })
+        })
+      }
+
+      let next = at + (part.length ?? spec.gap ?? 0.9)
       if (part.arpeggio) {
         const { count, from = 0 } = part.arpeggio
         // Arpeggio root between B♭3 and A4, whatever the chord.
