@@ -61,6 +61,7 @@ export type LawId =
   | 'cramer'
   | 'free-variables'
   | 'homogeneous-wide'
+  | 'big-connection'
 
 /** One line of the formula sheet: the formula, a short Turkish reading of it, and the check behind it. */
 export interface Formula {

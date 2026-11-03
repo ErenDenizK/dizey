@@ -596,6 +596,57 @@ export const summaries: Readonly<Record<string, Summary>> = {
       ],
     },
   },
+  'x1-big-connection': {
+    gist: 'Kare matriste tek bir bilgi bütün listeyi söyler.',
+    points: [
+      'Regüler $\\iff |A| \\neq 0 \\iff$ rank $n \\iff$ indirgenince $I$.',
+      'Regüler $\\iff Ax = 0$ yalnız aşikâr çözüm $\\iff Ax = b$ her $b$ için tek çözüm $\\iff A^{-1}$ var.',
+      'Singüler: hepsi tersine döner. $|A| = 0$, rank $< n$, sıfır satır, $Ax = 0$ sonsuz çözüm.',
+      'Şıkta bir halkayı bilince diğerlerini hesaplamadan ele.',
+    ],
+    trap: '$|A| = 0$ "çözüm yok" demez: $Ax = b$ çözümsüz ya da sonsuz olur, tek çözüm olmaz.',
+    example: {
+      matrices: {
+        S: m('S =', [
+          ['1', '2', '3'],
+          ['4', '5', '6'],
+          ['7', '8', '9'],
+        ]),
+      },
+      show: ['S'],
+      line: '$|S| = 0$, rank $2 < 3$: $S$ singüler, tersi yok, $Sx = 0$ sonsuz çözümlü.',
+      claims: [
+        { kind: 'det', matrix: 'S', equals: '0' },
+        { kind: 'rank', matrix: 'S', equals: '2' },
+      ],
+    },
+  },
+  'x2-exam-tactics': {
+    gist: 'Çoktan seçmelide şıklar da bilgidir: önce kısa yolu dene.',
+    points: [
+      'Çözüm sorulursa şıkları denkleme koy. Çarpımda önce tipleri yaz.',
+      'Sıfır ya da orantılı satır: $|A| = 0$. Üçgenselde köşegen çarpımı.',
+      'Açarken en çok sıfırlı satır ya da sütunu seç.',
+      'Parametreli sistemde $|A| = 0$ köklerini bul, her kökü ayrı dene.',
+      'Büyük Bağlantı ile aynı cümledeki şıkları ele.',
+    ],
+    trap: '$|kA| = k^n |A|$: $3 \\times 3$ matriste $|2A| = 8|A|$, $2|A|$ değil.',
+    example: {
+      matrices: {
+        A: m('A =', [
+          ['2', '0', '0'],
+          ['0', '2', '0'],
+          ['0', '0', '1'],
+        ]),
+      },
+      show: ['A'],
+      line: '$|A| = 4$ ise $|2A| = 2^3 \\cdot 4 = 32$.',
+      claims: [
+        { kind: 'det', matrix: 'A', equals: '4' },
+        { kind: 'detProduct', scalar: '2', factors: [{ matrix: 'A' }], equals: '32' },
+      ],
+    },
+  },
 }
 
 /** A lesson's summary, or undefined while it has none. */
