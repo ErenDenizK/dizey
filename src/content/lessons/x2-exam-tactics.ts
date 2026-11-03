@@ -375,7 +375,7 @@ export const x2ExamTactics: Lesson = {
           errorType: 'misread-which-wrong',
           feedback: 'Singüler matrisin tersi yok, doğru bir şık. Aradığın yanlış olan.',
         },
-        { key: 'd', content: [text('$Ax = b$’nin her $b$ için tek çözümü vardır')] },
+        { key: 'd', content: [text('$Ax = b$ her $b$ için tek çözümlü')] },
         {
           key: 'e',
           content: [text('$A$ indirgenince sıfır satır çıkar')],

@@ -307,13 +307,13 @@ export const x1BigConnection: Lesson = {
         },
         {
           key: 'c',
-          content: [text('$Ax = 0$’ın yalnız $x = 0$ çözümü var')],
+          content: [text('$Ax = 0$ yalnız $x = 0$ verir')],
           errorType: 'rank-below-n-invertible',
           feedback: 'Rank $2 < 3$: serbest değişken var, sonsuz çözüm.',
         },
         {
           key: 'd',
-          content: [text('$Ax = b$’nin her $b$ için tek çözümü vardır')],
+          content: [text('$Ax = b$ her $b$ için tek çözümlü')],
           errorType: 'rank-below-n-invertible',
           feedback: 'Tek çözüm için rank $n$ gerekir.',
         },
@@ -355,7 +355,7 @@ export const x1BigConnection: Lesson = {
         },
         {
           key: 'e',
-          content: [text('$Ax = b$’nin her $b$ için tek çözümü vardır')],
+          content: [text('$Ax = b$ her $b$ için tek çözümlü')],
           errorType: 'rank-below-n-invertible',
           feedback: 'Singülerde hiçbir $b$ için tek çözüm yok.',
         },
