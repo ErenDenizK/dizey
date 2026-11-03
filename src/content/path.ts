@@ -13,6 +13,8 @@ export type Chapter = {
   label: string
   lessons: readonly Lesson[]
   examItems: number | null
+  /** Nodes the chapter test draws from when they differ from the chapter's own lesson nodes. */
+  testNodes?: readonly string[]
 }
 
 const spec = [
@@ -57,6 +59,8 @@ const spec = [
     label: 'Büyük resim',
     examItems: null,
     ids: ['x1-big-connection', 'x2-exam-tactics'],
+    // The theorem and the tactics have no items of their own: the test mixes the topics they connect.
+    testNodes: ['M11', 'R3', 'R4', 'D3', 'S1', 'S2', 'S3'],
   },
 ] as const
 
