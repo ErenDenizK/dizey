@@ -61,7 +61,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,m4a}'],
         // PR previews live under the production scope; never answer them with the production shell.
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/\/pr-preview\//],

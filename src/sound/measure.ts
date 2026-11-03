@@ -1,4 +1,5 @@
 import { createConductor, createLearner } from './conductor'
+import { createCueBank, isCueEvent } from './cues'
 import { type Flourish, hashOf, type MusicCue, planLesson, type StepKind, type Theme } from './form'
 import { PROGRESSION, seeded } from './harmony'
 import { composeSection, freshState, idleCue, SECTION } from './music'
@@ -83,6 +84,13 @@ function momentary(channels: Float32Array[], phone: boolean) {
   return -0.691 + 10 * Math.log10(best || 1e-12)
 }
 
+/** The recorded cues decoded for an offline context, so a render hears what the app plays. */
+async function recorded(ctx: BaseAudioContext) {
+  const bank = createCueBank(ctx)
+  await bank.load()
+  return bank
+}
+
 const pick = ({ step, steps }: { step?: number; steps?: number }) => ({
   ...(step === undefined ? {} : { step }),
   ...(steps === undefined ? {} : { steps }),
@@ -101,19 +109,45 @@ export type Measurement = {
 
 export async function measure(
   event: SoundEvent,
-  options: { levelDb?: number; masterDb?: number; step?: number; steps?: number; palette?: PaletteId } = {},
+  options: {
+    levelDb?: number
+    masterDb?: number
+    step?: number
+    steps?: number
+    palette?: PaletteId
+    /** true: the synthesized cue, even for an event that has a recording (its fallback). */
+    synthOnly?: boolean
+  } = {},
 ): Promise<Measurement> {
   const ctx = new OfflineAudioContext(2, RATE * 10, RATE)
-  const synth = createSynth(ctx, { random: seeded(7), ...options })
-  synth.play(event, { ...pick(options), index: 1 }, 0.05)
+  const { synthOnly, ...rest } = options
+  const synth = createSynth(ctx, {
+    random: seeded(7),
+    ...(synthOnly ? {} : { cues: await recorded(ctx) }),
+    ...rest,
+  })
+  const plan = synth.play(event, { ...pick(options), index: 1 }, 0.05)
   const buffer = await ctx.startRendering()
   const channels = [buffer.getChannelData(0), buffer.getChannelData(1)]
+  // A recording is full of real transients (a hammer, a plucked string) that a 4th difference cannot tell from a
+  // click, and it was checked when it was rendered. What can still click is its edges: it starts from silence (its
+  // first samples are a 2 ms fade-in, so a step at the start shows as a large first sample) and its last 50 ms
+  // are a fade (a cut end shows in the 4th difference as usual).
+  const recording = plan.notes.length === 0
+  const from = Math.round(0.05 * RATE)
+  const to = Math.round(plan.end * RATE)
   let peak = 0
   let click = 0
   for (const d of channels) {
     for (let i = 4; i < d.length; i++) {
       const at = (k: number) => d[i - k] as number
       peak = Math.max(peak, Math.abs(at(0)))
+      if (recording) {
+        if (i === from) click = Math.max(click, Math.abs(at(0)))
+        else if (i > to - RATE * 0.05 && i < to + RATE * 0.05)
+          click = Math.max(click, Math.abs(at(0) - 4 * at(1) + 6 * at(2) - 4 * at(3) + at(4)))
+        continue
+      }
       click = Math.max(click, Math.abs(at(0) - 4 * at(1) + 6 * at(2) - 4 * at(3) + at(4)))
     }
   }
@@ -132,10 +166,32 @@ async function averageLoudness(event: SoundEvent, levelDb: number, palette: Pale
   const steps = followsStep ? PROGRESSION.map((_, i) => i) : [0]
   let power = 0
   for (const step of steps) {
-    const m = await measure(event, { levelDb, masterDb: 0, step, steps: PROGRESSION.length, palette })
+    const m = await measure(event, {
+      levelDb,
+      masterDb: 0,
+      step,
+      steps: PROGRESSION.length,
+      palette,
+      synthOnly: true,
+    })
     power += 10 ** (m.loudness / 10)
   }
   return 10 * Math.log10(power / steps.length)
+}
+
+/** Bus level (CUE_TRIM in cues.ts) per recorded cue that meets EVENTS.loudness, from the decoded files. */
+export async function calibrateCues() {
+  const table: Record<string, number> = {}
+  for (const event of Object.keys(EVENTS) as SoundEvent[]) {
+    if (!isCueEvent(event)) continue
+    let level = -12
+    for (let pass = 0; pass < 2; pass++) {
+      const m = await measure(event, { levelDb: level, masterDb: 0 })
+      level = round(level + EVENTS[event].loudness - m.loudness)
+    }
+    table[event] = level
+  }
+  return table
 }
 
 /** Bus level per event that meets EVENTS.loudness: render, correct, render again (the limiter is not linear). */
@@ -191,7 +247,7 @@ export async function renderLesson(
   const sections = plan.length * 2
   const length = SECTION * sections + (lessonEnd ? 12 : 4)
   const ctx = new OfflineAudioContext(2, Math.ceil(RATE * length), RATE)
-  const synth = createSynth(ctx, { random: seeded(7), palette, masterDb })
+  const synth = createSynth(ctx, { random: seeded(7), palette, masterDb, cues: await recorded(ctx) })
   const random = seeded(11)
   let state = freshState(seed)
   let at = 0.05
@@ -243,7 +299,7 @@ export async function renderListening(
   if (total > maxSeconds) lengths = lengths.map((l) => (l * maxSeconds) / total)
   const length = Math.ceil(lengths.reduce((a, b) => a + b, 0) + 22)
   const ctx = new OfflineAudioContext(1, rate * length, rate)
-  const synth = createSynth(ctx, { random: seeded(7), palette })
+  const synth = createSynth(ctx, { random: seeded(7), palette, cues: await recorded(ctx) })
 
   let clock = 0
   let step = 0
@@ -389,10 +445,13 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
   const length = 72
   type Step = { at: number; run: (play: (event: SoundEvent, at: number, step?: number) => void) => void }
   const windows: [number, number][] = []
+  /** Where recorded cues sound: real transients there, so only their edges are scanned for clicks. */
+  const recordings: [number, number][] = []
 
   async function run(withSounds: boolean) {
     const ctx = new OfflineAudioContext(2, RATE * length, RATE)
-    const synth = createSynth(ctx, { random: seeded(7), palette })
+    const cues = await recorded(ctx)
+    const synth = createSynth(ctx, { random: seeded(7), palette, cues })
     const score = createScore(seeded(7))
     const learner = createLearner()
     let clock = 0
@@ -413,7 +472,14 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
       clock = at
       learner.heard(event)
       const context = { chord: plan[index]?.chord ?? 'I', step: index, steps: plan.length }
-      const planned = withSounds ? synth.play(event, context, at) : score.plan(event, context, at)
+      // The music-alone run still needs to know how long each cue lasts, so it asks the recording too.
+      const recording = isCueEvent(event) ? cues.get(event) : undefined
+      const planned = withSounds
+        ? synth.play(event, context, at)
+        : recording
+          ? { end: at + recording.duration }
+          : score.plan(event, context, at)
+      if (withSounds && recording) recordings.push([at, planned.end])
       const tier = EVENTS[event].tier
       if (tier === 'lesson' || tier === 'reward') {
         conductor.fade(planned.end - 1.5)
@@ -469,11 +535,13 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
   // Clicks: the largest 4th difference against the peak, as measure() does.
   let peak = 0
   let click = 0
+  const inside = (i: number) => recordings.some(([a, b]) => i >= a * RATE && i < (b - 0.05) * RATE)
   for (let c = 0; c < mix.numberOfChannels; c++) {
     const d = mix.getChannelData(c)
     for (let i = 4; i < d.length; i++) {
       const at = (j: number) => d[i - j] as number
       peak = Math.max(peak, Math.abs(at(0)))
+      if (inside(i)) continue
       click = Math.max(click, Math.abs(at(0) - 4 * at(1) + 6 * at(2) - 4 * at(3) + at(4)))
     }
   }
@@ -535,7 +603,7 @@ export async function renderCues(options: { rate?: number; palette?: PaletteId }
     at = score.plan(event, { chord: 'I' }, at).end + 1.5
   }
   const ctx = new OfflineAudioContext(1, Math.ceil(rate * (at + 1)), rate)
-  const synth = createSynth(ctx, { random: seeded(7), palette })
+  const synth = createSynth(ctx, { random: seeded(7), palette, cues: await recorded(ctx) })
   events.forEach((event, i) => {
     synth.play(event, { chord: 'I' }, starts[i])
   })

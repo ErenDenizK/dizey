@@ -1,3 +1,4 @@
+import { CUE_TRIM, type CueBank, isCueEvent } from './cues'
 import { clamp, dbToGain, midiToHz, seeded, TONIC_MIDI } from './harmony'
 import {
   createScore,
@@ -248,6 +249,8 @@ export type SynthOptions = {
   /** false: the caller connects `output` itself. */
   connect?: boolean
   palette?: PaletteId
+  /** Recorded cues: an event whose buffer is decoded plays it instead of the synthesized notes. */
+  cues?: Pick<CueBank, 'get'>
 }
 
 export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
@@ -497,11 +500,39 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     return bus
   }
 
+  /** A recorded cue has no notes to show, only a length: it rings the whole file and leaves no chord behind. */
+  function recordedPlan(event: SoundEvent, buffer: AudioBuffer, start: number): Plan {
+    return { event, notes: [], end: start + buffer.duration, harmony: '*', chords: [] }
+  }
+
+  /** A recorded cue on its own bus: the room is already in the file, so it goes to the dry path only. */
+  function renderRecording(buffer: AudioBuffer, start: number, event: SoundEvent, levelDb: number): Bus {
+    const source = ctx.createBufferSource()
+    const fade = ctx.createGain()
+    const level = ctx.createGain()
+    source.buffer = buffer
+    level.gain.value = dbToGain(levelDb)
+    source.connect(fade).connect(level).connect(dry)
+    source.start(start)
+    const bus: Bus = {
+      event,
+      harmony: '*',
+      fade,
+      nodes: [source, fade, level],
+      sources: [[source, start + buffer.duration]],
+      released: false,
+      duck: 1,
+    }
+    source.onended = () => cleanup(bus)
+    return bus
+  }
+
   /** Plays `event` at context time `when` (default: now). Returns the plan, in context time. */
   function play(event: SoundEvent, context: SoundContext = {}, when?: number): Plan {
     const now = ctx.currentTime
     const start = Math.max(when ?? now + 0.01, now + 0.005)
-    const plan = score.plan(event, context, start)
+    const recorded = isCueEvent(event) ? options.cues?.get(event) : undefined
+    const plan = recorded ? recordedPlan(event, recorded, start) : score.plan(event, context, start)
     // Pedal: a different harmony, or any multi-chord event, fades the tails still ringing.
     if (EVENTS[event].pedal !== false)
       for (const bus of live)
@@ -518,7 +549,11 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     const ringing = live.filter((bus) => !bus.released)
     for (let i = 0; i <= ringing.length - MAX_LIVE; i++) release(ringing[i] as Bus, start, 0.15)
     const spec = EVENTS[event]
-    live.push(render(plan.notes, spec, options.levelDb ?? TRIM[palette.id][event], event, plan.harmony))
+    live.push(
+      recorded
+        ? renderRecording(recorded, start, event, options.levelDb ?? CUE_TRIM[event as keyof typeof CUE_TRIM])
+        : render(plan.notes, spec, options.levelDb ?? TRIM[palette.id][event], event, plan.harmony),
+    )
     const tier = EVENTS[event].tier
     duckMusic(start, tier === 'touch' ? 0.35 : Math.min(3, plan.end - start), MUSIC_DUCK[tier])
     for (const listener of listeners) listener(plan)
