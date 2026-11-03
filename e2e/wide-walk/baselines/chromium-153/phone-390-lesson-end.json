@@ -3196,11 +3196,28 @@
   }
  },
  {
-  "key": "div",
+  "key": "div.ls-end__links",
   "rect": [
    16,
    660,
    358,
+   48
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "div",
+  "rect": [
+   16,
+   660,
+   200,
    48
   ],
   "style": {
@@ -3250,6 +3267,74 @@
   "key": "svg.dz-chevron",
   "rect": [
    206,
+   676,
+   10,
+   16
+  ],
+  "style": {
+   "color": "oklch(0.628 0.012 81.8)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "650",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "div",
+  "rect": [
+   236,
+   660,
+   54,
+   48
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "button[lesson-summary-open]",
+  "rect": [
+   236,
+   660,
+   54,
+   48
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "650",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "span.ls-asked__main",
+  "rect": [
+   236,
+   671,
+   40,
+   26
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "650",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "svg.dz-chevron",
+  "rect": [
+   280,
    676,
    10,
    16

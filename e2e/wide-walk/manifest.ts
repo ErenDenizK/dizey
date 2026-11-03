@@ -160,6 +160,18 @@ export const manifest: Entry[] = [
     primary: '[data-testid=lesson-end]',
     measure: 'read',
   },
+  // The summary sheet opens over the lesson end; the lesson end it belongs to is the entry just before.
+  {
+    id: 'lesson-summary-sheet',
+    reach: async (w) => {
+      if (!(await w.tap('[data-testid=lesson-summary-open]'))) throw new Error('no summary row')
+      await w.settle(900)
+    },
+    primary: '.dz-sheet',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
   {
     id: 'exam-home',
     reach: async (w) => {
@@ -218,6 +230,52 @@ export const manifest: Entry[] = [
       await w.settle(1300)
     },
     primary: '.exr-frame',
+    measure: 'read',
+  },
+  // Son tekrar: the summary list, one lesson's summary and the formula sheet, all reached from the exam hub.
+  {
+    id: 'summary-index',
+    reach: async (w) => {
+      await w.fresh('yol')
+      await w.intoView(`${pane} [data-testid=vize-gate]`)
+      if (!(await w.tap(`${pane} [data-testid=vize-gate]`))) throw new Error('no gate')
+      await w.page.waitForURL(/exam/, { timeout: 6000 })
+      await w.settle(1300)
+      if (!(await w.tap('[data-testid=open-summaries]'))) throw new Error('no summaries row')
+      await w.page.waitForURL(/summary/, { timeout: 6000 })
+      await w.settle(1300)
+    },
+    primary: '[data-testid=summary-index]',
+    measure: 'read',
+  },
+  {
+    id: 'summary-lesson',
+    reach: async (w) => {
+      if (!(await w.tap('[data-testid=summary-row-r4-inverse]'))) throw new Error('no summary row')
+      await w.page.waitForURL(/summary\/r4/, { timeout: 6000 })
+      await w.settle(1300)
+    },
+    primary: '[data-testid=summary-body]',
+    measure: 'read',
+  },
+  {
+    id: 'formula-sheet',
+    reach: async (w) => {
+      if (!(await w.tap('[data-testid=screen-done]'))) throw new Error('no back')
+      await w.settle(1300)
+      if (!(await w.tap('[data-testid=open-formulas]'))) throw new Error('no formulas row')
+      await w.page.waitForURL(/formulas/, { timeout: 6000 })
+      await w.settle(1300)
+    },
+    primary: '[data-testid=formula-sheet]',
+    measure: 'read',
+  },
+  {
+    id: 'formula-sheet-middle',
+    reach: async (w) => {
+      await w.intoView('[data-testid=formula-group-determinants]')
+    },
+    primary: '[data-testid=formula-sheet]',
     measure: 'read',
   },
   {

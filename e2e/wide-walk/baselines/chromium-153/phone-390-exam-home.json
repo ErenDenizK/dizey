@@ -2725,7 +2725,7 @@
    16,
    125,
    358,
-   368
+   570
   ],
   "style": {
    "color": "oklch(0.9 0.007 80)",
@@ -3498,6 +3498,193 @@
    "font-size": "18.003px",
    "font-weight": "460",
    "border-radius": "8px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "section.exh-review",
+  "rect": [
+   16,
+   481,
+   358,
+   190
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "h2.dz-section-label",
+  "rect": [
+   32,
+   513,
+   326,
+   22
+  ],
+  "style": {
+   "color": "oklch(0.78 0.01 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "14.994px",
+   "font-weight": "650",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "div.dz-list",
+  "rect": [
+   16,
+   543,
+   358,
+   128
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "oklch(0.245 0.008 84.6)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "20px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "a[open-formulas]",
+  "rect": [
+   16,
+   543,
+   358,
+   64
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "span.dz-row-main",
+  "rect": [
+   32,
+   551,
+   304,
+   48
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "560",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "small.dz-footnote.sh-row-sub",
+  "rect": [
+   32,
+   577,
+   304,
+   22
+  ],
+  "style": {
+   "color": "oklch(0.78 0.01 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "14.994px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "svg.dz-chevron",
+  "rect": [
+   348,
+   567,
+   10,
+   16
+  ],
+  "style": {
+   "color": "oklch(0.628 0.012 81.8)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "a[open-summaries]",
+  "rect": [
+   16,
+   607,
+   358,
+   64
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "span.dz-row-main",
+  "rect": [
+   32,
+   615,
+   304,
+   48
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "560",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "small.dz-footnote.sh-row-sub",
+  "rect": [
+   32,
+   641,
+   304,
+   22
+  ],
+  "style": {
+   "color": "oklch(0.78 0.01 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "14.994px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "svg.dz-chevron",
+  "rect": [
+   348,
+   631,
+   10,
+   16
+  ],
+  "style": {
+   "color": "oklch(0.628 0.012 81.8)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
    "opacity": "1"
   }
  },
