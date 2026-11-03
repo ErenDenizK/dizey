@@ -304,47 +304,113 @@
   text-decoration: none;
   color: var(--ink-1);
 }
-/* One thin row under the lesson, a hairline apart: equal cells (one to three, only the ones that exist), each a label over its value. */
+/* Under the lesson, a row of secondary buttons (equal columns, one to three, only the ones that exist). The card's only
+   primary stays "Başla". Three items do not fit side by side as icon + label + chip, so on a phone each becomes a small
+   tile (icon and chip on top, the label under them); on a very narrow card the third takes its own line instead. */
 .ph-more {
   display: grid;
   grid-template-columns: repeat(var(--cols, 1), minmax(0, 1fr));
-  border-top: 0.5px solid var(--hairline-strong);
+  gap: var(--space-2);
+  padding: 0 var(--space-3) var(--space-3);
 }
 .ph-more:empty {
   display: none;
 }
 .ph-more__item {
   min-width: 0;
-  display: grid;
-  align-content: center;
-  justify-items: center;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
   min-height: var(--target);
-  padding: 0 var(--space-1);
+  padding: 0 var(--space-3);
   border: 0;
-  background: none;
-  text-align: center;
+  border-radius: var(--corner-button);
+  background: var(--control-soft);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+  text-align: start;
   text-decoration: none;
   font: inherit;
-  font-size: var(--type-caption);
-  line-height: var(--leading-caption);
-  letter-spacing: var(--tracking-caption);
-  color: var(--ink-1);
-}
-.ph-more__item + .ph-more__item {
-  border-inline-start: 0.5px solid var(--hairline-strong);
-}
-.ph-more__title,
-.ph-more__value {
-  max-width: 100%;
-  white-space: nowrap;
-}
-.ph-more__title {
-  font-weight: var(--weight-medium);
-  color: var(--ink-2);
-}
-.ph-more__value {
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
   font-weight: var(--weight-semibold);
   color: var(--ink-1);
+}
+/* Answered for today: quieter, still pressable. */
+.ph-more__item[data-testid="today-daily"][data-state="right"],
+.ph-more__item[data-testid="today-daily"][data-state="wrong"] {
+  color: var(--ink-2);
+}
+.ph-more__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+}
+.ph-more__label {
+  min-width: 0;
+  white-space: nowrap;
+}
+.ph-more__chip {
+  flex: none;
+  min-width: 24px;
+  padding: 0 var(--space-2);
+  border-radius: var(--corner-pill);
+  background: var(--bg);
+  box-shadow: inset 0 0 0 0.5px var(--hairline);
+  font-size: var(--type-caption);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+  text-align: center;
+  color: var(--ink-1);
+  white-space: nowrap;
+}
+/* Three items on a phone: tiles in one row. */
+@media (min-width: 344px) {
+  .ph-more[data-count="3"] .ph-more__item {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-areas: "icon chip" "label label";
+    grid-template-rows: 22px auto;
+    align-content: center;
+    align-items: center;
+    row-gap: var(--space-1);
+    min-height: 56px;
+    padding: var(--space-2) var(--space-1);
+    font-size: var(--type-caption);
+    line-height: var(--leading-footnote);
+    letter-spacing: var(--tracking-body);
+  }
+  .ph-more[data-count="3"] .ph-more__icon {
+    grid-area: icon;
+    justify-self: start;
+    margin-inline-start: var(--space-1);
+  }
+  .ph-more[data-count="3"] .ph-more__chip {
+    grid-area: chip;
+    justify-self: end;
+    margin-inline-end: var(--space-1);
+  }
+  .ph-more[data-count="3"] .ph-more__label {
+    grid-area: label;
+  }
+}
+/* Narrower than that the third item takes the second line. */
+@media (max-width: 343px) {
+  .ph-more[data-count="3"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ph-more[data-count="3"] > :last-child {
+    grid-column: 1 / -1;
+  }
+}
+@media (max-width: 359px) {
+  .ph-more__icon {
+    display: none;
+  }
+  .ph-more__item {
+    padding-inline: var(--space-2);
+  }
 }
 .ph-next__text {
   display: grid;

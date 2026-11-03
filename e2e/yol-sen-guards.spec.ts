@@ -52,7 +52,7 @@ test.describe('Yol dock card', () => {
           const value = document.querySelector(`.sh-pane:not([inert]) [data-testid="${id}"] .ph-more__value`)
           if (value) value.textContent = text
         }
-        set('today-review', '88 hata')
+        set('today-review', '88')
         set('today-exam', '12 gün')
       })
       const result = await page.evaluate(() => {
@@ -68,7 +68,7 @@ test.describe('Yol dock card', () => {
         for (const el of card.querySelectorAll<HTMLElement>('.ph-more *, .ph-next__title, .ph-next__where *'))
           if (el.scrollWidth > el.clientWidth + 0.5 && getComputedStyle(el).textOverflow === 'ellipsis')
             ellipsis.push(el.className)
-        for (const el of card.querySelectorAll<HTMLElement>('.ph-more__title, .ph-more__value'))
+        for (const el of card.querySelectorAll<HTMLElement>('.ph-more__label, .ph-more__chip'))
           if (el.scrollWidth > el.clientWidth + 0.5)
             ellipsis.push(`clipped ${el.className} ${el.textContent}`)
         const cells = [...card.querySelectorAll<HTMLElement>('.ph-more__item')].map(
@@ -81,17 +81,65 @@ test.describe('Yol dock card', () => {
       expect(result.overflowing).toEqual([])
       expect(result.ellipsis).toEqual([])
       expect(result.cells).toHaveLength(3)
-      for (const h of result.cells) expect(h).toBeGreaterThanOrEqual(48)
+      for (const h of result.cells) expect(h).toBeGreaterThanOrEqual(44)
     })
   }
 
-  test('the thin row has as many equal columns as it has items', async ({ page }) => {
+  test('the row has as many equal columns as it has items, except on the narrowest card', async ({
+    page,
+  }) => {
     await seed(page, 390)
-    const columns = await pane(page)
-      .locator('.ph-more')
-      .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)
-    expect(columns).toBe(3)
+    const columns = () =>
+      pane(page)
+        .locator('.ph-more')
+        .evaluate((el) => getComputedStyle(el).gridTemplateColumns.split(' ').length)
+    expect(await columns()).toBe(3)
+    await page.setViewportSize({ width: 320, height: 844 })
+    await page.waitForTimeout(300)
+    // On a card narrower than 300 px, three tiles no longer fit: the third takes its own line.
+    expect(await columns()).toBe(2)
   })
+
+  for (const width of WIDTHS) {
+    test(`the row's items read as buttons at ${width} px: a surface, 44 px, an icon, ink text`, async ({
+      page,
+    }) => {
+      await seed(page, width)
+      const host = pane(page)
+      await expect(host.getByTestId('today-daily')).toBeVisible()
+      await page.waitForTimeout(500)
+      const items = await host.locator('.ph-more__item').evaluateAll((els) => {
+        const probe = document.createElement('i')
+        probe.style.color = 'var(--ink-2)'
+        document.body.append(probe)
+        const ink2 = getComputedStyle(probe).color
+        probe.remove()
+        return els.map((el) => {
+          const cs = getComputedStyle(el)
+          const label = el.querySelector('.ph-more__label') as HTMLElement
+          const icon = el.querySelector('.ph-more__icon') as HTMLElement
+          return {
+            testid: el.getAttribute('data-testid'),
+            state: el.getAttribute('data-state'),
+            bg: cs.backgroundColor,
+            height: el.getBoundingClientRect().height,
+            iconShown: getComputedStyle(icon).display !== 'none' && icon.querySelector('svg') !== null,
+            labelColor: getComputedStyle(label).color,
+            ink2,
+          }
+        })
+      })
+      expect(items.length).toBeGreaterThanOrEqual(2)
+      for (const item of items) {
+        expect(item.bg).not.toBe('rgba(0, 0, 0, 0)')
+        expect(item.bg).not.toBe('transparent')
+        expect(item.height).toBeGreaterThanOrEqual(44)
+        if (width >= 360) expect(item.iconShown).toBe(true)
+        if (item.state === 'open' || item.testid !== 'today-daily')
+          expect(item.labelColor).not.toBe(item.ink2)
+      }
+    })
+  }
 
   test('a long lesson title wraps to two lines instead of ellipsising', async ({ page }) => {
     // Chapter 1 done: the dock offers "Elemanter satır işlemleri" (r1).
