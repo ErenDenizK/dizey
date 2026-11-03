@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
 
 /**
- * Size classes: the one definition of how wide a window is (decision 0020). Compact is today's phone and never
+ * Size classes: the one definition of how wide a window is (decision 0021). Compact is today's phone and never
  * changes; medium (a tablet, a narrow window) is one centred column; expanded adds the in-flow side column.
  * The same numbers sit in the CSS media queries (`min-width: 600px`, `min-width: 1024px`, which cannot read a
  * variable) and in the `--size-*-from` tokens of src/styles/tokens.css; src/ui/size-class.test.ts keeps all three equal.

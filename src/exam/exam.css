@@ -678,7 +678,7 @@ button.exs-seal__cell {
   }
 }
 
-/* ---- Wide screens (decision 0020): the rehearsal and its result are full-window surfaces with a centred reading column ---- */
+/* ---- Wide screens (decision 0021): the rehearsal and its result are full-window surfaces with a centred reading column ---- */
 @media (min-width: 600px) {
   .exr {
     background: var(--bg);

@@ -8,7 +8,7 @@ import { isMediumUp } from './size-class'
 
 /**
  * Bottom sheet with two detents (medium, large), drag to resize or dismiss. From 600 px it is a centred dialog instead
- * (decision 0020): as tall as its content, fading and rising in over a scrim that covers the whole window, closed by an
+ * (decision 0021): as tall as its content, fading and rising in over a scrim that covers the whole window, closed by an
  * outside tap, Escape or a drag down; no detents and the screen behind does not recede.
  *
  * One value moves: the sheet's y. The scrim and the receding screen behind are derived from it in

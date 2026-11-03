@@ -10,7 +10,7 @@ import type { Page } from '@playwright/test'
 export const channel = process.env.E2E_CHANNEL ?? 'production'
 export const prefix = channel === 'production' ? '' : `${channel}:`
 
-/** The size classes the walk measures, as the design names them (decision 0020). The CSS and TS constants are tested separately. */
+/** The size classes the walk measures, as the design names them (decision 0021). The CSS and TS constants are tested separately. */
 export const SIZES = {
   'phone-390': { width: 390, height: 844 },
   'phone-320': { width: 320, height: 568 },

@@ -670,7 +670,7 @@
 }
 
 /*
- * One layout system from 600 px up (decision 0020); under 600 nothing here applies. Every surface fills the window
+ * One layout system from 600 px up (decision 0021); under 600 nothing here applies. Every surface fills the window
  * with its own background and centres its content on the window's centre: a screen's frame raises the gutter
  * until the content is one of the measures in tokens.css (page, read or stage); fixed layers centre with inset and
  * auto margins, never against a "left area". The frame carries no transform: a transform would make it the

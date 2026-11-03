@@ -218,7 +218,7 @@
   --bar-clearance: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
   --nav-height: 48px; /* top bar */
   /*
-   * Size classes (decision 0020): compact under 600 px (today's phone, never changed), medium from 600 px (one centred
+   * Size classes (decision 0021): compact under 600 px (today's phone, never changed), medium from 600 px (one centred
    * column), expanded from 1024 px (the stage grid with an in-flow side column). A media query cannot read a
    * variable, so the two boundaries are written in words here and as literals in the CSS; src/ui/size-class.ts holds
    * the same numbers and size-class.test.ts keeps all of them equal.
