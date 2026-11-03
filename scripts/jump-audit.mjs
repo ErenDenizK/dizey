@@ -95,6 +95,17 @@ export async function openAuditPage(browser, url, { fresh = false } = {}) {
 
 /** Steps the virtual clock until the engine is idle, sampling every frame. */
 export const hooks = { onFrame: null }
+/** Steps the virtual clock until the engine has been idle for 8 frames, without sampling (no frames recorded). */
+export async function drive(page, cap = 900) {
+  for (let i = 0, quiet = 0; i < cap && quiet < 8; i++) {
+    const busy = await page.evaluate((ms) => {
+      window.__dzReview.review.step(ms)
+      return window.__dzReview.engine.isActive()
+    }, FRAME)
+    quiet = busy ? 0 : quiet + 1
+  }
+}
+
 export async function film(page, frames, cap = 900) {
   for (let i = 0, quiet = 0; i < cap && quiet < 8; i++) {
     const [busy, sample] = await page.evaluate((ms) => {
