@@ -98,3 +98,21 @@ composition (chords stamped under a tune) and in timbre (synthetic voices).
 **What changed.** For music, render a prototype offline first, from real instrument samples, and play two or three
 versions to Eren before any app code exists. Build only the one he picks. Tests then guard what he chose (levels,
 timing, no clicks), not whether it is good.
+
+## 2026-11-03: every sound is judged inside the full mix, not alone
+
+**What happened.** The recorded cues (0.73.0) were chosen by Eren from a prototype and then passed every guard. In the
+app he said they "come in and cut off too abruptly", were "too showy and bright" and "do not fit the background music".
+
+**Root cause.** Three things, one habit. The cues were designed and judged in isolation and never heard over the music
+they play on. "Çok şaşalı" (colourful, showy) was taken as "bright" and answered with glock, flute and a high melody,
+when what he meant was striking but soft. And the music was cut for the cues (`conductor.fade`), the exact fault ADR 0018
+had already named, so the loudest moments were also the ones where the bed vanished. The cue files also ended on a
+length budget with the reverb cut short, so a soft start did not make a soft end.
+
+**What changed.** Music and cues share one palette (soft piano, harp, strings, cello), one room and one top end
+(decision 0020). The music keeps playing under a cue and only ducks. Cues end on their own room tail and a long
+exponential fade, never on a cut. Evaluate every sound inside the full mix: render a real lesson with the music and the
+cues together and listen to that, and when a word like "colourful" has two readings (bright, or rich), ask or render
+both before building.
+
