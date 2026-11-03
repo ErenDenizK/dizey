@@ -1,7 +1,7 @@
 import { readFileSync, writeFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
 import { fingerprint, lockProblems } from '../engine/fingerprint'
-import { determinantQuestions } from './determinant'
+import { generatedQuestions } from './all'
 
 /**
  * Stability guard for generated questions. Attempt and mistake records key on question ids, so a locked id
@@ -16,7 +16,7 @@ const path = new URL('./lock.json', import.meta.url)
 const README =
   'Fingerprints of generated questions, id -> content. Only add via "pnpm lock:questions"; never edit a locked entry. See lock.test.ts.'
 
-const current = Object.fromEntries(determinantQuestions.map((q) => [q.id, fingerprint(q)]))
+const current = Object.fromEntries(generatedQuestions.map((q) => [q.id, fingerprint(q)]))
 
 function readLock(): Record<string, string> {
   return (JSON.parse(readFileSync(path, 'utf8')) as { fingerprints: Record<string, string> }).fingerprints

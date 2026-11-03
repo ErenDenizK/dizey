@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import * as Q from '../../../lib/math/rational'
-import { determinantFamilies } from '../generated/determinant'
+import { generatedFamilies } from '../generated/all'
 import { buildQuestion } from './assemble'
 import { fingerprint } from './fingerprint'
 import { renderValue, texNumber } from './format'
@@ -40,7 +40,7 @@ describe('number rendering', () => {
 })
 
 describe('assembler', () => {
-  for (const family of determinantFamilies) {
+  for (const family of generatedFamilies) {
     it(`${family.id} is deterministic per seed and has five distinct options`, () => {
       const meta = { id: `v1-gen-${family.id}-01`, item: 1 }
       const first = buildQuestion(family, 11, meta)

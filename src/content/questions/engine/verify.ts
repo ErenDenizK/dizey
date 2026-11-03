@@ -5,7 +5,9 @@ import { optionKeys, type Question } from '../types'
 import { rootSet, sameValue, valueKey } from './format'
 import { genericFit } from './phone-fit'
 import type { OptionValue } from './types'
+import { DET_ANALYSERS } from './verify-dets'
 import { adjugate, bestLine, expand, leibniz, matrixWithDet, permanent } from './verify-math'
+import { MATRIX_ANALYSERS } from './verify-matrices'
 import {
   evalGrid,
   evalLinear,
@@ -15,8 +17,10 @@ import {
   parseOptionValue,
   parseScalarExpression,
   stemExpression,
-  stemTexts,
 } from './verify-parse'
+import { ROW_ANALYSERS } from './verify-rows'
+import { type Analysis, abs, int, n, sizeLimits, stemOf } from './verify-shared'
+import { SYSTEM_ANALYSERS } from './verify-systems'
 
 /**
  * The independent verifier. It shares no code with the generators: it reads what a student sees (matrix
@@ -26,30 +30,11 @@ import {
  * and the family's phone-fit limits.
  */
 
-interface Analysis {
-  readonly truth: OptionValue
-  readonly models: Readonly<Record<string, readonly OptionValue[]>>
-  readonly limits: readonly string[]
-}
-
-const n = (value: Rational): OptionValue => ({ kind: 'num', value })
-const int = (value: number): Rational => Q.rational(value)
-const abs = (v: Rational): Rational => (v.num < 0n ? Q.neg(v) : v)
-
 function power(base: Rational, exponent: number): Rational {
   let result = Q.ONE
   for (let i = 0; i < Math.abs(exponent); i++) result = Q.mul(result, base)
   return exponent < 0 ? Q.div(Q.ONE, result) : result
 }
-
-function sizeLimits(truth: Rational, extra: readonly string[] = []): string[] {
-  const out = [...extra]
-  if (abs(truth).num > 200n) out.push(`|answer| ${Q.format(truth)} exceeds 200`)
-  if (truth.den > 64n) out.push(`answer ${Q.format(truth)} has a large denominator`)
-  return out
-}
-
-const stemOf = (q: Question) => stemTexts(q).join(' ')
 
 function orderOf(text: string): number {
   const size = parseInteger(text, /(\d) \\times \1/)
@@ -342,7 +327,7 @@ function analyseRowOps(q: Question): Analysis {
 
 function analyseSingular(q: Question): Analysis {
   const block = matrixBlocks(q.stem)[0]
-  if (!block || block.rows.length !== 3) throw new Error('needs a 3x3 matrix in k')
+  if (block?.rows.length !== 3) throw new Error('needs a 3x3 matrix in k')
   const at = (kValue: number) => leibniz(evalGrid(block.rows, { k: kValue }))
   const coefficients = (valueAt: (kValue: number) => Rational) => {
     const [f0, f1, f2, f3] = [0, 1, 2, 3].map(valueAt) as [Rational, Rational, Rational, Rational]
@@ -395,6 +380,10 @@ function analyseSingular(q: Question): Analysis {
 // ---------------------------------------------------------------- driver
 
 const ANALYSERS: Readonly<Record<string, (q: Question) => Analysis>> = {
+  ...MATRIX_ANALYSERS,
+  ...ROW_ANALYSERS,
+  ...DET_ANALYSERS,
+  ...SYSTEM_ANALYSERS,
   'd3-scalar': analyseScalar,
   'd3-row-ops': analyseRowOps,
   'd2-numeric': analyseNumeric,
