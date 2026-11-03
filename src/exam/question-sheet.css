@@ -86,3 +86,8 @@
   line-height: var(--leading-read);
   color: var(--ink-1);
 }
+
+/* In a dialog (600 px and up, Sheet.tsx) the question scrolls inside the dialog's own 85% height and the action stays pinned. */
+.dz-sheet[data-dialog] .sh-sheet-body.td-q {
+  max-height: calc(85dvh - var(--space-5) - var(--space-6) - env(safe-area-inset-bottom));
+}

@@ -46,6 +46,7 @@ export function MeView() {
   return (
     <Screen
       title={strings.me.title}
+      measure="stage"
       action={
         <PressLink
           to="/settings"
@@ -61,7 +62,7 @@ export function MeView() {
       <div className="me-page">
         <Scene />
         <ProfileStatus />
-        {/* "What to do": under 1000 px these two sit in the page; from 1000 px they move into the bottom-right card. */}
+        {/* "What to do": under 1024 px these two sit in the page; from 1024 px they are the stage's side column. */}
         <div className="me-aside" data-testid="me-aside">
           <MistakeLog />
           <NextBadge />

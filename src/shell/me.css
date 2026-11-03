@@ -588,37 +588,36 @@ section[aria-labelledby="badges"] > .dz-section-label {
   text-decoration: none;
 }
 
-/* ---- Wide screens ------------------------------------------------------------------------------------------- */
-/* The two groups are boxes only where they have to be: under 1000 px they are not a layout box at all. */
+/* ---- Wide screens (decision 0020) ------------------------------------------------------------------------- */
+/* The two groups are boxes only where they have to be: under 1024 px they are not a layout box at all. */
 .me-aside {
   display: contents;
 }
-@media (min-width: 600px) {
-  /* A reading column in the middle; the head, the matrix and the badges keep phone proportions. */
+/*
+ * Medium: one centred column (the screen's gutter does the centring, ui.css). Expanded: the stage grid, the head, the
+ * matrix and the badges in the main column and the mistake log with the next badge in the side column, in the flow
+ * and sticky under the safe area; a long mistake list makes the page longer, never the card scroll.
+ */
+@media (min-width: 1024px) {
   .me-page {
-    max-width: var(--column-max);
-    margin-inline: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--side-col);
+    grid-template-rows: repeat(4, auto) 1fr;
+    column-gap: var(--gap-group);
+    align-items: start;
   }
-}
-@media (min-width: 1000px) {
-  /* The left area: everything but "what to do", top-aligned on the page gutter. */
-  .me-page {
-    margin-inline: 0;
+  .me-page > :not(.me-aside) {
+    grid-column: 1;
+    min-width: 0;
   }
-  .sh-pane:has(.me-page) .dz-screen {
-    padding-right: calc(var(--page-gutter) + var(--wide-reserve));
-  }
-  /* What to do (the mistake log and the next badge) is the one card at the bottom right, its foot level with the tab bar's. */
   .me-aside {
-    position: fixed;
-    z-index: 4;
-    right: var(--page-gutter);
-    bottom: var(--bar-bottom);
-    width: var(--card-wide);
+    grid-column: 2;
+    grid-row: 1 / span 5;
+    position: sticky;
+    /* Under the settings gear, which floats at the stage's top right. */
+    top: calc(env(safe-area-inset-top) + var(--space-2) + var(--target) + var(--space-3));
     display: grid;
     gap: var(--space-4);
-    max-height: calc(100dvh - var(--bar-bottom) - var(--space-8) * 2);
-    overflow-y: auto;
     padding: var(--card-pad);
     border-radius: var(--corner-card);
     background: var(--surface);

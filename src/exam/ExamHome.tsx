@@ -62,6 +62,7 @@ export function ExamHome() {
       backLabel={strings.exam.back}
       parent={strings.tabs.path}
       pushed
+      measure="read"
     >
       <div className="exh">
         {running ? <ResumePaper session={session} now={now} /> : null}

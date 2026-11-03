@@ -203,7 +203,9 @@
   --gap-group: var(--space-8);
 
   /* ---- Layout ---------------------------------------------------------- */
-  --page-gutter: 16px; /* screen edge to content */
+  --page-gutter: var(
+    --gutter-base
+  ); /* screen edge to content; a wide screen's own frame raises it (ui.css) */
   --card-pad: 16px;
   --group-gap: var(--gap-group);
   --stack-gap: var(--gap-item);
@@ -216,15 +218,25 @@
   --bar-clearance: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
   --nav-height: 48px; /* top bar */
   /*
-   * Wide screens. Breakpoints cannot be tokens in a media query, so they live here in words: from 600 px the
-   * path walks four columns and the app stops being a phone column; from 1000 px "what to do" moves to a card at
-   * the bottom right (src/shell/path-home.css, me.css). Under 600 nothing changes.
+   * Size classes (decision 0020): compact under 600 px (today's phone, never changed), medium from 600 px (one centred
+   * column), expanded from 1024 px (the stage grid with an in-flow side column). A media query cannot read a
+   * variable, so the two boundaries are written in words here and as literals in the CSS; src/ui/size-class.ts holds
+   * the same numbers and size-class.test.ts keeps all of them equal.
    */
-  --column-max: 560px; /* a reading column on a wide screen (the dock card, Sen's head and badges) */
-  --card-wide: 360px; /* the bottom-right card from 1000 px */
-  --wide-reserve: calc(var(--card-wide) + var(--page-gutter) * 2); /* the right column, gutters included */
+  --size-medium-from: 600px;
+  --size-expanded-from: 1024px;
+  /*
+   * Width by purpose, from 600 px up. Every surface fills the window with its background; only its content takes one
+   * of these widths, centred on the window's centre. page: Sen, settings, onboarding, labs. read: a lesson, a
+   * rehearsal, a question, a dialog. stage: Yol and Sen, the main column plus the side column.
+   */
+  --measure-page: 640px;
+  --measure-read: 640px;
+  --stage-wide: 1120px;
+  --stage-col: var(--measure-page);
+  --side-col: 360px; /* the side column of the stage grid (expanded) */
+  --gutter-base: 16px;
   --bar-width: 360px; /* the floating tab bar on a wide screen: phone width */
-  --lesson-max: 640px; /* a lesson or rehearsal stage keeps phone proportions */
 
   /* ---- Radius: concentric (outer = inner + padding) -------------------- */
   --corner-device: 55px; /* current iPhone screen corners, for full-bleed surfaces */
@@ -355,6 +367,14 @@
   --badge-gloss-out: oklch(1 0 0 / 0);
   --badge-rim: oklch(1 0 0 / 0.22);
   --badge-ground: oklch(0 0 0 / 0.45);
+}
+
+/* Expanded (1024 px and up): a longer reading measure and the stage grid. */
+@media (min-width: 1024px) {
+  :root {
+    --measure-read: 720px;
+    --stage-col: var(--stage-wide);
+  }
 }
 
 /* Increase Contrast: glass turns solid and secondary ink matches primary. */

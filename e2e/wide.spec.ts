@@ -1,9 +1,10 @@
 import { expect, type Page, test } from '@playwright/test'
 
 /**
- * Wide-screen guards: the phone never changes under 600 px; from 600 px the path walks four columns and the dock
- * stays the bottom card (max 560, centred); from 1000 px "what to do" lives in a card bottom right and a picked
- * lesson swaps into it. Measured on a resting app (reduced motion).
+ * Wide-screen guards (decision 0020): the phone never changes under 600 px; from 600 px the path walks four columns
+ * in one centred column and the dock stays the bottom card at that column's width; from 1024 px Yol and Sen are a stage
+ * grid with an in-flow 360 px side column, and a picked lesson opens the same peek as on a phone. The whole app,
+ * screen by screen, is guarded by wide-walk.spec.ts; these are the Yol and Sen specifics. Measured on a resting app.
  */
 
 const channel = process.env.E2E_CHANNEL ?? 'production'
@@ -71,13 +72,13 @@ test.describe('wide layout', () => {
     expect(await noHorizontalScroll(page)).toBe(true)
   })
 
-  test('820 x 1180: four columns, a bottom dock at most 560 wide and centred, the tab bar centred', async ({
+  test('820 x 1180: four columns in one 640 px column, the dock at its width above the centred tab bar', async ({
     page,
   }) => {
     await open(page, 820, 1180)
     expect(await columnsOf(page)).toBe(4)
     const dock = await box(page, '.sh-pane:not([inert]) .dz-card.ph-next')
-    expect(dock.width).toBeLessThanOrEqual(560.5)
+    expect(dock.width).toBeCloseTo(640, 0)
     expect(dock.x + dock.width / 2).toBeCloseTo(410, 0)
     const bar = await box(page, '.dz-tabbar')
     expect(bar.x + bar.width / 2).toBeCloseTo(410, 0)
@@ -85,89 +86,93 @@ test.describe('wide layout', () => {
     expect(await noHorizontalScroll(page)).toBe(true)
   })
 
-  test('1180 x 820: four columns, the dock card bottom right level with the tab bar, clear of the path', async ({
+  test('1180 x 820: the stage grid, the path on the left and the dock card in flow on the right, one axis with the bar', async ({
     page,
   }) => {
     await open(page, 1180, 820)
     expect(await columnsOf(page)).toBe(4)
     const card = await box(page, '.sh-pane:not([inert]) .dz-card.ph-next')
     const bar = await box(page, '.dz-tabbar')
-    expect(card.x + card.width).toBeCloseTo(1180 - GUTTER, 0)
+    // The stage is 1120 wide, centred: 30 px each side; the side column is 360 and ends on the stage's right edge.
+    expect(card.x + card.width).toBeCloseTo(1180 - 30, 0)
     expect(card.width).toBeCloseTo(360, 0)
-    expect(card.y + card.height).toBeCloseTo(bar.y + bar.height, 0)
-    // The bar is phone width, centred under the left area.
-    expect(bar.width).toBeCloseTo(360, 0)
-    expect(bar.x + bar.width / 2).toBeCloseTo((1180 - (360 + 2 * GUTTER)) / 2, 0)
+    expect(bar.x + bar.width / 2).toBeCloseTo(590, 0)
+    const dock = await page.evaluate(() => {
+      const el = document.querySelector<HTMLElement>('.sh-pane:not([inert]) .ph-dock')
+      if (!el) return null
+      const style = getComputedStyle(el)
+      return { position: style.position, overflowY: style.overflowY }
+    })
+    expect(dock?.position).toBe('sticky')
+    expect(dock?.overflowY).toBe('visible')
     // No node touches the card.
     const overlaps = await page.evaluate(
-      ([x, y]) =>
+      ([x, y, bottom]) =>
         [
           ...document.querySelectorAll('.sh-pane:not([inert]) .pa-tile, .sh-pane:not([inert]) .pa-test'),
         ].filter((el) => {
           const r = el.getBoundingClientRect()
-          return r.right > (x as number) && r.bottom > (y as number) && r.top < 820 && r.left < 1180
+          return (
+            r.right > (x as number) && r.left < 1180 && r.top < (bottom as number) && r.bottom > (y as number)
+          )
         }).length,
-      [card.x, card.y],
+      [card.x, card.y, card.y + card.height],
     )
     expect(overlaps).toBe(0)
     expect(await noHorizontalScroll(page)).toBe(true)
   })
 
-  test('1180 x 820: tapping a lesson swaps the card, opens no sheet, and "Sıradakine dön" restores it', async ({
+  test('1180 x 820: tapping a lesson opens the same peek as on a phone, and the dock card stays where it is', async ({
     page,
   }) => {
     await open(page, 1180, 820)
     const before = await box(page, '.sh-pane:not([inert]) .dz-card.ph-next')
     await pane(page).locator('.pa-tile:not([data-next])').nth(1).click()
-    const preview = page.getByTestId('dock-preview')
-    await expect(preview).toBeVisible()
+    await expect(page.getByTestId('lesson-peek')).toBeVisible()
+    await expect(page.getByTestId('dock-preview')).toHaveCount(0)
+    const after = await box(page, '.sh-pane:not([inert]) .dz-card.ph-next')
+    expect(after.x).toBeCloseTo(before.x, 0)
+    expect(after.y).toBeCloseTo(before.y, 0)
+    await page.keyboard.press('Escape')
     await expect(page.getByTestId('lesson-peek')).toHaveCount(0)
-    const after = await box(page, '[data-testid="dock-preview"]')
-    expect(after.x + after.width).toBeCloseTo(before.x + before.width, 0)
-    expect(after.y + after.height).toBeCloseTo(before.y + before.height, 0)
-    await expect(pane(page).locator('.ph-next-lane')).toHaveAttribute('inert', '')
-    await page.getByTestId('dock-back').click()
-    await expect(preview).toHaveCount(0)
-    await expect(pane(page).locator('.ph-next-lane')).not.toHaveAttribute('inert', '')
-    await expect(pane(page).getByTestId('today-next')).toBeVisible()
   })
 
-  test('1180 x 820, Sen: Hata defteri and Sıradaki sit in the bottom-right card, the rest on the left', async ({
+  test('1180 x 820, Sen: Hata defteri and Sıradaki are the side column in flow, the rest the main column', async ({
     page,
   }) => {
     await open(page, 1180, 820)
     await page.getByRole('navigation', { name: 'Bölümler' }).getByText('Sen').click()
     await page.waitForTimeout(600)
     const aside = await box(page, '.sh-pane:not([inert]) .me-aside')
-    const bar = await box(page, '.dz-tabbar')
-    expect(aside.x + aside.width).toBeCloseTo(1180 - GUTTER, 0)
-    expect(aside.y + aside.height).toBeCloseTo(bar.y + bar.height, 0)
+    expect(aside.x + aside.width).toBeCloseTo(1180 - 30, 0)
+    expect(aside.width).toBeCloseTo(360, 0)
+    const position = await page.evaluate(
+      () => getComputedStyle(document.querySelector('.sh-pane:not([inert]) .me-aside') as Element).position,
+    )
+    expect(position).toBe('sticky')
     await expect(pane(page).locator('.me-aside').getByText('Hata defteri')).toBeVisible()
     await expect(pane(page).locator('.me-aside').getByText('Sıradaki')).toBeVisible()
     const matrix = await box(page, '.sh-pane:not([inert]) [data-testid="me-status"]')
-    expect(matrix.x + matrix.width).toBeLessThanOrEqual(GUTTER + 560 + 1)
+    expect(matrix.x + matrix.width).toBeLessThanOrEqual(aside.x)
     expect(await noHorizontalScroll(page)).toBe(true)
   })
 
   test('resizing 1180 to 390 returns to the phone layout without a reload', async ({ page }) => {
     await open(page, 1180, 820)
-    await pane(page).locator('.pa-tile:not([data-next])').nth(1).click()
-    await expect(page.getByTestId('dock-preview')).toBeVisible()
     await page.setViewportSize({ width: 390, height: 844 })
     await page.waitForTimeout(600)
     expect(await columnsOf(page)).toBe(2)
-    await expect(page.getByTestId('dock-preview')).toHaveCount(0)
     const dock = await box(page, '.sh-pane:not([inert]) .dz-card.ph-next')
     expect(dock.x).toBeCloseTo(GUTTER, 0)
     expect(dock.width).toBeCloseTo(390 - 2 * GUTTER, 0)
-    // A tap now opens the phone's sheet again.
+    // A tap opens the phone's sheet.
     await pane(page).locator('.pa-tile:not([data-next])').nth(1).click()
     await expect(page.getByTestId('lesson-peek')).toBeVisible()
     expect(await noHorizontalScroll(page)).toBe(true)
   })
 
   test('nothing scrolls sideways at any width', async ({ page }) => {
-    for (const width of [320, 599, 600, 768, 999, 1000, 1180, 1440]) {
+    for (const width of [320, 599, 600, 768, 1023, 1024, 1180, 1440]) {
       await open(page, width, 820)
       expect(await noHorizontalScroll(page), `width ${width}`).toBe(true)
     }

@@ -182,7 +182,7 @@ async function wideChecks(page: Page, size: SizeName, entry: Entry, n: number, n
 
   if (entry.dialog) {
     const hits = await page.evaluate(
-      ([w, h]) => {
+      ([w, h, dialog]) => {
         const pts: [string, number, number][] = [
           ['top-left', 4, 4],
           ['top-right', w - 4, 4],
@@ -190,13 +190,23 @@ async function wideChecks(page: Page, size: SizeName, entry: Entry, n: number, n
           ['bottom-right', w - 4, h - 4],
         ]
         const bar = document.querySelector('.dz-tabbar')?.getBoundingClientRect()
-        if (bar && bar.width > 0) pts.push(['tab-bar', bar.left + bar.width / 2, bar.top + bar.height / 2])
-        return pts.map(([name, x, y]) => ({
-          name,
-          scrim: !!document.elementFromPoint(x, y)?.closest('.dz-scrim'),
-        }))
+        if (bar && bar.width > 0 && bar.bottom <= h)
+          pts.push(['tab-bar', bar.left + bar.width / 2, bar.top + bar.height / 2])
+        // The side card and the cat on its edge are content like any other: the scrim covers them too.
+        for (const el of document.querySelectorAll('.ph-dock, .me-aside')) {
+          const r = el.getBoundingClientRect()
+          if (r.width > 0 && r.height > 0) {
+            pts.push(['side-card', r.left + r.width / 2, r.top + r.height / 2])
+            pts.push(['side-card-edge', r.right - 28, r.top - 14])
+          }
+        }
+        // Whatever is on top at a point is the scrim or the dialog itself: never the tab bar, a side card or the screen.
+        return pts.map(([name, x, y]) => {
+          const hit = document.elementFromPoint(x, y)
+          return { name, scrim: !!hit?.closest('.dz-scrim') || !!hit?.closest(dialog) }
+        })
       },
-      [width, height] as const,
+      [width, height, entry.primary] as const,
     )
     for (const hit of hits) if (!hit.scrim) note(`the scrim does not cover ${hit.name}`)
 

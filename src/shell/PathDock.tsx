@@ -19,7 +19,6 @@ import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
 import { Check, ClockIcon, DailyIcon, RetryIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
-import { DockPreview, type Preview } from './DockPreview'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import { type TodayBlock, todayBlocks } from './today-blocks'
@@ -44,18 +43,11 @@ function DockCat() {
 }
 
 /**
- * The dock above the tab bar: one card and nothing else. It holds the next lesson, the screen's only primary
+ * The dock: one card and nothing else (above the tab bar on a phone and a tablet, the side column's sticky card from 1024 px). It holds the next lesson, the screen's only primary
  * button (decision 0012), and under it a row of secondary buttons, each an icon and a label (the question of the day, the
  * mistakes to retry, the rehearsal when the exam is close; none of them ever drawn empty).
  */
-export function PathDock({
-  preview = null,
-  onBack = () => {},
-}: {
-  /** Wide screens: the lesson picked on the path, whose card takes this slot. */
-  preview?: Preview | null
-  onBack?: () => void
-}) {
+export function PathDock() {
   const records = useLessonRecords()
   const { outcomes } = useExam()
   const { examDate } = useSettings()
@@ -116,40 +108,14 @@ export function PathDock({
   )
 
   return (
-    <div className="ph-dock" data-testid="path-dock" data-previewing={preview ? '' : undefined}>
-      <NextLane away={preview !== null}>
-        {main ? (
-          <NextLesson lessonId={main.id} count={blocks.length - 1}>
-            {more}
-          </NextLesson>
-        ) : (
-          <AllDone count={blocks.length - 1}>{more}</AllDone>
-        )}
-      </NextLane>
-      <DockPreview preview={preview} onBack={onBack} />
-    </div>
-  )
-}
-
-/**
- * The slot's usual card. On a phone the lane is transparent to layout (display: contents) and `away` never turns on.
- * On a wide screen it fades out under a picked lesson's card and back in over the spring engine, never in one frame.
- */
-function NextLane({ away, children }: { away: boolean; children: React.ReactNode }) {
-  const lane = useRef<HTMLDivElement>(null)
-  const first = useRef(true)
-  useLayoutEffect(() => {
-    const el = lane.current
-    if (!el) return
-    if (first.current) {
-      first.current = false
-      if (!away) return
-    }
-    engine.to(el, { opacity: away ? 0 : 1 }, 'fade')
-  }, [away])
-  return (
-    <div ref={lane} className="ph-lane ph-next-lane" inert={away || undefined}>
-      {children}
+    <div className="ph-dock" data-testid="path-dock">
+      {main ? (
+        <NextLesson lessonId={main.id} count={blocks.length - 1}>
+          {more}
+        </NextLesson>
+      ) : (
+        <AllDone count={blocks.length - 1}>{more}</AllDone>
+      )}
     </div>
   )
 }

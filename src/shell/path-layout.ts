@@ -1,5 +1,6 @@
 import type { Lesson } from '../content/lessons/types'
 import type { Chapter } from '../content/path'
+import { SIZE_FROM } from '../ui/size-class'
 
 /**
  * The geometry of the path: every lesson and every chapter test walks a grid in a serpentine (boustrophedon).
@@ -15,11 +16,10 @@ export const COL_X: Record<number, readonly number[]> = {
   2: [28, 72],
   4: [12.5, 37.5, 62.5, 87.5],
 }
-/** The path is this wide (px) or wider: four columns. Below it, the phone's two. */
-export const WIDE_PATH = 600
 /** How many columns a path of this measured width (px) walks. */
 export function columnCount(width: number): 2 | 4 {
-  return width >= WIDE_PATH ? 4 : 2
+  // A path as wide as the medium size class starts: four columns. Below it, the phone's two.
+  return width >= SIZE_FROM.medium ? 4 : 2
 }
 /** Distance between the centres of two rows of one chapter (px). */
 export const ROW = 100

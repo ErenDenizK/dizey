@@ -6,6 +6,7 @@ import { engine } from '../engine/driver'
 import { CHOREO, CHOREO_MS } from '../engine/tokens'
 import { readSettings } from '../progress/settings'
 import { MeIcon, PathIcon } from '../ui/icons'
+import { isMediumUp, useSizeClass } from '../ui/size-class'
 import { TabBar } from '../ui/TabBar'
 import { MeView } from './MeView'
 import {
@@ -65,6 +66,7 @@ export function Shell() {
   const overlay = routeTab === null
   // Decided from the target path before the route mounts: a sheet over the dimmed tab or a full push.
   const present = overlay ? presentationOf(pathname) : 'push'
+  const wide = useSizeClass() !== 'compact'
   const presentRef = useRef(present)
   presentRef.current = present
   // Under a full-screen route the tab it came from stays where it was. Opened straight onto one (a
@@ -120,7 +122,8 @@ export function Shell() {
     if (!overlay || !el) return
     // A route opened again before the last exit finished replaces its ghost at once.
     finishExit?.()
-    const sheet = presentRef.current === 'sheet'
+    // From 600 px a sheet route (the rehearsal) is a full-window route: nothing shows above it to drag or tap.
+    const sheet = presentRef.current === 'sheet' && !isMediumUp()
     const card = visibleCard()
     const closeSheet = () => void navigateRef.current({ to: returnTab.current })
     const stopDrag = sheet
@@ -206,7 +209,7 @@ export function Shell() {
       />
       {overlay ? (
         <>
-          {present === 'sheet' ? (
+          {present === 'sheet' && !wide ? (
             // The dimmed tab above the sheet: a tap on it closes the sheet.
             <div
               className="sh-sheet-dismiss"

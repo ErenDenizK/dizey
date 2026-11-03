@@ -558,6 +558,30 @@
   padding-top: var(--space-3);
 }
 
+/*
+ * From 600 px a sheet is a centred dialog: the measure of a reading column, as tall as its content up to 85% of the window
+ * (it scrolls inside only past that), over a scrim that covers the whole window (Sheet.tsx sets data-dialog).
+ */
+.dz-sheet[data-dialog] {
+  inset: 0;
+  margin: auto;
+  width: min(var(--measure-read), calc(100% - var(--gutter-base) * 2));
+  height: fit-content;
+  max-height: 85dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  border-radius: var(--corner-sheet);
+  padding-top: var(--space-5);
+}
+/* A dialog's text keeps a reading line, whatever the dialog's width. */
+.dz-sheet[data-dialog] p {
+  max-width: 52ch;
+}
+.dz-sheet[data-dialog] .dz-grabber-hit {
+  display: none;
+}
+
 /* ---- Lesson stage overlay (card grows into it) ----------------------------------- */
 .dz-morph {
   position: absolute;
@@ -646,40 +670,43 @@
 }
 
 /*
- * Wider than a phone (a tablet or a computer window): the frame takes the whole window and the screens inside it
- * lay themselves out (the path walks four columns, the tab bar stays phone-sized and centred, sheets and lessons
- * keep a phone-proportioned column in the middle). Under 600 px nothing here applies. The transform makes the
- * frame the containing block for the full-screen layers inside it (lesson, exam run, sheets).
+ * One layout system from 600 px up (decision 0020); under 600 nothing here applies. Every surface fills the window
+ * with its own background and centres its content on the window's centre: a screen's frame raises the gutter
+ * until the content is one of the measures in tokens.css (page, read or stage); fixed layers centre with inset and
+ * auto margins, never against a "left area". The frame carries no transform: a transform would make it the
+ * containing block of every fixed layer and was how 0.62.0 put each layer on its own axis.
  */
 @media (min-width: 600px) {
   html,
   body {
     background: var(--bg);
   }
-  .dz-app {
-    transform: translateZ(0);
+  .dz-screen-frame {
+    --col: var(--measure-page);
+    --page-gutter: max(var(--gutter-base), calc((100vw - var(--col)) / 2));
+  }
+  .dz-screen-frame[data-measure="read"] {
+    --col: var(--measure-read);
+  }
+  .dz-screen-frame[data-measure="stage"] {
+    --col: var(--stage-col);
   }
   .dz-tabbar {
-    left: calc(50% - var(--bar-width) / 2);
-    right: auto;
+    left: 0;
+    right: 0;
+    margin-inline: auto;
     width: var(--bar-width);
   }
-  /* Sheets keep a phone-proportioned width, centred. */
-  .dz-sheet {
-    max-width: var(--column-max);
-    margin-inline: auto;
+  /* A second-level route is a full-window page here, not a raised sheet over a receded tab. */
+  [data-present="sheet"] .dz-screen[data-pushed] {
+    background: var(--bg);
+    border-radius: 0;
+    padding-top: calc(env(safe-area-inset-top) + var(--space-3));
   }
-  /* Sen's one floating action stays on its column's right edge. */
-  .dz-float-action {
-    right: calc(max(var(--page-gutter), (100% - var(--column-max)) / 2) - var(--space-2));
+  [data-present="sheet"] .dz-screen[data-pushed] .dz-screen-head {
+    background: var(--bg);
   }
-}
-/* From 1000 px the left area (everything but the right column) holds the screens and the tab bar. */
-@media (min-width: 1000px) {
-  .dz-tabbar {
-    left: calc((100% - var(--wide-reserve)) / 2 - var(--bar-width) / 2);
-  }
-  .dz-float-action {
-    right: calc(100% - var(--page-gutter) - var(--column-max) - var(--space-2));
+  [data-present="sheet"] .dz-screen[data-pushed] .dz-screen-grabber {
+    display: none;
   }
 }
