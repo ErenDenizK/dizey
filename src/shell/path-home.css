@@ -451,7 +451,7 @@
   padding: 0 var(--space-5);
 }
 
-/* ---- Wide screens (decision 0020) ------------------------------------------------------------------------- */
+/* ---- Wide screens (decision 0021) ------------------------------------------------------------------------- */
 /*
  * Medium (600 px and up): the path is one centred column of the page measure, four columns inside it; the paper still
  * runs edge to edge behind it and the dock is the phone's bottom card at the column's width.

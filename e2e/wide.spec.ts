@@ -1,7 +1,7 @@
 import { expect, type Page, test } from '@playwright/test'
 
 /**
- * Wide-screen guards (decision 0020): the phone never changes under 600 px; from 600 px the path walks four columns
+ * Wide-screen guards (decision 0021): the phone never changes under 600 px; from 600 px the path walks four columns
  * in one centred column and the dock stays the bottom card at that column's width; from 1024 px Yol and Sen are a stage
  * grid with an in-flow 360 px side column, and a picked lesson opens the same peek as on a phone. The whole app,
  * screen by screen, is guarded by wide-walk.spec.ts; these are the Yol and Sen specifics. Measured on a resting app.

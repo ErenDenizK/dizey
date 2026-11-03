@@ -116,3 +116,20 @@ exponential fade, never on a cut. Evaluate every sound inside the full mix: rend
 cues together and listen to that, and when a word like "colourful" has two readings (bright, or rich), ask or render
 both before building.
 
+## 2026-11-03: Widescreen 0.62.0 shipped broken
+
+**What happened.** 0.62.0 made the app "wide-aware", and Eren called the result broken. Only Yol and Sen had been
+designed, tested and screenshotted at wide sizes. The change also removed the app's frame column, which moved every
+other surface onto its own axis: sheets, lessons, the rehearsal, Settings and onboarding were never opened at a wide
+size, and they sat off-centre, on strips of different widths, with black bars. A second interaction model, the swap-in
+card with no way to dismiss it, read as "pages do not open".
+
+**Root cause.** Verification was scoped to the files changed, not to the blast radius of a global frame change. The done
+condition named two screens instead of every screen at every target size. Mockups were reviewed more carefully than the
+real app.
+
+**Guard.** `e2e/wide-walk.spec.ts` walks a manifest of every screen and overlay, reached by real taps, at four wide sizes
+(820, 1024, 1180, 1440): one axis, the declared measure, no sideways overflow, dialogs under a full-window scrim that close
+on Escape and an outside tap, no bars at the window's edges, no line over 80 characters, the side column in flow. The same
+manifest is compared with phone baselines (390, and 320 for Yol, Sen and the lesson). Any change to the shell frame, the
+tokens or the overlays runs the full walk, and a new screen is added to the manifest (decision 0021).

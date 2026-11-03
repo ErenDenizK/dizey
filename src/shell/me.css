@@ -588,7 +588,7 @@ section[aria-labelledby="badges"] > .dz-section-label {
   text-decoration: none;
 }
 
-/* ---- Wide screens (decision 0020) ------------------------------------------------------------------------- */
+/* ---- Wide screens (decision 0021) ------------------------------------------------------------------------- */
 /* The two groups are boxes only where they have to be: under 1024 px they are not a layout box at all. */
 .me-aside {
   display: contents;

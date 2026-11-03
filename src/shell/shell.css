@@ -1620,7 +1620,7 @@ svg.ls-duo {
   z-index: 29;
 }
 
-/* ---- Wide screens (decision 0020; from 600 px, below it nothing applies) ---------------------------------------- */
+/* ---- Wide screens (decision 0021; from 600 px, below it nothing applies) ---------------------------------------- */
 /*
  * Every route is a full-window surface with its content in one centred column: a lesson and a rehearsal in the reading
  * measure, onboarding in the page measure. A second-level route presented as a sheet on a phone (the rehearsal) is a plain
