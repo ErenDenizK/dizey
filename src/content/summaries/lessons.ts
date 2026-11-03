@@ -599,9 +599,9 @@ export const summaries: Readonly<Record<string, Summary>> = {
   'x1-big-connection': {
     gist: 'Kare matriste tek bir bilgi bütün listeyi söyler.',
     points: [
-      'Regüler $\\iff |A| \\neq 0 \\iff$ rank $n \\iff$ indirgenince $I$.',
-      'Regüler $\\iff Ax = 0$ yalnız aşikâr çözüm $\\iff Ax = b$ her $b$ için tek çözüm $\\iff A^{-1}$ var.',
-      'Singüler: hepsi tersine döner. $|A| = 0$, rank $< n$, sıfır satır, $Ax = 0$ sonsuz çözüm.',
+      'Regüler: $|A| \\neq 0 \\iff \\text{rank}(A) = n \\iff A \\to I$.',
+      'Aynı cümle: $Ax = 0$ yalnız aşikâr çözüm, $Ax = b$ her $b$ için tek çözüm, $A^{-1}$ var.',
+      'Singüler: hepsi tersine döner. $|A| = 0$, $\\text{rank}(A) < n$, sıfır satır, $Ax = 0$ sonsuz çözüm.',
       'Şıkta bir halkayı bilince diğerlerini hesaplamadan ele.',
     ],
     trap: '$|A| = 0$ "çözüm yok" demez: $Ax = b$ çözümsüz ya da sonsuz olur, tek çözüm olmaz.',
