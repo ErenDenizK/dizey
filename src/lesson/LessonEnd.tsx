@@ -8,7 +8,7 @@ import { chapterOf, chapters } from '../content/path'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { useExam } from '../exam/store'
-import { BadgeReveal, landReveal } from '../rewards/BadgeReveal'
+import { BadgeReveal, landReveal, REVEAL_MS } from '../rewards/BadgeReveal'
 import { type Badge, earnedBadges } from '../rewards/badges'
 import { markShown, unshown } from '../rewards/store'
 import { PressLink } from '../shell/PressLink'
@@ -28,11 +28,30 @@ const END_CHANNEL = 'lesson-end'
 const END_MS = { cellsFrom: 210, cellStagger: 80, closeAfter: 105 } as const
 /** Brackets start this far open (old --seal-gap). */
 const SEAL_GAP = 14
-/** New rozetler wait this long after the seal closes (the duo's cheer plays out), then one every BADGE_EVERY. */
-const BADGE_AFTER = 1100
-const BADGE_EVERY = 2600
+/** New rozetler wait at least this long after the seal closes (the duo's cheer plays out), then one every badgeEvery(). */
+const BADGE_AFTER_MIN = 1100
+const BADGE_EVERY_MIN = 2600
+/** A rozet's seal sound plays no sooner than this after the reward cue's home chord, and no sooner than its own end plus this (decision 0019). */
+const SOUND_GAP_MS = { afterHome: 1000, afterSeal: 600 } as const
 /** At most this many rozet moments at one lesson end; the rest wait on Profil with their spark dot. */
 const BADGE_MAX = 3
+
+const rewardKind = (reward: SoundEvent) =>
+  reward === 'halfway' || reward === 'milestone' ? reward : 'lessonEnd'
+
+/**
+ * The first rozet comes after the reward cue has landed its home chord and rung for a second, so its own seal sound
+ * never talks over the reward. The rozet's sound plays tileFrom + closeAfter after the rozet appears (BadgeReveal).
+ */
+function badgeAfter(reward: SoundEvent) {
+  const home = (lightScore(rewardKind(reward)).chords.at(-1) ?? 0) * 1000
+  const soundDelay = REVEAL_MS.tileFrom + REVEAL_MS.closeAfter
+  return Math.max(BADGE_AFTER_MIN, Math.ceil(home + SOUND_GAP_MS.afterHome - soundDelay))
+}
+
+/** One rozet after another, never closer than the rozet seal sound's length plus a breath. */
+const badgeEvery = () =>
+  Math.max(BADGE_EVERY_MIN, Math.ceil(lightScore('seal').end * 1000 + SOUND_GAP_MS.afterSeal))
 
 /**
  * The lesson end (old feel-layer end screen, inventory 8): the Satır and Sütun duo above a "Cevapların" seal, one
@@ -116,7 +135,7 @@ export function LessonEnd({
       if (!flown.current) duo.current?.react('proud')
       // Then each new rozet takes the seal's place; it counts as shown once it is on screen.
       for (const [at, next] of fresh.entries()) {
-        engine.after(BADGE_AFTER + at * BADGE_EVERY, () => {
+        engine.after(badgeAfter(reward) + at * badgeEvery(), () => {
           markShown([next.id], Date.now())
           // The seal fades before the rozet takes its place, instead of vanishing in one frame.
           const seal = el.querySelector<HTMLElement>('.ls-seal')
@@ -273,7 +292,7 @@ const GLINT_STAGGER = 70
  * light playing with the music.
  */
 function celebrate(root: HTMLElement, reward: SoundEvent, perfect: boolean) {
-  const kind = reward === 'halfway' || reward === 'milestone' ? reward : 'lessonEnd'
+  const kind = rewardKind(reward)
   const light = LIGHT[kind]
   const halo = root.querySelector<HTMLElement>('.ls-end__halo')
   const layer = root.querySelector<HTMLElement>('.fx-layer')

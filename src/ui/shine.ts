@@ -1,4 +1,6 @@
 import { engine } from '../engine/driver'
+import { isCueEvent } from '../sound/cues'
+import { CUE_TIMELINE } from '../sound/cueTimeline'
 import { createScore, type SoundEvent } from '../sound/score'
 
 /**
@@ -6,7 +8,7 @@ import { createScore, type SoundEvent } from '../sound/score'
  * chapter finished, a lesson's tick landing on the path). Everything runs on the spring engine, so a tap lands it,
  * reduced motion keeps only the glows (they fade, nothing travels) and the review script can step it frame by frame.
  *
- * The light follows the music: `lightScore` reads the same score the synth plays, so a glow swells on each chord and
+ * The light follows the music: `lightScore` reads the recorded cue's timeline, or the same score the synth plays, so a glow swells on each chord and
  * a spark leaves on each arpeggio note. With sound off the light keeps the same rhythm.
  */
 
@@ -19,6 +21,11 @@ export type LightScore = { chords: number[]; shines: number[]; end: number }
 const CHORD_SPLIT = 0.3
 
 export function lightScore(event: SoundEvent): LightScore {
+  // A recorded cue brings its own timeline (rendered with it), so the light lands on the notes that are heard.
+  if (isCueEvent(event)) {
+    const { chords, shines, end } = CUE_TIMELINE[event]
+    return { chords: [...chords], shines: [...shines], end }
+  }
   const plan = createScore(() => 0.5).plan(event)
   const mains = plan.notes
     .filter((note) => note.kind === 'main')
