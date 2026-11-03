@@ -85,5 +85,5 @@ picked by step index.
    cat's head with its tail pointing at her, at most 55 vw wide. It rides the perch's lift, so it enters after the rise
    (opacity and scale on the engine) and sinks behind the card's edge with her. It is `aria-hidden`; the verdict's
    `aria-label` carries the line, so it is announced once.
-5. The first step's cat perches on the top edge of the first card, over the top bar, so the step counter fades out
-   (`useEase`) while she is there. No new sounds.
+5. The first step's cat perches on the first card's top edge, in a 40 px lane reserved above that card from the first frame, so
+   she never covers the top bar and nothing moves when she arrives. No new sounds.
