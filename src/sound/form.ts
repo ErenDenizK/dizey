@@ -21,6 +21,9 @@ export type Role = 'open' | 'travel' | 'tension' | 'arrival' | 'coda'
 /** A short gesture on a phrase's first beat that answers a key moment (see music.ts flourishNotes). */
 export type Flourish = 'rise' | 'peak' | 'cascade'
 
+/** The unit's theme (music.ts THEMES): M, R, D, S by the lesson's unit; home outside lessons. */
+export type Theme = 'home' | 'M' | 'R' | 'D' | 'S'
+
 export type MusicCue = {
   chord: ChordId
   /** 0–1: how many layers play and how high the line sits. */
@@ -30,6 +33,8 @@ export type MusicCue = {
   act: number
   /** Same for every step of one lesson: picks the lesson's own motif. */
   seed: number
+  /** Which theme the melody sings. Absent: the home theme. */
+  theme?: Theme
   /** Played on the first beat of the phrase this cue starts. */
   flourish?: Flourish
 }
@@ -74,7 +79,7 @@ export function actStarts(kinds: readonly StepKind[]): number[] {
   return split
 }
 
-export function planLesson(kinds: readonly StepKind[], seed = 1): MusicCue[] {
+export function planLesson(kinds: readonly StepKind[], seed = 1, theme?: Theme): MusicCue[] {
   const n = kinds.length
   if (!n) return []
   const random = seeded(seed)
@@ -109,7 +114,14 @@ export function planLesson(kinds: readonly StepKind[], seed = 1): MusicCue[] {
       : isQuestion(kinds[end - 1] as StepKind) && !isQuestion(kinds[end] as StepKind)
         ? 'I'
         : 'vi'
-    const closing: ChordId = last ? 'IV' : nextOpening === 'I' && act >= 2 && random() < 0.5 ? 'iv' : 'V'
+    // An act that opened on vi closes on III (V/vi), a deceptive approach heard as colour.
+    const closing: ChordId = last
+      ? 'IV'
+      : opening === 'vi'
+        ? 'III'
+        : nextOpening === 'I' && act >= 2 && random() < 0.5
+          ? 'iv'
+          : 'V'
     for (let i = start; i < end; i++) {
       actOf[i] = act
       let chord: ChordId
@@ -140,6 +152,11 @@ export function planLesson(kinds: readonly StepKind[], seed = 1): MusicCue[] {
     }
   })
 
+  // On a travel step right before ii, the dominant of ii (VI) sometimes leans in.
+  for (let i = 2; i < n; i++)
+    if (chords[i] === 'ii' && roles[i - 1] === 'travel' && !starts.includes(i - 1) && random() < 0.5)
+      chords[i - 1] = 'VI'
+
   return chords.map((chord, i) => {
     const act = actOf[i] as number
     const start = starts[act] as number
@@ -147,6 +164,13 @@ export function planLesson(kinds: readonly StepKind[], seed = 1): MusicCue[] {
     const whole = n > 1 ? i / (n - 1) : 1
     const local = end - start > 1 ? (i - start) / (end - start - 1) : 0
     const energy = clamp(0.12 + 0.62 * whole + 0.26 * local, 0, 1)
-    return { chord, energy: Math.round(energy * 100) / 100, role: roles[i] as Role, act, seed }
+    return {
+      chord,
+      energy: Math.round(energy * 100) / 100,
+      role: roles[i] as Role,
+      act,
+      seed,
+      ...(theme ? { theme } : {}),
+    }
   })
 }
