@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Cheer } from '../character/Cheer'
+import { flight } from '../character/flight'
 import type { MirtisMood } from '../character/Mirtis'
 import { lineOf, MOOD_OF, type Moment, pastHalf, pickMoment as pickCheer } from '../character/moments'
 import { lessons } from '../content/lessons'
@@ -47,6 +48,8 @@ const SECRET_GAP = 520
 const MOMENT_CHANNEL = 'moment'
 /** The first step's cat comes in after the lesson's own entrance has settled (ms). */
 const GREET_DELAY = 650
+/** With Mırtis flying in from the page before, she lands as soon as the overlay has opened enough to hold her (ms). */
+const FLIGHT_GREET_DELAY = 380
 
 /** First-try answers in a row that turn the correct chord into a streak. */
 const STREAK = 3
@@ -153,7 +156,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     })
     if (!m) return
     memo.current.lastAt = 0
-    engine.withChannel('hello', () => engine.after(GREET_DELAY, () => setHello(m)))
+    engine.withChannel('hello', () =>
+      engine.after(flight.holding() ? FLIGHT_GREET_DELAY : GREET_DELAY, () => setHello(m)),
+    )
     return () => engine.cancelCues('hello')
   }, [])
   /** The verdict is out: does she step in? */
@@ -192,6 +197,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     sounded.current = index
   }, [index])
   useEffect(() => () => setSoundContext({}), [])
+  // A lesson closed with no flight in the air gives the dock its cat back (flight.ts).
+  useEffect(() => () => flight.restore('dock'), [])
 
   // Resume point: the step on screen (the gizli an is not a step).
   useEffect(() => {
@@ -286,6 +293,8 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
     // The reward sounds when the end screen's seal closes, not at the tap.
     const reward = rewardFor(lesson, doneBefore)
     haptic(20)
+    // Her verdict perch is where the hero's flight starts; the end screen lands her.
+    if (!(lesson.moment && momentState(readMoments(), lesson.id) !== 'solved')) flight.depart('verdict')
     if (lesson.moment && momentState(readMoments(), lesson.id) !== 'solved') {
       // The secret question comes first; the reward waits behind it.
       setReplays(0)
@@ -309,6 +318,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const leaveMoment = (skip: boolean) => {
     if (!moment) return
     if (skip) setMoment(lesson.id, 'skipped')
+    flight.depart('verdict')
     setEnded(moment.reward)
     setMomentView(null)
   }
@@ -484,6 +494,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
             className="ls-top__btn"
             aria-label={strings.lesson.close}
             data-sound="close"
+            onClick={() => {
+              if (ended && returnTab.current === '/') flight.go('hero', 'dock', 'happy')
+            }}
           >
             <Close />
           </Link>

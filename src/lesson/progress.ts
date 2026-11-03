@@ -20,6 +20,12 @@ export function resumeIndex(lesson: Lesson, record: LessonRecord): number {
   return Math.max(index, 0)
 }
 
+/** Whether opening this lesson greets the learner with Mırtis: it starts at its first step, which explains. */
+export function greetsOnOpen(lesson: Lesson, record: LessonRecord): boolean {
+  const first = lesson.steps[0]
+  return resumeIndex(lesson, record) === 0 && first !== undefined && !isQuestion(first)
+}
+
 export function isQuestion(step: Step): step is Extract<Step, { kind: 'choice' | 'keypad' }> {
   return step.kind === 'choice' || step.kind === 'keypad'
 }

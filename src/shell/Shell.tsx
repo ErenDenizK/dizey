@@ -1,5 +1,6 @@
 import { Outlet, useNavigate, useRouterState } from '@tanstack/react-router'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { CatFlight } from '../character/CatFlight'
 import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { CHOREO, CHOREO_MS } from '../engine/tokens'
@@ -221,6 +222,7 @@ export function Shell() {
         </>
       ) : null}
       <div ref={overlayHostRef} className="sh-sheet-host" />
+      <CatFlight />
       <Onboarding />
     </div>
   )
