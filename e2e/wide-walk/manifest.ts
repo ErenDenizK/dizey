@@ -85,7 +85,7 @@ export const manifest: Entry[] = [
       if (!(await w.tap('[data-testid=today-daily]'))) throw new Error('no daily')
       await w.settle(800)
     },
-    primary: '[data-testid=question-sheet]',
+    primary: '.dz-sheet',
     measure: 'read',
     box: 'border',
     dialog: true,
@@ -98,7 +98,7 @@ export const manifest: Entry[] = [
       if (!(await w.tap(`${pane} .pa-test[data-state="preparing"]`))) throw new Error('no preparing test')
       await w.settle(800)
     },
-    primary: '[data-testid=chapter-test-note]',
+    primary: '.dz-sheet',
     measure: 'read',
     box: 'border',
     dialog: true,

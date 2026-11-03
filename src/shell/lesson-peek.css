@@ -130,10 +130,12 @@
   color: var(--ink-2);
 }
 
-/* A wide window (600 px and up): the card keeps a phone-proportioned width, centred over the path. */
+/* From 600 px the card is a centred dialog (decision 0020): the reading measure, as tall as its content, over the whole window's scrim. */
 @media (min-width: 600px) {
   .lp {
-    max-width: var(--column-max);
-    margin-inline: auto;
+    inset: 0;
+    margin: auto;
+    width: min(var(--measure-read), calc(100% - var(--gutter-base) * 2));
+    height: fit-content;
   }
 }

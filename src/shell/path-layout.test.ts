@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { chapters } from '../content/path'
-import { columnCount, columnsAt, layoutPath, WIDE_PATH } from './path-layout'
+import { SIZE_FROM } from '../ui/size-class'
+import { columnCount, columnsAt, layoutPath } from './path-layout'
 
 describe('layoutPath', () => {
   const layout = layoutPath(chapters)
@@ -63,10 +64,10 @@ describe('layoutPath', () => {
   })
 
   it('walks four columns from a path 600 px wide, two below it', () => {
-    expect(columnCount(WIDE_PATH - 1)).toBe(2)
-    expect(columnCount(WIDE_PATH)).toBe(4)
-    expect(columnsAt(WIDE_PATH - 1)).toHaveLength(2)
-    expect(columnsAt(WIDE_PATH)).toHaveLength(4)
+    expect(columnCount(SIZE_FROM.medium - 1)).toBe(2)
+    expect(columnCount(SIZE_FROM.medium)).toBe(4)
+    expect(columnsAt(SIZE_FROM.medium - 1)).toHaveLength(2)
+    expect(columnsAt(SIZE_FROM.medium)).toHaveLength(4)
   })
 })
 
@@ -140,7 +141,7 @@ describe('layoutPath in four columns', () => {
   })
 
   it('puts every column and every y on whole CSS px for any wide path width', () => {
-    for (let width = WIDE_PATH; width <= 1200; width++) {
+    for (let width = SIZE_FROM.medium; width <= 1200; width++) {
       const cols = columnsAt(width)
       expect(cols).toHaveLength(4)
       for (const [i, x] of cols.entries()) {

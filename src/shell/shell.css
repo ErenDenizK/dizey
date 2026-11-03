@@ -1620,22 +1620,32 @@ svg.ls-duo {
   z-index: 29;
 }
 
-/* ---- Wide screens: routes and sheets keep phone proportions, centred (from 600 px; below it nothing applies) ---- */
+/* ---- Wide screens (decision 0020; from 600 px, below it nothing applies) ---------------------------------------- */
+/*
+ * Every route is a full-window surface with its content in one centred column: a lesson and a rehearsal in the reading
+ * measure, onboarding in the page measure. A second-level route presented as a sheet on a phone (the rehearsal) is a plain
+ * full-window route here: there is no tab to see above it.
+ */
 @media (min-width: 600px) {
-  /* A full-screen route's content (settings, a rehearsal's result) is a centred column; the lesson and rehearsal stages are already max 440. */
-  .sh-overlay__content {
-    max-width: var(--lesson-max);
-    margin-inline: auto;
-  }
-  /* A second-level route presented as a sheet is a centred sheet, not a full-width one. */
   .sh-overlay[data-present="sheet"] {
-    left: 0;
-    right: 0;
-    max-width: var(--column-max);
-    margin-inline: auto;
+    top: 0;
+    bottom: 0;
+    border-radius: 0;
   }
   .sh-overlay[data-present="sheet"] .sh-overlay__content {
+    bottom: 0;
+    border-radius: 0;
+  }
+  .sh-sheet-dismiss {
+    display: none;
+  }
+  .ls-run {
     max-width: none;
+    margin-inline: 0;
+    padding-inline: max(var(--gutter-base), calc((100% - var(--measure-read)) / 2));
+  }
+  .sh-onb {
+    padding-inline: max(var(--space-6), calc((100% - var(--measure-page)) / 2));
   }
 }
 

@@ -677,3 +677,16 @@ button.exs-seal__cell {
     font-size: 1em;
   }
 }
+
+/* ---- Wide screens (decision 0020): the rehearsal and its result are full-window surfaces with a centred reading column ---- */
+@media (min-width: 600px) {
+  .exr {
+    background: var(--bg);
+  }
+  .exr-frame,
+  .exs {
+    max-width: none;
+    margin-inline: 0;
+    padding-inline: max(var(--gutter-base), calc((100% - var(--measure-read)) / 2));
+  }
+}

@@ -1,4 +1,3 @@
-import { useRouterState } from '@tanstack/react-router'
 import { useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { lessons } from '../content/lessons'
@@ -8,14 +7,13 @@ import { engine } from '../engine/driver'
 import { stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { Screen } from '../ui/Screen'
-import type { Preview } from './DockPreview'
+import { isExpanded } from '../ui/size-class'
 import { LessonPeek, type Peek } from './LessonPeek'
 import { PathDock } from './PathDock'
 import { ChapterTestNode, Gate, LessonNode, type TestNote, TestNoteSheet } from './PathNodes'
 import { useCelebrations } from './path-effects'
 import { columnCount, columnsAt, layoutPath } from './path-layout'
 import { overlayHostRef } from './stage'
-import { useWide } from './wide'
 import './path-home.css'
 
 /**
@@ -35,18 +33,6 @@ export function PathHome() {
   const columns = columnsAt(width, count)
   const layout = useMemo(() => layoutPath(chapters, count), [count])
   const [peek, setPeek] = useState<Peek | null>(null)
-  const [preview, setPreview] = useState<Preview | null>(null)
-  const wide = useWide()
-  const pathname = useRouterState({ select: (state) => state.location.pathname })
-  // A wide window picks a lesson into the dock's slot; a phone-sized one into the sheet. Crossing the line clears both.
-  const [seenWide, setSeenWide] = useState(wide)
-  if (seenWide !== wide) {
-    setSeenWide(wide)
-    setPeek(null)
-    setPreview(null)
-  }
-  // Going into a lesson hands the slot back.
-  if (preview && pathname.startsWith('/lesson')) setPreview(null)
   const [note, setNote] = useState<TestNote | null>(null)
   const mainNode = layout.nodes.find((node) => node.lesson?.id === main?.id)
   // Segments up to the lesson you are on are walked; with every lesson done the whole path is.
@@ -55,10 +41,9 @@ export function PathHome() {
   useCelebrations(root, records)
   useWalked(root, reached)
   useOpening(root, main?.id ?? null)
-  usePicked(preview?.tile ?? null)
 
   return (
-    <Screen title={strings.path.title}>
+    <Screen title={strings.path.title} measure="stage">
       <div className="ph-paper">
         <div className="ph-field">
           <div
@@ -126,9 +111,7 @@ export function PathHome() {
                         lesson={node.lesson}
                         record={records[node.lesson.id]}
                         main={current}
-                        onPick={(lesson, tile) =>
-                          wide ? setPreview({ lesson, tile }) : setPeek({ lesson, tile })
-                        }
+                        onPick={(lesson, tile) => setPeek({ lesson, tile })}
                       />
                     ) : c ? (
                       <ChapterTestNode chapter={c} number={node.chapter + 1} onNote={setNote} />
@@ -142,7 +125,7 @@ export function PathHome() {
             <Gate />
           </div>
         </div>
-        <PathDock preview={preview} onBack={() => setPreview(null)} />
+        <PathDock />
       </div>
       {overlayHostRef.current
         ? createPortal(
@@ -172,17 +155,6 @@ function useWidth(root: React.RefObject<HTMLElement | null>): number {
   return width
 }
 
-/** The lesson picked into the dock's slot wears a ring that grows in and out (never in one frame). */
-function usePicked(tile: HTMLElement | null) {
-  useLayoutEffect(() => {
-    if (!tile) return
-    engine.to(tile, { '--pick': 1 }, 'fade')
-    return () => {
-      engine.to(tile, { '--pick': 0 }, 'fade')
-    }
-  }, [tile])
-}
-
 /**
  * Opening the app, and coming back to a new lesson: the view glides to the lesson you are on, like a camera
  * finding your place, so it lands between the top of the screen and the dock. It rides the spring engine (never a native
@@ -201,7 +173,10 @@ function useOpening(root: React.RefObject<HTMLDivElement | null>, mainId: string
     const center = box.top - frame.top + scroller.scrollTop + box.height / 2
     // The free band of the screen: under the screen's top padding and above the dock, which rests at the bottom.
     const top = Number.parseFloat(getComputedStyle(scroller).paddingTop) || 0
-    const bottom = dock.getBoundingClientRect().top - frame.top
+    // From 1024 px the dock is the side column's card, not a bar at the bottom: the band runs to the tab bar's top instead.
+    const bottom = isExpanded()
+      ? scroller.clientHeight - Number.parseFloat(getComputedStyle(scroller).paddingBottom)
+      : dock.getBoundingClientRect().top - frame.top
     const goal = Math.max(
       0,
       Math.min(center - (top + bottom) / 2, scroller.scrollHeight - scroller.clientHeight),

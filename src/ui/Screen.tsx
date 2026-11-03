@@ -33,6 +33,7 @@ export function Screen({
   pushed = false,
   action,
   chrome = CHROME,
+  measure = 'page',
 }: {
   title: string
   /** Makes this a second-level screen: closes it (scene: "Bitti"; masthead: "‹ parent"). */
@@ -46,6 +47,8 @@ export function Screen({
   action?: ReactNode
   /** Defaults to the app-wide `CHROME`; tests pass both. */
   chrome?: Chrome
+  /** The width its content takes from 600 px up (tokens.css): a page, a reading column or the two-column stage. */
+  measure?: 'page' | 'read' | 'stage'
 }) {
   const scroller = useRef<HTMLDivElement>(null)
   const heading = useRef<HTMLHeadingElement>(null)
@@ -105,7 +108,7 @@ export function Screen({
   )
 
   return (
-    <div className="dz-screen-frame" style={{ position: 'absolute', inset: 0 }}>
+    <div className="dz-screen-frame" data-measure={measure} style={{ position: 'absolute', inset: 0 }}>
       <div ref={scroller} className="dz-screen" data-pushed={pushed || undefined} data-chrome={chrome}>
         {masthead ? null : back ? (
           <header className="dz-screen-head">

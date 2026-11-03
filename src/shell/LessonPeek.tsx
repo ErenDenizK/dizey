@@ -11,6 +11,7 @@ import { isQuestion, resumeIndex } from '../lesson/progress'
 import { stateOf } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { playSound } from '../sound/player'
+import { isMediumUp } from '../ui/size-class'
 import { clipWith, faceOf, insets } from './morph'
 import { PressLink } from './PressLink'
 import { morphFrom, stageRef } from './stage'
@@ -88,7 +89,8 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     engine.withChannel('chrome', () => {
       // The map behind recedes as one layer; the scrim does the dimming.
       // Under reduced motion the map only dims: a scale would land in one frame.
-      if (stage && !engine.reducedMotion) engine.to(stage, { scale: CHOREO.sheetRecede }, 'page')
+      if (stage && !engine.reducedMotion && !isMediumUp())
+        engine.to(stage, { scale: CHOREO.sheetRecede }, 'page')
       engine.to(el, { t: 0, r: 0, b: 0, l: 0, rad: radius }, 'page', { launch: 0.4 })
       engine.to(face, { opacity: 0 }, 'fade', { onArrive: () => face.remove() })
       if (scrim.current) engine.to(scrim.current, { opacity: CHOREO.sheetScrim }, 'fade')
@@ -155,6 +157,16 @@ export function LessonPeek({ peek, onClose }: { peek: Peek | null; onClose: () =
     setShown(null)
     closeRef.current()
   }, [pathname, shown])
+
+  // Escape closes the card wherever the focus is (a hardware keyboard on a tablet or a computer).
+  useEffect(() => {
+    if (!shown || closing.current) return
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeRef.current()
+    }
+    window.addEventListener('keydown', key)
+    return () => window.removeEventListener('keydown', key)
+  }, [shown])
 
   // Drag down to close; anything short of that springs back.
   useEffect(() => {
