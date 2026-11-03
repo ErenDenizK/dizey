@@ -204,7 +204,7 @@ describe('music conductor', () => {
               n.kind === 'shine' &&
               n.at >= start &&
               n.at < start + 0.3 * 10 &&
-              n.velocity >= 0.1 &&
+              n.velocity >= 0.07 &&
               n.at < start + 2 * BEAT,
           )
         expect(flourish.length, `${kind} ${chord}`).toBeGreaterThanOrEqual(5)

@@ -308,6 +308,8 @@ export type Note = {
   bright: number
   /** Swell time for pads, s. */
   rise?: number
+  /** Stereo position, -1..1. Default: follows the pitch, narrowly. */
+  pan?: number
 }
 
 export type SoundContext = {

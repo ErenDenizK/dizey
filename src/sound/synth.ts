@@ -122,9 +122,9 @@ const DUCK_EARLY = 0.02
  * Background music: a dark bus well under every event. Bus level per palette for −50 LUFS momentary
  * maximum before the master boost (measureMusic() in measure.ts), under the quietest tap.
  */
-const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -39.9, felt: -38.7, glass: -40.2 }
+const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -39.2, felt: -38.0, glass: -39.5 }
 // Darker than any event (the old app's bed sat under a 900 Hz low-pass), so it stays behind.
-const MUSIC_TONE = { cutoff: 1500, wet: 1.6 }
+const MUSIC_TONE = { cutoff: 2200, wet: 1.6 }
 /**
  * Events turn the music down while they ring, more the more they matter: a tap barely, a lesson beat
  * clearly, an answer deeply (its suspended 4th must not meet the music's 3rd). Lesson ends and
@@ -419,7 +419,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
       const velocity = note.velocity * (1 + (random() * 2 - 1) * 0.06)
       const at = note.at + (note.kind === 'main' && note.bright > 0.05 ? random() * 0.004 : 0)
       const hz = midiToHz(TONIC_MIDI + note.pitch)
-      const pan = clamp((TONIC_MIDI + note.pitch - 66) / 34, -0.3, 0.3)
+      const pan = note.pan ?? clamp((TONIC_MIDI + note.pitch - 66) / 34, -0.3, 0.3)
       const stopAt = at + note.ring + 0.05
       const played: Note = { ...note, at, velocity }
 

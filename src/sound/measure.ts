@@ -1,5 +1,5 @@
 import { createConductor, createLearner } from './conductor'
-import { type Flourish, type MusicCue, planLesson, type StepKind } from './form'
+import { type Flourish, hashOf, type MusicCue, planLesson, type StepKind, type Theme } from './form'
 import { PROGRESSION, seeded } from './harmony'
 import { composeSection, freshState, idleCue, SECTION } from './music'
 import { EVENTS, type SoundEvent } from './score'
@@ -213,8 +213,13 @@ export async function renderLesson(
 }
 
 /** Loudness of a whole planned lesson at its loudest (the peak energy), per palette. */
-export async function measureLessonMusic(palette: PaletteId = 'rhodes', masterDb = 0, steps = 12) {
-  const plan = planLesson(sampleKinds(steps), 1234)
+export async function measureLessonMusic(
+  palette: PaletteId = 'rhodes',
+  masterDb = 0,
+  steps = 12,
+  theme: Theme = 'S',
+) {
+  const plan = planLesson(sampleKinds(steps), 1234, theme)
   const buffer = await renderLesson(plan, { palette, masterDb })
   return { palette, peakEnergy: Math.max(...plan.map((c) => c.energy)), ...loudnessOf(buffer) }
 }
@@ -227,10 +232,10 @@ export async function measureLessonMusic(palette: PaletteId = 'rhodes', masterDb
 export async function renderListening(
   kinds: readonly StepKind[],
   lessonSeed: number,
-  options: { rate?: number; palette?: PaletteId; maxSeconds?: number } = {},
+  options: { rate?: number; palette?: PaletteId; maxSeconds?: number; theme?: Theme } = {},
 ) {
-  const { rate = 22050, palette = 'rhodes', maxSeconds = 185 } = options
-  const plan = planLesson(kinds, lessonSeed)
+  const { rate = 22050, palette = 'rhodes', maxSeconds = 185, theme } = options
+  const plan = planLesson(kinds, lessonSeed, theme)
   const random = seeded(99)
   // Step durations, then the whole thing scaled to fit the sample's length.
   let lengths = plan.map(() => 6 + random() * 8)
@@ -316,12 +321,58 @@ export async function renderListening(
   }
 
   const buffer = await ctx.startRendering()
-  const samples = buffer.getChannelData(0)
+  return { seconds: length, steps: plan.length, questions, int16: toInt16(buffer.getChannelData(0)) }
+}
+
+/** Peak-normalised to -1 dBFS, 16-bit. */
+function toInt16(samples: Float32Array) {
   let peak = 0
   for (const x of samples) peak = Math.max(peak, Math.abs(x))
   const gain = 10 ** (-1 / 20) / (peak || 1)
   const int16 = new Int16Array(samples.length)
   for (let i = 0; i < samples.length; i++)
     int16[i] = Math.round(Math.max(-1, Math.min(1, (samples[i] as number) * gain)) * 32767)
-  return { seconds: length, steps: plan.length, questions, int16 }
+  return int16
+}
+
+/**
+ * The five themes back to back, `seconds` each (home, M, R, D, S): each over the first steps of a
+ * planned lesson in its unit, at a steady middle energy, steps every 5 s. Mono samples at `rate`.
+ */
+export async function renderThemes(options: { rate?: number; seconds?: number; palette?: PaletteId } = {}) {
+  const { rate = 22050, seconds = 15, palette = 'rhodes' } = options
+  const themes: Theme[] = ['home', 'M', 'R', 'D', 'S']
+  const ctx = new OfflineAudioContext(1, rate * (seconds * themes.length + 6), rate)
+  const synth = createSynth(ctx, { random: seeded(7), palette })
+  themes.forEach((theme, n) => {
+    const plan = planLesson(sampleKinds(12), hashOf(`theme-${theme}`), theme)
+    const offset = n * seconds
+    let clock = offset
+    let step = 0
+    const conductor = createConductor({
+      now: () => clock,
+      sink: { play: (notes, at) => synth.playMusic(notes, at), cut: (at, tau) => synth.cutMusic(at, tau) },
+      random: seeded(5),
+      wanted: (phrase) =>
+        theme === 'home' ? idleCue(phrase) : { ...(plan[step] as MusicCue), energy: 0.55 },
+    })
+    conductor.setSeed(theme === 'home' ? 0 : (plan[0]?.seed ?? 0))
+    for (let t = 0; t < seconds; t += 0.4) {
+      clock = offset + t
+      if (
+        theme !== 'home' &&
+        t > 0 &&
+        Math.abs(t / 5 - Math.round(t / 5)) < 0.2 &&
+        step < Math.round(t / 5)
+      ) {
+        step = Math.round(t / 5)
+        conductor.request()
+      }
+      conductor.tick()
+    }
+    clock = offset + seconds
+    conductor.stop(0.6)
+  })
+  const buffer = await ctx.startRendering()
+  return { seconds: seconds * themes.length + 6, int16: toInt16(buffer.getChannelData(0)) }
 }

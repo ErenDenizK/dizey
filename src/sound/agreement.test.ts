@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { CHORDS, type ChordId, intervalOf, PROGRESSION, seeded } from './harmony'
-import { IDLE } from './music'
+import { HOME_LOOP } from './music'
 import { createScore, EVENTS, type SoundContext, type SoundEvent } from './score'
 
 /**
@@ -35,7 +35,7 @@ function check(event: SoundEvent, context: SoundContext, chord: ChordId) {
 
 describe('sounds agree with the music', () => {
   it('outside a lesson, every quick sound plays the chord the music holds', () => {
-    for (const chord of IDLE) for (const event of quick) check(event, { chord }, chord)
+    for (const chord of new Set(HOME_LOOP)) for (const event of quick) check(event, { chord }, chord)
   })
 
   it('inside a lesson, every quick sound plays the step chord the music follows', () => {
@@ -45,7 +45,7 @@ describe('sounds agree with the music', () => {
   })
 
   it('inside a lesson, a planned chord in the context wins over the step walk', () => {
-    for (const chord of ['I', 'vi', 'ii', 'V', 'iv', 'IV'] as ChordId[])
+    for (const chord of ['I', 'vi', 'ii', 'V', 'iv', 'IV', 'III', 'VI'] as ChordId[])
       for (const event of quick) check(event, { step: 3, steps: 12, chord }, chord)
   })
 
