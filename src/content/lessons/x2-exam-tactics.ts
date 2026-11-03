@@ -241,10 +241,8 @@ export const x2ExamTactics: Lesson = {
       id: 'exam-kn',
       kind: 'choice',
       eyebrow: 'Taktik 5',
-      title: '$3 \\times 3$ matriste $|A| = 4$. $|2A|$ kaç?',
-      body: 'Her satır $2$ ile çarpıldı. Kaç satır?',
+      title: '$3 \\times 3$ matriste $|A| = 4$ ise $|2A|$ kaç?',
       skill: 'scalar-power-n',
-      scene: { items: ['Q'] },
       options: [
         {
           key: 'a',
@@ -290,9 +288,9 @@ export const x2ExamTactics: Lesson = {
       beat: {
         kind: 'equation',
         lines: [
-          'k \\neq 2,\\ k \\neq -3: \\text{ tek çözüm}',
-          'k = 2: r_A = 2 < r_B = 3 \\text{ (çözüm yok)}',
-          'k = -3: r_A = r_B = 2 < 3 \\text{ (sonsuz çözüm)}',
+          'k \\neq 2,\\ k \\neq -3:\\ \\text{tek çözüm}',
+          'k = 2:\\ \\text{çözüm yok } (r_A < r_B)',
+          'k = -3:\\ \\text{sonsuz çözüm } (r_A = r_B < 3)',
         ],
       },
       claims: [
@@ -310,7 +308,6 @@ export const x2ExamTactics: Lesson = {
       kind: 'choice',
       eyebrow: 'Sınav tipi',
       title: 'Sistemin sonsuz çözümünün olması için $k$ kaç olmalı?',
-      body: 'Kökler $2$ ve $-3$. Şıklara bak.',
       skill: 'parametric-case',
       scene: { items: ['KS'] },
       options: [
@@ -333,17 +330,11 @@ export const x2ExamTactics: Lesson = {
           errorType: 'nonzero-determinant',
           feedback: '$k = 1/3$ kök değil: $|A| \\neq 0$, tek çözüm.',
         },
-        {
-          key: 'e',
-          content: [text('$-1/3$')],
-          errorType: 'nonzero-determinant',
-          feedback: '$k = -1/3$ kök değil: $|A| \\neq 0$, tek çözüm.',
-        },
       ],
       answer: 'c',
       reveal: {
         kind: 'equation',
-        lines: ['|A| = 0 \\iff k \\in \\{2, -3\\}', 'k = 2: \\text{çözüm yok}', 'k = -3: \\text{sonsuz}'],
+        lines: ['|A| = 0 \\iff k \\in \\{2, -3\\}', 'k = 2:\\ \\text{çözüm yok}', 'k = -3:\\ \\text{sonsuz}'],
       },
       solution:
         'Köklerden yalnız $-3$ şıklarda var. Emin olmak için: $k = -3$’te $r_A = r_B = 2 < 3$, sonsuz çözüm.',
