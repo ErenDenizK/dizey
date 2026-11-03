@@ -9,6 +9,7 @@ export const units = [
   { prefix: 'R', label: 'Satır işlemleri ve ters matris', examItems: 4 },
   { prefix: 'D', label: 'Determinant', examItems: 13 },
   { prefix: 'S', label: 'Lineer denklem sistemleri', examItems: 5 },
+  { prefix: 'X', label: 'Büyük resim', examItems: 0 },
 ] as const
 
 export const examItemTotal = 34

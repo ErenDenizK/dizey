@@ -30,6 +30,7 @@ export type NodeId =
   | 'S3'
   | 'S4'
   | 'X1'
+  | 'X2'
 
 export type OptionKey = 'a' | 'b' | 'c' | 'd' | 'e'
 

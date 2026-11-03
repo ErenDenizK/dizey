@@ -52,6 +52,12 @@ const spec = [
     examItems: 5,
     ids: ['s1-linear-systems', 's2-parametric-systems', 's3-homogeneous-systems', 's4-cramer'],
   },
+  {
+    id: 'big-picture',
+    label: 'Büyük resim',
+    examItems: null,
+    ids: ['x1-big-connection', 'x2-exam-tactics'],
+  },
 ] as const
 
 export const examItemTotal = 34
@@ -99,6 +105,7 @@ const tileTitles: Readonly<Record<string, string>> = {
   'd1-determinant': 'Determinant ve Sarrus',
   'd2-cofactor-expansion': 'Laplace açılımı',
   'd3-determinant-properties': 'Determinant özellikleri',
+  'x1-big-connection': 'Büyük Bağlantı',
 }
 
 export function tileTitle(lesson: Lesson): string {
