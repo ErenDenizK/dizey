@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { determinantFamilies, determinantQuestions } from '../generated/determinant'
+import { generatedFamilies, generatedQuestions } from '../generated/all'
 import type { Question } from '../types'
 import { optionKeys } from '../types'
 import { buildQuestion } from './assemble'
@@ -9,7 +9,7 @@ import { familyOf, phoneFitProblems, verifyQuestion } from './verify'
 const FUZZ_SEEDS = 150
 
 const fuzz = new Map(
-  determinantFamilies.map((family) => [
+  generatedFamilies.map((family) => [
     family.id,
     Array.from({ length: FUZZ_SEEDS }, (_, i) =>
       buildQuestion(family, 1000 + i, { id: `v1-gen-${family.id}-s${1000 + i}`, item: 1 }),
@@ -28,24 +28,24 @@ const dollars = (q: Question) => [
 
 describe('committed generated items', () => {
   it('has about four items per family', () => {
-    for (const family of determinantFamilies) {
-      const own = determinantQuestions.filter((q) => familyOf(q.id) === family.id)
+    for (const family of generatedFamilies) {
+      const own = generatedQuestions.filter((q) => familyOf(q.id) === family.id)
       expect(own.length).toBeGreaterThanOrEqual(4)
     }
   })
 
   it('has ids and sources in the generated shape', () => {
-    for (const q of determinantQuestions) {
+    for (const q of generatedQuestions) {
       expect(q.id).toMatch(/^v1-gen-[a-z0-9-]+-\d{2}$/)
       expect(q.source.exam).toBe('dizey-generated')
     }
   })
 
   it('uses every answer letter somewhere', () => {
-    expect(new Set(determinantQuestions.map((q) => q.answer)).size).toBe(5)
+    expect(new Set(generatedQuestions.map((q) => q.answer)).size).toBe(5)
   })
 
-  for (const q of determinantQuestions) {
+  for (const q of generatedQuestions) {
     it(`${q.id} verifies independently and fits a phone`, () => {
       expect(verifyQuestion(q)).toEqual([])
       expect(phoneFitProblems(q)).toEqual([])
@@ -54,7 +54,7 @@ describe('committed generated items', () => {
 })
 
 describe('fuzz: every output verifies', () => {
-  for (const family of determinantFamilies) {
+  for (const family of generatedFamilies) {
     describe(family.id, () => {
       const items = fuzz.get(family.id) ?? []
 
@@ -92,7 +92,7 @@ describe('fuzz: every output verifies', () => {
 })
 
 describe('the verifier catches wrong items', () => {
-  const sample = determinantQuestions.filter((q) => familyOf(q.id) !== null)
+  const sample = generatedQuestions.filter((q) => familyOf(q.id) !== null)
   const swapAnswer = (q: Question): Question => ({
     ...q,
     answer: optionKeys[(optionKeys.indexOf(q.answer) + 1) % 5] as Question['answer'],
@@ -116,7 +116,7 @@ describe('the verifier catches wrong items', () => {
   })
 
   it('rejects a changed number in the displayed data', () => {
-    for (const q of determinantQuestions.filter((x) => familyOf(x.id) === 'd2-numeric')) {
+    for (const q of generatedQuestions.filter((x) => familyOf(x.id) === 'd2-numeric')) {
       const block = q.stem[0]
       if (block?.kind !== 'matrix') continue
       const size = block.rows.length
@@ -132,7 +132,7 @@ describe('the verifier catches wrong items', () => {
 })
 
 describe('phone-fit rules', () => {
-  const base = determinantQuestions[0] as Question
+  const base = generatedQuestions[0] as Question
   const withStem = (rows: string[][]): Question => ({
     ...base,
     stem: [{ kind: 'matrix', delimiter: 'bars', rows }],

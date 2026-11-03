@@ -1,4 +1,4 @@
-import { determinantQuestions } from './generated/determinant'
+import { generatedQuestions } from './generated/all'
 import type { Question } from './types'
 import { vize1Summer2024 } from './vize1-2024-summer'
 import { vize1PracticeA } from './vize1-practice-a'
@@ -11,5 +11,5 @@ export const questions: readonly Question[] = [
   ...vize1Summer2024,
   ...vize1PracticeA,
   ...vize1PracticeB,
-  ...determinantQuestions,
+  ...generatedQuestions,
 ]
