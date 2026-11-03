@@ -279,12 +279,14 @@ describe('bars', () => {
     }
   })
 
-  it('splits the pad so the first bar rings into the second without a gap', () => {
+  it('holds one pad for the whole phrase, so the bar line has no dip', () => {
     const { notes } = composeSection(cue('IV', 0.5), 10, seeded(1), freshState(3))
     const pads = notes.filter((n) => n.kind === 'pad')
-    const first = pads.filter((n) => n.at < 10 + BAR)
-    const second = pads.filter((n) => n.at >= 10 + BAR)
-    expect(first.length).toBe(second.length)
-    for (const n of first) expect(n.at + n.ring).toBeGreaterThan(10 + BAR + 0.5)
+    expect(pads.length).toBe(CHORDS.IV.voicing.length)
+    // A pad's level has fallen well before its ring ends, so it must outlast both bars.
+    for (const n of pads) {
+      expect(n.at).toBe(10)
+      expect(n.ring).toBeGreaterThan(2 * BAR + 2)
+    }
   })
 })

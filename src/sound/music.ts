@@ -331,58 +331,41 @@ export function composeSection(
     : cue.energy
   const tension = cue.role === 'tension'
 
-  // Pad: the nearest voicing to the last one, swelling in. One strike per bar: the first bar's pad rings
-  // into the second's soft re-strike, so there is no gap at the bar line.
+  // Pad: the nearest voicing to the last one, swelling in. One strike for the whole two-bar phrase, ringing
+  // into the next: its envelope fades slowly, so the bar line has no dip (a pad per bar left a silent
+  // gap there, because a pad's level has fallen well before its ring ends).
   const voicing = state.voicing ? nearest(c.voicing, state.voicing) : [...c.voicing]
   const padVelocity = 0.42 + 0.02 * energy
+  const padRise = entering ? 0.3 : 2.4
   voicing.forEach((pitch, v) => {
-    // Voices spread left to right, +-0.35.
-    const pan = -0.35 + (0.7 * v) / Math.max(1, voicing.length - 1)
     notes.push({
       kind: 'pad',
       pitch,
-      pan,
+      // Voices spread left to right, +-0.35.
+      pan: -0.35 + (0.7 * v) / Math.max(1, voicing.length - 1),
       at: start,
-      ring: BAR + 1.4,
+      ring: SECTION + 2.6,
       velocity: padVelocity,
       bright: 0,
-      rise: entering ? 0.3 : 2.4,
-    })
-    notes.push({
-      kind: 'pad',
-      pitch,
-      pan,
-      at: start + BAR,
-      ring: BAR + 2.6,
-      velocity: padVelocity * 0.9,
-      bright: 0,
-      rise: 0.6,
+      rise: padRise,
+      // Level held to the end of the phrase, then a 2.6 s fade under the next pad's swell.
+      hold: SECTION - padRise,
     })
   })
   // High shimmer on the top two voices, only near the peak.
   if (energy >= 0.72 && !tired)
-    for (const pitch of voicing.slice(-2)) {
+    for (const [k, pitch] of voicing.slice(-2).entries())
       notes.push({
         kind: 'halo',
         pitch: pitch + 12,
-        pan: 0.2,
+        pan: k === 0 ? 0.2 : -0.2,
         at: start + 0.4,
-        ring: BAR + 0.8,
+        ring: SECTION + 1.5,
         velocity: 0.13 + 0.14 * (energy - 0.72),
         bright: 0,
         rise: 2.2,
+        hold: SECTION - 2.6,
       })
-      notes.push({
-        kind: 'halo',
-        pitch: pitch + 12,
-        pan: -0.2,
-        at: start + BAR + 0.4,
-        ring: BAR + 1.5,
-        velocity: 0.13 + 0.14 * (energy - 0.72),
-        bright: 0,
-        rise: 1.2,
-      })
-    }
 
   // Bass: one root; then root and a 5th; then a slow walk (root, 5th, octave, 5th).
   const bass = (beat: number, pitch: number, velocity: number, ring: number) =>

@@ -46,19 +46,19 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     wrong: -28.8,
     correct: -24.2,
     streak: -23.3,
-    lessonEnd: -21.7,
-    halfway: -20,
-    milestone: -19.2,
-    seal: -20.4,
-    secret: -20.8,
+    lessonEnd: -20.7,
+    halfway: -20.8,
+    milestone: -20,
+    seal: -20.9,
+    secret: -21.2,
     tap: -33.5,
-    tab: -30.4,
+    tab: -29.3,
     toggleOn: -34,
     toggleOff: -35.4,
     open: -35.7,
     close: -36.3,
     step: -34.9,
-    lessonOpen: -28.9,
+    lessonOpen: -29,
   },
   felt: {
     select: -30.7,
@@ -67,19 +67,19 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     wrong: -29,
     correct: -24.6,
     streak: -23.7,
-    lessonEnd: -21.7,
-    halfway: -20.3,
-    milestone: -19.4,
+    lessonEnd: -20.7,
+    halfway: -21.1,
+    milestone: -20.2,
     seal: -21.3,
-    secret: -20.6,
+    secret: -21.4,
     tap: -33.4,
-    tab: -30.6,
+    tab: -29.2,
     toggleOn: -34.1,
     toggleOff: -35.2,
     open: -35.9,
     close: -36.2,
     step: -35.1,
-    lessonOpen: -28.9,
+    lessonOpen: -29.4,
   },
   glass: {
     select: -28.7,
@@ -88,19 +88,19 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     wrong: -27.2,
     correct: -22.8,
     streak: -21.8,
-    lessonEnd: -20.5,
-    halfway: -18.8,
-    milestone: -17.7,
-    seal: -19.9,
-    secret: -19.4,
+    lessonEnd: -20.1,
+    halfway: -19.8,
+    milestone: -18.8,
+    seal: -20,
+    secret: -20.3,
     tap: -31.7,
-    tab: -30.6,
+    tab: -29.2,
     toggleOn: -32.2,
     toggleOff: -33.4,
     open: -34.4,
     close: -34.4,
     step: -33.5,
-    lessonOpen: -27.6,
+    lessonOpen: -28.1,
   },
 }
 
@@ -122,7 +122,7 @@ const DUCK_EARLY = 0.02
  * Background music: a dark bus well under every event. Bus level per palette for −50 LUFS momentary
  * maximum before the master boost (measureMusic() in measure.ts), under the quietest tap.
  */
-const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -39.2, felt: -38.0, glass: -39.5 }
+const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -40.0, felt: -38.8, glass: -40.3 }
 // Darker than any event (the old app's bed sat under a 900 Hz low-pass), so it stays behind.
 const MUSIC_TONE = { cutoff: 2200, wet: 1.6 }
 /**
@@ -169,13 +169,13 @@ function strike(
 }
 
 /** Swell envelope: an exponential approach over `rise` s, a long hold, then a fade to −80 dB. */
-function swell(param: AudioParam, at: number, peak: number, rise: number, ring: number) {
+function swell(param: AudioParam, at: number, peak: number, rise: number, ring: number, hold = 0) {
   const n = 160
   const curve = new Float32Array(n)
   const tau = rise / 3
   for (let i = 0; i < n; i++) {
     const x = (i / (n - 1)) * ring
-    const u = Math.max(0, (x - rise) / (ring - rise))
+    const u = Math.max(0, (x - rise - hold) / Math.max(1e-3, ring - rise - hold))
     curve[i] = peak * (1 - Math.exp(-x / tau)) * dbToGain(-80 * u ** 1.6)
   }
   curve[0] = 0
@@ -426,7 +426,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
       if (note.kind === 'pad' || note.kind === 'halo') {
         // Two detuned triangles (pad) or sines (halo) swelling in.
         const a = amp(pan)
-        swell(a.gain, at, played.velocity * 0.3 * palette.pad, note.rise ?? 0.6, note.ring)
+        swell(a.gain, at, played.velocity * 0.3 * palette.pad, note.rise ?? 0.6, note.ring, note.hold)
         for (const cents of [-7, 7])
           osc(note.kind === 'pad' ? 'triangle' : 'sine', hz, at, stopAt, detune + cents).connect(a)
       } else if (note.kind === 'shine' || palette.voice === 'glass') {
