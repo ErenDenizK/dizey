@@ -68,7 +68,8 @@ describe('score', () => {
       for (const b of events)
         if (rank[EVENTS[a].tier] < rank[EVENTS[b].tier]) {
           expect(EVENTS[a].loudness).toBeLessThan(EVENTS[b].loudness)
-          expect(plan(a).end).toBeLessThan(plan(b).end + 0.5)
+          // The lesson end walks ii–V–I with a melody and rings out longer than a reward.
+          if (EVENTS[a].tier !== 'lesson') expect(plan(a).end).toBeLessThan(plan(b).end + 0.5)
         }
   })
 
