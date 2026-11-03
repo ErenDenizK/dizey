@@ -310,6 +310,34 @@ export const strings = {
     },
   },
 
+  summary: {
+    title: 'Son tekrar',
+    back: 'Sınava dön',
+    backToIndex: 'Özetlere dön',
+    rules: 'Aklında kalsın',
+    trap: 'Sınav tuzağı',
+    example: 'Küçük örnek',
+    lessonRow: 'Özet',
+    sheetLabel: 'Ders özeti',
+    openFormulas: 'Formül kağıdı',
+    formulas: {
+      title: 'Formül kağıdı',
+      sub: 'Vize 1’in bütün formülleri ve kuralları, bölüm bölüm.',
+    },
+    index: {
+      sub: 'Her ders bir dakikalık okuma. Dersi baştan oynatmadan sınavdan önceki akşam göz gezdirmek için.',
+      formulasSub: 'Bütün formüller tek sayfada',
+      lessons: 'Ders özetleri',
+    },
+    examHome: {
+      label: 'Son tekrar',
+      formulas: 'Formül kağıdı',
+      formulasSub: 'Vize 1’in bütün formülleri tek sayfada',
+      summaries: 'Ders özetleri',
+      summariesSub: 'Her ders bir dakikalık okuma',
+    },
+  },
+
   lessonEnd: {
     title: 'Bu dersi bitirdin',
     momentTitle: 'Gizli anı çözdün: sezgi mührü senin.',

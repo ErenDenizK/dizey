@@ -6,6 +6,7 @@ import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
 import { chapterOf, chapters } from '../content/path'
 import { strings } from '../content/strings'
+import { summaryOf } from '../content/summaries'
 import { engine } from '../engine/driver'
 import { useExam } from '../exam/store'
 import { BadgeReveal, landReveal, REVEAL_MS } from '../rewards/BadgeReveal'
@@ -14,6 +15,7 @@ import { markShown, unshown } from '../rewards/store'
 import { PressLink } from '../shell/PressLink'
 import { returnTab } from '../shell/stage'
 import type { SoundEvent } from '../sound/score'
+import { LessonSummary } from '../summary/LessonSummary'
 import { Check, Close } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { burst, glow, lightScore, pointIn, SHINE_CHANNEL, type SparkTone, sweep } from '../ui/shine'
@@ -87,6 +89,7 @@ export function LessonEnd({
   const perfect = results.length > 0 && correct === results.length
   const cols = sealColumns(results.length)
   const asked = examQuestionFor(lesson.node)
+  const summary = summaryOf(lesson.id)
 
   const root = useRef<HTMLDivElement>(null)
   const duo = useRef<MirtisHandle>(null)
@@ -230,7 +233,12 @@ export function LessonEnd({
           {results.length ? strings.lessonEnd.score(correct, results.length) : strings.lessonEnd.noQuestions}
           {chapterDone && chapter?.examItems ? ` ${strings.lessonEnd.chapterWeight(chapter.examItems)}` : ''}
         </p>
-        {asked ? <ExamAsked question={asked} /> : null}
+        {asked || summary ? (
+          <div className="ls-end__links">
+            {asked ? <ExamAsked question={asked} /> : null}
+            {summary ? <LessonSummary title={lesson.title} summary={summary} /> : null}
+          </div>
+        ) : null}
       </div>
 
       <div className="ls-dock ls-end__dock" data-enter="">

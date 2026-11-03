@@ -1,0 +1,155 @@
+/*
+ * Son tekrar: lesson summaries (sm-) and the formula sheet. Tokens only; nothing here moves, so the
+ * only transitions are the route's and the sheet's own.
+ */
+
+.sm {
+  display: grid;
+  gap: var(--gap-block);
+  padding-bottom: var(--space-6);
+}
+.sm-gist {
+  margin: 0;
+  max-width: 60ch;
+  color: var(--ink-2);
+}
+.sm-group {
+  display: grid;
+  gap: 0;
+}
+/* The label sits on the card's text edge, like every section label in the app. */
+.sm-label {
+  margin-inline: var(--card-pad);
+}
+.sm-label--trap {
+  color: var(--bad-ink);
+}
+
+/* The rules: one card, one line per rule, a hairline between them. */
+.sm-points {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: var(--surface);
+  border-radius: var(--corner-card);
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.sm-point,
+.sm-formula {
+  position: relative;
+  padding: var(--space-3) var(--card-pad);
+  line-height: var(--leading-read);
+  color: var(--ink-1);
+}
+.sm-point + .sm-point::before,
+.sm-formula + .sm-formula::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: var(--card-pad);
+  right: 0;
+  height: 0.5px;
+  background: var(--hairline-strong);
+}
+
+/* The trap: a tinted card with its own label above, no edge stripe. */
+.sm-trap {
+  margin: 0;
+  padding: var(--space-3) var(--card-pad);
+  line-height: var(--leading-read);
+  color: var(--ink-1);
+  background: var(--bad-tint);
+  border-radius: var(--corner-card);
+  box-shadow: inset 0 0 0 1px var(--bad-edge);
+}
+
+/* The example: the matrices side by side (they wrap on a narrow phone), one line under them. */
+.sm-example {
+  display: grid;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--card-pad);
+  background: var(--surface-raised);
+  border-radius: var(--corner-card);
+  box-shadow: var(--shadow-1), var(--edge-light);
+}
+.sm-example__mats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3) var(--space-5);
+}
+.sm-example__line {
+  margin: 0;
+  text-align: center;
+  line-height: var(--leading-read);
+  color: var(--ink-1);
+}
+
+/* The formula sheet: the formula first and large, its short reading under it. */
+.sm-formula {
+  display: grid;
+  gap: var(--space-1);
+}
+.sm-formula__tex {
+  font-size: var(--type-callout);
+  line-height: var(--leading-read);
+}
+.sm-formula__note {
+  color: var(--ink-2);
+}
+
+/* The summary list: the path code sits in a small outlined chip, as in the exam result's review rows. */
+.sm-row {
+  position: relative;
+  color: var(--ink-1);
+  text-decoration: none;
+}
+.sm-row__code {
+  display: grid;
+  place-items: center;
+  flex: none;
+  min-width: var(--target);
+  height: var(--space-8);
+  padding: 0 var(--space-2);
+  border-radius: var(--corner-chip);
+  box-shadow: inset 0 0 0 1.5px var(--hairline-strong);
+  color: var(--ink-2);
+  font-size: var(--type-footnote);
+  line-height: var(--leading-footnote);
+  letter-spacing: var(--tracking-small);
+  font-weight: var(--weight-semibold);
+}
+
+/* The summary in a sheet: the page scrolls inside the sheet, which itself never scrolls (Sheet.tsx). */
+.sh-sheet-body.sm-sheet {
+  display: flex;
+  flex-direction: column;
+  padding-bottom: 0;
+  max-height: calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--space-4));
+}
+.sm-sheet__title {
+  margin: 0 0 var(--space-3);
+}
+.sm-sheet__scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;
+  scrollbar-width: none;
+}
+.sm-sheet__scroll::-webkit-scrollbar {
+  display: none;
+}
+.dz-sheet[data-dialog] .sh-sheet-body.sm-sheet {
+  max-height: calc(85dvh - var(--space-5) - var(--space-6) - env(safe-area-inset-bottom));
+}
+
+/* The quiet rows at a lesson's end ("Sınavda böyle sorulur", "Özet") share one line, so the hero keeps its room. */
+.ls-end__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-5);
+}
