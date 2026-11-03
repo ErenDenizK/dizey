@@ -3,7 +3,10 @@ import { expect, type Page, test } from '@playwright/test'
 const channel = process.env.E2E_CHANNEL ?? 'production'
 const prefix = channel === 'production' ? '' : `${channel}:`
 
-/** Counts the oscillators the app starts, so a test can tell whether a sound was played. */
+/**
+ * Counts the oscillators and recorded-sample sources the app creates, so a test can tell whether a sound was played
+ * (the music is on recorded instruments, the interface sounds are synthesized).
+ */
 async function openApp(page: Page, path: string, settings?: object) {
   await page.addInitScript(
     ({ prefix, settings }) => {
@@ -15,6 +18,11 @@ async function openApp(page: Page, path: string, settings?: object) {
       BaseAudioContext.prototype.createOscillator = function (this: BaseAudioContext) {
         counter.oscillators++
         return create.call(this)
+      }
+      const createSource = BaseAudioContext.prototype.createBufferSource
+      BaseAudioContext.prototype.createBufferSource = function (this: BaseAudioContext) {
+        counter.oscillators++
+        return createSource.call(this)
       }
     },
     { prefix, settings },

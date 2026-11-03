@@ -1,9 +1,10 @@
 import { createConductor, createLearner } from './conductor'
-import { createCueBank, isCueEvent } from './cues'
+import { createCueBank, isCueEvent, musicAnswersCue } from './cues'
 import { type Flourish, hashOf, type MusicCue, planLesson, type StepKind, type Theme } from './form'
 import { PROGRESSION, seeded } from './harmony'
 import { composeSection, freshState, idleCue, SECTION } from './music'
-import { createScore, EVENTS, type SoundEvent } from './score'
+import { createSampleBank } from './sampler'
+import { createScore, EVENTS, type MusicVoice, type SoundEvent } from './score'
 import { createSynth, PALETTES, type PaletteId } from './synth'
 
 /**
@@ -87,6 +88,13 @@ function momentary(channels: Float32Array[], phone: boolean) {
 /** The recorded cues decoded for an offline context, so a render hears what the app plays. */
 async function recorded(ctx: BaseAudioContext) {
   const bank = createCueBank(ctx)
+  await bank.load()
+  return bank
+}
+
+/** The music's instruments decoded for an offline context, so a render plays the sampled music the app plays. */
+async function instruments(ctx: BaseAudioContext) {
+  const bank = createSampleBank(ctx)
   await bank.load()
   return bank
 }
@@ -219,10 +227,15 @@ function loudnessOf(buffer: AudioBuffer) {
 }
 
 /** Background music: loudness of eight sections (the whole idle walk) at the normal level, per palette. */
-export async function measureMusic(palette: PaletteId = 'rhodes', masterDb = 0) {
+export async function measureMusic(palette: PaletteId = 'rhodes', masterDb = 0, sampled = true) {
   const sections = 8
   const ctx = new OfflineAudioContext(2, Math.ceil(RATE * (SECTION * sections + 4)), RATE)
-  const synth = createSynth(ctx, { random: seeded(7), palette, masterDb })
+  const synth = createSynth(ctx, {
+    random: seeded(7),
+    palette,
+    masterDb,
+    ...(sampled ? { samples: await instruments(ctx) } : {}),
+  })
   const random = seeded(11)
   let state = freshState(0)
   for (let n = 0; n < sections; n++) {
@@ -241,13 +254,25 @@ export function sampleKinds(steps = 12): StepKind[] {
 /** Renders a whole planned lesson (2 sections per step) and returns the stereo buffer. */
 export async function renderLesson(
   plan: readonly MusicCue[],
-  options: { palette?: PaletteId; masterDb?: number; lessonEnd?: boolean; seed?: number } = {},
+  options: {
+    palette?: PaletteId
+    masterDb?: number
+    lessonEnd?: boolean
+    seed?: number
+    sampled?: boolean
+  } = {},
 ) {
-  const { palette = 'rhodes', masterDb = 0, lessonEnd = false, seed = 0 } = options
+  const { palette = 'rhodes', masterDb = 0, lessonEnd = false, seed = 0, sampled = true } = options
   const sections = plan.length * 2
   const length = SECTION * sections + (lessonEnd ? 12 : 4)
   const ctx = new OfflineAudioContext(2, Math.ceil(RATE * length), RATE)
-  const synth = createSynth(ctx, { random: seeded(7), palette, masterDb, cues: await recorded(ctx) })
+  const synth = createSynth(ctx, {
+    random: seeded(7),
+    palette,
+    masterDb,
+    cues: await recorded(ctx),
+    ...(sampled ? { samples: await instruments(ctx) } : {}),
+  })
   const random = seeded(11)
   let state = freshState(seed)
   let at = 0.05
@@ -274,9 +299,10 @@ export async function measureLessonMusic(
   masterDb = 0,
   steps = 12,
   theme: Theme = 'S',
+  sampled = true,
 ) {
   const plan = planLesson(sampleKinds(steps), 1234, theme)
-  const buffer = await renderLesson(plan, { palette, masterDb })
+  const buffer = await renderLesson(plan, { palette, masterDb, sampled })
   return { palette, peakEnergy: Math.max(...plan.map((c) => c.energy)), ...loudnessOf(buffer) }
 }
 
@@ -299,7 +325,12 @@ export async function renderListening(
   if (total > maxSeconds) lengths = lengths.map((l) => (l * maxSeconds) / total)
   const length = Math.ceil(lengths.reduce((a, b) => a + b, 0) + 22)
   const ctx = new OfflineAudioContext(1, rate * length, rate)
-  const synth = createSynth(ctx, { random: seeded(7), palette, cues: await recorded(ctx) })
+  const synth = createSynth(ctx, {
+    random: seeded(7),
+    palette,
+    cues: await recorded(ctx),
+    samples: await instruments(ctx),
+  })
 
   let clock = 0
   let step = 0
@@ -320,7 +351,7 @@ export async function renderListening(
     learner.heard(event)
     const context = { chord: plan[index]?.chord ?? 'I', step: index, steps: plan.length }
     const played = synth.play(event, context, at)
-    if (EVENTS[event].tier === 'lesson' || EVENTS[event].tier === 'reward') conductor.fade(played.end - 1.5)
+    if (isCueEvent(event)) musicAnswersCue(conductor, event, played.start ?? at)
   }
 
   type Item = { at: number; run: () => void }
@@ -399,7 +430,7 @@ export async function renderThemes(options: { rate?: number; seconds?: number; p
   const { rate = 22050, seconds = 15, palette = 'rhodes' } = options
   const themes: Theme[] = ['home', 'M', 'R', 'D', 'S']
   const ctx = new OfflineAudioContext(1, rate * (seconds * themes.length + 6), rate)
-  const synth = createSynth(ctx, { random: seeded(7), palette })
+  const synth = createSynth(ctx, { random: seeded(7), palette, samples: await instruments(ctx) })
   themes.forEach((theme, n) => {
     const plan = planLesson(sampleKinds(12), hashOf(`theme-${theme}`), theme)
     const offset = n * seconds
@@ -444,14 +475,16 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
   const plan = planLesson(kinds, 4242, 'D')
   const length = 72
   type Step = { at: number; run: (play: (event: SoundEvent, at: number, step?: number) => void) => void }
-  const windows: [number, number][] = []
   /** Where recorded cues sound: real transients there, so only their edges are scanned for clicks. */
   const recordings: [number, number][] = []
 
-  async function run(withSounds: boolean) {
+  /** 'mix': what the learner hears; 'music': the music alone (ducked as in the app); 'sounds': no music. */
+  async function run(mode: 'mix' | 'music' | 'sounds') {
+    const withSounds = mode !== 'music'
+    const withMusic = mode !== 'sounds'
     const ctx = new OfflineAudioContext(2, RATE * length, RATE)
     const cues = await recorded(ctx)
-    const synth = createSynth(ctx, { random: seeded(7), palette, cues })
+    const synth = createSynth(ctx, { random: seeded(7), palette, cues, samples: await instruments(ctx) })
     const score = createScore(seeded(7))
     const learner = createLearner()
     let clock = 0
@@ -479,11 +512,12 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
         : recording
           ? { end: at + recording.duration }
           : score.plan(event, context, at)
-      if (withSounds && recording) recordings.push([at, planned.end])
-      const tier = EVENTS[event].tier
-      if (tier === 'lesson' || tier === 'reward') {
-        conductor.fade(planned.end - 1.5)
-        if (!withSounds) windows.push([at, planned.end + 2])
+      if (mode === 'sounds' && recording) recordings.push([at, planned.end])
+      // The music never stops for a recorded cue: it ducks and the conductor rests its melody. The run with the music
+      // alone ducks too, so the dropout scan hears exactly the music the learner hears under the cue.
+      if (isCueEvent(event) && withMusic) {
+        if (!withSounds) synth.duckForCue(event, at)
+        musicAnswersCue(conductor, event, at)
       }
     }
     const steps: Step[] = []
@@ -506,10 +540,12 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
     add(35.2, (p) => p('streak', 35.2))
     add(42.5, (p) => p('halfway', 42.5))
     add(50, (p) => p('lessonEnd', 50))
-    add(50.5, () => {
+    // The learner leaves the lesson end screen once the cue has rung out: the home walk takes over.
+    add(56, () => {
       inLesson = false
       conductor.setSeed(0)
       learner.reset()
+      conductor.request()
     })
     steps.sort((a, b) => a.at - b.at)
     let next = 0
@@ -522,19 +558,24 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
       } else {
         clock = next
         // After the lesson end the learner has left the lesson: the home walk resumes by itself.
-        conductor.tick()
+        if (withMusic) conductor.tick()
         next += 0.4
       }
     }
     return ctx.startRendering()
   }
 
-  const mix = await run(true)
-  const music = await run(false)
+  const music = await run('music')
+  const sounds = await run('sounds')
 
-  // Clicks: the largest 4th difference against the peak, as measure() does.
+  // Clicks: the largest 4th difference against the peak, as measure() does, in the sounds alone. The music is made of
+  // recorded instruments now, whose hammer and pluck attacks a 4th difference cannot tell from a click, so it is
+  // guarded where a click could come from instead: its voices start and end at zero, are stolen with a fade and loop
+  // on a crossfade (sampler.test.ts), and it is scanned for dropouts below.
+  const mix = sounds
   let peak = 0
   let click = 0
+  let clickAt = 0
   const inside = (i: number) => recordings.some(([a, b]) => i >= a * RATE && i < (b - 0.05) * RATE)
   for (let c = 0; c < mix.numberOfChannels; c++) {
     const d = mix.getChannelData(c)
@@ -542,12 +583,16 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
       const at = (j: number) => d[i - j] as number
       peak = Math.max(peak, Math.abs(at(0)))
       if (inside(i)) continue
-      click = Math.max(click, Math.abs(at(0) - 4 * at(1) + 6 * at(2) - 4 * at(3) + at(4)))
+      const fourth = Math.abs(at(0) - 4 * at(1) + 6 * at(2) - 4 * at(3) + at(4))
+      if (fourth > click) {
+        click = fourth
+        clickAt = i / RATE
+      }
     }
   }
 
-  // Dropouts: 50 ms RMS of the music alone against its running median (the last 4 s), outside the
-  // windows where a reward or the lesson end has the floor, and 3 s after the music starts.
+  // Dropouts: 50 ms RMS of the music alone (ducked under the cues as in the app) against its running median (the
+  // last 4 s), everywhere from 3 s after the music starts: it never stops for a cue, so there is no exempt window.
   const left = music.getChannelData(0)
   const right = music.getChannelData(1)
   const hop = Math.round(RATE * 0.05)
@@ -559,26 +604,28 @@ export async function renderSession(palette: PaletteId = 'rhodes') {
   }
   const dropouts: { at: number; db: number; median: number }[] = []
   let worst = 0
+  let worstAt = 0
   const firstSound = db.findIndex((x) => x > -90)
-  const inWindow = (t: number) => windows.some(([a, b]) => t >= a && t <= b)
   for (let i = firstSound + 60; i < db.length - 30; i++) {
     const t = i * 0.05
-    if (inWindow(t)) continue
-    const recent = db
-      .slice(Math.max(0, i - 80), i)
-      .filter((_, j) => !inWindow((Math.max(0, i - 80) + j) * 0.05))
+    const recent = db.slice(Math.max(0, i - 80), i)
     if (recent.length < 20) continue
     const median = [...recent].sort((a, b) => a - b)[Math.floor(recent.length / 2)] as number
-    worst = Math.min(worst, (db[i] as number) - median)
+    if ((db[i] as number) - median < worst) {
+      worst = (db[i] as number) - median
+      worstAt = t
+    }
     if ((db[i] as number) < median - 30)
       dropouts.push({ at: round(t), db: round(db[i] as number), median: round(median) })
   }
   return {
     clickDb: round(20 * Math.log10(click / peak)),
+    /** Where the largest step is, s: where to look when the guard fails. */
+    clickAt: round(clickAt),
     peakDb: round(20 * Math.log10(peak)),
     dropouts,
     worstDipDb: round(worst),
-    windows,
+    worstDipAt: round(worstAt),
   }
 }
 
@@ -609,4 +656,150 @@ export async function renderCues(options: { rate?: number; palette?: PaletteId }
   })
   const buffer = await ctx.startRendering()
   return { seconds: at + 1, int16: toInt16(buffer.getChannelData(0)) }
+}
+
+/** Stereo 16-bit PCM, interleaved, as base64 chunks (a page cannot return 15 MB in one piece). */
+function stereoChunks(buffer: AudioBuffer, peakDb: number, gain?: number) {
+  const left = buffer.getChannelData(0)
+  const right = buffer.getChannelData(1)
+  let peak = 0
+  for (let i = 0; i < left.length; i++)
+    peak = Math.max(peak, Math.abs(left[i] as number), Math.abs(right[i] as number))
+  const scale = gain ?? 10 ** (peakDb / 20) / (peak || 1)
+  const chunks: string[] = []
+  const frames = 1 << 17
+  for (let from = 0; from < left.length; from += frames) {
+    const to = Math.min(left.length, from + frames)
+    const pcm = new Int16Array((to - from) * 2)
+    for (let i = from; i < to; i++) {
+      pcm[(i - from) * 2] = Math.round(Math.max(-1, Math.min(1, (left[i] as number) * scale)) * 32767)
+      pcm[(i - from) * 2 + 1] = Math.round(Math.max(-1, Math.min(1, (right[i] as number) * scale)) * 32767)
+    }
+    let text = ''
+    const bytes = new Uint8Array(pcm.buffer)
+    for (let i = 0; i < bytes.length; i += 0x8000)
+      text += String.fromCharCode(...bytes.subarray(i, i + 0x8000))
+    chunks.push(btoa(text))
+  }
+  return { rate: buffer.sampleRate, seconds: buffer.duration, scale, peak, chunks }
+}
+
+/**
+ * Listening samples for the owner, stereo, through the real synth, sampler and conductor, offline:
+ * - 'lesson': about 65 s of a lesson (theme M): the opening, nine steps, a first-try correct and a streak (each
+ *   opens its flourish), the halfway reward, the lesson end over the music, the learner leaving, and 6 s more music;
+ * - 'cues': the six recorded cues, 1.5 s apart, no music;
+ * - 'music': 40 s of the home piece on the sampler.
+ * Every file is one gain: the loudest sample peak at `peakDb` (default -3 dBFS), so the relative levels are the app's.
+ */
+export async function renderDemo(
+  kind: 'lesson' | 'cues' | 'music',
+  peakDb = -3,
+  options: { silent?: boolean; voices?: MusicVoice[] } = {},
+) {
+  const { silent = false, voices } = options
+  if (kind === 'cues') {
+    const order: SoundEvent[] = ['lessonOpen', 'halfway', 'milestone', 'seal', 'secret', 'lessonEnd']
+    const probe = new OfflineAudioContext(2, RATE, RATE)
+    const bank = await recorded(probe)
+    let at = 0.3
+    const starts = order.map((event) => {
+      const start = at
+      at += (bank.get(event)?.duration ?? 0) + 1.5
+      return start
+    })
+    const ctx = new OfflineAudioContext(2, Math.ceil(RATE * (at + 1)), RATE)
+    const synth = createSynth(ctx, { random: seeded(7), cues: await recorded(ctx) })
+    order.forEach((event, i) => {
+      synth.play(event, { chord: 'I' }, starts[i])
+    })
+    return stereoChunks(await ctx.startRendering(), peakDb)
+  }
+
+  const length = kind === 'lesson' ? 69 : 41
+  const ctx = new OfflineAudioContext(2, RATE * length, RATE)
+  const synth = createSynth(ctx, {
+    random: seeded(7),
+    cues: await recorded(ctx),
+    samples: await instruments(ctx),
+  })
+  const plan = planLesson(sampleKinds(10), 777, 'M')
+  const learner = createLearner()
+  let clock = 0
+  let step = 0
+  let inLesson = kind === 'lesson'
+  const conductor = createConductor({
+    now: () => clock,
+    sink: {
+      play: (n, at) => synth.playMusic(voices ? n.filter((x) => x.voice && voices.includes(x.voice)) : n, at),
+      cut: (at, tau) => synth.cutMusic(at, tau),
+    },
+    random: seeded(5),
+    wanted: (n) => {
+      if (!inLesson) return idleCue(n)
+      const cue = plan[step] as MusicCue
+      return { ...cue, energy: learner.energy(cue.energy, step) }
+    },
+  })
+  conductor.setSeed(kind === 'lesson' ? (plan[0]?.seed ?? 0) : 0)
+  const play = (event: SoundEvent, at: number, index = step) => {
+    clock = at
+    learner.heard(event)
+    const recorded = isCueEvent(event)
+    // `silent`: the same lesson with only its music, to hear (and measure) what the sounds are laid over.
+    if (silent) {
+      if (recorded) synth.duckForCue(event, at)
+    } else synth.play(event, { chord: plan[index]?.chord ?? 'I', step: index, steps: plan.length }, at)
+    if (recorded) musicAnswersCue(conductor, event, at)
+  }
+  type Item = { at: number; run: () => void }
+  const items: Item[] = []
+  if (kind === 'lesson') {
+    items.push({ at: 0.3, run: () => play('lessonOpen', 0.3, 0) })
+    for (let i = 1; i < 10; i++) {
+      const at = 4 + i * 5.2
+      items.push({
+        at,
+        run: () => {
+          clock = at
+          step = i
+          play('step', at, i)
+          conductor.request(learner.stepped(i, plan[i]?.role, true))
+        },
+      })
+    }
+    // Two questions answered first try: the first a plain correct, the second a streak.
+    items.push({ at: 4 + 3 * 5.2 + 2.2, run: () => play('correct', 4 + 3 * 5.2 + 2.2) })
+    items.push({ at: 4 + 7 * 5.2 + 2.2, run: () => play('streak', 4 + 7 * 5.2 + 2.2) })
+    items.push({ at: 31, run: () => play('halfway', 31) })
+    items.push({ at: 56.5, run: () => play('lessonEnd', 56.5) })
+    // The learner leaves the lesson end screen: the home walk takes over, and 6 s more music are heard.
+    items.push({
+      at: 61.2,
+      run: () => {
+        clock = 61.2
+        inLesson = false
+        conductor.setSeed(0)
+        learner.reset()
+        conductor.request()
+      },
+    })
+  }
+  items.sort((a, b) => a.at - b.at)
+  let next = 0
+  let k = 0
+  while (next < length - 1.5) {
+    const item = items[k]
+    if (item && item.at <= next) {
+      item.run()
+      k++
+    } else {
+      clock = next
+      if (kind === 'music' && next > 37.5) {
+        if (conductor.playing) conductor.stop(2)
+      } else conductor.tick()
+      next += 0.4
+    }
+  }
+  return stereoChunks(await ctx.startRendering(), peakDb)
 }

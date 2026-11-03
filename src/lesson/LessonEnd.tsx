@@ -49,9 +49,15 @@ function badgeAfter(reward: SoundEvent) {
   return Math.max(BADGE_AFTER_MIN, Math.ceil(home + SOUND_GAP_MS.afterHome - soundDelay))
 }
 
-/** One rozet after another, never closer than the rozet seal sound's length plus a breath. */
-const badgeEvery = () =>
-  Math.max(BADGE_EVERY_MIN, Math.ceil(lightScore('seal').end * 1000 + SOUND_GAP_MS.afterSeal))
+/**
+ * One rozet after another, never closer than the rozet seal sound's body plus a breath. The body is the seal cue up to
+ * 1.2 s past its home chord; the quiet room tail after it (decision 0020) may ring under the next rozet's seal.
+ */
+const SEAL_BODY_AFTER_HOME_MS = 1200
+const badgeEvery = () => {
+  const home = (lightScore('seal').chords.at(-1) ?? 0) * 1000
+  return Math.max(BADGE_EVERY_MIN, Math.ceil(home + SEAL_BODY_AFTER_HOME_MS + SOUND_GAP_MS.afterSeal))
+}
 
 /**
  * The lesson end (old feel-layer end screen, inventory 8): the Satır and Sütun duo above a "Cevapların" seal, one

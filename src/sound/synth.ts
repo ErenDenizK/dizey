@@ -1,5 +1,7 @@
-import { CUE_TRIM, type CueBank, isCueEvent } from './cues'
+import { CUE_DUCK, CUE_TRIM, type CueBank, type CueEvent, isCueEvent } from './cues'
+import { CUE_TIMELINE } from './cueTimeline'
 import { clamp, dbToGain, midiToHz, seeded, TONIC_MIDI } from './harmony'
+import { createVoice, MAX_VOICES, type SampleBank, type Voice } from './sampler'
 import {
   createScore,
   EVENTS,
@@ -47,11 +49,11 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     wrong: -28.8,
     correct: -24.2,
     streak: -23.3,
-    lessonEnd: -20.7,
-    halfway: -20.8,
-    milestone: -20,
-    seal: -20.9,
-    secret: -21.2,
+    lessonEnd: -22.7,
+    halfway: -22.8,
+    milestone: -22,
+    seal: -22.9,
+    secret: -23.2,
     tap: -33.5,
     tab: -29.3,
     toggleOn: -34,
@@ -59,7 +61,7 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     open: -35.7,
     close: -36.3,
     step: -34.9,
-    lessonOpen: -29,
+    lessonOpen: -31,
   },
   felt: {
     select: -30.7,
@@ -68,11 +70,11 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     wrong: -29,
     correct: -24.6,
     streak: -23.7,
-    lessonEnd: -20.7,
-    halfway: -21.1,
-    milestone: -20.2,
-    seal: -21.3,
-    secret: -21.4,
+    lessonEnd: -22.7,
+    halfway: -23.1,
+    milestone: -22.2,
+    seal: -23.3,
+    secret: -23.4,
     tap: -33.4,
     tab: -29.2,
     toggleOn: -34.1,
@@ -80,7 +82,7 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     open: -35.9,
     close: -36.2,
     step: -35.1,
-    lessonOpen: -29.4,
+    lessonOpen: -31.4,
   },
   glass: {
     select: -28.7,
@@ -89,11 +91,11 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     wrong: -27.2,
     correct: -22.8,
     streak: -21.8,
-    lessonEnd: -20.1,
-    halfway: -19.8,
-    milestone: -18.8,
-    seal: -20,
-    secret: -20.3,
+    lessonEnd: -22.1,
+    halfway: -21.8,
+    milestone: -20.8,
+    seal: -22,
+    secret: -22.3,
     tap: -31.7,
     tab: -29.2,
     toggleOn: -32.2,
@@ -101,7 +103,7 @@ export const TRIM: Record<PaletteId, Record<SoundEvent, number>> = {
     open: -34.4,
     close: -34.4,
     step: -33.5,
-    lessonOpen: -28.1,
+    lessonOpen: -30.1,
   },
 }
 
@@ -124,20 +126,32 @@ const DUCK_EARLY = 0.02
  * maximum before the master boost (measureMusic() in measure.ts), under the quietest tap.
  */
 const MUSIC_TRIM: Record<PaletteId, number> = { rhodes: -40.0, felt: -38.8, glass: -40.3 }
+/**
+ * The sampled music is levelled to the same −50 LUFS momentary maximum as the synth voices (measureLessonMusic()
+ * in measure.ts): this is the sampler's own correction on top of MUSIC_TRIM.
+ */
+const SAMPLED_TRIM_DB = 10.5
 // Darker than any event (the old app's bed sat under a 900 Hz low-pass), so it stays behind.
 const MUSIC_TONE = { cutoff: 2200, wet: 1.6 }
 /**
  * Events turn the music down while they ring, more the more they matter: a tap barely, a lesson beat
- * clearly, an answer deeply (its suspended 4th must not meet the music's 3rd). Lesson ends and
- * rewards change chord, so the player stops the music for them instead (see player.ts).
+ * clearly, an answer deeply (its suspended 4th must not meet the music's 3rd). A recorded cue (lesson end, reward,
+ * lesson opening) is in the music's own room and instruments, so it only needs a gentle duck: the music keeps
+ * playing under it (decision 0020), with the glide and return of CUE_DUCK in cues.ts.
  */
 export const MUSIC_DUCK: Record<Tier, number> = {
   touch: -4.5,
   frequent: -6,
   question: -16,
-  lesson: -24,
-  reward: -24,
+  lesson: CUE_DUCK.db,
+  reward: CUE_DUCK.db,
 }
+/** The synthesized fallback cues walk their own chords over the music, which the player fades out: duck deeply. */
+const FALLBACK_DUCK = -24
+/** The sampler's room send: the cues were rendered with 32 % wet in a 2.4 s room, the app's room is 2.3 s. */
+const MUSIC_SEND_SAMPLED = 0.65
+/** The music bus has the same soft top as the cues: -4 dB above 5 kHz. */
+const MUSIC_SHELF = { frequency: 5000, gain: -4 }
 
 /** Sounds that come in quick runs: each new one ducks the others still ringing. */
 const quick = (event: SoundEvent | 'music') =>
@@ -239,6 +253,8 @@ type Bus = {
   duck: number
   /** Music buses: the grid time the bus belongs to (a cut drops buses from here on). */
   start?: number
+  /** Sampled music buses: their voices, so a dropped bus frees its share of the voice cap. */
+  voices?: Voice[]
 }
 
 export type SynthOptions = {
@@ -251,10 +267,14 @@ export type SynthOptions = {
   palette?: PaletteId
   /** Recorded cues: an event whose buffer is decoded plays it instead of the synthesized notes. */
   cues?: Pick<CueBank, 'get'>
+  /** Background music on recorded instruments; before the sets are decoded the synth voices play it. */
+  samples?: Pick<SampleBank, 'get' | 'ready'>
 }
 
 export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
   const random = options.random ?? Math.random
+  // The sampled music has its own stream, so a sound played over it never changes how the music is played (renders).
+  const musicRandom = options.random ? seeded(99) : Math.random
   let palette = PALETTES[options.palette ?? 'rhodes']
   const listeners = new Set<(plan: Plan) => void>()
   const score = createScore(random)
@@ -291,6 +311,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
   const live: Bus[] = []
 
   function cleanup(bus: Bus) {
+    for (const voice of bus.voices ?? []) voice.done = true
     for (const node of bus.nodes) node.disconnect()
     bus.nodes.length = 0
     bus.sources.length = 0
@@ -502,7 +523,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
 
   /** A recorded cue has no notes to show, only a length: it rings the whole file and leaves no chord behind. */
   function recordedPlan(event: SoundEvent, buffer: AudioBuffer, start: number): Plan {
-    return { event, notes: [], end: start + buffer.duration, harmony: '*', chords: [] }
+    return { event, notes: [], end: start + buffer.duration, start, harmony: '*', chords: [] }
   }
 
   /** A recorded cue on its own bus: the room is already in the file, so it goes to the dry path only. */
@@ -555,17 +576,28 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
         : render(plan.notes, spec, options.levelDb ?? TRIM[palette.id][event], event, plan.harmony),
     )
     const tier = EVENTS[event].tier
-    duckMusic(start, tier === 'touch' ? 0.35 : Math.min(3, plan.end - start), MUSIC_DUCK[tier])
+    if (recorded && isCueEvent(event)) duckForCue(event, start)
+    else {
+      const deep = tier === 'lesson' || tier === 'reward' ? FALLBACK_DUCK : MUSIC_DUCK[tier]
+      duckMusic(start, tier === 'touch' ? 0.35 : Math.min(3, plan.end - start), deep)
+    }
     for (const listener of listeners) listener(plan)
     return plan
   }
 
   // Background music: its own input, ducked under every event, outside the pedal and the voice limit.
   const musicIn = ctx.createGain()
+  const musicShelf = ctx.createBiquadFilter()
   const musicSend = ctx.createGain()
-  musicIn.connect(dry)
-  musicIn.connect(musicSend).connect(sendIn)
+  musicShelf.type = 'highshelf'
+  musicShelf.frequency.value = MUSIC_SHELF.frequency
+  musicShelf.gain.value = MUSIC_SHELF.gain
+  musicIn.connect(musicShelf)
+  musicShelf.connect(dry)
+  musicShelf.connect(musicSend).connect(sendIn)
   musicSend.gain.value = 0.3 * MUSIC_TONE.wet
+  const voices: Voice[] = []
+  let sampledSend = false
   const music: Bus[] = []
   let musicOffset = 0
   let ducked = { db: 0, until: 0 }
@@ -576,17 +608,83 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
    */
   function playMusic(notes: Note[], at = Math.min(...notes.map((n) => n.at))) {
     if (!notes.length) return { at }
-    const bus = render(
-      notes,
-      { cutoff: MUSIC_TONE.cutoff, wet: 0 },
-      MUSIC_TRIM[palette.id] + musicOffset,
-      'music',
-      '-',
-      musicIn,
-    )
+    const samples = options.samples?.ready ? options.samples : undefined
+    // The sampled music has the cues' room: more send than the synth voices, set once the sets are in.
+    if (sampledSend !== !!samples) {
+      sampledSend = !!samples
+      musicSend.gain.setTargetAtTime(
+        samples ? MUSIC_SEND_SAMPLED : 0.3 * MUSIC_TONE.wet,
+        ctx.currentTime,
+        0.2,
+      )
+    }
+    const bus = samples
+      ? renderSampled(notes, MUSIC_TRIM[palette.id] + musicOffset + SAMPLED_TRIM_DB, samples)
+      : render(
+          notes,
+          { cutoff: MUSIC_TONE.cutoff, wet: 0 },
+          MUSIC_TRIM[palette.id] + musicOffset,
+          'music',
+          '-',
+          musicIn,
+        )
     bus.start = at
     music.push(bus)
     return { at }
+  }
+
+  /** Background-music notes on the recorded instruments: each note is a voice; the oldest are stolen over the cap. */
+  function renderSampled(notes: Note[], levelDb: number, samples: Pick<SampleBank, 'get'>): Bus {
+    const nodes: AudioNode[] = []
+    const sources: [AudioScheduledSourceNode, number][] = []
+    const fade = ctx.createGain()
+    const level = ctx.createGain()
+    level.gain.value = dbToGain(levelDb)
+    fade.connect(level).connect(musicIn)
+    nodes.push(fade, level)
+    let last: AudioScheduledSourceNode | null = null
+    let lastStop = -1
+    const added: Voice[] = []
+    for (const note of notes) {
+      const voice = createVoice(ctx, samples, note, musicRandom)
+      if (!voice) continue
+      voice.out.connect(fade)
+      nodes.push(...voice.nodes)
+      sources.push([voice.source, voice.stopAt])
+      if (voice.stopAt > lastStop) {
+        lastStop = voice.stopAt
+        last = voice.source
+      }
+      added.push(voice)
+    }
+    // Voices still sounding when this group starts, counted by schedule (an offline render has no clock to ask):
+    // over the cap the oldest fade out in 60 ms and stop, and the newest notes always sound.
+    if (added.length) {
+      const from = Math.min(...added.map((v) => v.at))
+      for (let i = voices.length - 1; i >= 0; i--) {
+        const v = voices[i] as Voice
+        if (v.done || v.stopAt < from - 1) voices.splice(i, 1)
+      }
+      voices.push(...added)
+      const sounding = voices.filter((v) => v.stopAt > from)
+      const older = sounding.filter((v) => v.at < from - 1e-3).sort((a, b) => a.at - b.at)
+      for (const old of older.slice(0, Math.max(0, sounding.length - MAX_VOICES))) {
+        old.steal(from)
+        old.done = true
+      }
+    }
+    const bus: Bus = {
+      event: 'music',
+      harmony: '-',
+      fade,
+      nodes,
+      sources,
+      voices: added,
+      released: false,
+      duck: 1,
+    }
+    if (last) (last as AudioScheduledSourceNode).onended = () => cleanup(bus)
+    return bus
   }
 
   /**
@@ -610,16 +708,36 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     }
   }
 
-  /** Turns the music down for a moment so an event sounds clear over it. */
-  function duckMusic(at: number, length: number, db: number) {
+  /**
+   * The music keeps playing under a recorded cue: a glide down from the cue's start, held until just after its home
+   * chord, then back (CUE_DUCK). `play` does this itself; an offline render of the music alone calls it too.
+   */
+  function duckForCue(event: CueEvent, start: number) {
+    duckMusic(start, CUE_TIMELINE[event].home + CUE_DUCK.afterHome, CUE_DUCK.db, {
+      early: 0,
+      tau: CUE_DUCK.glide / 3,
+      backTau: CUE_DUCK.back / 3,
+    })
+  }
+
+  /**
+   * Turns the music down for a moment so an event sounds clear over it. `tau` is how fast it goes down, `backTau`
+   * how fast it returns, `early` how long before `at` it starts.
+   */
+  function duckMusic(
+    at: number,
+    length: number,
+    db: number,
+    { early = 0.03, tau = 0.03, backTau = 0.6 }: { early?: number; tau?: number; backTau?: number } = {},
+  ) {
     // A quieter duck never lifts a deeper one that is still holding.
     if (db > ducked.db && at < ducked.until) return
     ducked = { db, until: at + length }
     // WebKit rejects a negative time, which `at - 0.03` is right after the context starts.
-    const from = Math.max(0, at - 0.03)
+    const from = Math.max(0, at - early)
     musicIn.gain.cancelScheduledValues(from)
-    musicIn.gain.setTargetAtTime(dbToGain(db), from, 0.03)
-    musicIn.gain.setTargetAtTime(1, at + length, 0.6)
+    musicIn.gain.setTargetAtTime(dbToGain(db), from, tau)
+    musicIn.gain.setTargetAtTime(1, at + length, backTau)
   }
 
   function stopMusic(tau = 0.6) {
@@ -638,6 +756,7 @@ export function createSynth(ctx: BaseAudioContext, options: SynthOptions = {}) {
     play,
     stopAll,
     playMusic,
+    duckForCue,
     cutMusic,
     stopMusic,
     /** Music level, dB on top of the calibrated base (0 = normal). */
