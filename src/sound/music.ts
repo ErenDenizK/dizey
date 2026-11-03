@@ -1,6 +1,6 @@
 import type { Flourish, MusicCue, Theme } from './form'
 import { CHORDS, type ChordId, clamp, intervalOf, mod, nearest } from './harmony'
-import type { Note } from './score'
+import type { MusicVoice, Note } from './score'
 
 /**
  * Background music: generated, never a recording and never a loop you can learn by heart. Each
@@ -274,6 +274,7 @@ export function flourishNotes(kind: Flourish, chord: ChordId, start: number): No
     velocity,
     bright: 0.35,
     pan: flip() * 0.25,
+    voice: 'flourish',
   })
   const at0 = start + 0.03
   if (kind === 'cascade') {
@@ -347,6 +348,7 @@ export function composeSection(
       ring: SECTION + 2.6,
       velocity: padVelocity,
       bright: 0,
+      voice: 'pad',
       rise: padRise,
       // Level held to the end of the phrase, then a 2.6 s fade under the next pad's swell.
       hold: SECTION - padRise,
@@ -369,7 +371,15 @@ export function composeSection(
 
   // Bass: one root; then root and a 5th; then a slow walk (root, 5th, octave, 5th).
   const bass = (beat: number, pitch: number, velocity: number, ring: number) =>
-    notes.push({ kind: 'main', pitch, at: start + beat * BEAT + 0.02, ring, velocity, bright: 0.05 })
+    notes.push({
+      kind: 'main',
+      pitch,
+      at: start + beat * BEAT + 0.02,
+      ring,
+      velocity,
+      bright: 0.05,
+      voice: 'bass',
+    })
   const isArrival = cue.role === 'arrival' && state.bar === 0
   bass(0, c.bass, isArrival ? 0.42 : 0.36, 5.5)
   if (energy < 0.35) bass(4, c.bass, 0.22, 4)
@@ -386,6 +396,8 @@ export function composeSection(
   const low = 6 + Math.round(energy * 4)
   const high = low + 13
   let last = state.last
+  // The soft piano sings the home theme and M and D; the harp sings R and S.
+  const sings: MusicVoice = cue.theme === 'R' || cue.theme === 'S' ? 'melodyHarp' : 'melody'
   const melodyIn = cue.role !== 'open' || state.bar > 0 || energy >= 0.2
   if (melodyIn) {
     const landing = cue.role === 'arrival' && state.bar === 0
@@ -398,11 +410,20 @@ export function composeSection(
         ring: n.ring,
         velocity: n.velocity,
         bright: n.passing ? 0.1 : 0.18,
+        voice: sings,
       })
     // An arrival lands first: the chord's own root, a little louder, on the downbeat.
     if (landing && !line.some((n) => n.at < 0.25)) {
       const root = nearestTone(state.last ?? low + 6, (i) => i === 0, c)
-      notes.push({ kind: 'main', pitch: root, at: start + 0.04, ring: 3, velocity: 0.33, bright: 0.2 })
+      notes.push({
+        kind: 'main',
+        pitch: root,
+        at: start + 0.04,
+        ring: 3,
+        velocity: 0.33,
+        bright: 0.2,
+        voice: sings,
+      })
     }
     if (line.length) last = line[line.length - 1]?.pitch
   }
@@ -420,6 +441,7 @@ export function composeSection(
         ring: 1.1,
         velocity: (tension ? 0.07 : 0.095) + 0.05 * energy,
         bright: 0.35,
+        voice: 'pulse',
       })
     })
   }

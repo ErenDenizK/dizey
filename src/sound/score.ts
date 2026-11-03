@@ -183,7 +183,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
   },
   lessonEnd: {
     tier: 'lesson',
-    loudness: -28,
+    loudness: -30,
     cutoff: 5000,
     wet: 1.1,
     parts: [
@@ -229,7 +229,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
   },
   halfway: {
     tier: 'reward',
-    loudness: -27,
+    loudness: -29,
     cutoff: 5600,
     wet: 1.2,
     parts: [
@@ -259,7 +259,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
   },
   milestone: {
     tier: 'reward',
-    loudness: -26,
+    loudness: -28,
     cutoff: 6000,
     wet: 1.3,
     parts: [
@@ -299,7 +299,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
   // A mastery seal closes: the dominant, held open, rises into home.
   seal: {
     tier: 'reward',
-    loudness: -27.5,
+    loudness: -29.5,
     cutoff: 5600,
     wet: 1.2,
     parts: [
@@ -321,7 +321,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
   // A hidden insight found: a colour heard nowhere else (♭VI to a Lydian tonic).
   secret: {
     tier: 'reward',
-    loudness: -27,
+    loudness: -29,
     cutoff: 6400,
     wet: 1.3,
     parts: [
@@ -407,7 +407,7 @@ export const EVENTS: Record<SoundEvent, EventSpec> = {
   // Opening a lesson is one deliberate moment: as loud as an answer, well under the lesson's end.
   lessonOpen: {
     tier: 'question',
-    loudness: -36,
+    loudness: -38,
     cutoff: 5000,
     wet: 1,
     parts: [
@@ -451,7 +451,15 @@ export type Note = {
   hold?: number
   /** Stereo position, -1..1. Default: follows the pitch, narrowly. */
   pan?: number
+  /**
+   * Background music only: the part this note plays, which the sampler maps onto an instrument (sampler.ts).
+   * Absent: the synth voice of its kind.
+   */
+  voice?: MusicVoice
 }
+
+/** The parts of the background music: strings pad, soft piano or harp melody, cello bass, harp flourish and pulse. */
+export type MusicVoice = 'pad' | 'melody' | 'melodyHarp' | 'bass' | 'flourish' | 'pulse'
 
 export type SoundContext = {
   /** Current lesson step and the lesson's length: they choose the chord. */
@@ -471,6 +479,8 @@ export type Plan = {
   notes: Note[]
   /** Last moment anything is still ringing, s. */
   end: number
+  /** A recorded cue: the context time it starts at (the music ducks and rests around it). */
+  start?: number
   /**
    * The harmony this event leaves ringing ('*' for a multi-chord event). A new event with a
    * different harmony fades the old tails, as a pianist lifts the pedal.

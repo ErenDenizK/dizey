@@ -1,9 +1,10 @@
 import { readSettings, saveSettings } from '../progress/settings'
 import { type Conductor, createConductor, createLearner } from './conductor'
-import { type CueBank, createCueBank } from './cues'
+import { type CueBank, createCueBank, isCueEvent, musicAnswersCue } from './cues'
 import type { MusicCue } from './form'
 import { chordAt, seeded } from './harmony'
 import { idleCue } from './music'
+import { createSampleBank, type SampleBank } from './sampler'
 import { EVENTS, type Plan, type SoundContext, type SoundEvent } from './score'
 import { createSynth, PALETTES, type PaletteId, type Synth } from './synth'
 
@@ -26,6 +27,7 @@ type AudioSessionNavigator = Navigator & { audioSession?: { type: string } }
 let ctx: AudioContext | null = null
 let synth: Synth | null = null
 let cues: CueBank | null = null
+let samples: SampleBank | null = null
 let idle: ReturnType<typeof setTimeout> | undefined
 let hooked = false
 
@@ -94,9 +96,12 @@ function prepare() {
   }
   const settings = readSettings()
   cues = createCueBank(ctx)
-  synth = createSynth(ctx, { palette: paletteOf(settings.palette), cues })
-  // Decode the recorded cues while the app is idle; until they are ready the synth plays the old cues.
+  samples = createSampleBank(ctx)
+  synth = createSynth(ctx, { palette: paletteOf(settings.palette), cues, samples })
+  // Decode the recorded cues and the music's instruments while the app is idle; until they are ready the synth
+  // plays the old cues and the music's synth voices.
   void cues.load()
+  void samples.load()
   synth.setMusicLevel(settings.musicSoft ? MUSIC_SOFT_DB : 0)
   conductor = createConductor({
     now: () => ctx?.currentTime ?? 0,
@@ -142,6 +147,7 @@ function unlock() {
   if (ctx.state !== 'running') void ctx.resume().catch(() => {})
   // A load that failed (offline at start-up) is tried again on a tap.
   void cues?.load()
+  void samples?.load()
 }
 
 function quiet() {
@@ -181,9 +187,12 @@ export function playSound(event: SoundEvent, given?: SoundContext) {
   if (ctx.state === 'running') {
     armIdle()
     const plan = synth.play(event, context)
-    // A lesson end or a reward walks its own chords: the music steps aside and comes back after it.
-    if (tier === 'lesson' || tier === 'reward') {
-      conductor?.fade(plan.end - 1.5)
+    // The music never stops for a recorded cue: its bus ducks (synth.ts) and the melody rests until the duck has
+    // returned; a lesson end also settles on I. A synthesized fallback cue walks its own chords, so the music steps
+    // aside and comes back after it.
+    if ((tier === 'lesson' || tier === 'reward') && conductor) {
+      if (plan.start !== undefined && isCueEvent(event)) musicAnswersCue(conductor, event, plan.start)
+      else conductor.fade(plan.end - 1.5)
     }
     return
   }

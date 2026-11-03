@@ -1,6 +1,6 @@
 import type { Flourish, MusicCue } from './form'
 import type { ChordId } from './harmony'
-import { BAR, BEAT, composeSection, freshState, type MusicState, SECTION } from './music'
+import { BAR, BEAT, composeSection, freshState, IDLE_ENERGY, type MusicState, SECTION } from './music'
 import type { Note } from './score'
 
 /**
@@ -12,6 +12,9 @@ import type { Note } from './score'
  *   skips to the next grid point; it never re-anchors at "now".
  * - A bar is written about LOOKAHEAD ahead, its notes grouped per beat (the pad rides with beat 0),
  *   so a change can drop what has not started yet.
+ * - The music never stops for a recorded cue: the synth ducks its bus (synth.ts) and the conductor only rests the
+ *   melody while the duck holds (`rest`); a lesson end also moves the music to chord I, softly (`settle`).
+ *   `fade` is only for a synthesized cue that walks its own chords (the fallback before the recordings decode).
  * - A change (`request`) takes effect on the next grid beat: groups from there on are dropped,
  *   ringing ones are released from there (tau 0.3), and a new phrase begins on that beat. The
  *   musical state carries over; the piece continues.
@@ -57,8 +60,26 @@ export function createConductor(options: ConductorOptions) {
   /** Lesson end or reward: no music until this context time. 0 = not paused. */
   let pausedUntil = 0
   let seed = 0
+  /** A cue is ringing: the melody rests (its notes are not written) until this context time. */
+  let restUntil = 0
+  /** After a lesson end the music holds I at the home loop's energy until the next request. */
+  let settled = false
   let state: MusicState = freshState(0)
   let written: { at: number; chord: ChordId }[] = []
+
+  /** Drops what is written from the next beat on and begins a fresh phrase there (the same cue, or the changed one). */
+  function rewrite() {
+    const at = gridAt(now() + MIN_AHEAD)
+    sink.cut(at, CHANGE_TAU)
+    written = written.filter((w) => w.at < at - EPS)
+    phrase = null
+    nextAt = at
+    entering = true
+    flourish = undefined
+    tick()
+  }
+
+  const isMelody = (note: Note) => note.voice === 'melody' || note.voice === 'melodyHarp'
 
   /** First grid beat at or after `time`. */
   const gridAt = (time: number) => origin + Math.ceil((time - origin) / BEAT - EPS) * BEAT
@@ -77,7 +98,10 @@ export function createConductor(options: ConductorOptions) {
       const beat = Math.min(3, Math.max(0, Math.floor((note.at - at) / BEAT + EPS)))
       groups.set(beat, [...(groups.get(beat) ?? []), note])
     }
-    for (const [beat, group] of [...groups].sort((a, b) => a[0] - b[0])) sink.play(group, at + beat * BEAT)
+    for (const [beat, group] of [...groups].sort((a, b) => a[0] - b[0])) {
+      const heard = group.filter((n) => !(isMelody(n) && n.at < restUntil))
+      if (heard.length) sink.play(heard, at + beat * BEAT)
+    }
     written = [...written.filter((w) => w.at > now() - SECTION * 2), { at, chord }]
   }
 
@@ -102,7 +126,11 @@ export function createConductor(options: ConductorOptions) {
         continue
       }
       if (!phrase) {
-        const cue: MusicCue = { ...wanted(phraseNumber), ...(flourish ? { flourish } : {}) }
+        const cue: MusicCue = {
+          ...wanted(phraseNumber),
+          ...(settled ? { chord: 'I', energy: IDLE_ENERGY, role: 'travel' } : {}),
+          ...(flourish ? { flourish } : {}),
+        }
         flourish = undefined
         const composed = composeSection(cue, nextAt, random, state, entering)
         entering = false
@@ -131,6 +159,7 @@ export function createConductor(options: ConductorOptions) {
      */
     request(answer?: Flourish) {
       state = { ...state, bar: 0 }
+      settled = false
       if (!running || pausedUntil) return
       const at = gridAt(now() + MIN_AHEAD)
       sink.cut(at, CHANGE_TAU)
@@ -142,7 +171,24 @@ export function createConductor(options: ConductorOptions) {
       tick()
     },
 
-    /** A lesson end or reward is ringing: fade all music and stay out until `until`. */
+    /** A recorded cue is ringing over the music: the melody rests until `until` (the duck has returned). */
+    rest(until: number) {
+      restUntil = Math.max(restUntil, until)
+      // Melody already written up to LOOKAHEAD ahead would still sound: write it again from the next beat, without it.
+      if (running && !pausedUntil) rewrite()
+    },
+
+    /**
+     * The lesson end is ringing: like `rest`, and from the next beat the music holds chord I softly (the home loop's
+     * energy) until the next `request`. The grid and the music state carry on; nothing stops.
+     */
+    settle(until: number) {
+      restUntil = Math.max(restUntil, until)
+      settled = true
+      if (running && !pausedUntil) rewrite()
+    },
+
+    /** A synthesized cue that walks its own chords is ringing: fade all music and stay out until `until`. */
     fade(until: number) {
       sink.cut(now(), FADE_TAU)
       phrase = null
@@ -159,6 +205,8 @@ export function createConductor(options: ConductorOptions) {
 
     /** Stops the music with a fade; the grid restarts the next time it plays. */
     stop(tau = FADE_TAU) {
+      settled = false
+      restUntil = 0
       if (!running) {
         pausedUntil = 0
         return

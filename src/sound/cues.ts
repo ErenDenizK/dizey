@@ -4,6 +4,8 @@ import lessonOpen from '../assets/sound/lessonOpen.m4a'
 import milestone from '../assets/sound/milestone.m4a'
 import seal from '../assets/sound/seal.m4a'
 import secret from '../assets/sound/secret.m4a'
+import type { Conductor } from './conductor'
+import { CUE_TIMELINE } from './cueTimeline'
 import type { SoundEvent } from './score'
 
 /**
@@ -23,22 +25,50 @@ export const isCueEvent = (event: SoundEvent): event is CueEvent => event in CUE
  * peak-normalized, so only the level differs per cue). Re-run the calibration after re-rendering the files.
  */
 export const CUE_TRIM: Record<CueEvent, number> = {
-  lessonEnd: -16.7,
-  halfway: -16.6,
-  milestone: -15.9,
-  seal: -16.9,
-  secret: -18.3,
-  lessonOpen: -24.2,
+  lessonEnd: -18.5,
+  halfway: -18.1,
+  milestone: -16.9,
+  seal: -18.6,
+  secret: -16.8,
+  lessonOpen: -25.4,
 }
 
-/** The sound map's length budget per cue, seconds (decision 0019): a cue is as short as the moment it plays with. */
+/**
+ * The sound map's length budget per cue, seconds (decisions 0019 and 0020): a cue is as short as the moment it plays
+ * with, plus the tail its room rings out for (1.3 s; the lesson end 1.4 s, its home chord still at 1.5 s).
+ */
 export const CUE_BUDGET: Record<CueEvent, number> = {
-  lessonOpen: 1.3,
-  lessonEnd: 3.2,
-  seal: 1.8,
-  halfway: 2.8,
-  milestone: 3.4,
-  secret: 2.6,
+  lessonOpen: 2.6,
+  lessonEnd: 4.6,
+  seal: 3.1,
+  halfway: 4.1,
+  milestone: 4.7,
+  secret: 3.9,
+}
+
+/**
+ * The music never stops for a recorded cue (decision 0020). Its bus ducks `db` over `glide` s from the cue's start,
+ * holds until `afterHome` s past the cue's home chord, and returns to normal over `back` s.
+ */
+export const CUE_DUCK = { db: -8, glide: 0.4, afterHome: 0.6, back: 2.0 } as const
+
+/** When the duck of a cue that starts at `start` is back to normal: the melody rests until then. */
+export const cueDuckEnd = (event: CueEvent, start: number) =>
+  start + CUE_TIMELINE[event].home + CUE_DUCK.afterHome + CUE_DUCK.back
+
+/**
+ * What the music does while a recorded cue rings: it keeps its grid. A reward rests the melody until the duck has
+ * returned; a lesson end also moves the music to chord I; a lesson's opening only ducks.
+ */
+export function musicAnswersCue(
+  conductor: Pick<Conductor, 'rest' | 'settle'>,
+  event: CueEvent,
+  start: number,
+) {
+  if (event === 'lessonOpen') return
+  const until = cueDuckEnd(event, start)
+  if (event === 'lessonEnd') conductor.settle(until)
+  else conductor.rest(until)
 }
 
 export type CueBank = {

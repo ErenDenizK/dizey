@@ -242,6 +242,60 @@ describe('music conductor', () => {
     expect(Math.abs(beats - Math.round(beats)) * BEAT).toBeLessThan(0.001)
     expect(first.notes.find((n) => n.kind === 'pad')?.rise).toBe(0.3)
   })
+  it('never stops for a recorded cue: the grid keeps playing, and only the melody rests until the duck is back', () => {
+    const r = rig(() => ({ ...cue('IV', 0.6), theme: 'M' }))
+    r.conductor.tick()
+    r.advance(2)
+    r.conductor.tick()
+    const until = r.now() + 4
+    const restedAt = r.now()
+    r.conductor.rest(until)
+    let guard = 0
+    while (r.now() < until + 8 && guard++ < 100) {
+      r.advance(0.4)
+      r.conductor.tick()
+    }
+    expect(r.conductor.paused).toBe(false)
+    const notes = r.plays.filter((p) => !p.dropped).flatMap((p) => p.notes)
+    const melody = notes.filter((n) => n.voice === 'melody' && n.at >= r.now() - 12)
+    expect(melody.length).toBeGreaterThan(0)
+    expect(notes.some((n) => n.voice === 'melody' && n.at > until)).toBe(true)
+    expect(notes.filter((n) => n.voice === 'melody' && n.at >= restedAt + BEAT && n.at < until)).toEqual([])
+    // Pad and bass play right through it.
+    const quietBeats = r.plays.filter((p) => !p.dropped && p.at >= restedAt && p.at < until)
+    expect(quietBeats.some((p) => p.notes.some((n) => n.voice === 'pad'))).toBe(true)
+  })
+
+  it('settles a lesson end on I at the home energy from the next beat, melody resting, until the next request', () => {
+    const r = rig(() => ({ ...cue('IV', 0.9), theme: 'M' }))
+    r.conductor.tick()
+    r.advance(2)
+    r.conductor.tick()
+    const { origin } = r.conductor.grid
+    const count = r.plays.length
+    const until = r.now() + 4
+    r.conductor.settle(until)
+    expect(r.conductor.paused).toBe(false)
+    const after = r.plays.slice(count)
+    const first = after.find((p) => p.notes.some((n) => n.voice === 'pad'))
+    expect(first).toBeDefined()
+    const beats = ((first as Play).at - origin) / BEAT
+    expect(Math.abs(beats - Math.round(beats)) * BEAT).toBeLessThan(0.001)
+    expect((first as Play).at - r.now()).toBeLessThanOrEqual(BEAT + 0.05)
+    expect(r.conductor.chordAt((first as Play).at + 0.1)).toBe('I')
+    const pad = (first as Play).notes.filter((n) => n.voice === 'pad')
+    // The pad is chord I's voicing; the bass is I's root.
+    for (const n of pad) expect(CHORDS.I.voicing.map((p) => p % 12)).toContain(n.pitch % 12)
+    expect(
+      after
+        .filter((p) => !p.dropped)
+        .flatMap((p) => p.notes)
+        .filter((n) => n.voice === 'melody' && n.at < until),
+    ).toEqual([])
+    // A new request (the learner leaves) ends the settling.
+    r.conductor.request()
+    expect(r.conductor.chordAt(r.now() + 1)).toBe('IV')
+  })
 })
 
 describe('bars', () => {
