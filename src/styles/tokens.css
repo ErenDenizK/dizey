@@ -235,6 +235,7 @@
   --stage-wide: 1120px;
   --stage-col: var(--measure-page);
   --side-col: 360px; /* the side column of the stage grid (expanded) */
+  --side-h: 0px; /* the side card's own height, written by src/ui/useSideHeight.ts for its sticky offset */
   --gutter-base: 16px;
   --bar-width: 360px; /* the floating tab bar on a wide screen: phone width */
 

@@ -114,9 +114,7 @@
   text-decoration: none;
   --node-glow: 0 0 calc(var(--glow, 0) * 26px) calc(var(--glow, 0) * 3px) var(--glow-ok);
   --node-ring: inset 0 0 0 0 transparent;
-  box-shadow:
-    var(--node-ring),
-    var(--node-glow);
+  box-shadow: var(--node-ring), var(--node-glow);
 }
 /* A source coming home (node, test, gate): the outline is an SVG stroke that draws itself (src/shell/morph.ts, drawRing). */
 .pa-tile__trace {
@@ -488,7 +486,10 @@
   .ph-dock {
     position: sticky;
     /* Room above the card for the cat that perches on its edge. */
-    top: calc(var(--paper-top) + var(--space-16));
+    top: min(
+      calc(var(--paper-top) + var(--space-16)),
+      calc(100dvh - var(--side-h, 0px) - var(--bar-clearance))
+    );
     bottom: auto;
     margin: 0;
     padding: 0;

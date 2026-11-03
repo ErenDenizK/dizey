@@ -7,12 +7,12 @@
 //        node scripts/motion-strip.mjs <scenario> <outDir>
 // Scenarios: count (lesson counter, forward then back), verdict (a wrong pick, then the right one), birim-answer (the
 // same, filmed on the whole dock so Birim's spring into the verdict shows), press, keypad,
-// tabs, sheet, dock-swap (wide: W=1180), progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
+// tabs, sheet (a centred dialog from W=600), progress, lesson-open and lesson-close (a tile's card, the lesson and back), each also as
 // chapter-test-open / chapter-test-close (alias test-close) (Yol's chapter test node and the test), lesson-open-cells / lesson-close-cells with the matrix-cell reveal on.
 // Then check for one-frame pops (PR-16, nothing changes in a single frame):
 //        node scripts/pop-check.mjs <outDir>/frames   (exit 1 and the frames and cells when something steps)
 // Output: outDir/frames/*.png, outDir/strip.png (tiled), outDir/slow.mp4 (4x slower; needs ffmpeg).
-// Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390),
+// Env: REVIEW_URL (default http://localhost:4173/dizey/), PLAYWRIGHT_CHROMIUM_PATH, W (viewport width, 390), H (viewport height, 844),
 // REDUCED=1 (film with prefers-reduced-motion: reduce).
 import { execFileSync } from 'node:child_process'
 import { mkdir, rm } from 'node:fs/promises'
@@ -22,6 +22,7 @@ import { chromium } from '@playwright/test'
 const base = process.env.REVIEW_URL ?? 'http://localhost:4173/dizey/'
 const [scenario = 'count', out = join('motion-strip', scenario)] = process.argv.slice(2)
 const width = Number(process.env.W ?? 390)
+const height = Number(process.env.H ?? 844)
 const FRAME = 1000 / 60
 
 const PEEK_ENTER = '[data-testid="lesson-peek"] .dz-button[data-kind="primary"]'
@@ -157,18 +158,6 @@ const scenarios = {
       await frames(50)
     },
   },
-  // Wide screens (W=1180): a picked lesson swaps into the bottom-right card and "Sıradakine dön" swaps it back.
-  'dock-swap': {
-    region: 'body',
-    scale: 2,
-    prep: toYol,
-    run: async ({ tap, frames }) => {
-      await tap('.pa-tile:not([data-next])')
-      await frames(50)
-      await tap('[data-testid="dock-back"]')
-      await frames(50)
-    },
-  },
   progress: {
     region: '.ls-top',
     lesson: 'd1-determinant',
@@ -285,7 +274,7 @@ const browser = await chromium.launch(
   process.env.PLAYWRIGHT_CHROMIUM_PATH ? { executablePath: process.env.PLAYWRIGHT_CHROMIUM_PATH } : {},
 )
 const context = await browser.newContext({
-  viewport: { width, height: 844 },
+  viewport: { width, height },
   deviceScaleFactor: plan.scale ?? 4,
   isMobile: true,
   hasTouch: true,

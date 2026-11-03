@@ -19,6 +19,7 @@ import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
 import { Check, ClockIcon, DailyIcon, RetryIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
+import { useSideHeight } from '../ui/useSideHeight'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import { type TodayBlock, todayBlocks } from './today-blocks'
@@ -48,6 +49,8 @@ function DockCat() {
  * mistakes to retry, the rehearsal when the exam is close; none of them ever drawn empty).
  */
 export function PathDock() {
+  const root = useRef<HTMLDivElement>(null)
+  useSideHeight(root)
   const records = useLessonRecords()
   const { outcomes } = useExam()
   const { examDate } = useSettings()
@@ -108,7 +111,7 @@ export function PathDock() {
   )
 
   return (
-    <div className="ph-dock" data-testid="path-dock">
+    <div ref={root} className="ph-dock" data-testid="path-dock">
       {main ? (
         <NextLesson lessonId={main.id} count={blocks.length - 1}>
           {more}
