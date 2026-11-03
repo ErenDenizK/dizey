@@ -25,11 +25,11 @@ test('Yol offers the first lesson on the path', async ({ page }) => {
 test('the path groups lessons into chapters and Sen shows version and commit', async ({ page }) => {
   await openApp(page)
   await expect(screen(page).getByRole('heading', { name: /^Determinant\b/ })).toBeVisible()
-  // Every chapter has its heading in the path; the nodes are its lessons (10 + 3 + 4 + 2 + 4) and one test each.
-  await expect(screen(page).getByRole('heading', { level: 2 })).toHaveCount(5)
+  // Every chapter has its heading in the path; the nodes are its lessons (10 + 3 + 4 + 2 + 4 + 2) and one test each.
+  await expect(screen(page).getByRole('heading', { level: 2 })).toHaveCount(6)
   const nodes = screen(page).getByRole('list', { name: 'Dersler' })
-  await expect(nodes.locator('.pa-tile')).toHaveCount(23)
-  await expect(nodes.locator('.pa-test')).toHaveCount(5)
+  await expect(nodes.locator('.pa-tile')).toHaveCount(25)
+  await expect(nodes.locator('.pa-test')).toHaveCount(6)
   await tab(page, 'Sen').click()
   await page.getByTestId('open-settings').click()
   await expect(page.getByTestId('app-version')).toContainText(/Sürüm \d+\.\d+\.\d+ · ([0-9a-f]{7}|unknown)/)
@@ -399,7 +399,7 @@ test('every node is a tap target of at least 44 px and its aria-label carries th
         label: el.getAttribute('aria-label') ?? '',
       })),
     )
-  expect(nodes).toHaveLength(28)
+  expect(nodes).toHaveLength(31)
   for (const node of nodes) {
     expect(node.width).toBeGreaterThanOrEqual(56)
     expect(node.height).toBeGreaterThanOrEqual(56)
@@ -1250,7 +1250,7 @@ test.describe('Yol, the path home', () => {
             : (node.getAttribute('aria-label') ?? '').match(/\d+\.\d+/)?.[0]
         }),
       )
-    const sizes = [10, 3, 4, 2, 4]
+    const sizes = [10, 3, 4, 2, 4, 2]
     const expected = sizes.flatMap((size, chapter) => [
       ...Array.from({ length: size }, (_, i) => `${chapter + 1}.${i + 1}`),
       'test',
@@ -1380,7 +1380,7 @@ test.describe('Sen, the profile', () => {
     await expect(sen.getByTestId('me-name')).toHaveText('Adını yaz')
     await expect(sen.getByTestId('me-title')).toHaveText('Yola yeni çıktın')
     await expect(sen.getByTestId('me-status')).toBeVisible()
-    await expect(sen.getByTestId('status-path').locator('.me-path__seg')).toHaveCount(23)
+    await expect(sen.getByTestId('status-path').locator('.me-path__seg')).toHaveCount(25)
     await expect(sen.getByRole('heading', { name: 'Durumun' })).toBeVisible()
   })
 
@@ -1391,7 +1391,7 @@ test.describe('Sen, the profile', () => {
     const sen = screen(page)
     await expect(sen.getByTestId('me-title')).toHaveText('Matris okuru')
     const figure = (key: string) => sen.getByTestId(`status-${key}`).locator('.me-figure__n')
-    await expect(sen.getByTestId('status-readiness').locator('.me-status__big')).toHaveText('43%')
+    await expect(sen.getByTestId('status-readiness').locator('.me-status__big')).toHaveText('40%')
     await expect(sen.getByTestId('status-path').locator('.me-path__seg[data-fill="1"]')).toHaveCount(10)
     await expect(figure('firsttry')).toHaveText('70%')
     await expect(figure('days')).toHaveText('10')
