@@ -96,7 +96,14 @@ async function phoneShot(page: Page, size: SizeName, entry: Entry, note: (msg: s
       maxDiffPixels: 0,
       mask: (entry.mask ?? []).map((selector) => page.locator(selector)),
       ...(entry.clipTop
-        ? { clip: { x: 0, y: entry.clipTop, width: SIZES[size].width, height: SIZES[size].height - entry.clipTop } }
+        ? {
+            clip: {
+              x: 0,
+              y: entry.clipTop,
+              width: SIZES[size].width,
+              height: SIZES[size].height - entry.clipTop,
+            },
+          }
         : {}),
       animations: 'disabled',
       caret: 'hide',
