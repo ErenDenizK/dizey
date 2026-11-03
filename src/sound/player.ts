@@ -1,5 +1,6 @@
 import { readSettings, saveSettings } from '../progress/settings'
 import { type Conductor, createConductor, createLearner } from './conductor'
+import { type CueBank, createCueBank } from './cues'
 import type { MusicCue } from './form'
 import { chordAt, seeded } from './harmony'
 import { idleCue } from './music'
@@ -24,6 +25,7 @@ type AudioSessionNavigator = Navigator & { audioSession?: { type: string } }
 
 let ctx: AudioContext | null = null
 let synth: Synth | null = null
+let cues: CueBank | null = null
 let idle: ReturnType<typeof setTimeout> | undefined
 let hooked = false
 
@@ -91,7 +93,10 @@ function prepare() {
     return
   }
   const settings = readSettings()
-  synth = createSynth(ctx, { palette: paletteOf(settings.palette) })
+  cues = createCueBank(ctx)
+  synth = createSynth(ctx, { palette: paletteOf(settings.palette), cues })
+  // Decode the recorded cues while the app is idle; until they are ready the synth plays the old cues.
+  void cues.load()
   synth.setMusicLevel(settings.musicSoft ? MUSIC_SOFT_DB : 0)
   conductor = createConductor({
     now: () => ctx?.currentTime ?? 0,
@@ -135,6 +140,8 @@ function unlock() {
     }
   }
   if (ctx.state !== 'running') void ctx.resume().catch(() => {})
+  // A load that failed (offline at start-up) is tried again on a tap.
+  void cues?.load()
 }
 
 function quiet() {
