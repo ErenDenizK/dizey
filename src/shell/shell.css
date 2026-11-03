@@ -1639,7 +1639,18 @@ svg.ls-duo {
   }
 }
 
-/* The step counter yields to the first step's greeting (eased by useEase on --on). */
-.ls-count[data-ease] {
-  opacity: var(--on, 1);
+/* The first step's lane: room above its card for the greeting cat (56 px, paws on the card's top edge), reserved from
+   the first frame. .ls-lane is a zero-height anchor on that edge, so the perch's `bottom: 100%` lands on the card. */
+.ls-main[data-lane] {
+  padding-top: var(--space-10);
+}
+.ls-lane {
+  position: absolute;
+  top: var(--space-10);
+  left: 0;
+  right: 0;
+  height: 0;
+}
+.ls-main:not([data-lane]) > .ls-lane {
+  display: none;
 }

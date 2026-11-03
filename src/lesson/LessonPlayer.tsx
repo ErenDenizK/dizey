@@ -125,6 +125,12 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   })
   const [cheer, setCheer] = useState<Moment | null>(null)
   const [hello, setHello] = useState<Moment | null>(null)
+  // The first step keeps a lane above its card for her from the first frame, so she never covers the top bar and
+  // nothing moves when she arrives. It closes with the step.
+  const [lane, setLane] = useState(() => {
+    const first = lesson.steps[index]
+    return index === 0 && Boolean(first) && !isQuestion(first as Step)
+  })
   // The lesson's first explain step: she wakes on its card once the lesson has settled.
   // biome-ignore lint/correctness/useExhaustiveDependencies: once, when the lesson opens
   useEffect(() => {
@@ -195,9 +201,6 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const back = useRef<HTMLButtonElement>(null)
   const backOff = index === 0 || ended !== null || moment !== null
   useEase(back, !backOff)
-  // Her paws are on the counter while she greets, so the counter steps aside (an eased fade, never a cut).
-  const count = useRef<HTMLSpanElement>(null)
-  useEase(count, !hello)
   useLessonMotion(root, index, lesson.steps.length)
   useAnswerMotion(root, attempt.wrong, attempt.solved)
 
@@ -248,6 +251,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
   const go = (next: number) => {
     engine.cancelCues('hello')
     setHello(null)
+    setLane(false)
     setCheer(null)
     setReplays(0)
     setHeld(false)
@@ -505,7 +509,6 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         {/* Only the step number rolls; the code and the total stay still. */}
         {/* Room for the widest count from the start, so a new tens digit never shifts the code in one frame. */}
         <span
-          ref={count}
           className="ls-count"
           aria-hidden="true"
           style={{
@@ -520,9 +523,9 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
         <LessonEnd lesson={lesson} reward={ended} insight={insight} onSealed={() => cue(ended)} />
       ) : (
         <>
-          <div className="ls-main" data-stage={hasStage}>
-            {/* The first step's greeting: perched on the top edge of the first card, and gone with the step. */}
-            {hello ? <Cheer greet line={lineOf(hello)} /> : null}
+          <div className="ls-main" data-stage={hasStage} data-lane={lane || undefined}>
+            {/* The first step's greeting: perched on the first card's top edge, in the lane above it; gone with the step. */}
+            <div className="ls-lane">{hello ? <Cheer greet line={lineOf(hello)} /> : null}</div>
             {hasStage ? (
               <Stage
                 lesson={lesson}
