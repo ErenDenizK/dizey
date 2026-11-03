@@ -95,9 +95,9 @@ async function phoneShot(page: Page, size: SizeName, entry: Entry, note: (msg: s
     await expect(page).toHaveScreenshot(`${size}-${entry.id}.png`, {
       maxDiffPixels: 0,
       mask: (entry.mask ?? []).map((selector) => page.locator(selector)),
-      clip: entry.clipTop
-        ? { x: 0, y: entry.clipTop, width: SIZES[size].width, height: SIZES[size].height - entry.clipTop }
-        : undefined,
+      ...(entry.clipTop
+        ? { clip: { x: 0, y: entry.clipTop, width: SIZES[size].width, height: SIZES[size].height - entry.clipTop } }
+        : {}),
       animations: 'disabled',
       caret: 'hide',
     })
