@@ -397,8 +397,19 @@ async function readLayout(page: Page, skip: string[]): Promise<LayoutNode[]> {
 }
 
 const BASELINES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'baselines')
+const ACTUAL = path.join(process.cwd(), 'test-results', 'layout-actual')
 
-/** Compare with e2e/wide-walk/baselines/<name>.json, or write it when UPDATE_LAYOUT=1. Returns a diff summary or null. */
+/**
+ * Baselines are kept per browser build (e2e/wide-walk/baselines/<engine>-<major>/<name>.json): two Chromium builds
+ * shape the same font differently enough to rewrap a line, so one build's layout is no oracle for another's. A
+ * mismatch or a missing baseline also writes the actual layout to test-results/layout-actual/<engine>-<major>/,
+ * which CI uploads, so a new build's baselines come from that build and never from hand edits.
+ */
+export function baselineKey(browserName: string, version: string): string {
+  return `${browserName}-${version.split('.')[0]}`
+}
+
+/** Compare with the baseline for this browser build, or write it when UPDATE_LAYOUT=1. Returns a diff summary or null. */
 /**
  * Text shaping differs between machines: the CI runner lays the same font out a few percent wider than this box, so a
  * text run's width (and the x of whatever follows it on the line) moves while nothing vertical does. Vertical metrics
@@ -423,17 +434,26 @@ function sameNode(w: LayoutNode | undefined, n: LayoutNode | undefined): boolean
   return near(wx, nx, true) && near(wy, ny, false) && near(ww, nw, true) && near(wh, nh, false)
 }
 
-export function compareLayout(name: string, nodes: LayoutNode[]): string | null {
-  const file = path.join(BASELINES, `${name}.json`)
+export function compareLayout(key: string, name: string, nodes: LayoutNode[]): string | null {
+  const dir = path.join(BASELINES, key)
+  const file = path.join(dir, `${name}.json`)
   const json = `${JSON.stringify(nodes, null, 1)}\n`
   if (process.env.UPDATE_LAYOUT === '1') {
-    fs.mkdirSync(BASELINES, { recursive: true })
+    fs.mkdirSync(dir, { recursive: true })
     fs.writeFileSync(file, json)
     return null
   }
-  if (!fs.existsSync(file)) return `no baseline ${name}.json (run with UPDATE_LAYOUT=1)`
+  const keepActual = () => {
+    fs.mkdirSync(path.join(ACTUAL, key), { recursive: true })
+    fs.writeFileSync(path.join(ACTUAL, key, `${name}.json`), json)
+  }
+  if (!fs.existsSync(file)) {
+    keepActual()
+    return `no baseline ${key}/${name}.json (run with UPDATE_LAYOUT=1)`
+  }
   const want = JSON.parse(fs.readFileSync(file, 'utf8')) as LayoutNode[]
   if (want.length === nodes.length && want.every((w, k) => sameNode(w, nodes[k]))) return null
+  keepActual()
   const i = want.findIndex((w, k) => !sameNode(w, nodes[k]))
   const at = i === -1 ? want.length : i
   const more = want
@@ -444,5 +464,5 @@ export function compareLayout(name: string, nodes: LayoutNode[]): string | null 
     )
     .filter((d): d is string => d !== null)
     .slice(1, 10)
-  return `layout differs from ${name}.json (${nodes.length} elements, baseline ${want.length}); first at #${at}: got ${JSON.stringify(nodes[at])} want ${JSON.stringify(want[at])}${more.length ? `; also ${more.join(' | ')}` : ''}`
+  return `layout differs from ${key}/${name}.json (${nodes.length} elements, baseline ${want.length}); first at #${at}: got ${JSON.stringify(nodes[at])} want ${JSON.stringify(want[at])}${more.length ? `; also ${more.join(' | ')}` : ''}`
 }
