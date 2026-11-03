@@ -38,3 +38,14 @@ claims a real exam question.
 - The mixed exam rehearsal and chapter tests now include generated items next to real ones; the printed 2024 paper does not.
 - A family change that alters a committed item fails the lock test: add a new seed or id instead.
 - Watch: Turkish is templated, so phrasing needs Eren's ear; the verifier's mistake models are the specification of each errorType.
+
+## Update: families for the other Vize 1 chapters
+
+The engine now covers every chapter, not only determinants. Families are grouped by file under `generated/`:
+`matrices.ts` (m1-entries, m1-rule, m1-count, m2-types, m4-combo, m6-transpose, m10-hermitian),
+`row-operations.ts` (r1-ops-entry, r3-rank-prop, r3-rank-k), `determinant-basics.ts` (d1-sarrus, d1-two-param) and
+`systems.ts` (s2-k-system, s2-b-param). `generated/all.ts` is the one list the bank, the tests and the lock read.
+Each file has its own independent analysers under `engine/verify-*.ts`. All answers are numbers or k-sets, so
+`OptionValue` did not change. Systems with a parameter are shown as `A` and `b` (two matrices) because a 3x4
+augmented matrix breaks the phone rules. A plain "rank of this 3x3" item is not generated: the true rank has
+only three possible values, so four honest wrong options cannot exist; rank is asked through k instead.
