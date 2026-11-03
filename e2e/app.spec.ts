@@ -154,7 +154,7 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   await page.emulateMedia({ reducedMotion: 'reduce' })
   await openApp(page)
   const card = screen(page).getByTestId('today-daily')
-  await expect(card).toContainText('Günlük')
+  await expect(card).toContainText('Günün sorusu')
   await card.click()
   const sheet = page.getByTestId('question-sheet')
   await expect(sheet).toBeVisible()
@@ -166,11 +166,11 @@ test('the question of the day is answered in a sheet, stays answered and a wrong
   const right = (await result.getAttribute('data-correct')) === 'true'
   await sheet.getByRole('button', { name: 'Tamam' }).click()
   await expect(sheet).toHaveCount(0)
-  await expect(card).toContainText('Yarın')
+  await expect(card).toContainText('Yarın yenisi')
   await expect(card).toHaveAttribute('data-state', right ? 'right' : 'wrong')
   // Answered stays answered across a reload, and the day counts in Sen's matrix.
   await page.reload()
-  await expect(screen(page).getByTestId('today-daily')).toContainText('Yarın')
+  await expect(screen(page).getByTestId('today-daily')).toContainText('Yarın yenisi')
   await expect(screen(page).getByTestId('today-daily')).toHaveAttribute(
     'data-state',
     right ? 'right' : 'wrong',

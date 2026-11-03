@@ -126,6 +126,27 @@ export function ClockIcon() {
   )
 }
 
+/** The question of the day: a calendar page with today's dot. */
+export function DailyIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+      <rect x="3" y="4.5" width="14" height="12.5" rx="3" {...stroke} strokeWidth={1.8} />
+      <path d="M3 8.6h14M7 2.8v3M13 2.8v3" {...stroke} strokeWidth={1.8} />
+      <circle cx="10" cy="12.7" r="1.3" fill="currentColor" />
+    </svg>
+  )
+}
+
+/** Tekrar çöz: a circular arrow, the mistakes to try again. */
+export function RetryIcon() {
+  return (
+    <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+      <path d="M16.2 10a6.2 6.2 0 1 1-2-4.6" {...stroke} strokeWidth={1.8} />
+      <path d="M14.6 2.4v3.3h-3.3" {...stroke} strokeWidth={1.8} />
+    </svg>
+  )
+}
+
 /** Ayarlar: a gear, eight teeth around a round hub. */
 export function GearIcon() {
   return (

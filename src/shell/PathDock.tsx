@@ -16,6 +16,7 @@ import { answeredOn, dayKey, pickDaily } from '../progress/daily'
 import { saveDailyAnswer, useDailyAnswer } from '../progress/daily-store'
 import { openMistakes } from '../progress/mistakes'
 import { useSettings } from '../progress/settings'
+import { Check, ClockIcon, DailyIcon, RetryIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { DockPreview, type Preview } from './DockPreview'
 import { PressLink } from './PressLink'
@@ -43,8 +44,8 @@ function DockCat() {
 
 /**
  * The dock above the tab bar: one card and nothing else. It holds the next lesson, the screen's only primary
- * button (decision 0012), and under a hairline one thin row of equal cells, each a label over its value (the question of the day, the
- * mistakes to revisit, the rehearsal when the exam is close; none of them ever drawn empty).
+ * button (decision 0012), and under it a row of secondary buttons, each an icon and a label (the question of the day, the
+ * mistakes to retry, the rehearsal when the exam is close; none of them ever drawn empty).
  */
 export function PathDock({
   preview = null,
@@ -97,17 +98,17 @@ export function PathDock({
             className="ph-more__item"
             data-testid="today-review"
           >
-            <ItemFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+            <ItemFace icon={<RetryIcon />} label={strings.today.retry} chip={String(open.length)} />
           </PressLink>
         ) : (
           <PressLink to="/me" className="ph-more__item" data-testid="today-review">
-            <ItemFace title={strings.today.review} value={strings.today.reviewCount(open.length)} />
+            <ItemFace icon={<RetryIcon />} label={strings.today.retry} chip={String(open.length)} />
           </PressLink>
         )
       ) : null}
       {show('exam') ? (
         <PressLink to="/exam" className="ph-more__item" data-testid="today-exam">
-          <ItemFace title={strings.today.exam} value={examValue} />
+          <ItemFace icon={<ClockIcon />} label={strings.today.exam} chip={examValue} />
         </PressLink>
       ) : null}
     </>
@@ -152,20 +153,22 @@ function NextLane({ away, children }: { away: boolean; children: React.ReactNode
   )
 }
 
-/** The thin row under the card's lesson: whatever items exist, or nothing at all (no empty hairline). */
+/** The row of secondary buttons under the card's lesson: whatever items exist, or nothing at all. */
 function MoreRow({ children, count }: { children: React.ReactNode; count: number }) {
   return (
-    <div className="ph-more" style={{ '--cols': count } as React.CSSProperties}>
+    <div className="ph-more" data-count={count} style={{ '--cols': count } as React.CSSProperties}>
       {children}
     </div>
   )
 }
 
-function ItemFace({ title, value }: { title: string; value: string }) {
+/** A secondary button's face: a leading icon, one line of label, optionally a count chip. */
+function ItemFace({ icon, label, chip }: { icon: React.ReactNode; label: string; chip?: string }) {
   return (
     <>
-      <span className="ph-more__title">{title}</span>
-      <span className="ph-more__value">{value}</span>
+      <span className="ph-more__icon">{icon}</span>
+      <span className="ph-more__label">{label}</span>
+      {chip ? <span className="ph-more__chip">{chip}</span> : null}
     </>
   )
 }
@@ -255,7 +258,7 @@ function DailyItem({
         data-state={answered ? (answered.correct ? 'right' : 'wrong') : 'open'}
         onClick={() => setOpen(true)}
       >
-        <ItemFace title={text.cell} value={answered ? text.cellNext : text.solve} />
+        <ItemFace icon={answered ? <Check /> : <DailyIcon />} label={answered ? text.next : text.open} />
       </Pressable>
       {host ? (
         <QuestionSheet
