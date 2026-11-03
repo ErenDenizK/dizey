@@ -9,7 +9,7 @@ const REVEAL_CHANNEL = 'badge-reveal'
 /** Brackets start this far open, in emblem units (the seal gap of every other seal). */
 const GAP = 16
 /** The tile lands first; the brackets close on it a beat later, like the answers seal. */
-const REVEAL_MS = { tileFrom: 60, closeAfter: 260, wordsAfter: 140 } as const
+export const REVEAL_MS = { tileFrom: 60, closeAfter: 260, wordsAfter: 140 } as const
 
 /**
  * The moment a rozet is earned: its tile lands, the brackets close on it (the seal sound), then its name and
