@@ -13,6 +13,8 @@ export type Chapter = {
   label: string
   lessons: readonly Lesson[]
   examItems: number | null
+  /** Nodes the chapter test draws from when they differ from the chapter's own lesson nodes. */
+  testNodes?: readonly string[]
 }
 
 const spec = [
@@ -51,6 +53,14 @@ const spec = [
     label: 'Denklem sistemleri',
     examItems: 5,
     ids: ['s1-linear-systems', 's2-parametric-systems', 's3-homogeneous-systems', 's4-cramer'],
+  },
+  {
+    id: 'big-picture',
+    label: 'Büyük resim',
+    examItems: null,
+    ids: ['x1-big-connection', 'x2-exam-tactics'],
+    // The theorem and the tactics have no items of their own: the test mixes the topics they connect.
+    testNodes: ['M11', 'R3', 'R4', 'D3', 'S1', 'S2', 'S3'],
   },
 ] as const
 
@@ -99,6 +109,7 @@ const tileTitles: Readonly<Record<string, string>> = {
   'd1-determinant': 'Determinant ve Sarrus',
   'd2-cofactor-expansion': 'Laplace açılımı',
   'd3-determinant-properties': 'Determinant özellikleri',
+  'x1-big-connection': 'Büyük Bağlantı',
 }
 
 export function tileTitle(lesson: Lesson): string {

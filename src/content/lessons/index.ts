@@ -22,6 +22,8 @@ import { s2ParametricSystems } from './s2-parametric-systems'
 import { s3HomogeneousSystems } from './s3-homogeneous-systems'
 import { s4Cramer } from './s4-cramer'
 import type { Lesson } from './types'
+import { x1BigConnection } from './x1-big-connection'
+import { x2ExamTactics } from './x2-exam-tactics'
 
 export type { Beat, Claim, Lesson, Step } from './types'
 
@@ -53,4 +55,6 @@ export const lessons: readonly Lesson[] = [
   s2ParametricSystems,
   s3HomogeneousSystems,
   s4Cramer,
+  x1BigConnection,
+  x2ExamTactics,
 ]

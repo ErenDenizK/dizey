@@ -531,7 +531,7 @@
   "rect": [
    32,
    250,
-   97.5,
+   86.5,
    8
   ],
   "style": {
@@ -548,7 +548,7 @@
   "rect": [
    32,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -563,9 +563,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   42,
+   41,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -580,9 +580,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   52,
+   49.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -597,9 +597,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   62,
+   58.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -614,9 +614,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   72,
+   67.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -631,9 +631,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   81.5,
+   76,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -648,9 +648,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   91.5,
+   85,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -665,9 +665,26 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   101.5,
+   94,
    250,
-   8,
+   7,
+   8
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "oklch(0.3 0.008 84.6)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "999px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "span.me-path__seg",
+  "rect": [
+   102.5,
+   250,
+   7,
    8
   ],
   "style": {
@@ -684,24 +701,7 @@
   "rect": [
    111.5,
    250,
-   8,
-   8
-  ],
-  "style": {
-   "color": "oklch(0.9 0.007 80)",
-   "background-color": "oklch(0.3 0.008 84.6)",
-   "font-size": "18.003px",
-   "font-weight": "460",
-   "border-radius": "999px",
-   "opacity": "1"
-  }
- },
- {
-  "key": "span.me-path__seg",
-  "rect": [
-   121.5,
-   250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -716,9 +716,9 @@
  {
   "key": "li.me-path__chapter",
   "rect": [
-   137.5,
+   126.5,
    250,
-   29,
+   26,
    8
   ],
   "style": {
@@ -733,9 +733,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   137.5,
+   126.5,
    250,
-   8.5,
+   7.5,
    8
   ],
   "style": {
@@ -750,9 +750,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   148,
+   135.5,
    250,
-   8.5,
+   7.5,
    8
   ],
   "style": {
@@ -767,9 +767,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   158,
+   145,
    250,
-   8.5,
+   7.5,
    8
   ],
   "style": {
@@ -784,9 +784,9 @@
  {
   "key": "li.me-path__chapter",
   "rect": [
-   174.5,
+   160.5,
    250,
-   39,
+   34.5,
    8
   ],
   "style": {
@@ -801,9 +801,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   174.5,
+   160.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -818,9 +818,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   185,
+   169.5,
    250,
-   8.5,
+   7,
    8
   ],
   "style": {
@@ -835,9 +835,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   195,
+   178.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -852,9 +852,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   205.5,
+   187.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -869,9 +869,9 @@
  {
   "key": "li.me-path__chapter",
   "rect": [
-   221.5,
+   203,
    250,
-   19.5,
+   17.5,
    8
   ],
   "style": {
@@ -886,9 +886,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   221.5,
+   203,
    250,
-   8.5,
+   7.5,
    8
   ],
   "style": {
@@ -903,9 +903,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   232.5,
+   212.5,
    250,
-   9,
+   7.5,
    8
   ],
   "style": {
@@ -920,9 +920,9 @@
  {
   "key": "li.me-path__chapter",
   "rect": [
-   249,
+   228,
    250,
-   39,
+   34.5,
    8
   ],
   "style": {
@@ -937,9 +937,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   249,
+   228,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -954,9 +954,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   259.5,
+   237.5,
    250,
-   8.5,
+   7,
    8
   ],
   "style": {
@@ -971,9 +971,9 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   269.5,
+   246.5,
    250,
-   8,
+   7,
    8
   ],
   "style": {
@@ -988,9 +988,60 @@
  {
   "key": "span.me-path__seg",
   "rect": [
-   280,
+   255.5,
    250,
-   8,
+   7,
+   8
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "oklch(0.3 0.008 84.6)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "999px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "li.me-path__chapter",
+  "rect": [
+   270.5,
+   250,
+   17.5,
+   8
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "rgba(0, 0, 0, 0)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "0px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "span.me-path__seg",
+  "rect": [
+   270.5,
+   250,
+   7.5,
+   8
+  ],
+  "style": {
+   "color": "oklch(0.9 0.007 80)",
+   "background-color": "oklch(0.3 0.008 84.6)",
+   "font-size": "18.003px",
+   "font-weight": "460",
+   "border-radius": "999px",
+   "opacity": "1"
+  }
+ },
+ {
+  "key": "span.me-path__seg",
+  "rect": [
+   280.5,
+   250,
+   7.5,
    8
   ],
   "style": {

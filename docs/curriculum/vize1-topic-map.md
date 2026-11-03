@@ -43,6 +43,7 @@ Every node answers part of one question: is Ax = b solvable, and is the solution
 | S3 | Homogeneous systems | S1 | trivial solution always exists; non-trivial ⇔ r_A < n | solution set is a subspace | answering "no solution" |
 | S4 | Cramer, X = A⁻¹B | D4, S1 | x_i = \|A_i\| / \|A\| | when (not) to use it | Cramer with \|A\| = 0 |
 | X1 | Invertible matrix theorem ("Büyük Bağlantı Teoremi") | all | one statement eliminates many options | invertible ⇔ det ≠ 0 ⇔ rank = n ⇔ Ax = 0 only trivial ⇔ independent columns | - |
+| X2 | Exam tactics (plug in options, size check, fast determinant routes, \|kA\| = kⁿ\|A\|, k-system tables, killing options with X1) | X1, S2 | work back from the options | - | - |
 
 ## Notation (lecturer's, adopt as is)
 
