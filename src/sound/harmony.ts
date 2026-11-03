@@ -11,7 +11,7 @@ export const clamp = (x: number, low: number, high: number) => Math.min(high, Ma
 export const midiToHz = (midi: number) => 440 * 2 ** ((midi - 69) / 12)
 export const dbToGain = (db: number) => 10 ** (db / 20)
 
-export type ChordId = 'I' | 'IV' | 'iii' | 'vi' | 'ii' | 'V' | 'iv' | 'bVII' | 'bVI' | 'Is11'
+export type ChordId = 'I' | 'IV' | 'iii' | 'vi' | 'ii' | 'V' | 'iv' | 'III' | 'VI' | 'bVII' | 'bVI' | 'Is11'
 
 export type Chord = {
   /** Root, semitones above the tonic. */
@@ -32,6 +32,9 @@ export const CHORDS: Record<ChordId, Chord> = {
   ii: { root: 2, bass: -10, voicing: [5, 9, 12, 16], arpeggio: [0, 3, 7, 10, 14] },
   V: { root: 7, bass: -17, voicing: [5, 9, 11, 16], arpeggio: [0, 4, 7, 10, 14] },
   iv: { root: 5, bass: -7, voicing: [8, 12, 15, 19], arpeggio: [0, 3, 7, 10, 14] },
+  // Secondary dominants, heard as colour on the way to vi and ii: F9 (V/vi) and B♭9 (V/ii).
+  III: { root: 4, bass: -8, voicing: [8, 11, 14, 18], arpeggio: [0, 4, 7, 10, 14] },
+  VI: { root: 9, bass: -15, voicing: [11, 13, 16, 19], arpeggio: [0, 4, 7, 10, 14] },
   bVII: { root: 10, bass: -14, voicing: [8, 12, 14, 19], arpeggio: [0, 4, 7, 10, 14, 21] },
   // A borrowed colour (A maj7♯11) and the Lydian tonic it resolves to: heard only for a rare insight.
   bVI: { root: 8, bass: -16, voicing: [3, 7, 12, 14], arpeggio: [0, 4, 7, 11, 18] },

@@ -185,6 +185,8 @@ export const lab = {
       ii: ['E♭m9', 'ii', 'subdominant', 'E♭'],
       V: ['A♭13', 'V', 'dominant', 'A♭'],
       iv: ['G♭m9', 'iv', 'minör subdominant', 'G♭'],
+      III: ['F9', 'III', 'vi’ya dominant', 'F'],
+      VI: ['B♭9', 'VI', 'ii’ye dominant', 'B♭'],
       bVII: ['C♭13', '♭VII', 'arka kapı dominantı', 'C♭'],
       bVI: ['Amaj7♯11', '♭VI', 'ödünç renk', 'A'],
       Is11: ['D♭maj7♯11', 'I♯11', 'lidyen tonik', 'D♭'],
