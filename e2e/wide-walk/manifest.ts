@@ -164,6 +164,7 @@ export const manifest: Entry[] = [
   {
     id: 'lesson-summary-sheet',
     reach: async (w) => {
+      await w.settle(2400)
       if (!(await w.tap('[data-testid=lesson-summary-open]'))) throw new Error('no summary row')
       await w.settle(900)
     },
