@@ -5,8 +5,10 @@ import { questions } from '../content/questions'
 import { strings } from '../content/strings'
 import { PressLink } from '../shell/PressLink'
 import { Expander } from '../ui/Expander'
+import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
+import '../summary/summary.css'
 import { isChapterSet, setTitle } from './chapter-test'
 import { clock } from './format'
 import {
@@ -82,6 +84,25 @@ export function ExamHome() {
               onStart={() => start(set)}
             />
           ))}
+        <section className="exh-review">
+          <h2 className="dz-section-label">{strings.summary.examHome.label}</h2>
+          <div className="dz-list">
+            <PressLink to="/summary/formulas" className="dz-row sm-row" data-testid="open-formulas">
+              <span className="dz-row-main">
+                {strings.summary.examHome.formulas}
+                <small className="dz-footnote sh-row-sub">{strings.summary.examHome.formulasSub}</small>
+              </span>
+              <ChevronRight />
+            </PressLink>
+            <PressLink to="/summary" className="dz-row sm-row" data-testid="open-summaries">
+              <span className="dz-row-main">
+                {strings.summary.examHome.summaries}
+                <small className="dz-footnote sh-row-sub">{strings.summary.examHome.summariesSub}</small>
+              </span>
+              <ChevronRight />
+            </PressLink>
+          </div>
+        </section>
       </div>
     </Screen>
   )

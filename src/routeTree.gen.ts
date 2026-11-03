@@ -20,6 +20,9 @@ import { Route as ExamRunRouteImport } from './routes/exam.run'
 import { Route as LabCharacterRouteImport } from './routes/lab_.character'
 import { Route as LabSoundsRouteImport } from './routes/lab_.sounds'
 import { Route as LessonIdRouteImport } from './routes/lesson.$id'
+import { Route as SummaryIndexRouteImport } from './routes/summary.index'
+import { Route as SummaryIdRouteImport } from './routes/summary.$id'
+import { Route as SummaryFormulasRouteImport } from './routes/summary.formulas'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -76,6 +79,21 @@ const LessonIdRoute = LessonIdRouteImport.update({
   path: '/lesson/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const SummaryIndexRoute = SummaryIndexRouteImport.update({
+  id: '/summary/',
+  path: '/summary/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SummaryIdRoute = SummaryIdRouteImport.update({
+  id: '/summary/$id',
+  path: '/summary/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SummaryFormulasRoute = SummaryFormulasRouteImport.update({
+  id: '/summary/formulas',
+  path: '/summary/formulas',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -88,7 +106,10 @@ export interface FileRoutesByFullPath {
   '/lab/character': typeof LabCharacterRoute
   '/lab/sounds': typeof LabSoundsRoute
   '/lesson/$id': typeof LessonIdRoute
+  '/summary/$id': typeof SummaryIdRoute
+  '/summary/formulas': typeof SummaryFormulasRoute
   '/exam/': typeof ExamIndexRoute
+  '/summary/': typeof SummaryIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -101,7 +122,10 @@ export interface FileRoutesByTo {
   '/lab/character': typeof LabCharacterRoute
   '/lab/sounds': typeof LabSoundsRoute
   '/lesson/$id': typeof LessonIdRoute
+  '/summary/$id': typeof SummaryIdRoute
+  '/summary/formulas': typeof SummaryFormulasRoute
   '/exam': typeof ExamIndexRoute
+  '/summary': typeof SummaryIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -115,7 +139,10 @@ export interface FileRoutesById {
   '/lab_/character': typeof LabCharacterRoute
   '/lab_/sounds': typeof LabSoundsRoute
   '/lesson/$id': typeof LessonIdRoute
+  '/summary/$id': typeof SummaryIdRoute
+  '/summary/formulas': typeof SummaryFormulasRoute
   '/exam/': typeof ExamIndexRoute
+  '/summary/': typeof SummaryIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,7 +157,10 @@ export interface FileRouteTypes {
     | '/lab/character'
     | '/lab/sounds'
     | '/lesson/$id'
+    | '/summary/$id'
+    | '/summary/formulas'
     | '/exam/'
+    | '/summary/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -143,7 +173,10 @@ export interface FileRouteTypes {
     | '/lab/character'
     | '/lab/sounds'
     | '/lesson/$id'
+    | '/summary/$id'
+    | '/summary/formulas'
     | '/exam'
+    | '/summary'
   id:
     | '__root__'
     | '/'
@@ -156,7 +189,10 @@ export interface FileRouteTypes {
     | '/lab_/character'
     | '/lab_/sounds'
     | '/lesson/$id'
+    | '/summary/$id'
+    | '/summary/formulas'
     | '/exam/'
+    | '/summary/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -170,7 +206,10 @@ export interface RootRouteChildren {
   LabCharacterRoute: typeof LabCharacterRoute
   LabSoundsRoute: typeof LabSoundsRoute
   LessonIdRoute: typeof LessonIdRoute
+  SummaryIdRoute: typeof SummaryIdRoute
+  SummaryFormulasRoute: typeof SummaryFormulasRoute
   ExamIndexRoute: typeof ExamIndexRoute
+  SummaryIndexRoute: typeof SummaryIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -252,6 +291,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LessonIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/summary/': {
+      id: '/summary/'
+      path: '/summary'
+      fullPath: '/summary/'
+      preLoaderRoute: typeof SummaryIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/summary/$id': {
+      id: '/summary/$id'
+      path: '/summary/$id'
+      fullPath: '/summary/$id'
+      preLoaderRoute: typeof SummaryIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/summary/formulas': {
+      id: '/summary/formulas'
+      path: '/summary/formulas'
+      fullPath: '/summary/formulas'
+      preLoaderRoute: typeof SummaryFormulasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -266,7 +326,10 @@ const rootRouteChildren: RootRouteChildren = {
   LabCharacterRoute: LabCharacterRoute,
   LabSoundsRoute: LabSoundsRoute,
   LessonIdRoute: LessonIdRoute,
+  SummaryIdRoute: SummaryIdRoute,
+  SummaryFormulasRoute: SummaryFormulasRoute,
   ExamIndexRoute: ExamIndexRoute,
+  SummaryIndexRoute: SummaryIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
