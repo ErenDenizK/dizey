@@ -320,6 +320,30 @@ const laws: Record<LawId, () => void> = {
       expect(num(Q.div(M.determinant(Ai), M.determinant(A)))).toBe(num(M.at(x, i, 0)))
     }
   },
+  'big-connection': () => {
+    const S = mat([
+      [1, 2, 3],
+      [4, 5, 6],
+      [7, 8, 9],
+    ])
+    const bs = [mat([[1], [0], [0]]), mat([[3], [-1], [2]]), mat([[6], [15], [24]])]
+    const zero = mat([[0], [0], [0]])
+    // Regular: every statement holds together.
+    expect(Q.isZero(M.determinant(A))).toBe(false)
+    expect(M.rank(A)).toBe(3)
+    same(M.rref(A).result, M.identity(3))
+    expect(M.inverse(A)).not.toBeNull()
+    expect(M.classifySystem(A, zero)).toBe('unique')
+    for (const b of bs) expect(M.classifySystem(A, b)).toBe('unique')
+    // Singular: every statement turns over together.
+    expect(Q.isZero(M.determinant(S))).toBe(true)
+    expect(M.rank(S)).toBeLessThan(3)
+    expect(M.rref(S).result.some((row) => row.every(Q.isZero))).toBe(true)
+    expect(M.inverse(S)).toBeNull()
+    expect(M.classifySystem(S, zero)).toBe('infinite')
+    for (const b of bs) expect(M.classifySystem(S, b)).not.toBe('unique')
+    expect(new Set(bs.map((b) => M.classifySystem(S, b)))).toEqual(new Set(['none', 'infinite']))
+  },
   'free-variables': () => {
     // [A | b] with r_A = r_B = 2 < 3: one free variable.
     const a = mat([

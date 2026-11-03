@@ -42,7 +42,7 @@ describe('summaries', () => {
 
   it('cover every Vize 1 lesson (a lesson of another node may still wait for its summary)', () => {
     const missing = lessons
-      .filter((lesson) => /^[MRDS]\d/.test(lesson.node) && !summaryOf(lesson.id))
+      .filter((lesson) => /^[MRDSX]\d/.test(lesson.node) && !summaryOf(lesson.id))
       .map((lesson) => lesson.id)
     expect(missing).toEqual([])
   })
