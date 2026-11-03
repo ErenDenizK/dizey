@@ -10,8 +10,10 @@ import numpy as np
 # A pad is one viola section note and, from G#3 up, one violin section note an octave-width apart in pan.
 PAD_VIOLIN_FROM = 57
 # Mix of the buses, dB relative to the instrument's own calibrated sample level.
-MELODY_DB = 2.0
-STRINGS_DB = -1.5
+MELODY_DB = 1.0
+STRINGS_DB = 0.0
+# After the last note the room keeps ringing: the file is this much longer than the music (seconds).
+TAIL = 1.3
 
 PENTATONIC = {1, 3, 5, 8, 10}  # D-flat major pentatonic pitch classes (D-flat, E-flat, F, A-flat, B-flat)
 
@@ -40,7 +42,7 @@ class Cue:
     chords: list[float]  # chord-change times, the last one is home
     shines: list[float]  # melody note times before home
     home: float
-    fade: float = 0.35  # the last stretch fades out smoothly
+    fade: float = 0.8  # the last stretch falls exponentially to silence
 
 
 class Builder:
@@ -68,24 +70,26 @@ class Builder:
     def piano(self, midi, at, dur, vel, **kw):
         self.add('piano', midi, at, dur, vel, **kw)
 
-    def melody(self, notes, flute_vel=None, flute_cap=None, flute_octave=False, piano_vel=0.8,
-               final_rel=0.7, final_end=None, harp_vel=None, rel_short=0.3):
-        """Piano melody (+2 dB) with an optional flute (or harp) doubling. notes: (midi, at, dur) in seconds;
-        the last one is held until `final_end` (seconds, sounding), then released over `final_rel`."""
+    def melody(self, notes, home, harp_vel=None, final_rel=0.7, final_end=None, rel_short=0.3, piano_scale=1.0):
+        """Soft piano melody (+1 dB) with an optional harp doubling. notes: (midi, at, dur) in seconds; the last
+        one is held until `final_end` (seconds, sounding), then released over `final_rel`. Phrase dynamics: a gentle
+        crescendo into `home` (0.36 up to 0.50), the home note at 0.55, then each later note a little softer."""
+        before = [i for i, (_, at, _) in enumerate(notes) if at < home - 1e-6]
+        later = 0
         for i, (m, at, dur) in enumerate(notes):
             last = i == len(notes) - 1
             if last and final_end is not None:
                 dur = final_end - at
             rel = final_rel if last else min(rel_short, max(0.12, dur))
-            self.piano(m, at, dur, piano_vel, pan=0.05, rel=rel, gain_db=MELODY_DB)
-            if flute_vel:
-                fm = m + 12 if flute_octave else m
-                if flute_octave and fm > flute_cap:
-                    fm = m
-                self.add('flute', fm, at - 0.02 if at > 0.03 else at, dur + 0.04, flute_vel, pan=0.2,
-                         rel=final_rel if last else 0.3, attack=0.05, gain_db=MELODY_DB, human=False)
+            if i in before:
+                vel = 0.36 + 0.14 * (before.index(i) / max(1, len(before)))
+            else:
+                vel = 0.55 * 0.88 ** later
+                later += 1
+            self.piano(m, at, dur, vel * piano_scale, pan=0.05, rel=rel, gain_db=MELODY_DB)
             if harp_vel:
-                self.add('harp', m, at, dur, harp_vel, pan=-0.3, rel=1.0 if last else 0.6, gain_db=MELODY_DB)
+                self.add('harp', m, at, dur, harp_vel * (vel / 0.55) ** 0.5, pan=-0.3, rel=1.0 if last else 0.6,
+                         gain_db=MELODY_DB)
 
     def strings(self, chord, at, end, vel, rel=0.4, legato=True, swell=None):
         """A viola + violin section pad on each chord tone, from `at` to `end` (sounding), then `rel`."""
@@ -106,7 +110,7 @@ class Builder:
         for i, m in enumerate(chord):
             self.add(bank, m, at + i * gap, dur, vel * (1 - 0.05 * i), pan=pan, rel=rel)
 
-    def gliss(self, lo, hi, at, over, vel_lo=0.3, vel_hi=0.7, rel=1.2, dur=1.0):
+    def gliss(self, lo, hi, at, over, vel_lo=0.22, vel_hi=0.4, rel=1.2, dur=1.0):
         """A quick pentatonic harp glissando, `over` seconds from `lo` to `hi`, brightening and panning right."""
         scale = [m for m in range(lo, hi + 1) if m % 12 in PENTATONIC]
         for i, m in enumerate(scale):
@@ -114,9 +118,9 @@ class Builder:
             self.add('harp', m, at + f * over, dur, vel_lo + (vel_hi - vel_lo) * f, pan=-0.3 + 0.5 * f,
                      rel=rel, human=False)
 
-    def glock(self, midis, at, gap, vel=0.3, rel=1.0, dur=0.5):
+    def glock(self, midis, at, gap, vel=0.18, rel=1.0, dur=0.5):
         for i, m in enumerate(midis):
             self.add('glock', m, at + i * gap, dur, vel, pan=0.4, rel=rel, human=False)
 
-    def cue(self, chords, shines, home, fade=0.35) -> Cue:
-        return Cue(self.name, self.notes, self.length, chords, shines, home, fade)
+    def cue(self, chords, shines, home, tail=TAIL, fade=0.8) -> Cue:
+        return Cue(self.name, self.notes, self.length + tail, chords, shines, home, fade)

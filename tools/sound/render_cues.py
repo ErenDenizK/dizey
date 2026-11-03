@@ -60,11 +60,35 @@ def write_wav(path: Path, y: np.ndarray) -> None:
     w.close()
 
 
-def load_bank(pairs, target_rms: float):
+def smooth_filter(a: np.ndarray, response) -> np.ndarray:
+    """Zero-phase filter along the last axis with a magnitude response given as a function of frequency (Hz)."""
+    n = a.shape[-1]
+    size = 1 << (n - 1).bit_length()
+    f = np.fft.rfftfreq(size, 1 / SR)
+    return np.fft.irfft(np.fft.rfft(a, size, axis=-1) * response(f), size, axis=-1)[..., :n].astype(np.float32)
+
+
+def lowpass(a: np.ndarray, cutoff: float, order: int = 2) -> np.ndarray:
+    """Butterworth-shaped low-pass (magnitude only, no phase shift)."""
+    return smooth_filter(a, lambda f: 1 / np.sqrt(1 + (f / cutoff) ** (2 * order)))
+
+
+def high_shelf(a: np.ndarray, corner: float, gain_db: float) -> np.ndarray:
+    """A smooth shelf: `gain_db` well above `corner`, nothing well below (a third of an octave per step)."""
+    return smooth_filter(a, lambda f: 10 ** (gain_db / 20 * 0.5 * (1 + np.tanh(1.5 * np.log2(np.maximum(f, 1) / corner)))))
+
+
+# How each instrument is softened before it is levelled: (low-pass cutoff Hz, order). Harp stays as recorded.
+SOFTEN = {'piano': (3500, 2), 'glock': (3200, 2), 'viola': (5500, 2), 'violin': (5500, 2), 'cello': (4500, 2)}
+
+
+def load_bank(pairs, target_rms: float, soften: tuple[float, int] | None = None):
     """(midi, layer, samples) with every layer of the instrument levelled to one RMS, onsets trimmed."""
     items = []
     for midi, layer, path in pairs:
         a = read_wav(path)
+        if soften:
+            a = lowpass(a, *soften)
         env = np.abs(a).max(0)
         onset = int(np.argmax(env > 0.01 * env.max()))
         a = a[:, max(0, onset - 20):]
@@ -84,20 +108,23 @@ def load_banks(root: Path):
             sys.exit(f'No samples match {root / pattern}. See tools/sound/README.md to fetch them.')
         return found
 
+    # The soft piano: the upright's quietest dynamic layer only (felt-like), then a low-pass.
     piano = []
-    for f in files('Keys/Upright Piano/Player_dyn*_rr1_*.wav'):
+    for f in files('Keys/Upright Piano/Player_dyn1_rr1_*.wav'):
         m = re.search(r'dyn(\d)_rr1_(\d+)', f)
         idx = int(m[2])
         piano.append((21 + 2 * idx if idx < 44 else 108, int(m[1]), f))
     by_name = lambda pattern, rx: [(name_to_midi(re.search(rx, f)[1]), 1, f) for f in files(pattern)]
     return {
-        'piano': load_bank(piano, 0.10),
+        'piano': load_bank(piano, 0.10, SOFTEN['piano']),
         'harp': load_bank(by_name('Strings/Harp/*.wav', r'_([A-G]#?\d)_'), 0.07),
-        'violin': load_bank(by_name('Strings/Violin Section/susVib/*_v1.wav', r'susVib_([A-G]#?\d)_v1'), 0.055),
-        'viola': load_bank(by_name('Strings/Viola Section/susvib/*_v1_1.wav', r'susvib_([A-G]#?\d)_v1'), 0.06),
-        'cello': load_bank(by_name('Strings/Cello Section/susvib/*_v1_1.wav', r'susvib_([A-G]#?\d)_v1'), 0.08),
-        'flute': load_bank(by_name('Woodwinds/Flute/susvib/*_1.wav', r'susvib_([A-G]#?\d)_'), 0.07),
-        'glock': load_bank(by_name('Percussion/Glock/*.wav', r'medium_([A-G]#?\d)'), 0.05),
+        'violin': load_bank(by_name('Strings/Violin Section/susVib/*_v1.wav', r'susVib_([A-G]#?\d)_v1'), 0.055,
+                            SOFTEN['violin']),
+        'viola': load_bank(by_name('Strings/Viola Section/susvib/*_v1_1.wav', r'susvib_([A-G]#?\d)_v1'), 0.06,
+                           SOFTEN['viola']),
+        'cello': load_bank(by_name('Strings/Cello Section/susvib/*_v1_1.wav', r'susvib_([A-G]#?\d)_v1'), 0.08,
+                           SOFTEN['cello']),
+        'glock': load_bank(by_name('Percussion/Glock/*.wav', r'medium_([A-G]#?\d)'), 0.05, SOFTEN['glock']),
     }
 
 
@@ -107,7 +134,7 @@ def pan_gain(p: float):
 
 
 def render_note(buf: np.ndarray, bank, n: Note, warnings: list[str]) -> None:
-    layer = 1 if n.bank != 'piano' else (1 if n.vel < 0.4 else 2 if n.vel < 0.7 else 3)
+    layer = 1  # one dynamic layer per instrument: the piano is the felt one, velocity only sets the level
     _, m, a = min(((abs(m - n.midi), m, a) for m, l, a in bank if l == layer), key=lambda c: c[0])
     st = n.midi - m
     if abs(st) > 4:
@@ -141,7 +168,14 @@ def render_note(buf: np.ndarray, bank, n: Note, warnings: list[str]) -> None:
     buf[:, s0:s0 + nlen] += y[:, :max(0, buf.shape[1] - s0)][:, :nlen]
 
 
-def make_ir(rt60=2.0, pre=0.015, seed=7):
+# The room every sound shares: RT60 about 2.4 s (the app's own room, synth.ts roomOf, is 2.3 s), 32 % wet.
+ROOM_RT60 = 2.4
+ROOM_WET = 0.32
+SHELF_HZ, SHELF_DB = 5000, -4.0
+FADE_IN, FADE_OUT = 0.02, 0.8
+
+
+def make_ir(rt60=ROOM_RT60, pre=0.02, seed=7):
     """A synthetic stereo room: dark exponential noise tail."""
     rng = np.random.default_rng(seed)
     n = int(rt60 * 1.15 * SR)
@@ -157,7 +191,7 @@ def make_ir(rt60=2.0, pre=0.015, seed=7):
     return ir / np.sqrt((ir ** 2).sum(1, keepdims=True))
 
 
-def reverb(x: np.ndarray, wet=0.25) -> np.ndarray:
+def reverb(x: np.ndarray, wet=ROOM_WET) -> np.ndarray:
     ir = make_ir()
     n = x.shape[1] + ir.shape[1]
     size = 1 << (n - 1).bit_length()
@@ -180,28 +214,33 @@ def render(cue: Cue, banks, warnings: list[str]) -> np.ndarray:
     for n in cue.notes:
         render_note(buf, banks[n.bank], n, warnings)
     y = reverb(buf)[:, :int(cue.length * SR)]
+    # The master: the same soft top as the music bus (-4 dB above 5 kHz).
+    y = high_shelf(y, SHELF_HZ, SHELF_DB).astype(np.float64)
+    # Never a cut: the room rings out naturally, then the last 0.8 s fall exponentially (-90 dB) to true silence.
     f = int(cue.fade * SR)
-    y[:, -f:] *= np.cos(np.linspace(0, np.pi / 2, f)) ** 2
+    y[:, -f:] *= 10 ** (-90 / 20 * np.linspace(0, 1, f))
+    y[:, -1] = 0
     y = soft_clip(y / np.abs(y).max() * 0.9)
-    # The cue must land on the tap: drop anything before the first audible sample (keep 2 ms).
+    # The cue must land on the tap: drop anything before the first audible sample.
     first = int(np.argmax(np.abs(y).max(0) > 10 ** (-60 / 20)))
-    y = y[:, max(0, first - int(0.002 * SR)):]
-    ramp = int(0.002 * SR)  # a 2 ms fade-in: the file can never begin with a step
-    y[:, :ramp] *= np.linspace(0, 1, ramp)
+    y = y[:, first:]
+    ramp = int(FADE_IN * SR)  # a 20 ms fade-in: the file can never begin with a step
+    y[:, :ramp] *= np.linspace(0, 1, ramp) ** 2
     return y / np.abs(y).max() * 10 ** (-2 / 20)
 
 
 def encode(wav: Path, m4a: Path) -> None:
-    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(wav), '-c:a', 'aac', '-b:a', '96k', '-ar', '44100',
+    subprocess.run(['ffmpeg', '-y', '-v', 'error', '-i', str(wav), '-c:a', 'aac', '-b:a', '80k', '-ar', '44100',
                     '-ac', '2', '-movflags', '+faststart', str(m4a)], check=True)
 
 
 def timeline_ts(cues: dict[str, Cue], lengths: dict[str, float]) -> str:
     rows = []
     for name, c in cues.items():
-        r = lambda xs: '[' + ', '.join(f'{x:.3f}'.rstrip('0').rstrip('.') for x in xs) + ']'
-        rows.append(f"  {name}: {{ chords: {r(c.chords)}, shines: {r(c.shines)}, home: {c.home:.3f}, "
-                    f"end: {lengths[name]:.3f} }},")
+        tr = lambda x: f'{x:.3f}'.rstrip('0').rstrip('.')
+        r = lambda xs: '[' + ', '.join(tr(x) for x in xs) + ']'
+        rows.append(f"  {name}: {{ chords: {r(c.chords)}, shines: {r(c.shines)}, home: {tr(c.home)}, "
+                    f"end: {tr(lengths[name])} }},")
     return ('// Generated by tools/sound/render_cues.py: do not edit. When each recorded cue changes chord, plays a\n'
             '// melody note before home, lands home and ends, in seconds from its first sample (the downbeat is 0).\n'
             'export type CueTimeline = { chords: number[]; shines: number[]; home: number; end: number }\n\n'

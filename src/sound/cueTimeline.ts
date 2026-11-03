@@ -3,10 +3,15 @@
 export type CueTimeline = { chords: number[]; shines: number[]; home: number; end: number }
 
 export const CUE_TIMELINE = {
-  lessonOpen: { chords: [0], shines: [0, 0.125, 0.25], home: 0.375, end: 1.3 },
-  halfway: { chords: [0, 0.8], shines: [0, 0.2, 0.4], home: 0.8, end: 2.4 },
-  milestone: { chords: [0, 0.4, 0.8], shines: [0, 0.133, 0.267, 0.4, 0.533, 0.667], home: 0.8, end: 3.2 },
-  seal: { chords: [0, 0.57], shines: [0, 0.19, 0.38], home: 0.57, end: 1.74 },
-  secret: { chords: [0, 0.9], shines: [0, 0.225, 0.45], home: 0.9, end: 2.6 },
-  lessonEnd: { chords: [0, 0.6, 1.2, 1.5], shines: [0, 0.45, 0.6, 1.05, 1.2, 1.3, 1.4], home: 1.5, end: 3.2 },
+  lessonOpen: { chords: [0], shines: [0, 0.125, 0.25], home: 0.375, end: 2.598 },
+  halfway: { chords: [0, 0.8], shines: [0, 0.2, 0.4], home: 0.8, end: 3.699 },
+  milestone: { chords: [0, 0.4, 0.8], shines: [0, 0.133, 0.267, 0.4, 0.533, 0.667], home: 0.8, end: 4.498 },
+  seal: { chords: [0, 0.57], shines: [0, 0.19, 0.38], home: 0.57, end: 3.04 },
+  secret: { chords: [0, 0.9], shines: [0, 0.225, 0.45], home: 0.9, end: 3.899 },
+  lessonEnd: {
+    chords: [0, 0.6, 1.2, 1.5],
+    shines: [0, 0.45, 0.6, 1.05, 1.2, 1.3, 1.4],
+    home: 1.5,
+    end: 4.599,
+  },
 } satisfies Record<string, CueTimeline>
