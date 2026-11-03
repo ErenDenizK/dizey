@@ -400,19 +400,27 @@ const BASELINES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'basel
 
 /** Compare with e2e/wide-walk/baselines/<name>.json, or write it when UPDATE_LAYOUT=1. Returns a diff summary or null. */
 /**
- * Text shaping differs by a pixel or two between machines (this box and the CI runner rasterise the same font with
- * slightly different advances), so rects match within RECT_SLACK px. Keys and computed styles must match exactly; a
- * real phone layout change moves things by more than that.
+ * Text shaping differs between machines: the CI runner lays the same font out a few percent wider than this box, so a
+ * text run's width (and the x of whatever follows it on the line) moves while nothing vertical does. Vertical metrics
+ * (y, height) must match within RECT_SLACK px; horizontal ones (x, width) within RECT_SLACK px plus TEXT_DRIFT of the
+ * value. Keys and computed styles must match exactly. A real phone change still trips it: anything that moves
+ * vertically, restyles, appears or disappears, or shifts sideways by more than the text drift.
  */
 const RECT_SLACK = 3
+const TEXT_DRIFT = 0.06
+
+function near(want: number, got: number | undefined, horizontal: boolean): boolean {
+  if (got === undefined) return false
+  const slack = RECT_SLACK + (horizontal ? Math.abs(want) * TEXT_DRIFT : 0)
+  return Math.abs(want - got) <= slack
+}
 
 function sameNode(w: LayoutNode | undefined, n: LayoutNode | undefined): boolean {
   if (!w || !n) return false
   if (w.key !== n.key || JSON.stringify(w.style) !== JSON.stringify(n.style)) return false
-  return (
-    w.rect.length === n.rect.length &&
-    w.rect.every((v, k) => Math.abs(v - (n.rect[k] ?? Number.NaN)) <= RECT_SLACK)
-  )
+  const [wx, wy, ww, wh] = w.rect
+  const [nx, ny, nw, nh] = n.rect
+  return near(wx, nx, true) && near(wy, ny, false) && near(ww, nw, true) && near(wh, nh, false)
 }
 
 export function compareLayout(name: string, nodes: LayoutNode[]): string | null {
@@ -428,5 +436,13 @@ export function compareLayout(name: string, nodes: LayoutNode[]): string | null 
   if (want.length === nodes.length && want.every((w, k) => sameNode(w, nodes[k]))) return null
   const i = want.findIndex((w, k) => !sameNode(w, nodes[k]))
   const at = i === -1 ? want.length : i
-  return `layout differs from ${name}.json (${nodes.length} elements, baseline ${want.length}); first at #${at}: got ${JSON.stringify(nodes[at])} want ${JSON.stringify(want[at])}`
+  const more = want
+    .map((w, k) =>
+      sameNode(w, nodes[k])
+        ? null
+        : `#${k} ${w.key} want ${w.rect.join(',')} got ${nodes[k]?.rect.join(',')}`,
+    )
+    .filter((d): d is string => d !== null)
+    .slice(1, 10)
+  return `layout differs from ${name}.json (${nodes.length} elements, baseline ${want.length}); first at #${at}: got ${JSON.stringify(nodes[at])} want ${JSON.stringify(want[at])}${more.length ? `; also ${more.join(' | ')}` : ''}`
 }
