@@ -44,14 +44,26 @@ export default defineConfig({
         lang: 'tr',
         description: 'Lineer cebir, adım adım.',
         display: 'standalone',
-        orientation: 'portrait',
+        id: base,
+        dir: 'ltr',
+        categories: ['education'],
+        orientation: 'any',
         start_url: base,
         scope: base,
         background_color: '#171511',
         theme_color: '#171511',
+        // Quick actions on the installed icon. The daily question has no URL of its own (it opens from Bugün), so only the mock exam.
+        shortcuts: [
+          {
+            name: 'Vize provası',
+            short_name: 'Prova',
+            url: `${base}exam`,
+            icons: [{ src: 'icons/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+        ],
         icons: [
-          { src: 'icons/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-          { src: 'icons/pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'icons/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: 'icons/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
           {
             src: 'icons/maskable-icon-512x512.png',
             sizes: '512x512',
@@ -62,6 +74,8 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2,m4a}'],
+        // Startup images and the social card are fetched by iOS and crawlers, never by the app: keep first install light.
+        globIgnores: ['splash/**', 'icons/og-*.png'],
         // PR previews live under the production scope; never answer them with the production shell.
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/\/pr-preview\//],

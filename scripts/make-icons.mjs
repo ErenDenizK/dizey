@@ -1,9 +1,10 @@
 // Draws the app icons from the Mırtis rig (src/character/mirtis.ts): her head bust at rest on a tile in the app's
 // background colour. Colours come from the tokens (--bg and --mirtis-*) and the classes from mirtis.css, so the icon
 // can never drift from the cat in the app. Writes public/icons/: icon.svg, apple-touch-icon-180x180.png,
-// pwa-192x192.png, pwa-512x512.png, maskable-icon-512x512.png and favicon.ico.
+// pwa-192x192.png, pwa-512x512.png, maskable-icon-512x512.png, favicon.ico and og-1200x630.png, and
+// public/splash/: the iOS startup images (apple-touch-startup-image), one per current iPhone portrait size.
 // Usage: node scripts/make-icons.mjs        (Playwright's Chromium; PLAYWRIGHT_CHROMIUM_PATH overrides the binary)
-import { readFileSync, writeFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { chromium } from '@playwright/test'
 import { drawCat, pose } from '../src/character/mirtis.ts'
 
@@ -73,12 +74,22 @@ const browser = await chromium.launch(
 )
 const page = await browser.newPage()
 
-async function png(svg, size) {
-  await page.setViewportSize({ width: size, height: size })
+async function png(svg, width, height = width) {
+  await page.setViewportSize({ width, height })
   await page.setContent(
-    `<style>html,body{margin:0;background:transparent}svg{display:block;width:${size}px;height:${size}px}</style>${svg}`,
+    `<style>html,body{margin:0;background:transparent}svg{display:block;width:${width}px;height:${height}px}</style>${svg}`,
   )
-  return page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width: size, height: size } })
+  return page.screenshot({ omitBackground: true, clip: { x: 0, y: 0, width, height } })
+}
+
+/** The bust alone (no tile) as a group at (cx, cy) with width `w`, for pages that draw their own background. */
+function bustAt(cx, cy, w) {
+  const bust = drawCat(pose('rest'), { lod: 'full', head: true })
+  const inner = bust.slice(bust.indexOf('>') + 1, bust.lastIndexOf('</svg>'))
+  const k = w / BUST.w
+  const tx = cx - (BUST.w / 2 + BUST.x) * k
+  const ty = cy - (BUST.h / 2 + BUST.y) * k
+  return `<g transform="translate(${tx.toFixed(2)} ${ty.toFixed(2)}) scale(${k.toFixed(4)})">${inner}</g>`
 }
 
 const out = (name, data) => writeFileSync(new URL(`public/icons/${name}`, root), data)
@@ -113,6 +124,46 @@ sizes.forEach((size, at) => {
   offset += pngs[at].length
 })
 out('favicon.ico', Buffer.concat([head, ...pngs]))
+
+// iOS startup images: --bg full bleed, the bust centred at 28% of the width. Keyed by device size in CSS px.
+const SPLASH = [
+  [1320, 2868, 3],
+  [1290, 2796, 3],
+  [1206, 2622, 3],
+  [1179, 2556, 3],
+  [1170, 2532, 3],
+  [1284, 2778, 3],
+  [1125, 2436, 3],
+  [1242, 2688, 3],
+  [828, 1792, 2],
+  [750, 1334, 2],
+  [640, 1136, 2],
+]
+mkdirSync(new URL('public/splash/', root), { recursive: true })
+for (const [w, h] of SPLASH) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}">${style}<rect width="${w}" height="${h}" fill="${bg}"/>${bustAt(w / 2, h / 2, w * 0.28)}</svg>`
+  writeFileSync(new URL(`public/splash/splash-${w}x${h}.png`, root), await png(svg, w, h))
+}
+
+// Social card: the bust on the left third, the name and the tagline in the app's font and ink tokens.
+const font = (file, range) =>
+  `@font-face{font-family:"Onest";src:url(data:font/woff2;base64,${readFileSync(new URL(`src/styles/fonts/${file}`, root)).toString('base64')}) format("woff2-variations");font-weight:100 900;unicode-range:${range}}`
+const ink1 = oklchToHex(token('--ink-1'))
+const ink2 = oklchToHex(token('--ink-2'))
+const ogFonts = [
+  font('onest-latin-wght-normal.woff2', 'U+0000-00FF,U+0131,U+0152-0153,U+2000-206F'),
+  font('onest-latin-ext-wght-normal.woff2', 'U+0100-0130,U+0132-0151,U+0154-02BA'),
+].join('')
+const og = `<style>${ogFonts}html,body{margin:0}body{width:1200px;height:630px;background:${bg};position:relative;font-family:"Onest",sans-serif}
+svg{position:absolute;left:0;top:0}.t{position:absolute;left:440px;top:210px}
+h1{margin:0;font-size:132px;line-height:1.05;font-weight:700;letter-spacing:-0.02em;color:${ink1}}
+p{margin:12px 0 0;font-size:44px;line-height:1.2;font-weight:450;color:${ink2}}</style>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">${style}${bustAt(220, 315, 360)}</svg>
+<div class="t"><h1>Dizey</h1><p>Lineer cebir, adım adım.</p></div>`
+await page.setViewportSize({ width: 1200, height: 630 })
+await page.setContent(og)
+await page.evaluate(() => document.fonts.ready)
+out('og-1200x630.png', await page.screenshot({ clip: { x: 0, y: 0, width: 1200, height: 630 } }))
 
 await browser.close()
 console.log(`icons written (tile ${bg})`)
