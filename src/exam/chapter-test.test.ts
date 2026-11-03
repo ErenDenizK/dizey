@@ -18,10 +18,15 @@ const ready = chapters.filter((chapter) => chapterTestState(questions, chapter).
 describe('chapter tests', () => {
   it('draws only questions whose node belongs to the chapter', () => {
     for (const chapter of chapters) {
-      const nodes = new Set<string>(chapter.lessons.map((lesson) => lesson.node))
+      const nodes = new Set<string>(chapter.testNodes ?? chapter.lessons.map((lesson) => lesson.node))
       for (const question of drawChapterTest(questions, chapter, 7))
         expect(nodes.has(question.node)).toBe(true)
     }
+  })
+
+  it('the big-picture chapter tests the topics its theorem connects', () => {
+    const bigPicture = chapters.find((chapter) => chapter.id === 'big-picture')
+    expect(bigPicture && chapterTestState(questions, bigPicture).ready).toBe(true)
   })
 
   it('is deterministic for a seed, six distinct questions when the bank allows', () => {

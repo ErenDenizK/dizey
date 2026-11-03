@@ -19,9 +19,9 @@ export const isChapterSet = (set: string): set is ChapterSetId => set.startsWith
 
 export const chapterIdOf = (set: ChapterSetId): string => set.slice(PREFIX.length)
 
-/** Bank questions whose node belongs to a lesson of the chapter, in bank order. */
+/** Bank questions whose node belongs to a lesson of the chapter (or its test nodes), in bank order. */
 export function chapterQuestions(bank: readonly Question[], chapter: Chapter): Question[] {
-  const nodes = new Set<string>(chapter.lessons.map((lesson) => lesson.node))
+  const nodes = new Set<string>(chapter.testNodes ?? chapter.lessons.map((lesson) => lesson.node))
   return bank.filter((question) => nodes.has(question.node))
 }
 
