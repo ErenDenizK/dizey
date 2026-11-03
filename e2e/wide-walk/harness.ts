@@ -399,6 +399,22 @@ async function readLayout(page: Page, skip: string[]): Promise<LayoutNode[]> {
 const BASELINES = path.join(path.dirname(fileURLToPath(import.meta.url)), 'baselines')
 
 /** Compare with e2e/wide-walk/baselines/<name>.json, or write it when UPDATE_LAYOUT=1. Returns a diff summary or null. */
+/**
+ * Text shaping differs by a pixel or two between machines (this box and the CI runner rasterise the same font with
+ * slightly different advances), so rects match within RECT_SLACK px. Keys and computed styles must match exactly; a
+ * real phone layout change moves things by more than that.
+ */
+const RECT_SLACK = 3
+
+function sameNode(w: LayoutNode | undefined, n: LayoutNode | undefined): boolean {
+  if (!w || !n) return false
+  if (w.key !== n.key || JSON.stringify(w.style) !== JSON.stringify(n.style)) return false
+  return (
+    w.rect.length === n.rect.length &&
+    w.rect.every((v, k) => Math.abs(v - (n.rect[k] ?? Number.NaN)) <= RECT_SLACK)
+  )
+}
+
 export function compareLayout(name: string, nodes: LayoutNode[]): string | null {
   const file = path.join(BASELINES, `${name}.json`)
   const json = `${JSON.stringify(nodes, null, 1)}\n`
@@ -409,9 +425,8 @@ export function compareLayout(name: string, nodes: LayoutNode[]): string | null 
   }
   if (!fs.existsSync(file)) return `no baseline ${name}.json (run with UPDATE_LAYOUT=1)`
   const want = JSON.parse(fs.readFileSync(file, 'utf8')) as LayoutNode[]
-  const same = JSON.stringify(want) === JSON.stringify(nodes)
-  if (same) return null
-  const i = want.findIndex((w, k) => JSON.stringify(w) !== JSON.stringify(nodes[k]))
+  if (want.length === nodes.length && want.every((w, k) => sameNode(w, nodes[k]))) return null
+  const i = want.findIndex((w, k) => !sameNode(w, nodes[k]))
   const at = i === -1 ? want.length : i
   return `layout differs from ${name}.json (${nodes.length} elements, baseline ${want.length}); first at #${at}: got ${JSON.stringify(nodes[at])} want ${JSON.stringify(want[at])}`
 }
