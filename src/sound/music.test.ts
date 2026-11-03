@@ -45,20 +45,23 @@ describe('background music', () => {
   })
 
   it('plays only tones of its chord, in every role, energy and bar', () => {
-    for (const chord of CHORD_IDS)
+    // Collected and asserted once: one expect per note made this sweep slow on CI.
+    const wrong: string[] = []
+    for (const chord of CHORD_IDS) {
+      const tones = tonesOf(chord)
       for (const role of ROLES)
         for (let e = 0; e <= 10; e++)
           steps(cue(chord, e / 10, role), 9, e + 1).forEach((notes, bar) => {
             for (const note of notes) {
+              const where = `${chord} ${role} e${e / 10} bar${bar}: ${note.pitch} at ${note.at}`
+              if (note.at < 10 || note.at >= 10 + SECTION) wrong.push(`outside the section, ${where}`)
               // A short melody note may be a passing or neighbour tone (see melody.test.ts).
               if (note.kind === 'main' && note.ring <= BEAT * 0.5 + 1e-9) continue
-              expect(tonesOf(chord), `${chord} ${role} e${e / 10} bar${bar}: ${note.pitch}`).toContain(
-                intervalOf(CHORDS[chord], note.pitch),
-              )
-              expect(note.at).toBeGreaterThanOrEqual(10)
-              expect(note.at).toBeLessThan(10 + SECTION)
+              if (!tones.has(intervalOf(CHORDS[chord], note.pitch))) wrong.push(`not a chord tone, ${where}`)
             }
           })
+    }
+    expect(wrong).toEqual([])
   })
 
   it('writes more melody as the energy rises', () => {
