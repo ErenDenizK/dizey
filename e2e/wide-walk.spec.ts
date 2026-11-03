@@ -2,6 +2,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { expect, type Page, test } from '@playwright/test'
 import {
+  baselineKey,
   boxOf,
   compareLayout,
   declaredWidth,
@@ -27,7 +28,7 @@ import { type Entry, manifest } from './wide-walk/manifest'
  * (3) nothing scrolls sideways, (4) dialogs sit under a full-window scrim with nothing above it and close on Escape and an
  * outside tap, (5) the window edges are the surface colour (no bars), (6) no text line passes 80 characters, (7) the side
  * column is in the flow. Phone sizes compare a layout snapshot (every visible element's rect and key styles, no pixels, so
- * it is portable across rasterisers) with baselines taken from main before the layout work. UPDATE_LAYOUT=1 rewrites them.
+ * it is portable across rasterisers) with baselines taken from main before the layout work, kept per browser build. UPDATE_LAYOUT=1 rewrites them.
  */
 
 const DESKTOP_UA =
@@ -93,7 +94,9 @@ for (const size of [...WIDE, ...PHONE]) {
 /* ---- Phone: the same layout as the baselines taken from main ------------------------------------------------- */
 
 async function phoneLayout(page: Page, size: SizeName, entry: Entry, note: (msg: string) => void) {
-  const diff = compareLayout(`${size}-${entry.id}`, await layoutSnapshot(page, entry.mask))
+  const browser = page.context().browser()
+  const key = baselineKey(browser?.browserType().name() ?? 'browser', browser?.version() ?? '0')
+  const diff = compareLayout(key, `${size}-${entry.id}`, await layoutSnapshot(page, entry.mask))
   if (diff) note(diff)
 }
 
