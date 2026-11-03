@@ -1,4 +1,4 @@
-import type { Measure, Walk } from './harness'
+import { type Measure, prefix, type Walk } from './harness'
 
 /**
  * The screen manifest: one entry for every screen and overlay of the app, each with the real taps that reach it.
@@ -20,6 +20,8 @@ export type Entry = {
   bg?: string
   /** An in-flow side column at expanded sizes. */
   side?: string
+  /** Undoes what `reach` left behind in storage, run once the screen has been measured and closed. */
+  after?: (w: Walk) => Promise<void>
   /** Also compared at 320 x 568. */
   small?: boolean
   /** Skipped on phones (it only exists wide). */
@@ -92,11 +94,26 @@ export const manifest: Entry[] = [
   },
   {
     id: 'chapter-test-note',
+    // Every chapter's test is ready now, so the sheet that can still open is the warning before a test would
+    // replace a rehearsal in progress. A rehearsal is started from the hub, then a chapter test is tapped on Yol.
     reach: async (w) => {
-      await w.scrollPane('top')
-      await w.intoView(`${pane} .pa-test[data-state="preparing"], ${pane} .pa-test:last-of-type`)
-      if (!(await w.tap(`${pane} .pa-test[data-state="preparing"]`))) throw new Error('no preparing test')
+      await w.fresh('yol')
+      await w.intoView(`${pane} [data-testid=vize-gate]`)
+      if (!(await w.tap(`${pane} [data-testid=vize-gate]`))) throw new Error('no gate')
+      await w.page.waitForURL(/exam/, { timeout: 6000 })
+      await w.settle(900)
+      await w.tap('[data-testid^=exam-set-]')
+      await w.settle(300)
+      if (!(await w.tap('[data-testid=exam-start]'))) throw new Error('no start')
+      await w.page.waitForURL(/run/, { timeout: 6000 })
+      await w.fresh('yol')
+      await w.intoView(`${pane} .pa-test`)
+      if (!(await w.tap(`${pane} .pa-test`))) throw new Error('no chapter test')
       await w.settle(800)
+    },
+    // The rehearsal must not outlive the entry: the screens after it expect Yol and the hub without one.
+    after: async (w) => {
+      await w.page.evaluate((key) => localStorage.removeItem(key), `${prefix}dizey.exam.current`)
     },
     primary: '.dz-sheet',
     measure: 'read',

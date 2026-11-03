@@ -626,16 +626,30 @@ test('a chapter test runs six questions untimed and returns to Yol with its scor
   await expect(pushed(page).getByRole('heading', { name: 'Geçmiş' })).toHaveCount(0)
 })
 
-test('a chapter whose questions are still being written explains itself', async ({ page }) => {
-  await openApp(page)
+test('a chapter test warns before it replaces a rehearsal in progress and can leave it alone', async ({
+  page,
+}) => {
+  await openApp(page, './exam')
+  await pushed(page).getByTestId('exam-set-summer-2024').click()
+  await page.getByTestId('exam-start').click()
+  await expect(page.getByTestId('exam-run')).toBeVisible()
+  await page.goto('./')
+  await expect(page.getByRole('navigation', { name: 'Bölümler' })).toBeVisible()
+  // The bank holds at least six questions for every chapter, so the test itself is ready (never "hazırlanıyor").
   const cell = screen(page).getByTestId('chapter-test-row-operations')
-  await expect(cell).toHaveAttribute('aria-label', /hazırlanıyor/)
+  await expect(cell).toHaveAttribute('aria-label', /6 soru/)
   await cell.click()
   const note = page.getByTestId('chapter-test-note')
-  await expect(note.getByRole('heading', { name: 'Sorular hazırlanıyor' })).toBeVisible()
-  await expect(note).toContainText('şu an 2 var')
-  await note.getByRole('button', { name: 'Tamam' }).click()
-  await expect(note).toBeHidden()
+  await expect(note.getByRole('heading', { name: 'Yarım kalan provan var' })).toBeVisible()
+  // Keeping the rehearsal returns to the exam hub, where it is still offered.
+  await note.getByRole('button', { name: 'Provaya dön' }).click()
+  await expect(pushed(page).getByLabel('Yarım kalan prova')).toBeVisible()
+  await page.goto('./')
+  await expect(page.getByRole('navigation', { name: 'Bölümler' })).toBeVisible()
+  // Starting anyway replaces the rehearsal with the chapter test.
+  await screen(page).getByTestId('chapter-test-row-operations').click()
+  await page.getByTestId('chapter-test-note').getByRole('button', { name: 'Yine de testi başlat' }).click()
+  await expect(page.getByTestId('exam-run').getByText('Soru 1 / 6')).toBeVisible()
 })
 
 test('the Vize provası gate at the end of the map opens the exam hub', async ({ page }) => {

@@ -85,6 +85,7 @@ for (const size of [...WIDE, ...PHONE]) {
         } else {
           await wideChecks(page, size, entry, n, note)
         }
+        if (entry.after) await entry.after(walk)
       }
       expect(problems, problems.join('\n')).toEqual([])
     })
