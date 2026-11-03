@@ -1,5 +1,6 @@
 import { useNavigate } from '@tanstack/react-router'
 import { useLayoutEffect, useRef, useState } from 'react'
+import { flight } from '../character/flight'
 import { Mirtis, type MirtisHandle } from '../character/Mirtis'
 import { lessons } from '../content/lessons'
 import type { Lesson } from '../content/lessons/types'
@@ -19,6 +20,7 @@ import { burst, glow, lightScore, pointIn, SHINE_CHANNEL, type SparkTone, sweep 
 import { ExamAsked, examQuestionFor } from './ExamAsked'
 import { endResults, nextLesson, type Result, sealColumns } from './end'
 import { useMoments } from './moments'
+import { greetsOnOpen } from './progress'
 import { recordOf, useLessonRecords } from './store'
 
 const END_CHANNEL = 'lesson-end'
@@ -81,6 +83,13 @@ export function LessonEnd({
     if (engine.value(el, '--badge') === goal) return
     engine.withChannel(END_CHANNEL, () => engine.to(el, { '--badge': goal }, 'glide', { effect: true }))
   }, [shown])
+  // She arrives from the verdict's perch (a flight, flight.ts) when the last answer left one in the air; she lands in
+  // the hero's place and plays proud there. Otherwise the seal's closing makes her cheer, as before.
+  const flown = useRef(false)
+  // biome-ignore lint/correctness/useExhaustiveDependencies: decided once, when the screen opens
+  useLayoutEffect(() => {
+    flown.current ||= flight.holding() && flight.land('hero', 'proud')
+  }, [])
   // biome-ignore lint/correctness/useExhaustiveDependencies: the ceremony plays once, when the screen opens
   useLayoutEffect(() => {
     const el = root.current
@@ -104,7 +113,7 @@ export function LessonEnd({
     }
     // The duo watches the cells fill, then cheers when the brackets close.
     const hop = () => {
-      duo.current?.react('proud')
+      if (!flown.current) duo.current?.react('proud')
       // Then each new rozet takes the seal's place; it counts as shown once it is on screen.
       for (const [at, next] of fresh.entries()) {
         engine.after(BADGE_AFTER + at * BADGE_EVERY, () => {
@@ -144,6 +153,9 @@ export function LessonEnd({
   }, [])
 
   // A tap on the scene lands the whole ceremony at once (old 8603).
+  const toDock = () => {
+    if (returnTab.current === '/') flight.go('hero', 'dock', 'happy')
+  }
   const land = () => {
     landReveal()
     engine.finishChannel(END_CHANNEL)
@@ -155,7 +167,7 @@ export function LessonEnd({
       {/* biome-ignore lint/a11y/useKeyWithClickEvents: as above */}
       <div ref={stage} className="ls-end__stage" data-badge={badge ? '' : undefined} onClick={land}>
         <i className="ls-end__halo" aria-hidden="true" />
-        <Mirtis ref={duo} size="hero" className="ls-duo" />
+        <Mirtis ref={duo} size="hero" className="ls-duo" anchor="hero" />
         {badge ? (
           <BadgeReveal key={badge.id} badge={badge} onClosed={() => duo.current?.react('wow')} />
         ) : null}
@@ -203,11 +215,15 @@ export function LessonEnd({
               className="dz-button ls-end__next"
               data-kind="primary"
               data-wide=""
-              onClick={() => void navigate({ to: '/lesson/$id', params: { id: next.id } })}
+              onClick={() => {
+                // If the next lesson greets her, she flies there from the hero; otherwise nothing flies.
+                if (greetsOnOpen(next, recordOf(next.id))) flight.depart('hero')
+                void navigate({ to: '/lesson/$id', params: { id: next.id } })
+              }}
             >
               <span className="ls-end__next-label">{strings.lessonEnd.next(next.title)}</span>
             </Pressable>
-            <PressLink to={returnTab.current} className="dz-text-button" data-sound="close">
+            <PressLink to={returnTab.current} className="dz-text-button" data-sound="close" onClick={toDock}>
               {strings.lessonEnd.back}
             </PressLink>
           </>
@@ -218,6 +234,7 @@ export function LessonEnd({
             data-kind="primary"
             data-wide=""
             data-sound="close"
+            onClick={toDock}
           >
             {strings.lessonEnd.back}
           </PressLink>

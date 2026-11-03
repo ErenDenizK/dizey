@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { flight } from '../character/flight'
 import { Mirtis } from '../character/Mirtis'
 import { Perch } from '../character/Perch'
 import { daysUntil, examWeek } from '../content/exam'
@@ -9,7 +10,7 @@ import { strings } from '../content/strings'
 import { engine } from '../engine/driver'
 import { QuestionSheet } from '../exam/QuestionSheet'
 import { recordOutcome, useExam } from '../exam/store'
-import { resumeIndex } from '../lesson/progress'
+import { emptyRecord, greetsOnOpen, resumeIndex } from '../lesson/progress'
 import { stateOf, upNext } from '../lesson/state'
 import { useLessonRecords } from '../lesson/store'
 import { answeredOn, dayKey, pickDaily } from '../progress/daily'
@@ -37,7 +38,7 @@ function DockCat() {
   }, [])
   return (
     <Perch right={20}>
-      <Mirtis size="dock" wake={wake} />
+      <Mirtis size="dock" wake={wake} anchor="dock" />
     </Perch>
   )
 }
@@ -200,6 +201,8 @@ function NextLesson({
         data-testid="today-next"
         onClick={(event) => {
           morphFrom.current = event.currentTarget
+          // The lesson greets her: she takes off from the dock and lands on its first card.
+          if (greetsOnOpen(lesson, record ?? emptyRecord)) flight.depart('dock')
         }}
       >
         <span className="ph-next__text">
