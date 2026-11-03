@@ -1,5 +1,6 @@
 import { type ReactNode, useId, useLayoutEffect, useRef, useState } from 'react'
 import { engine } from '../engine/driver'
+import { flight, type Spot } from './flight'
 
 /**
  * Where Mırtis lives (decision 0017, "Presence"): she perches on the top edge of the card she belongs to, her paws on
@@ -15,6 +16,8 @@ export function Perch({
   right = 16,
   delay = 0,
   onGone,
+  anchor,
+  onClaim,
   className = '',
 }: {
   children: ReactNode
@@ -25,6 +28,13 @@ export function Perch({
   /** ms to wait before the rise, so she rises after whatever else is arriving with her card. */
   delay?: number
   onGone?: () => void
+  /**
+   * The spot this perch's cat answers to. When another page's cat is in the air (flight.ts) the cat arrives by
+   * flying instead of rising: she is seated from the first frame and plays `happy` on landing.
+   */
+  anchor?: Spot
+  /** Told once, as the cat comes in, whether a flight is bringing her (true) or she rises as usual (false). */
+  onClaim?: (flown: boolean) => void
   className?: string
 }) {
   const lift = useRef<HTMLDivElement>(null)
@@ -41,6 +51,12 @@ export function Perch({
     if (first.current) {
       first.current = false
       if (!present) return
+      if (anchor && flight.holding()) {
+        engine.set(el, { y: 0 })
+        const flown = flight.land(anchor, 'happy')
+        onClaim?.(flown)
+        if (flown) return
+      } else if (anchor) onClaim?.(false)
       engine.set(el, { y: hidden })
     }
     engine.withChannel(channel, () => {
