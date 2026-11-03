@@ -356,7 +356,7 @@ export const vize1PracticeB: readonly Question[] = [
         ],
         'A =',
       ),
-      text('matrisi için $\\text{iz}(A) = 0$ ise $x$’in çözüm kümesi aşağıdakilerden hangisidir?'),
+      text('matrisi için $\\text{tr}(A) = 0$ ise $x$’in çözüm kümesi aşağıdakilerden hangisidir?'),
     ],
     options: [
       {
@@ -401,7 +401,7 @@ export const vize1PracticeB: readonly Question[] = [
         ],
         'A =',
       ),
-      text('matrisi için $\\text{iz}(A) = 0$ ise $x$’in çözüm kümesi aşağıdakilerden hangisidir?'),
+      text('matrisi için $\\text{tr}(A) = 0$ ise $x$’in çözüm kümesi aşağıdakilerden hangisidir?'),
     ],
     options: [
       { key: 'a', content: [text('$\\{-4, 5\\}$')] },

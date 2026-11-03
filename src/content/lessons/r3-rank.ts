@@ -116,7 +116,7 @@ export const r3Rank: Lesson = {
       kind: 'explain',
       eyebrow: 'Kural',
       title: 'Rank, satır ve sütun sayısını aşamaz',
-      body: 'Her pivot ayrı bir satırda ve ayrı bir sütunda. $\\text{rank}(A^T) = \\text{rank}(A)$.',
+      body: 'Her pivot ayrı bir satırda ve ayrı bir sütunda. $\\text{rank}(A^T) = \\text{rank}(A)$: satır rankı sütun rankına eşit. Üst sınıra ulaşan matris tam ranklıdır.',
       beat: { kind: 'equation', lines: ['\\text{rank}(A) \\leq \\min(m, n)'] },
       scene: { items: ['F'] },
       claims: [{ kind: 'rank', matrix: 'F', equals: '2' }],
