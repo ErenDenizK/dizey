@@ -146,17 +146,21 @@ export const formulaGroups: readonly FormulaGroup[] = [
     title: 'Büyük Bağlantı Teoremi',
     formulas: [
       {
-        tex: '$A$ regüler $\\iff |A| \\neq 0 \\iff$ rank $n \\iff A \\to I$',
-        note: '$n \\times n$ $A$ için hepsi aynı cümle: biri doğruysa hepsi doğru.',
+        tex: '$|A| \\neq 0 \\iff \\text{rank}(A) = n \\iff A \\to I$',
+        note: '$n \\times n$ $A$ regüler: hepsi aynı cümle, biri doğruysa hepsi doğru.',
         law: 'big-connection',
       },
       {
-        tex: '$\\iff Ax = 0$ yalnız $x = 0$ $\\iff Ax = b$ her $b$ için tek çözüm $\\iff A^{-1}$ var',
-        note: 'Regüler tarafın devamı.',
+        tex: '$Ax = 0$ yalnız $x = 0 \\iff A^{-1}$ var',
+        note: 'Regüler ile aynı cümle.',
       },
       {
-        tex: '$A$ singüler $\\iff |A| = 0 \\iff$ rank $< n \\iff$ sıfır satır',
-        note: 'Hepsi birden tersine döner: $Ax = 0$ sonsuz çözüm, $A^{-1}$ yok.',
+        tex: '$Ax = b$ her $b$ için tek çözüm',
+        note: 'Regüler ile aynı cümle.',
+      },
+      {
+        tex: '$|A| = 0 \\iff \\text{rank}(A) < n \\iff$ sıfır satır',
+        note: 'Singüler: hepsi birden tersine döner. $Ax = 0$ sonsuz çözüm, $A^{-1}$ yok.',
       },
       {
         tex: '$Ax = b$, $|A| = 0$: çözümsüz ya da sonsuz',
