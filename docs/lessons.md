@@ -85,3 +85,16 @@ budget without moving the number.
 drop for oops, distinct closed eyes, a banded tail as the signature). The appeal verdict, though, went to Eren's eye,
 and he approved. For future identity work: gate on what a reviewer can check (blind read, silhouettes, small-size
 legibility), and use the appeal score only as a source of critique, never as a pass mark.
+
+## 2026-11-03: get the owner's ear on a rendered prototype before building music
+
+**What happened.** The lesson-end jingle was synthesized, calibrated and guarded (loudness, headroom, clicks, no
+dropouts) and shipped twice. Eren rejected it both times: "three choppy chords, an artificial melody".
+
+**Root cause.** Every check we had measured whether the sound was clean, and none asked whether it was good. The ear
+that matters was the last step in the process, after the code. A sound can pass every test and still be wrong in
+composition (chords stamped under a tune) and in timbre (synthetic voices).
+
+**What changed.** For music, render a prototype offline first, from real instrument samples, and play two or three
+versions to Eren before any app code exists. Build only the one he picks. Tests then guard what he chose (levels,
+timing, no clicks), not whether it is good.
