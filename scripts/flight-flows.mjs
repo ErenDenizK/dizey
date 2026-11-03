@@ -10,7 +10,10 @@ const base = process.env.REVIEW_URL ?? 'http://localhost:4173/dizey/'
 const catSample = () => {
   const out = []
   for (const el of document.querySelectorAll('svg.mirtis')) {
-    if (el.closest('[inert]')) continue
+    if (el.closest('[inert]') && !el.closest('.sh-onb')) continue
+    // A cat under the first-run scene's opaque paper is not seen.
+    const cover = document.querySelector('.sh-onb')
+    if (cover && !cover.contains(el) && Number(getComputedStyle(cover).opacity) > 0.98) continue
     const cs = getComputedStyle(el)
     if (cs.visibility === 'hidden' || cs.display === 'none') continue
     const r = el.getBoundingClientRect()
@@ -27,8 +30,8 @@ const catSample = () => {
   return out
 }
 
-export async function openFlightPage(browser, { reduced = false } = {}) {
-  const page = await openAuditPage(browser)
+export async function openFlightPage(browser, { reduced = false, fresh = false } = {}) {
+  const page = await openAuditPage(browser, undefined, { fresh })
   await page.addInitScript(`window.__dzCats = ${catSample.toString()}`)
   if (reduced) await page.emulateMedia({ reducedMotion: 'reduce' })
   return page

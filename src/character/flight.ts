@@ -17,7 +17,7 @@ import type { MirtisMood } from './Mirtis'
  * not fly: the flyer fades out where it stands while the target fades in, on the effect spring.
  */
 
-export type Spot = 'dock' | 'greet' | 'verdict' | 'hero'
+export type Spot = 'dock' | 'greet' | 'verdict' | 'hero' | 'intro'
 
 /** What a cat on screen tells the flight about itself (registered by `Mirtis` when it has an `anchor`). */
 export type Anchor = { svg: SVGSVGElement; react: (mood: MirtisMood) => void }
@@ -132,10 +132,11 @@ export const flight = {
   },
 
   /**
-   * Brings the held cat to a spot's cat and has it play `mood` on arrival. Returns false (the held cat goes back to its
+   * Brings the held cat to a spot's cat and has it play `mood` on arrival (`onLand` runs in that same frame, also when
+   * a tap landed her early). Returns false (the held cat goes back to its
    * source, nothing is hidden) when the target cannot take it; the caller then does its own entrance.
    */
-  land(spot: Spot, mood: MirtisMood): boolean {
+  land(spot: Spot, mood: MirtisMood, onLand?: () => void): boolean {
     const h = held
     if (!h) return false
     const target = anchors.get(spot)
@@ -150,7 +151,7 @@ export const flight = {
     }
     held = null
     engine.cancelCues(HOLD_CHANNEL)
-    fly(h, spot, target, mood)
+    fly(h, spot, target, mood, onLand)
     return true
   },
 
@@ -193,7 +194,7 @@ function show(spot: Spot, svg: SVGSVGElement, rise = false) {
 
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t
 
-function fly(h: Held, spot: Spot, target: Anchor, mood: MirtisMood) {
+function fly(h: Held, spot: Spot, target: Anchor, mood: MirtisMood, onLand?: () => void) {
   const { flyer, from } = h
   const svg = target.svg
   svg.style.visibility = 'hidden'
@@ -212,6 +213,7 @@ function fly(h: Held, spot: Spot, target: Anchor, mood: MirtisMood) {
       svg.style.visibility = ''
       engine.set(svg, { opacity: 1 })
       if (react) target.react(mood)
+      onLand?.()
     } else flight.restore(h.spot)
   }
   const tap = () => finish(true)

@@ -99,8 +99,9 @@ pages share one cat (Eren: "sayfalar arasında daha kesintisiz hareket edebilir"
 1. **Where.** Yol's dock "Başla" to the lesson's first-step greeting (only when the lesson opens at a first step that
    explains); the last verdict to the lesson end's hero (today only the gizli an ends a lesson on a verdict, every
    lesson's last step is a summary, so this flight is dormant for plain lessons); the end screen back to the dock
-   ("Yola dön" or ×, landing with `happy`), or, from "Sıradaki", to the next lesson's greeting when it has one.
-   No other transition flies.
+   ("Yola dön" or ×, landing with `happy`), or, from "Sıradaki", to the next lesson's greeting when it has one; and the
+   first-run scene's "Yola çık", from its `intro` cat to the dock (`flight.land` takes an `onLand` callback there, which
+   plays `seal` and arms the dock's one-time "İlk durak burası." bubble). No other transition flies.
 2. **Mechanism** (`src/character/flight.ts`, `CatFlight.tsx`). The flyer is a clone of the departing cat's svg, so its
    pose is exactly the pose on screen. In one frame the source is hidden and the flyer shown at the source's rect in a
    fixed, tap-proof layer above the overlay; it flies on the `page` spring along a small hop (lift scaled to the

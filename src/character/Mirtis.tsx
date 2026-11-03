@@ -18,6 +18,8 @@ export type { MirtisMood, MirtisSize }
 export type MirtisHandle = {
   /** Plays the reaction of a mood (a bounce, a flinch, a purr). Most come back to rest by themselves. */
   react: (mood: MirtisMood) => void
+  /** A cat that sleeps wakes up: opens her eyes, stretches, yawns and settles into rest. */
+  wake: () => void
 }
 
 /**
@@ -112,8 +114,15 @@ export const Mirtis = forwardRef<
     react(mood)
   }, [mood])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: react reads refs only
-  useImperativeHandle(ref, () => ({ react }), [])
+  const wakeUp = () => {
+    const m = motion.current
+    if (!m) return
+    m.setReduced(engine.reducedMotion)
+    m.play('wake')
+  }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: react and wakeUp read refs only
+  useImperativeHandle(ref, () => ({ react, wake: wakeUp }), [])
 
   // A cat with an anchor can be flown from and to (flight.ts).
   // biome-ignore lint/correctness/useExhaustiveDependencies: react reads refs only

@@ -7,6 +7,19 @@ const base = channel === 'production' ? '/dizey/' : `/dizey/pr-preview/${channel
 const port = 4173
 // Cloud sandboxes without a WebKit download can point Chromium at a preinstalled binary.
 const chromiumPath = process.env.PLAYWRIGHT_CHROMIUM_PATH
+// Every spec starts as a learner who has seen the first-run scene (src/shell/onboarding-state.ts); the keys carry the
+// channel prefix of src/lib/storage/app-storage.ts. e2e/onboarding.spec.ts and the wide walk's onboarding step opt out
+// with `test.use({ storageState: FRESH })`.
+const prefix = channel === 'production' ? '' : `${channel}:`
+const onboarded = {
+  cookies: [],
+  origins: [
+    {
+      origin: `http://localhost:${port}`,
+      localStorage: [{ name: `${prefix}dizey.onboarding`, value: '1' }],
+    },
+  ],
+}
 
 export default defineConfig({
   testDir: 'e2e',
@@ -17,6 +30,7 @@ export default defineConfig({
   use: {
     baseURL: `http://localhost:${port}${base}`,
     trace: 'retain-on-failure',
+    storageState: onboarded,
   },
   projects: [
     // The target device: iPhone means WebKit.

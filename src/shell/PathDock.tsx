@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef, useState } from 'react'
+import { Bubble } from '../character/Bubble'
 import { flight } from '../character/flight'
 import { Mirtis } from '../character/Mirtis'
 import { Perch } from '../character/Perch'
@@ -20,6 +21,7 @@ import { useSettings } from '../progress/settings'
 import { Check, ClockIcon, DailyIcon, RetryIcon } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { useSideHeight } from '../ui/useSideHeight'
+import { clearFirstStop, useFirstStop } from './onboarding/first-stop'
 import { PressLink } from './PressLink'
 import { morphFrom, overlayHostRef, stageRef } from './stage'
 import { type TodayBlock, todayBlocks } from './today-blocks'
@@ -33,12 +35,16 @@ let woken = false
 /** Mırtis on the dock card's top edge, at its right (decision 0017, Presence). One cat on Yol, here and nowhere else. */
 function DockCat() {
   const [wake] = useState(() => !woken)
+  const firstStop = useFirstStop()
   useLayoutEffect(() => {
     woken = true
   }, [])
   return (
     <Perch right={20}>
       <Mirtis size="dock" wake={wake} anchor="dock" />
+      {firstStop ? (
+        <Bubble line={strings.onboarding.firstStop} delay={260} hold={4200} onGone={clearFirstStop} />
+      ) : null}
     </Perch>
   )
 }
