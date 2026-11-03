@@ -1,6 +1,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import zlib from 'node:zlib'
 import type { Page } from '@playwright/test'
 
 /**
@@ -403,7 +404,7 @@ const ACTUAL = path.join(process.cwd(), 'test-results', 'layout-actual')
  * Baselines are kept per browser build (e2e/wide-walk/baselines/<engine>-<major>/<name>.json): two Chromium builds
  * shape the same font differently enough to rewrap a line, so one build's layout is no oracle for another's. A
  * mismatch or a missing baseline also writes the actual layout to test-results/layout-actual/<engine>-<major>/,
- * which CI uploads, so a new build's baselines come from that build and never from hand edits.
+ * which CI uploads (and, when the baseline is missing, to the log), so a new build's baselines come from that build and never from hand edits.
  */
 export function baselineKey(browserName: string, version: string): string {
   return `${browserName}-${version.split('.')[0]}`
@@ -449,6 +450,9 @@ export function compareLayout(key: string, name: string, nodes: LayoutNode[]): s
   }
   if (!fs.existsSync(file)) {
     keepActual()
+    // The CI artifact store is not reachable from every session, so a missing baseline also goes to the log, one
+    // line per screen: "LAYOUT-ACTUAL <key>/<name> <gzip+base64 json>".
+    if (process.env.CI) console.log(`LAYOUT-ACTUAL ${key}/${name} ${zlib.gzipSync(json).toString('base64')}`)
     return `no baseline ${key}/${name}.json (run with UPDATE_LAYOUT=1)`
   }
   const want = JSON.parse(fs.readFileSync(file, 'utf8')) as LayoutNode[]
