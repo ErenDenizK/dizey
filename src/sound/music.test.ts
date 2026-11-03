@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import type { MusicCue, Role } from './form'
 import { CHORDS, type ChordId, intervalOf, seeded } from './harmony'
-import { composeSection, freshState, IDLE, idleChord, type MusicState, SECTION } from './music'
+import { BEAT, composeSection, freshState, HOME_LOOP, idleChord, type MusicState, SECTION } from './music'
 
 const ROLES: Role[] = ['open', 'travel', 'tension', 'arrival', 'coda']
 const CHORD_IDS = Object.keys(CHORDS) as ChordId[]
@@ -36,10 +36,12 @@ const melodyOf = (notes: { kind: string; pitch: number }[]) =>
   notes.filter((n) => n.kind === 'main' && n.pitch > 0)
 
 describe('background music', () => {
-  it('walks the home loop slowly when no lesson picks the chord', () => {
-    const walk = Array.from({ length: 8 }, (_, n) => idleChord(n))
-    expect(walk.filter((_, n) => n % 2 === 0)).toEqual([...IDLE])
-    expect(walk[1]).toBe(walk[0])
+  it('walks the home piece, two bars a chord, when no lesson picks the chord', () => {
+    const walk = Array.from({ length: 18 }, (_, n) => idleChord(n))
+    expect(walk.slice(0, 9)).toEqual([...HOME_LOOP])
+    expect(walk.slice(0, 4)).toEqual(['I', 'vi', 'IV', 'V'])
+    expect(walk.slice(4, 9)).toEqual(['I', 'iii', 'IV', 'ii', 'V'])
+    expect(walk.slice(9)).toEqual(walk.slice(0, 9))
   })
 
   it('plays only tones of its chord, in every role, energy and bar', () => {
@@ -48,6 +50,8 @@ describe('background music', () => {
         for (let e = 0; e <= 10; e++)
           steps(cue(chord, e / 10, role), 9, e + 1).forEach((notes, bar) => {
             for (const note of notes) {
+              // A short melody note may be a passing or neighbour tone (see melody.test.ts).
+              if (note.kind === 'main' && note.ring <= BEAT * 0.5 + 1e-9) continue
               expect(tonesOf(chord), `${chord} ${role} e${e / 10} bar${bar}: ${note.pitch}`).toContain(
                 intervalOf(CHORDS[chord], note.pitch),
               )

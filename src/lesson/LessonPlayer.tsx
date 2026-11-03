@@ -7,12 +7,14 @@ import { lessons } from '../content/lessons'
 import type { Lesson, Step } from '../content/lessons/types'
 import { pathCode } from '../content/path'
 import { strings } from '../content/strings'
+import { unitOf } from '../content/units'
 import { engine } from '../engine/driver'
 import { CHOREO_MS, TEMPO_CLASSES } from '../engine/tokens'
 import { Blocks, RichText } from '../exam/Blocks'
 import { returnTab } from '../shell/stage'
 import { hashOf, planLesson } from '../sound/form'
 import { haptic } from '../sound/haptics'
+import { themeOfUnit } from '../sound/music'
 import { playSound, setSoundContext } from '../sound/player'
 import type { SoundEvent } from '../sound/score'
 import { ChevronLeft, Close } from '../ui/icons'
@@ -105,6 +107,7 @@ export function LessonPlayer({ lesson, startStep }: { lesson: Lesson; startStep:
       planLesson(
         lesson.steps.map((s) => s.kind),
         hashOf(lesson.id),
+        themeOfUnit(unitOf(lesson)?.prefix),
       ),
     [lesson],
   )
