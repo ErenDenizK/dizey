@@ -1,0 +1,312 @@
+import type { Measure, Walk } from './harness'
+
+/**
+ * The screen manifest: one entry for every screen and overlay of the app, each with the real taps that reach it.
+ * A new screen is added here (lessons.md, "Widescreen 0.62.0 shipped broken"); the spec measures every entry at
+ * every size. Entries run in order and some chain on the one before (a lesson step on the step before it).
+ */
+export type Entry = {
+  id: string
+  /** Reaches the screen by taps, from wherever the previous entry left the app. */
+  reach: (w: Walk) => Promise<void>
+  /** The element whose box is the screen's content column (a content box when the column is made of padding). */
+  primary: string
+  measure: Measure
+  /** Measure the border box (a dialog) instead of the content box (a surface that centres its content with padding). */
+  box?: 'content' | 'border'
+  /** A centred dialog from 600 px: needs a scrim over the whole window, and closes on Escape and on an outside tap. */
+  dialog?: boolean
+  /** The design token of the surface's background (default --bg). */
+  bg?: string
+  /** An in-flow side column at expanded sizes. */
+  side?: string
+  /** Also compared at 320 x 568. */
+  small?: boolean
+  /** Skipped on phones (it only exists wide). */
+  wideOnly?: boolean
+  /** Elements masked in phone screenshots (anything that changes with the build). */
+  mask?: string[]
+}
+
+const pane = '.sh-pane:not([inert])'
+const peekTile = (id: string) => async (w: Walk) => {
+  await w.scrollPane('top')
+  await w.intoView(`${pane} .pa-tile[data-lesson="${id}"]`)
+  if (!(await w.tap(`${pane} .pa-tile[data-lesson="${id}"]`))) throw new Error(`no tile ${id}`)
+  await w.settle(700)
+}
+
+export const manifest: Entry[] = [
+  {
+    id: 'yol',
+    reach: async (w) => {
+      await w.fresh('yol')
+    },
+    primary: `${pane} .ph-paper`,
+    measure: 'stage',
+    side: `${pane} .ph-dock`,
+    small: true,
+  },
+  {
+    id: 'yol-scrolled',
+    reach: async (w) => w.scrollPane('end'),
+    primary: `${pane} .ph-paper`,
+    measure: 'stage',
+    side: `${pane} .ph-dock`,
+  },
+  {
+    id: 'peek-done',
+    reach: peekTile('m1-reading-a-matrix'),
+    primary: '[data-testid=lesson-peek]',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
+  {
+    id: 'peek-current',
+    reach: peekTile('m6-transpose'),
+    primary: '[data-testid=lesson-peek]',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
+  {
+    id: 'peek-locked',
+    reach: peekTile('d1-determinant'),
+    primary: '[data-testid=lesson-peek]',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
+  {
+    id: 'daily-sheet',
+    reach: async (w) => {
+      await w.scrollPane('top')
+      if (!(await w.tap('[data-testid=today-daily]'))) throw new Error('no daily')
+      await w.settle(800)
+    },
+    primary: '[data-testid=question-sheet]',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
+  {
+    id: 'chapter-test-note',
+    reach: async (w) => {
+      await w.scrollPane('top')
+      await w.intoView(`${pane} .pa-test[data-state="preparing"], ${pane} .pa-test:last-of-type`)
+      if (!(await w.tap(`${pane} .pa-test[data-state="preparing"]`))) throw new Error('no preparing test')
+      await w.settle(800)
+    },
+    primary: '[data-testid=chapter-test-note]',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
+  // A lesson, entered from the dock: it resumes on a keypad question, then plain steps and choices follow.
+  {
+    id: 'lesson-keypad',
+    reach: async (w) => {
+      await w.fresh('yol')
+      if (!(await w.tap('[data-testid=today-next]'))) throw new Error('no next lesson')
+      await w.settle(1400)
+      if (!(await w.advanceUntil('keypad'))) throw new Error('no keypad step')
+    },
+    primary: '[data-testid=lesson-player]',
+    measure: 'read',
+    small: true,
+  },
+  {
+    id: 'lesson-plain',
+    reach: async (w) => {
+      if (!(await w.advanceUntil('plain'))) throw new Error('no plain step')
+    },
+    primary: '[data-testid=lesson-player]',
+    measure: 'read',
+    small: true,
+  },
+  {
+    id: 'lesson-choice',
+    reach: async (w) => {
+      if (!(await w.advanceUntil('choice'))) throw new Error('no choice step')
+    },
+    primary: '[data-testid=lesson-player]',
+    measure: 'read',
+    small: true,
+  },
+  {
+    id: 'lesson-end',
+    reach: async (w) => {
+      if (!(await w.advanceUntil('end', 60))) throw new Error('lesson did not end')
+      await w.settle(1400)
+    },
+    primary: '[data-testid=lesson-end]',
+    measure: 'read',
+  },
+  {
+    id: 'exam-home',
+    reach: async (w) => {
+      await w.fresh('yol')
+      await w.intoView(`${pane} [data-testid=vize-gate]`)
+      if (!(await w.tap(`${pane} [data-testid=vize-gate]`))) throw new Error('no gate')
+      await w.page.waitForURL(/exam/, { timeout: 6000 })
+      await w.settle(1300)
+    },
+    primary: '.exh',
+    measure: 'read',
+  },
+  {
+    id: 'exam-run',
+    reach: async (w) => {
+      await w.tap('[data-testid^=exam-set-]')
+      await w.settle(300)
+      if (!(await w.tap('[data-testid=exam-start]'))) throw new Error('no start')
+      await w.page.waitForURL(/run/, { timeout: 6000 })
+      await w.settle(1300)
+    },
+    primary: '.exr-frame',
+    measure: 'read',
+  },
+  {
+    id: 'exam-map-sheet',
+    reach: async (w) => {
+      if (!(await w.tap('.exr-paper'))) throw new Error('no paper')
+      await w.settle(900)
+    },
+    primary: '.dz-sheet',
+    measure: 'read',
+    box: 'border',
+    dialog: true,
+  },
+  {
+    id: 'exam-result',
+    reach: async (w) => {
+      // Finishing lives in the question map.
+      if (!(await w.tap('.exr-paper'))) throw new Error('no paper')
+      await w.settle(900)
+      if (!(await w.tap('[data-testid=exam-finish]'))) throw new Error('no finish')
+      await w.page.waitForURL(/result/, { timeout: 6000 })
+      await w.settle(1800)
+    },
+    primary: '[data-testid=exam-result]',
+    measure: 'read',
+  },
+  {
+    id: 'chapter-test-run',
+    reach: async (w) => {
+      await w.fresh('yol')
+      await w.intoView(`${pane} .pa-test:not([data-state="preparing"])`)
+      if (!(await w.tap(`${pane} .pa-test:not([data-state="preparing"])`))) throw new Error('no ready test')
+      await w.page.waitForURL(/run/, { timeout: 6000 })
+      await w.settle(1300)
+    },
+    primary: '.exr-frame',
+    measure: 'read',
+  },
+  {
+    id: 'tekrar',
+    reach: async (w) => {
+      await w.fresh('yol')
+      if (!(await w.tap('[data-testid=today-review]'))) throw new Error('no review')
+      await w.settle(1600)
+    },
+    primary: '[data-testid=lesson-player]',
+    measure: 'read',
+  },
+  {
+    id: 'sen',
+    reach: async (w) => {
+      await w.fresh('sen')
+    },
+    primary: `${pane} .me-page`,
+    measure: 'stage',
+    side: `${pane} .me-aside`,
+    small: true,
+  },
+  {
+    id: 'sen-name-edit',
+    reach: async (w) => {
+      if (!(await w.tap('[data-testid=me-name]'))) throw new Error('no name')
+      await w.settle(700)
+    },
+    primary: `${pane} .me-page`,
+    measure: 'stage',
+    side: `${pane} .me-aside`,
+  },
+  {
+    id: 'sen-mistake-open',
+    reach: async (w) => {
+      await w.page.keyboard.type('x')
+      await w.page.keyboard.press('Enter')
+      await w.settle(500)
+      if (!(await w.tap('[data-testid=mistake-group]'))) throw new Error('no mistake group')
+      await w.settle(800)
+      await w.intoView(`${pane} [data-testid=mistake-groups]`)
+    },
+    primary: `${pane} .me-page`,
+    measure: 'stage',
+    side: `${pane} .me-aside`,
+  },
+  {
+    id: 'sen-badge-detail',
+    reach: async (w) => {
+      if (!(await w.tap('[data-testid=badge-earned]'))) throw new Error('no badge')
+      await w.settle(1000)
+    },
+    primary: `${pane} .me-page`,
+    measure: 'stage',
+    side: `${pane} .me-aside`,
+  },
+  {
+    id: 'sen-moments',
+    reach: async (w) => {
+      await w.intoView(`${pane} [data-testid=moments-album]`)
+    },
+    primary: `${pane} .me-page`,
+    measure: 'stage',
+    side: `${pane} .me-aside`,
+  },
+  {
+    id: 'settings',
+    reach: async (w) => {
+      await w.fresh('sen')
+      if (!(await w.tap('[data-testid=open-settings]'))) throw new Error('no gear')
+      await w.page.waitForURL(/settings/, { timeout: 6000 })
+      await w.settle(1500)
+    },
+    primary: '.sh-overlay .dz-screen',
+    measure: 'page',
+    mask: ['[data-testid=version-foot]', '[data-testid=app-version]'],
+  },
+  {
+    id: 'lab-character',
+    reach: async (w) => {
+      await w.openLabs()
+      if (!(await w.tap('a[href*="lab/character"]'))) throw new Error('no lab link')
+      await w.page.waitForURL(/lab/, { timeout: 6000 })
+      await w.settle(1500)
+    },
+    primary: '.dz-screen',
+    measure: 'page',
+  },
+  {
+    id: 'lab-sounds',
+    reach: async (w) => {
+      await w.openLabs()
+      if (!(await w.tap('a[href*="lab/sounds"]'))) throw new Error('no sound lab link')
+      await w.page.waitForURL(/sounds/, { timeout: 6000 })
+      await w.settle(1500)
+    },
+    primary: '.dz-screen',
+    measure: 'page',
+  },
+  {
+    id: 'lab-motion',
+    reach: async (w) => {
+      await w.page.goto('./lab')
+      await w.settle(1800)
+    },
+    primary: '.lab-pane .dz-screen',
+    measure: 'page',
+  },
+]
