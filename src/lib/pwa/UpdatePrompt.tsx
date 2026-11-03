@@ -1,12 +1,13 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { strings } from '../../content/strings'
+import { keepFresh } from './keepFresh'
 
 /** Never reloads on its own: a new version waits until the learner taps. */
 export function UpdatePrompt() {
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
-  } = useRegisterSW()
+  } = useRegisterSW({ onRegisteredSW: (_url, registration) => keepFresh(registration) })
   if (!needRefresh) return null
   return (
     <div
