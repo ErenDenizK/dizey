@@ -75,7 +75,7 @@ export function MeView() {
   )
 }
 
-/** The side column's card (decision 0020): in the flow, sticky from 1024 px; it tells the CSS how tall it is. */
+/** The side column's card (decision 0021): in the flow, sticky from 1024 px; it tells the CSS how tall it is. */
 function Aside({ children }: { children: React.ReactNode }) {
   const root = useRef<HTMLDivElement>(null)
   useSideHeight(root)
