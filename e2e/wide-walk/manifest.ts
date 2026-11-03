@@ -26,6 +26,12 @@ export type Entry = {
   wideOnly?: boolean
   /** Elements masked in phone screenshots (anything that changes with the build). */
   mask?: string[]
+  /**
+   * Phone screenshots skip this many px at the top. The rehearsal result is a sheet whose rounded top corners show the
+   * receded Yol behind them, and under heavy CPU load that one corner strip settles differently (black or page
+   * colour). The layout below it is what the baseline guards.
+   */
+  clipTop?: number
 }
 
 const pane = '.sh-pane:not([inert])'
@@ -190,6 +196,7 @@ export const manifest: Entry[] = [
     },
     primary: '[data-testid=exam-result]',
     measure: 'read',
+    clipTop: 64,
   },
   {
     id: 'chapter-test-run',
