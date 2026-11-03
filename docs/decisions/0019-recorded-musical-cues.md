@@ -3,6 +3,7 @@
 - Status: accepted (Eren picked the rendered prototype "Zirve", 2026-11-03)
 - Date: 2026-11-03
 - Builds on: [0005](0005-lesson-sound.md) (lesson sound), [0018](0018-adaptive-music.md) (adaptive music)
+- Amended by: [0020](0020-one-sound-world.md) (instruments, room, tails and budgets; the music no longer fades for a cue)
 
 ## Context
 
