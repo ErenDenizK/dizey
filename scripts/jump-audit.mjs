@@ -20,7 +20,7 @@ const MOVE = 3
 const FADE = 0.35
 const HOLD = 2
 
-export async function openAuditPage(browser, url) {
+export async function openAuditPage(browser, url, { fresh = false } = {}) {
   const context = await browser.newContext({
     viewport: { width, height },
     deviceScaleFactor: 1,
@@ -28,8 +28,9 @@ export async function openAuditPage(browser, url) {
     hasTouch: true,
     colorScheme: 'dark',
   })
+  // `fresh` is a first visit: nothing marks the intro as seen, so the first-run scene shows.
+  if (!fresh) await context.addInitScript(() => localStorage.setItem('dizey.onboarding.safari', '1'))
   await context.addInitScript(() => {
-    localStorage.setItem('dizey.onboarding.safari', '1')
     let hook
     Object.defineProperty(window, '__dzReview', {
       configurable: true,
@@ -319,5 +320,32 @@ export const shellFlows = {
     const last = (await page.locator(group).count()) > 1 ? 1 : 0
     if (last) await tap(`${group} >> nth=1`)
     await tap(`${group} >> nth=${last}`)
+  },
+}
+
+/* ---------- First-run scene (scripts/onboarding-audit.mjs, e2e/onboarding-jumps.spec.ts) ---------- */
+
+/** The onboarding's own flows: a first visit, the story walked to the hand-off, its wrong-answer and skip variants. */
+export const onboardingFlows = {
+  story: async ({ tap, page }) => {
+    await tap('.onb-wake')
+    await tap('button:has-text("Tanışalım")')
+    await tap('[data-testid="onb-choice-2"]')
+    await tap('button:has-text("Devam")')
+    await page.fill('[data-testid="onb-name"]', 'Eren')
+    await tap(null)
+    await tap('button:has-text("Yola çık")')
+  },
+  wrong: async ({ tap }) => {
+    await tap('.onb-wake')
+    await tap('button:has-text("Tanışalım")')
+    await tap('[data-testid="onb-choice-3"]')
+    await tap('button:has-text("Devam")')
+    await tap('button:has-text("Geç")')
+  },
+  skip: async ({ tap }) => {
+    await tap('.onb-wake')
+    await tap('button:has-text("Tanışalım")')
+    await tap('button:has-text("Geç")')
   },
 }

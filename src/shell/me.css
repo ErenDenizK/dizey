@@ -633,3 +633,32 @@ section[aria-labelledby="badges"] > .dz-section-label {
     display: none;
   }
 }
+
+/* Inline confirm under a row (restore, reset): a sunk panel inside the list, the buttons side by side. */
+.me-confirm {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: var(--card-pad);
+  background: var(--surface-sunk);
+  border-top: 0.5px solid var(--hairline);
+  font-size: var(--type-subhead);
+  line-height: var(--leading-subhead);
+  color: var(--ink-2);
+}
+.me-confirm p {
+  margin: 0;
+}
+.me-confirm__actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.me-confirm .dz-button {
+  padding: 0 var(--space-3);
+}
+.me-confirm .dz-button[data-kind="danger"] {
+  background: var(--bad-tint);
+  color: var(--bad-ink);
+  box-shadow: inset 0 0 0 1px var(--bad-edge);
+}

@@ -112,69 +112,6 @@
   height: 16px;
 }
 
-/* mastery glyph */
-.sh-onb {
-  position: fixed;
-  inset: 0;
-  z-index: 40;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  padding: max(var(--space-12), env(safe-area-inset-top)) var(--space-6)
-    max(var(--space-6), env(safe-area-inset-bottom));
-  background: var(--sh-bg);
-  color: var(--sh-ink);
-  font-family: "Onest", system-ui, -apple-system, sans-serif;
-}
-.sh-onb__intro {
-  display: grid;
-  gap: var(--space-2);
-}
-.sh-onb h1 {
-  margin: 0;
-  font-size: var(--type-large);
-  line-height: var(--leading-large);
-  letter-spacing: var(--tracking-large);
-  font-weight: var(--weight-bold);
-}
-.sh-onb p {
-  margin: 0;
-  color: var(--sh-muted);
-}
-.sh-onb__steps {
-  margin: 0;
-  padding: var(--space-1) var(--space-4);
-  list-style: none;
-}
-.sh-onb__steps li {
-  display: grid;
-  grid-template-columns: 36px 1fr;
-  gap: var(--space-3);
-  align-items: center;
-  padding: var(--space-3) 0;
-  border-bottom: 1px solid var(--sh-line);
-}
-.sh-onb__steps li:last-child {
-  border-bottom: 0;
-}
-.sh-onb__n {
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: var(--corner-pill);
-  background: var(--sh-soft);
-  font-weight: var(--weight-semibold);
-}
-.sh-onb svg {
-  width: 18px;
-  height: 18px;
-  vertical-align: -3px;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-}
 .ex-text {
   margin: 0;
   font-size: var(--type-body);
@@ -1643,9 +1580,6 @@ svg.ls-duo {
     max-width: none;
     margin-inline: 0;
     padding-inline: max(var(--gutter-base), calc((100% - var(--measure-read)) / 2));
-  }
-  .sh-onb {
-    padding-inline: max(var(--space-6), calc((100% - var(--measure-page)) / 2));
   }
 }
 

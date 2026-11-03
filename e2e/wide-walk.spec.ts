@@ -253,6 +253,8 @@ for (const size of WIDE) {
       userAgent: IPAD_UA,
       locale: 'tr-TR',
       timezoneId: 'Europe/Istanbul',
+      // A real first visit: the config's "already onboarded" storage is dropped.
+      storageState: { cookies: [], origins: [] },
     })
     test(`onboarding is one centred page column at ${width} x ${height}`, async ({ page }) => {
       await prepare(page, { onboarded: false })

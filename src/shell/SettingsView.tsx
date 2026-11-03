@@ -6,15 +6,18 @@ import { type Backup, createBackup, parseBackup, readEntries, restoreEntries } f
 import { buildInfo } from '../lib/build-info'
 import { versionLine } from '../lib/build-line'
 import { appStorage } from '../lib/storage/app-storage'
+import { resetProgress } from '../lib/storage/reset-progress'
 import { readSettings, saveSettings, useSettings } from '../progress/settings'
 import { haptic } from '../sound/haptics'
 import { setMusicOn, setSoundInSilent, setSoundOn } from '../sound/player'
 import { choosePalette, paletteOf } from '../styles/apply-palette'
 import { PALETTE_IDS } from '../styles/palettes'
+import { Expander } from '../ui/Expander'
 import { ChevronRight } from '../ui/icons'
 import { Pressable } from '../ui/Pressable'
 import { Screen } from '../ui/Screen'
 import { Switch } from '../ui/Switch'
+import { replayOnboarding } from './onboarding-state'
 import { PressLink } from './PressLink'
 import './me.css'
 
@@ -269,38 +272,42 @@ function SoundSetting() {
   )
 }
 
+/** Writes every stored key of this channel to a JSON file (share sheet on iPhone, download elsewhere). */
+async function exportBackup() {
+  const now = new Date()
+  const backup = createBackup(readEntries(appStorage), buildInfo.channel, now)
+  const name = strings.settings.backupFileName(now.toISOString().slice(0, 10))
+  const blob = new File([JSON.stringify(backup, null, 2)], name, { type: 'application/json' })
+  // iPhone: the share sheet ("Save to Files") is the reliable way out of an installed web app.
+  if (navigator.canShare?.({ files: [blob] })) {
+    try {
+      await navigator.share({ files: [blob] })
+      return
+    } catch (shareError) {
+      if (shareError instanceof DOMException && shareError.name === 'AbortError') return
+    }
+  }
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name
+  link.click()
+  setTimeout(() => URL.revokeObjectURL(url), 1000)
+}
+
 function BackupSettings() {
   const file = useRef<HTMLInputElement>(null)
   const [pending, setPending] = useState<Backup | null>(null)
+  // The confirm collapses with its text still in place, so closing is a motion, not a cut.
+  const [open, setOpen] = useState(false)
   const [error, setError] = useState(false)
-
-  async function exportBackup() {
-    const now = new Date()
-    const backup = createBackup(readEntries(appStorage), buildInfo.channel, now)
-    const name = strings.settings.backupFileName(now.toISOString().slice(0, 10))
-    const blob = new File([JSON.stringify(backup, null, 2)], name, { type: 'application/json' })
-    // iPhone: the share sheet ("Save to Files") is the reliable way out of an installed web app.
-    if (navigator.canShare?.({ files: [blob] })) {
-      try {
-        await navigator.share({ files: [blob] })
-        return
-      } catch (shareError) {
-        if (shareError instanceof DOMException && shareError.name === 'AbortError') return
-      }
-    }
-    const url = URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = name
-    link.click()
-    setTimeout(() => URL.revokeObjectURL(url), 1000)
-  }
 
   async function chooseFile(selected: File | undefined) {
     if (!selected) return
     const backup = parseBackup(await selected.text())
     setError(!backup)
     setPending(backup)
+    setOpen(backup !== null)
     if (file.current) file.current.value = ''
   }
 
@@ -333,35 +340,91 @@ function BackupSettings() {
         </span>
       </Pressable>
       {error ? (
-        <p className="sh-note" role="alert">
+        <p className="me-confirm" role="alert">
           {strings.settings.restoreInvalid}
         </p>
       ) : null}
-      {pending ? (
-        <div className="sh-note" role="alertdialog" aria-label={strings.settings.restore}>
-          <p>
-            {strings.settings.restoreConfirm(
-              Object.keys(pending.entries).length,
-              new Date(pending.exportedAt).toLocaleDateString('tr-TR'),
-            )}
-          </p>
-          <div className="sh-note__actions">
-            <Pressable className="dz-button" data-kind="secondary" onClick={() => setPending(null)}>
+      <Expander open={open} id="restore-confirm">
+        {pending ? (
+          <div className="me-confirm" role="alertdialog" aria-label={strings.settings.restore}>
+            <p>
+              {strings.settings.restoreConfirm(
+                Object.keys(pending.entries).length,
+                new Date(pending.exportedAt).toLocaleDateString('tr-TR'),
+              )}
+            </p>
+            <div className="me-confirm__actions">
+              <Pressable className="dz-button" data-kind="secondary" onClick={() => setOpen(false)}>
+                {strings.settings.cancel}
+              </Pressable>
+              <Pressable
+                className="dz-button"
+                data-kind="primary"
+                onClick={() => {
+                  restoreEntries(appStorage, pending)
+                  window.location.reload()
+                }}
+              >
+                {strings.settings.restoreAction}
+              </Pressable>
+            </div>
+          </div>
+        ) : null}
+      </Expander>
+      <ResetSettings />
+    </>
+  )
+}
+
+/** Replay the intro, and erase progress behind an inline confirm (never one tap). Sound and appearance stay. */
+function ResetSettings() {
+  const [open, setOpen] = useState(false)
+  return (
+    <>
+      <Pressable className="dz-row" onClick={replayOnboarding}>
+        <Lead>
+          <path d="M6.5 4.5 15 10l-8.5 5.5z" />
+        </Lead>
+        <span className="dz-row-main">{strings.settings.replayIntro}</span>
+        <span className="dz-chevron">
+          <ChevronRight />
+        </span>
+      </Pressable>
+      <Pressable
+        className="dz-row"
+        aria-expanded={open}
+        aria-controls="reset-confirm"
+        onClick={() => setOpen(true)}
+      >
+        <Lead>
+          <path d="M4.5 10a5.5 5.5 0 1 0 1.8-4.1M4 3.5v3h3" />
+        </Lead>
+        <span className="dz-row-main">{strings.settings.resetProgress}</span>
+        <span className="dz-chevron">
+          <ChevronRight />
+        </span>
+      </Pressable>
+      <Expander open={open} id="reset-confirm">
+        <div className="me-confirm" role="alertdialog" aria-label={strings.settings.resetProgress}>
+          <p>{strings.settings.resetConfirm}</p>
+          <Pressable
+            className="dz-button"
+            data-kind="secondary"
+            data-wide
+            onClick={() => void exportBackup()}
+          >
+            {strings.settings.resetBackupFirst}
+          </Pressable>
+          <div className="me-confirm__actions">
+            <Pressable className="dz-button" data-kind="secondary" onClick={() => setOpen(false)}>
               {strings.settings.cancel}
             </Pressable>
-            <Pressable
-              className="dz-button"
-              data-kind="primary"
-              onClick={() => {
-                restoreEntries(appStorage, pending)
-                window.location.reload()
-              }}
-            >
-              {strings.settings.restoreAction}
+            <Pressable className="dz-button" data-kind="danger" onClick={resetProgress}>
+              {strings.settings.resetAction}
             </Pressable>
           </div>
         </div>
-      ) : null}
+      </Expander>
     </>
   )
 }

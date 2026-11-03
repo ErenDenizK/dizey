@@ -81,7 +81,8 @@ export const FIXED_TIME = new Date('2026-11-03T10:00:00+03:00')
 export async function prepare(page: Page, { onboarded = true }: { onboarded?: boolean } = {}) {
   await page.emulateMedia({ reducedMotion: 'reduce', colorScheme: 'dark' })
   await page.clock.setFixedTime(FIXED_TIME)
-  const data = seed()
+  // A real first visit (onboarded: false) has no progress either: a learner with progress is never shown the intro.
+  const data = onboarded ? seed() : {}
   await page.addInitScript(
     ([p, state, skip]) => {
       if (localStorage.getItem('__seeded')) return
