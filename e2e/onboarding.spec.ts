@@ -134,7 +134,7 @@ test('on a wide window the scene is a phone-width column on the paper, and a tap
   await page.setViewportSize({ width: 1280, height: 800 })
   await open(page)
   await toHello(page)
-  const column = await page.locator('.onb-beat').boundingBox()
+  const column = await page.locator('.onb-beat[data-beat="hello"]').boundingBox()
   expect(column?.width).toBeLessThanOrEqual(440)
   expect(Math.abs((column?.x ?? 0) + (column?.width ?? 0) / 2 - 640)).toBeLessThanOrEqual(1)
   await page.mouse.click(60, 400)
