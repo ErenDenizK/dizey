@@ -48,7 +48,7 @@
   height: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
   pointer-events: none;
   background: linear-gradient(to bottom, transparent, var(--bg) 78%);
-  opacity: 0.92;
+  opacity: 1;
 }
 
 /* ---- Type roles: one class per role in tokens.css; every text in the app is one of these ---- */
