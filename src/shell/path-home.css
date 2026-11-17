@@ -16,7 +16,7 @@
  */
 .ph-paper {
   --grid: color-mix(in oklch, var(--hairline) 35%, transparent);
-  --paper-top: calc(env(safe-area-inset-top) + var(--space-3));
+  --paper-top: calc(var(--safe-top) + var(--space-3));
   position: relative;
   min-height: 100dvh;
   margin: calc(var(--paper-top) * -1) calc(var(--page-gutter) * -1) calc(var(--bar-clearance) * -1);

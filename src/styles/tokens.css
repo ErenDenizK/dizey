@@ -214,7 +214,14 @@
   --row-height: 52px; /* list rows and lesson tiles */
   --bar-height: 62px; /* floating tab bar */
   --bar-inset: 16px; /* tab bar distance from the screen sides */
-  --bar-bottom: max(14px, calc(env(safe-area-inset-bottom) - 10px));
+  /*
+   * Safe area: every edge reads these two, never env() directly, so one place answers for the device. On an iPad
+   * installed app the window can be resized (iPadOS 26 windowed apps), and its window controls then sit over the
+   * top-left corner while env() reports no inset, so a touch screen of 600 px and up keeps a floor under them (below).
+   */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --bar-bottom: max(14px, calc(var(--safe-bottom) - 10px));
   --bar-clearance: calc(var(--bar-height) + var(--bar-bottom) + var(--space-6));
   --nav-height: 48px; /* top bar */
   /*
@@ -739,3 +746,10 @@
   --badge-ground: oklch(0 0 0 / 0.45);
 }
 /* ---- Palettes end ---- */
+
+/* iPad installed app: room for the window controls of a windowed app (see --safe-top above). */
+@media (display-mode: standalone) and (any-pointer: coarse) and (min-width: 600px) {
+  :root {
+    --safe-top: max(env(safe-area-inset-top, 0px), 32px);
+  }
+}

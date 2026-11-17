@@ -276,8 +276,7 @@ a.sh-node {
   gap: var(--space-3);
   max-width: 440px;
   margin-inline: auto;
-  padding: max(var(--space-2), env(safe-area-inset-top)) var(--page-gutter)
-    max(var(--space-3), env(safe-area-inset-bottom));
+  padding: max(var(--space-2), var(--safe-top)) var(--page-gutter) max(var(--space-3), var(--safe-bottom));
   background: var(--sh-bg);
 }
 /* Top bar: close, back, progress, lesson code and count. It never moves between steps. */
@@ -1542,7 +1541,7 @@ svg.ls-duo {
    and a gap (enough for the receded tab to show above it), with rounded top corners. The overlay reaches one radius past the screen bottom so the
    bottom corners stay out of sight, and the content ends where the screen does. */
 .sh-overlay[data-present="sheet"] {
-  top: calc(env(safe-area-inset-top) + var(--space-8));
+  top: calc(var(--safe-top) + var(--space-8));
   bottom: calc(-1 * var(--corner-sheet));
   border-radius: var(--corner-sheet);
 }

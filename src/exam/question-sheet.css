@@ -5,7 +5,7 @@
   flex-direction: column;
   gap: var(--space-3);
   padding-bottom: 0;
-  max-height: calc(100dvh - 56px - env(safe-area-inset-top) - env(safe-area-inset-bottom) - var(--space-4));
+  max-height: calc(100dvh - 56px - var(--safe-top) - var(--safe-bottom) - var(--space-4));
 }
 .td-q__scroll {
   display: grid;
@@ -89,5 +89,5 @@
 
 /* In a dialog (600 px and up, Sheet.tsx) the question scrolls inside the dialog's own 85% height and the action stays pinned. */
 .dz-sheet[data-dialog] .sh-sheet-body.td-q {
-  max-height: calc(85dvh - var(--space-5) - var(--space-6) - env(safe-area-inset-bottom));
+  max-height: calc(85dvh - var(--space-5) - var(--space-6) - var(--safe-bottom));
 }
