@@ -379,6 +379,8 @@ async function readLayout(page: Page, skip: string[]): Promise<LayoutNode[]> {
         if (el.closest('svg') && el.tagName.toLowerCase() !== 'svg') continue
         if (['SCRIPT', 'STYLE', 'LINK', 'META', 'TEMPLATE'].includes(el.tagName)) continue
         if (skipped(el)) continue
+        // The iOS status band is zero tall without a top inset (every browser here); safe-area.test.ts pins it.
+        if (el.classList.contains('dz-status-band')) continue
         const cs = getComputedStyle(el)
         if (cs.display === 'none' || cs.visibility === 'hidden') continue
         const r = el.getBoundingClientRect()
