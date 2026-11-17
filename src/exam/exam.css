@@ -143,8 +143,7 @@
   flex-direction: column;
   max-width: 440px;
   margin-inline: auto;
-  padding: max(var(--space-2), env(safe-area-inset-top)) var(--page-gutter)
-    max(var(--space-3), env(safe-area-inset-bottom));
+  padding: max(var(--space-2), var(--safe-top)) var(--page-gutter) max(var(--space-3), var(--safe-bottom));
   background: var(--bg);
   transform-origin: 50% 0;
 }
@@ -354,8 +353,8 @@
   overscroll-behavior-y: contain;
   max-width: 440px;
   margin-inline: auto;
-  padding: max(var(--space-2), env(safe-area-inset-top)) var(--page-gutter)
-    max(var(--space-6), calc(env(safe-area-inset-bottom) + var(--space-4)));
+  padding: max(var(--space-2), var(--safe-top)) var(--page-gutter)
+    max(var(--space-6), calc(var(--safe-bottom) + var(--space-4)));
   background: var(--bg);
 }
 /* One left edge: the title, the paper's name, the section labels and the cards all start on the gutter. */

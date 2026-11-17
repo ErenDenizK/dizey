@@ -5,8 +5,7 @@ export function safeTop(): number {
   if (typeof document === 'undefined') return 0
   if (!probe) {
     probe = document.createElement('div')
-    probe.style.cssText =
-      'position:fixed;visibility:hidden;pointer-events:none;padding-top:env(safe-area-inset-top)'
+    probe.style.cssText = 'position:fixed;visibility:hidden;pointer-events:none;padding-top:var(--safe-top)'
     document.body.appendChild(probe)
   }
   return Number.parseFloat(getComputedStyle(probe).paddingTop) || 0

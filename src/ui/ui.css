@@ -32,7 +32,7 @@
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   background: var(--bg);
-  padding: calc(env(safe-area-inset-top) + var(--space-3)) var(--page-gutter) var(--bar-clearance);
+  padding: calc(var(--safe-top) + var(--space-3)) var(--page-gutter) var(--bar-clearance);
 }
 
 .dz-screen[data-pushed] {
@@ -145,19 +145,19 @@
   position: absolute;
   inset: 0 0 auto 0;
   z-index: 5;
-  height: calc(env(safe-area-inset-top) + var(--space-6));
+  height: calc(var(--safe-top) + var(--space-6));
   pointer-events: none;
   background: linear-gradient(to top, transparent, var(--bg) 70%);
 }
 /* With a floating control the fade runs past the control, so content dissolves before it reaches the button. */
 .dz-edge-top[data-floating] {
-  height: calc(env(safe-area-inset-top) + var(--space-2) + var(--target) + var(--space-4));
+  height: calc(var(--safe-top) + var(--space-2) + var(--target) + var(--space-4));
 }
 /* A tab screen's one action floats at the top right and tucks away while reading down. */
 .dz-float-action {
   position: absolute;
   z-index: 6;
-  top: calc(env(safe-area-inset-top) + var(--space-2));
+  top: calc(var(--safe-top) + var(--space-2));
   right: calc(var(--page-gutter) - var(--space-2));
 }
 /* Visually hidden, still read by assistive tech: the h1 of a screen whose hero is its top. */
@@ -243,13 +243,13 @@
 
 /* Masthead: one solid row, name left, one context slot right; a hairline under it once scrolled. */
 .dz-screen[data-chrome="masthead"] {
-  padding-top: calc(env(safe-area-inset-top) + var(--target) + var(--space-2));
+  padding-top: calc(var(--safe-top) + var(--target) + var(--space-2));
 }
 .dz-masthead {
   position: absolute;
   inset: 0 0 auto 0;
   z-index: 6;
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--safe-top);
   background: var(--bg);
   pointer-events: auto;
 }
@@ -538,7 +538,7 @@
   background: var(--surface-raised);
   border-radius: var(--corner-sheet) var(--corner-sheet) 0 0;
   box-shadow: var(--shadow-3), var(--edge-light);
-  padding: var(--space-3) var(--page-gutter) calc(env(safe-area-inset-bottom) + var(--space-6));
+  padding: var(--space-3) var(--page-gutter) calc(var(--safe-bottom) + var(--space-6));
   touch-action: none;
   will-change: transform;
 }
@@ -701,7 +701,7 @@
   [data-present="sheet"] .dz-screen[data-pushed] {
     background: var(--bg);
     border-radius: 0;
-    padding-top: calc(env(safe-area-inset-top) + var(--space-3));
+    padding-top: calc(var(--safe-top) + var(--space-3));
   }
   [data-present="sheet"] .dz-screen[data-pushed] .dz-screen-head {
     background: var(--bg);

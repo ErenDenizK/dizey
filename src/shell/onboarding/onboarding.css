@@ -6,8 +6,8 @@
 .sh-onb {
   --onb-px: max(var(--space-6), calc((100% - var(--measure-page)) / 2));
   --onb-top: 0px;
-  --onb-pt: calc(max(var(--space-3), env(safe-area-inset-top)) + var(--target) + var(--space-2));
-  --onb-pb: max(var(--space-6), env(safe-area-inset-bottom));
+  --onb-pt: calc(max(var(--space-3), var(--safe-top)) + var(--target) + var(--space-2));
+  --onb-pb: max(var(--space-6), var(--safe-bottom));
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -85,7 +85,7 @@
   min-height: var(--target);
   max-width: 440px;
   margin-inline: auto;
-  margin-top: max(var(--space-3), env(safe-area-inset-top));
+  margin-top: max(var(--space-3), var(--safe-top));
   pointer-events: none;
 }
 .onb-top__side--end {
