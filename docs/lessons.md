@@ -133,3 +133,13 @@ real app.
 on Escape and an outside tap, no bars at the window's edges, no line over 80 characters, the side column in flow. The same
 manifest is compared with phone baselines (390, and 320 for Yol, Sen and the lesson). Any change to the shell frame, the
 tokens or the overlays runs the full walk, and a new screen is added to the manifest (decision 0021).
+
+## 2026-11-17: a band under the tab bar was blended instead of removed
+
+What happened: the 2026-11-04 report of a dead band under the tab bar in the Home Screen app was read as "the OS paints
+it, we cannot reach it" and answered with an opaque fade (PR #154, never merged). Two weeks later the same bug came back
+as "the tab bar is too high" on iPhone and "a line at the bottom" on iPad.
+Root cause: iOS 26 gives an installed app a viewport short by the status bar only while the document is shorter than
+the screen; a one-line html min-height rule removes it. Other projects had already published it on GitHub.
+Guard: `src/styles/safe-area.test.ts` keeps the rule and keeps every edge on the `--safe-*` tokens.
+Lesson: before calling a platform bug unfixable, search GitHub for projects that hit the same bug after us.
