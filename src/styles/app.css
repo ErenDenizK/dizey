@@ -62,6 +62,22 @@ html {
 }
 
 /*
+ * iOS 26 draws a Liquid Glass "scroll edge effect" over the top of a Home Screen app: a blur under the status bar that
+ * runs some 40 pt down, over the lesson progress bar and the top controls. WebKit skips it when the top edge hit-tests
+ * to a fixed, full-width box with one solid background (LocalFrameView::fixedContainerEdges); our frame is a full-screen
+ * box and the chrome lets touches through, so it found none. This band is that box: exactly the status bar, the page
+ * colour, above every layer, and it takes touches so the hit test lands on it. Zero tall wherever there is no inset.
+ */
+.dz-status-band {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 100;
+  height: var(--safe-top);
+  /* Dims with the app under a sheet or a dialog (src/ui/status-band.ts writes --band-dim, 0 to 1). */
+  background: color-mix(in srgb, var(--bg), black calc(var(--band-dim, 0) * 100%));
+}
+
+/*
  * No scrollbars anywhere (Eren 2026-10-31 23:02Z: "Scroll bar olmasın"). Scrolling still works by touch,
  * wheel and keyboard; position is shown by the screens themselves (the Dersler focus scaling, the navbar
  * title that appears once the large title scrolls away).

@@ -49,6 +49,8 @@
   </head>
   <body>
     <div id="root"></div>
+    <!-- Solid band under the status bar: iOS 26 blurs the top edge unless it finds a fixed, full-width, solid box there. -->
+    <div class="dz-status-band" aria-hidden="true"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

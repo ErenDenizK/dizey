@@ -34,6 +34,18 @@ describe('safe area', () => {
     )
   })
 
+  it('keeps a solid band under the status bar so iOS 26 does not blur the top edge', () => {
+    const html = readFileSync(join(src, '../index.html'), 'utf8')
+    expect(html).toContain('<div class="dz-status-band" aria-hidden="true"></div>')
+    const app = strip(readFileSync(join(src, 'styles/app.css'), 'utf8')).replace(/\s+/g, ' ')
+    const rule = app.match(/\.dz-status-band \{([^}]*)\}/)?.[1] ?? ''
+    expect(rule).toContain('position: fixed;')
+    expect(rule).toContain('inset: 0 0 auto 0;')
+    expect(rule).toContain('height: var(--safe-top);')
+    expect(rule).not.toContain('pointer-events')
+    expect(rule).not.toContain('backdrop-filter')
+  })
+
   it('defines both edges in the tokens', () => {
     const tokens = strip(readFileSync(join(src, 'styles/tokens.css'), 'utf8'))
     expect(tokens).toMatch(/--safe-top:\s*env\(safe-area-inset-top, 0px\);/)
