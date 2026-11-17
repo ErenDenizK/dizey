@@ -49,6 +49,19 @@ html {
 }
 
 /*
+ * iOS 26 Home Screen app: while the document is shorter than the screen, WebKit gives the page a viewport short by the
+ * status bar (874 pt screen, 812 pt viewport on a 6.3" iPhone; WebKit 301108). The fixed app frame then stops above
+ * the home indicator, the tab bar floats a status bar too high and iOS paints a band under it (on iPad: a line). A
+ * document at least screen tall gets the full viewport. min() keeps it at the visible height wherever the viewport is
+ * already full or the inset is 0, so the page never scrolls. docs/research/ios-edges.md has the sources.
+ */
+@media (display-mode: standalone) {
+  html {
+    min-height: min(100lvh, calc(100% + env(safe-area-inset-top, 0px)));
+  }
+}
+
+/*
  * No scrollbars anywhere (Eren 2026-10-31 23:02Z: "Scroll bar olmasın"). Scrolling still works by touch,
  * wheel and keyboard; position is shown by the screens themselves (the Dersler focus scaling, the navbar
  * title that appears once the large title scrolls away).
