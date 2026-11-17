@@ -6,6 +6,7 @@ import { requestPersistentStorage } from './lib/storage/persist'
 import { routeTree } from './routeTree.gen'
 import { installSound } from './sound/player'
 import { installPalette } from './styles/apply-palette'
+import { installStatusBand } from './ui/status-band'
 import './styles/app.css'
 
 const router = createRouter({ routeTree, basepath: import.meta.env.BASE_URL })
@@ -22,6 +23,7 @@ startAppDriver()
 ;(window as unknown as { __dzReview?: unknown }).__dzReview = { engine, review }
 installSound()
 void requestPersistentStorage()
+installStatusBand()
 
 const root = document.getElementById('root')
 if (!root) throw new Error('Missing #root')
