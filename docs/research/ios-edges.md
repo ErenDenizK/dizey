@@ -43,3 +43,18 @@ there are problems at the top and a line at the bottom.
 
 The short viewport cannot be reproduced in Playwright (Chromium or WebKit); the rule rests on the sources above and is
 checked on Eren's devices. Insets were emulated through the tokens at 402x874 (62/34) and 820x1180 (32/20).
+
+## Follow-up 2026-11-17: the top-edge blur (0.82.0)
+
+Eren, on device after 0.81.0: a system blur at the top covers the lesson progress bar and the top controls.
+
+- Cause: iOS 26's Liquid Glass "scroll edge effect" on Home Screen apps, a blur over the status bar that runs some
+  40 pt down. No meta tag or CSS property turns it off. WebKit skips it when the top edge hit-tests to a fixed,
+  full-width box with one solid background (`LocalFrameView::fixedContainerEdges`). Our frame is a full-screen box and
+  the top chrome is `pointer-events: none`, so WebKit found none and blurred.
+- Fix: `.dz-status-band` in `index.html`, styled in `app.css`: fixed, full width, exactly `--safe-top` tall, page colour,
+  above every layer, hit-testable. Zero tall where there is no inset (browser tabs, Android, desktop).
+- Its one cost, a lighter strip under the status bar while a sheet dims the app, is removed by `src/ui/status-band.ts`:
+  it reads what sits just under the band (scrims, the receding tab screen) and dims the band by the same amount.
+- Sources: traxon99/jim PR #773, mbryantms/folio PR #994, PowerBeef/discpress PR #24 (all describe the same WebKit rule;
+  none device-verified at the time). Not reproducible in Chromium or the simulator; checked on Eren's devices.
